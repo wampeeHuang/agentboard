@@ -85,14 +85,17 @@ body{min-height:100vh;display:flex;flex-direction:column}
 .btn.open-done{background:var(--status-on);border-color:var(--status-on);color:#fff;font-weight:500}
 .btn.open-done:hover{background:#157A34;border-color:#157A34;color:#fff}
 
-/* Footer — principles grid */
-.footer{max-width:1080px;width:100%;margin:0 auto;padding:36px 32px;border-top:1px solid var(--border)}
-.principles{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1px;background:var(--border);margin-bottom:32px}
+/* Principles — above the fold */
+.principles-bar{max-width:1080px;margin:0 auto;padding:32px 32px 24px}
+.principles-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1px;background:var(--border)}
 .principle{background:var(--paper);padding:24px 20px}
 .principle-num{font-family:'JetBrains Mono','SF Mono','Consolas',monospace;font-size:10px;font-weight:500;color:var(--ink);opacity:.45;margin-bottom:10px;letter-spacing:.04em}
 .principle-head{font-size:15px;font-weight:500;color:var(--text);margin-bottom:6px;letter-spacing:-0.01em;line-height:1.4}
 .principle-body{font-size:12px;font-weight:300;color:var(--text-secondary);line-height:1.6}
-.footer-bottom{margin-top:0;padding-top:18px;border-top:1px solid var(--border);font-size:11px;color:var(--text-muted);display:flex;align-items:center;justify-content:space-between;font-family:'JetBrains Mono','SF Mono','Consolas',monospace}
+
+/* Footer */
+.footer{max-width:1080px;width:100%;margin:0 auto;padding:24px 32px;border-top:1px solid var(--border)}
+.footer-bottom{font-size:11px;color:var(--text-muted);display:flex;align-items:center;justify-content:space-between;font-family:'JetBrains Mono','SF Mono','Consolas',monospace}
 
 /* Empty */
 .empty{text-align:center;padding:72px 20px;color:var(--text-muted)}
@@ -108,6 +111,31 @@ body{min-height:100vh;display:flex;flex-direction:column}
     <h1><b>工具架</b></h1>
     <div class="tagline" style="font-size:15px;opacity:.7;font-weight:300;max-width:520px">文件即注册，状态即界面</div>
     <div class="tagline">Agent 注册，自动发现，实时状态——人只管看。</div>
+  </div>
+</div>
+
+<div class="principles-bar">
+  <div class="principles-grid">
+    <div class="principle">
+      <div class="principle-num">01</div>
+      <div class="principle-head">想看状态？打开就有</div>
+      <div class="principle-body">绿色 = 运行中，灰色 = 未启动。"打开中"说明正在用，"打开"说明可点开用。</div>
+    </div>
+    <div class="principle">
+      <div class="principle-num">02</div>
+      <div class="principle-head">想控制？点按钮就行</div>
+      <div class="principle-body">启动、停止一键操作。Agent 也能 curl API 自己来，不用人动手。</div>
+    </div>
+    <div class="principle">
+      <div class="principle-num">03</div>
+      <div class="principle-head">想加工具？告诉 Agent</div>
+      <div class="principle-body">Agent 写入注册文件，工具架自动扫描发现。不需要人碰配置，刷新即出现。</div>
+    </div>
+    <div class="principle">
+      <div class="principle-num">04</div>
+      <div class="principle-head">文件即注册，无数据库</div>
+      <div class="principle-body">一个 manifest.json 就是一个工具。没有中心配置，没有 YAML 编排文件。删掉文件夹即下架。</div>
+    </div>
   </div>
 </div>
 
@@ -142,28 +170,6 @@ body{min-height:100vh;display:flex;flex-direction:column}
 </div>
 
 <div class="footer">
-  <div class="principles">
-    <div class="principle">
-      <div class="principle-num">01</div>
-      <div class="principle-head">想看状态？打开就有</div>
-      <div class="principle-body">绿色 = 运行中，灰色 = 未启动。"打开中"说明正在用，"打开"说明可点开用。</div>
-    </div>
-    <div class="principle">
-      <div class="principle-num">02</div>
-      <div class="principle-head">想控制？点按钮就行</div>
-      <div class="principle-body">启动、停止一键操作。Agent 也能 curl API 自己来，不用人动手。</div>
-    </div>
-    <div class="principle">
-      <div class="principle-num">03</div>
-      <div class="principle-head">想加工具？告诉 Agent</div>
-      <div class="principle-body">Agent 写入注册文件，工具架自动扫描发现。不需要人碰配置，刷新即出现。</div>
-    </div>
-    <div class="principle">
-      <div class="principle-num">04</div>
-      <div class="principle-head">文件即注册，无数据库</div>
-      <div class="principle-body">一个 manifest.json 就是一个工具。没有中心配置，没有 YAML 编排文件。删掉文件夹即下架。</div>
-    </div>
-  </div>
   <div class="footer-bottom">
     <span>工具架 · Agentboard</span>
     <span>文件即注册，状态即界面</span>

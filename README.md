@@ -197,6 +197,27 @@ No database migration. No config file merge conflicts. The filesystem is the sou
 - **Agent-native** — every operation accessible via REST API with schema discovery at `/api`
 - **Fixed port** — dashboard always at `:3099`, fails fast if occupied (discoverability > convenience)
 
+## Why this approach
+
+Agentboard inverts the homelab dashboard model. Dashy/Heimdall/Homer ask humans to maintain a YAML file. Agentboard treats the filesystem as the registry — if an agent can write a file, it can register a tool. There's no separate "configure this tool" step because the manifest IS the configuration.
+
+**For humans**: looking at the dashboard tells you what's running, what's stopped, what needs attention. Click a button to start or stop. No terminal, no `docker ps`, no remembering which port is which.
+
+**For AI agents**: `GET /api` discovers the API surface. `GET /api/tools` reads tool status. `POST /api/tools/start/:id` launches a tool. `POST /api/tools/stop/:id` stops it. Every operation is a single HTTP call — no state machine, no session, no authentication dance.
+
+**Self-referencing**: the dashboard registers itself as a tool (`category: 基础设施`, `order: 0`). It can manage its own start/stop through its own API. This is both a practical feature and a proof that the model works.
+
+## Deployment verification
+
+After cloning and `npm install`, verify these work:
+
+- [ ] `node server.js` starts on `:3099` without crashing (even if `~/.claude/tools/` doesn't exist)
+- [ ] `curl http://localhost:3099/api` returns API discovery doc
+- [ ] `curl http://localhost:3099/api/tools` lists demo tools
+- [ ] `curl -X POST http://localhost:3099/api/tools/start/agentboard` returns `{ ok: true }`
+- [ ] Opening `http://localhost:3099` shows the dashboard with tools rendered
+- [ ] Port check works on your OS: `netstat -ano` (Windows) / `lsof -i` (macOS) / `ss -tlnp` (Linux)
+
 ## Security
 
 Agentboard is designed for **localhost use**. It has no authentication, no TLS, and executes shell commands from manifest files. Keep it on `127.0.0.1` — do not expose it to the network. Tools are registered via filesystem access, which is the implicit trust boundary: if an agent can write to `~/.claude/tools/`, it can already run arbitrary commands.
