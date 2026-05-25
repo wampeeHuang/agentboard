@@ -414,7 +414,7 @@ function startServer() {
 
   function tryListen(port) {
     var server = app.listen(port, function() {
-      console.log('\n⚙  Agentboard · 智驭台  http://localhost:' + port + '\n');
+      console.log('\n⚙  工具架 · Agentboard  http://localhost:' + port + '\n');
     });
     server.on('error', function(err) {
       if (err.code === 'EADDRINUSE') {
