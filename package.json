@@ -1,0 +1,17 @@
+{
+  "name": "agentboard",
+  "version": "1.0.0",
+  "description": "Filesystem-as-registry toolchain control plane for AI agents. Auto-discovers tools from manifest.json, checks port status, one-click start/stop.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "keywords": ["ai-agent", "tool-dashboard", "control-plane", "toolchain", "homelab"],
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "express": "^4.21.0"
+  }
+}

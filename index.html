@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>工具架 · Agentboard</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='4' fill='%23002FA7'/%3E%3Ctext x='16' y='22' text-anchor='middle' font-family='Inter,sans-serif' font-size='16' font-weight='600' fill='white'%3E工%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600&family=Noto+Sans+SC:wght@200;300;400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --ink:#002FA7; --ink-rgb:0,47,167; --paper:#FAFAF8; --paper-tint:#F2F2F0;
+  --border:#E0E0DC; --text:#0A0A0A; --text-secondary:#555; --text-muted:#999;
+  --status-on:#1A8A3F; --status-off:#BBB;
+  font-family:'Inter','Noto Sans SC',sans-serif; color:var(--text); background:var(--paper);
+  font-weight:300; font-size:16px;
+}
+body{min-height:100vh;display:flex;flex-direction:column}
+
+/* Hero */
+.hero{background:var(--ink);color:var(--paper);padding:56px 32px 48px}
+.hero-inner{max-width:1080px;margin:0 auto}
+.hero-mono{font-family:'JetBrains Mono','SF Mono','Consolas',monospace;font-size:10px;font-weight:500;letter-spacing:.08em;opacity:.45;margin-bottom:10px}
+.hero h1{font-size:min(3vw,5vh);font-weight:200;letter-spacing:-0.02em;line-height:1.15}
+.hero h1 b{font-weight:500}
+.hero .tagline{font-size:14px;font-weight:300;opacity:.5;margin-top:10px;line-height:1.6;max-width:520px}
+
+/* Stats bar */
+.toolbar{max-width:1080px;margin:0 auto;padding:16px 32px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--border)}
+.stats-row{display:flex;gap:1px;background:var(--border);border:1px solid var(--border);flex:1;max-width:560px}
+.stat-card{flex:1;background:var(--paper);padding:10px 14px;text-align:center;cursor:pointer;transition:background .15s;border-bottom:2px solid transparent}
+.stat-card:hover{background:var(--paper-tint)}
+.stat-card.active{border-bottom-color:var(--ink)}
+.stat-num{font-size:26px;font-weight:200;letter-spacing:-0.02em;color:var(--text);line-height:1.15;display:block}
+.stat-label{font-size:11px;color:var(--text-muted);font-weight:300;margin-top:1px;display:block;white-space:nowrap}
+.search-input{border:1px solid var(--border);padding:6px 12px;font-size:13px;font-family:inherit;font-weight:300;background:var(--paper);color:var(--text);width:150px;outline:none;flex-shrink:0}
+.search-input:focus{border-color:var(--ink)}
+.search-input::placeholder{color:var(--text-muted)}
+.btn-refresh{padding:5px 12px;border:1px solid var(--border);background:var(--paper);font-size:12px;font-family:inherit;font-weight:400;cursor:pointer;color:var(--text-secondary);flex-shrink:0}
+.btn-refresh:hover{border-color:var(--ink);color:var(--ink)}
+.btn-refresh.spin{animation:spin .5s linear}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* Tool grid */
+.content{flex:1;max-width:1080px;width:100%;margin:0 auto;padding:6px 32px 32px}
+.cat-bar{max-width:1080px;margin:0 auto;padding:8px 32px;display:flex;align-items:center;gap:6px}
+.cat-pill{flex:1 1 0;padding:3px 10px;border:1px solid var(--border);background:var(--paper);font-size:11px;font-family:inherit;font-weight:400;cursor:pointer;color:var(--text-secondary);text-align:center;white-space:nowrap}
+.cat-pill:hover{border-color:var(--ink);color:var(--ink)}
+.cat-pill.active{background:var(--ink);border-color:var(--ink);color:var(--paper)}
+.cat-pill .count{opacity:.55;margin-left:2px;font-size:10px}
+.tool-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px;margin-top:8px}
+.tool-card{background:var(--paper);padding:16px;display:flex;flex-direction:column;gap:10px;transition:background .15s,box-shadow .15s;position:relative;border:1px solid var(--border);box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.tool-card:hover{background:var(--paper-tint);box-shadow:0 2px 8px rgba(0,0,0,.1)}
+.tool-card.virtual .card-mono{opacity:.55}
+.tool-card.virtual .card-name{color:var(--text-secondary)}
+.tool-card.self{border-left:3px solid var(--ink)}
+
+.card-head{display:flex;justify-content:space-between;align-items:center}
+.card-dot{width:7px;height:7px;flex-shrink:0}
+.card-dot.on{background:var(--status-on);animation:pulse 2s ease-in-out infinite}
+.card-dot.off{background:var(--status-off)}
+.card-cat-label{font-size:10px;color:var(--text-muted);font-weight:300;letter-spacing:.02em}
+.cat-tip{max-width:1080px;margin:0 auto;padding:0 32px 8px;font-size:11px;color:var(--text-muted);font-weight:300;height:28px;line-height:1.4;opacity:1;transition:opacity .15s}
+.cat-tip.hidden{opacity:0}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+
+.card-body{display:flex;align-items:flex-start;gap:12px;flex:1}
+.card-mono{flex-shrink:0;width:36px;height:36px;background:var(--ink);color:var(--paper);display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono','SF Mono','Consolas',monospace;font-size:12px;font-weight:500}
+.card-info{flex:1;min-width:0}
+.card-name{font-size:15px;font-weight:400;letter-spacing:-0.01em;line-height:1.35}
+.card-id{font-size:11px;font-family:'JetBrains Mono','SF Mono','Consolas',monospace;color:var(--text-muted);font-weight:400;display:block;margin-top:1px}
+.card-meta{font-size:11px;color:var(--text-muted);font-weight:300;margin-top:4px;display:flex;align-items:center;gap:8px}
+.card-port{font-family:'JetBrains Mono','SF Mono','Consolas',monospace;color:var(--text-muted)}
+.card-desc{font-size:11px;color:var(--text-secondary);font-weight:300;line-height:1.45;margin-top:4px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+
+.card-actions{display:flex;gap:8px;margin-top:2px}
+.btn{padding:4px 12px;border:1px solid var(--border);background:var(--paper);font-size:12px;font-family:inherit;font-weight:400;cursor:pointer;color:var(--text-secondary);text-decoration:none;display:inline-flex;align-items:center;white-space:nowrap}
+.btn:hover{border-color:var(--ink);color:var(--ink)}
+.btn.go{background:#2D2D2D;border-color:#2D2D2D;color:#fff;font-weight:500}
+.btn.go:hover{background:#1a1a1a;border-color:#1a1a1a;color:#fff}
+.btn.go.starting{opacity:.6}
+.btn.stop{border-color:#C0392B;color:#C0392B}
+.btn.stop:hover{background:#C0392B;border-color:#C0392B;color:#fff}
+.btn.open-done{background:var(--status-on);border-color:var(--status-on);color:#fff;font-weight:500}
+.btn.open-done:hover{background:#157A34;border-color:#157A34;color:#fff}
+
+/* Footer — principles grid */
+.footer{max-width:1080px;width:100%;margin:0 auto;padding:36px 32px;border-top:1px solid var(--border)}
+.principles{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1px;background:var(--border);margin-bottom:32px}
+.principle{background:var(--paper);padding:24px 20px}
+.principle-num{font-family:'JetBrains Mono','SF Mono','Consolas',monospace;font-size:10px;font-weight:500;color:var(--ink);opacity:.45;margin-bottom:10px;letter-spacing:.04em}
+.principle-head{font-size:15px;font-weight:500;color:var(--text);margin-bottom:6px;letter-spacing:-0.01em;line-height:1.4}
+.principle-body{font-size:12px;font-weight:300;color:var(--text-secondary);line-height:1.6}
+.footer-bottom{margin-top:0;padding-top:18px;border-top:1px solid var(--border);font-size:11px;color:var(--text-muted);display:flex;align-items:center;justify-content:space-between;font-family:'JetBrains Mono','SF Mono','Consolas',monospace}
+
+/* Empty */
+.empty{text-align:center;padding:72px 20px;color:var(--text-muted)}
+.empty p{font-size:14px;margin-top:10px}
+.empty code{font-size:12px;background:var(--paper-tint);padding:2px 8px}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="hero-inner">
+    <div class="hero-mono">AGENTBOARD</div>
+    <h1><b>工具架</b></h1>
+    <div class="tagline" style="font-size:15px;opacity:.7;font-weight:300;max-width:520px">文件即注册，状态即界面</div>
+    <div class="tagline">Agent 注册，自动发现，实时状态——人只管看。</div>
+  </div>
+</div>
+
+<div class="toolbar">
+  <div class="stats-row" id="statsRow">
+    <div class="stat-card active" data-filter="all" onclick="setFilter('all')">
+      <span class="stat-num" id="totalCount">—</span>
+      <span class="stat-label">全部</span>
+    </div>
+    <div class="stat-card" data-filter="opened" onclick="setFilter('opened')">
+      <span class="stat-num" id="openedCount">—</span>
+      <span class="stat-label">打开中</span>
+    </div>
+    <div class="stat-card" data-filter="openable" onclick="setFilter('openable')">
+      <span class="stat-num" id="openableCount">—</span>
+      <span class="stat-label">打开</span>
+    </div>
+    <div class="stat-card" data-filter="stopped" onclick="setFilter('stopped')">
+      <span class="stat-num" id="stoppedCount">—</span>
+      <span class="stat-label">未启动</span>
+    </div>
+  </div>
+  <input class="search-input" placeholder="搜索…" oninput="render()" id="searchInput">
+  <button class="btn-refresh" onclick="fetchTools()" id="refreshBtn">刷新</button>
+</div>
+
+<div class="cat-bar" id="catBar"></div>
+<div class="cat-tip" id="catTip"></div>
+
+<div class="content">
+  <div class="tool-grid" id="toolGrid"></div>
+</div>
+
+<div class="footer">
+  <div class="principles">
+    <div class="principle">
+      <div class="principle-num">01</div>
+      <div class="principle-head">想看状态？打开就有</div>
+      <div class="principle-body">绿色 = 运行中，灰色 = 未启动。"打开中"说明正在用，"打开"说明可点开用。</div>
+    </div>
+    <div class="principle">
+      <div class="principle-num">02</div>
+      <div class="principle-head">想控制？点按钮就行</div>
+      <div class="principle-body">启动、停止一键操作。Agent 也能 curl API 自己来，不用人动手。</div>
+    </div>
+    <div class="principle">
+      <div class="principle-num">03</div>
+      <div class="principle-head">想加工具？告诉 Agent</div>
+      <div class="principle-body">Agent 写入注册文件，工具架自动扫描发现。不需要人碰配置，刷新即出现。</div>
+    </div>
+    <div class="principle">
+      <div class="principle-num">04</div>
+      <div class="principle-head">文件即注册，无数据库</div>
+      <div class="principle-body">一个 manifest.json 就是一个工具。没有中心配置，没有 YAML 编排文件。删掉文件夹即下架。</div>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>工具架 · Agentboard</span>
+    <span>文件即注册，状态即界面</span>
+  </div>
+</div>
+
+<script>
+var tools = [];
+var starting = {}; // id → true when waiting for start
+var stopping = {}; // id → true when waiting for stop
+var opened = {};   // id → true when user clicked "打开" this session
+try { opened = JSON.parse(sessionStorage.getItem('opened')||'{}'); } catch(_) {}
+var filter = 'all';
+var catFilter = 'all';
+
+// 分类显示名 + 悬停解释。key 匹配 manifest.json 里的 category 字段
+var catMeta = {
+  '基础设施':  {label:'基础设施', tip:'Agent 控制平面 · 自指工具 — 工具链的骨架，管其他工具的启动/发现/可视化'},
+  '内容':     {label:'内容浏览', tip:'版式画廊 · Skill 目录 · 可视化面板 — 浏览和发现，不跑模型'},
+  '开发':     {label:'效率工具', tip:'浏览器自动化 · 原型搭建 — 开发辅助，轻量级'},
+  'AIGC':     {label:'AIGC',     tip:'图像生成 · 音乐生成 · 创意画布 — AI 驱动的数字内容创作'},
+  'AI 模型':  {label:'模型服务', tip:'本地大模型推理 · RAG 问答 · Agent 自主决策 — CPU/GPU 推理服务'},
+  '其他':     {label:'其他',     tip:'未分类工具'}
+};
+
+function setFilter(f) {
+  filter = f;
+  document.querySelectorAll('.stat-card').forEach(function(c){ c.classList.remove('active'); });
+  var card = document.querySelector('.stat-card[data-filter="' + f + '"]');
+  if (card) card.classList.add('active');
+  render();
+}
+
+function getSearchTerm() {
+  var inp = document.getElementById('searchInput');
+  return (inp && inp.value || '').trim().toLowerCase();
+}
+
+function setCatFilter(cat) {
+  catFilter = cat;
+  renderCatBar();
+  render();
+}
+
+function renderCatBar() {
+  var bar = document.getElementById('catBar');
+  var tipEl = document.getElementById('catTip');
+  var cats = {};
+  tools.forEach(function(t){
+    var c = t.category || '其他';
+    cats[c] = (cats[c]||0) + 1;
+  });
+  var catRank = {'基础设施':0, '内容':1, '开发':2, 'AIGC':3, 'AI 模型':4};
+  var names = Object.keys(cats).sort(function(a,b){ return (catRank[a]!=null?catRank[a]:99) - (catRank[b]!=null?catRank[b]:99); });
+  if (names.length <= 1) { bar.innerHTML = ''; if(tipEl) tipEl.textContent = ''; return; }
+
+  var allCount = tools.length;
+  var html = '<button class="cat-pill' + (catFilter==='all'?' active':'') + '" onclick="setCatFilter(\'all\')" onmouseenter="showCatTip(\'all\')" onmouseleave="hideCatTip()">全部<span class="count">' + allCount + '</span></button>';
+  names.forEach(function(c){
+    var meta = catMeta[c] || {label:c, tip:''};
+    html += '<button class="cat-pill' + (catFilter===c?' active':'') + '" onclick="setCatFilter(\'' + c + '\')" onmouseenter="showCatTip(\'' + c + '\')" onmouseleave="hideCatTip()">' + meta.label + '<span class="count">' + cats[c] + '</span></button>';
+  });
+  bar.innerHTML = html;
+}
+
+function showCatTip(cat) {
+  var tipEl = document.getElementById('catTip');
+  if (!tipEl) return;
+  if (cat === 'all') {
+    tipEl.textContent = '所有已注册工具 — 按分类分组排列，同类内运行中优先';
+  } else {
+    var meta = catMeta[cat];
+    tipEl.textContent = meta ? meta.tip : '';
+  }
+  tipEl.classList.remove('hidden');
+}
+function hideCatTip() {
+  var tipEl = document.getElementById('catTip');
+  if (tipEl) tipEl.classList.add('hidden');
+}
+
+function monogram(name) {
+  var s = (name||'').trim();
+  var en = s.match(/[A-Za-z][A-Za-z\s]+/);
+  if (en) {
+    var w = en[0].split(/\s+/).filter(Boolean);
+    if (w.length >= 2) return (w[0][0] + w[w.length-1][0]).toUpperCase();
+    if (w.length === 1 && w[0].length >= 2) return w[0].substring(0,2).toUpperCase();
+  }
+  var cn = s.replace(/[^一-鿿]/g,'');
+  if (cn.length >= 2) return cn[0] + cn[cn.length-1];
+  var ascii = s.replace(/[^A-Za-z0-9]/g,'');
+  if (ascii.length >= 2) return ascii.substring(0,2).toUpperCase();
+  return (s.substring(0,2) || '??').toUpperCase();
+}
+
+function isVirtual(t) {
+  var hasPorts = (t.ports && t.ports.length > 0) || t.port;
+  return !hasPorts && !t.startCommand && !t.stopCommand;
+}
+
+async function fetchTools() {
+  var btn = document.getElementById('refreshBtn');
+  btn.classList.add('spin');
+  try {
+    var res = await fetch('/api/tools');
+    var data = await res.json();
+    if (data.ok) {
+      tools = data.tools;
+      // 清除已生效的 starting / stopping 状态
+      Object.keys(starting).forEach(function(id){
+        var t = tools.find(function(x){return x.id===id;});
+        if (t && t.running) delete starting[id];
+      });
+      Object.keys(stopping).forEach(function(id){
+        var t = tools.find(function(x){return x.id===id;});
+        if (t && !t.running) delete stopping[id];
+      });
+      updateCounts();
+      renderCatBar();
+      render();
+    }
+  } catch(e) {
+    document.getElementById('totalCount').textContent = '—';
+    document.getElementById('openableCount').textContent = '—';
+    document.getElementById('openedCount').textContent = '—';
+    document.getElementById('stoppedCount').textContent = '—';
+  }
+  btn.classList.remove('spin');
+}
+
+function render() {
+  var grid = document.getElementById('toolGrid');
+  if (!tools.length) {
+    grid.innerHTML = '<div class="empty"><p>还没有工具</p><p>Agent 会在 <code>~/.claude/tools/</code> 下写入注册文件，自动上架。</p></div>';
+    return;
+  }
+
+  // Filter
+  var sorted = tools.slice();
+  if (filter === 'openable') sorted = sorted.filter(function(t){return t.running && !opened[t.id];});
+  if (filter === 'opened') sorted = sorted.filter(function(t){return t.running && opened[t.id];});
+  if (filter === 'stopped') sorted = sorted.filter(function(t){return !t.running;});
+  if (catFilter !== 'all') sorted = sorted.filter(function(t){return (t.category||'其他') === catFilter;});
+  var search = getSearchTerm();
+  if (search) {
+    sorted = sorted.filter(function(t){
+      return t.name.toLowerCase().indexOf(search) !== -1 || t.id.toLowerCase().indexOf(search) !== -1 || (t.description||'').toLowerCase().indexOf(search) !== -1;
+    });
+  }
+
+  // Sort: category group, then running first, then order
+  var catOrder = {'基础设施':0, '内容':1, '开发':2, 'AIGC':3, 'AI 模型':4};
+  sorted.sort(function(a,b){
+    var ca = catOrder[a.category] != null ? catOrder[a.category] : (catOrder[a.category] = 99);
+    var cb = catOrder[b.category] != null ? catOrder[b.category] : (catOrder[b.category] = 99);
+    if (ca !== cb) return ca - cb;
+    if (a.running && !b.running) return -1;
+    if (!a.running && b.running) return 1;
+    return (a.order||99) - (b.order||99);
+  });
+
+  grid.innerHTML = sorted.map(function(t){
+    var ports = t.ports || (t.port ? [t.port] : []);
+    var portsText = ports.length ? '端口 ' + ports.map(function(p){return ':'+p;}).join(', ') : '';
+    var v = isVirtual(t);
+    var hasCommands = t.startCommand || t.stopCommand;
+    var klass = t.running ? 'on' : 'off';
+    var pending = starting[t.id];
+    var halting = stopping[t.id];
+
+    var isSelf = t.id === 'dashboard';
+    var actionHtml = '';
+    if (pending) {
+      actionHtml = '<button class="btn go starting">启动中…</button>';
+    } else if (halting) {
+      actionHtml = '<button class="btn stop" style="opacity:.6">停止中…</button>';
+    } else if (hasCommands && !isSelf) {
+      if (t.running) {
+        actionHtml = '<button class="btn stop" onclick="event.stopPropagation();stopTool(\'' + t.id + '\')">停止</button>';
+      } else {
+        actionHtml = '<button class="btn go" onclick="event.stopPropagation();startTool(\'' + t.id + '\')">启动</button>';
+      }
+    }
+
+    var isOpened = opened[t.id];
+    var openLabel = isOpened ? '打开中' : '打开';
+    var openClass = isOpened ? 'btn open-done' : 'btn';
+    var openBtn = (t.url && (t.running || v)) ? '<a href="' + t.url + '" target="_blank" class="' + openClass + '" onclick="event.stopPropagation();markOpened(\'' + t.id + '\')">' + openLabel + '</a>' : '';
+
+    return '<div class="tool-card' + (v?' virtual':'') + (isSelf?' self':'') + '" data-id="' + t.id + '">'
+      + '<div class="card-head">'
+        + '<span class="card-dot ' + klass + '"></span>'
+        + '<span class="card-cat-label">' + (catMeta[t.category]&&catMeta[t.category].label || (t.category||'其他')) + '</span>'
+      + '</div>'
+      + '<div class="card-body">'
+        + '<div class="card-mono">' + monogram(t.name) + '</div>'
+        + '<div class="card-info">'
+          + '<div class="card-name">' + (t.icon||'') + ' ' + t.name + '</div>'
+          + '<div class="card-id">' + t.id + '</div>'
+          + (portsText || t.description ? '<div class="card-meta">' + (portsText||'') + '</div>' : '')
+          + (t.description ? '<div class="card-desc">' + t.description + '</div>' : '')
+        + '</div>'
+      + '</div>'
+      + (openBtn || actionHtml ? '<div class="card-actions">' + openBtn + actionHtml + '</div>' : '')
+    + '</div>';
+  }).join('');
+}
+
+function markOpened(id) {
+  opened[id] = true;
+  try { sessionStorage.setItem('opened', JSON.stringify(opened)); } catch(_) {}
+  updateCounts();
+}
+
+function pollUntil(id, wantRunning, maxTries) {
+  maxTries = maxTries || 30;
+  var tries = 0;
+  function check() {
+    fetch('/api/tools').then(function(r){ return r.json(); }).then(function(data){
+      if (!data.ok) return;
+      var t = data.tools.find(function(x){ return x.id === id; });
+      if (t && t.running === wantRunning) {
+        tools = data.tools;
+        if (wantRunning) delete starting[id]; else delete stopping[id];
+        updateCounts();
+        render();
+        return;
+      }
+      tries++;
+      if (tries >= maxTries) {
+        if (wantRunning) delete starting[id]; else delete stopping[id];
+        fetchTools();
+        return;
+      }
+      setTimeout(check, 500);
+    }).catch(function(){
+      tries++;
+      if (tries >= maxTries) {
+        if (wantRunning) delete starting[id]; else delete stopping[id];
+        fetchTools();
+        return;
+      }
+      setTimeout(check, 500);
+    });
+  }
+  setTimeout(check, 500);
+}
+
+async function startTool(id) {
+  starting[id] = true;
+  render();
+  try {
+    var res = await fetch('/api/tools/start/' + id, {method:'POST'});
+    var data = await res.json();
+    if (data.ok) {
+      pollUntil(id, true);
+    } else {
+      delete starting[id];
+      render();
+      alert('启动失败: ' + (data.error||'未知错误'));
+    }
+  } catch(e) {
+    delete starting[id];
+    render();
+    alert('连接失败');
+  }
+}
+
+async function stopTool(id) {
+  stopping[id] = true;
+  render();
+  try {
+    var res = await fetch('/api/tools/stop/' + id, {method:'POST'});
+    var data = await res.json();
+    if (data.ok) {
+      pollUntil(id, false);
+    } else {
+      delete stopping[id];
+      render();
+      alert('停止失败: ' + (data.error||'未知错误'));
+    }
+  } catch(e) {
+    delete stopping[id];
+    render();
+    alert('连接失败');
+  }
+}
+
+function updateCounts() {
+  document.getElementById('totalCount').textContent = tools.length;
+  document.getElementById('openableCount').textContent = tools.filter(function(t){return t.running && !opened[t.id];}).length;
+  document.getElementById('openedCount').textContent = tools.filter(function(t){return t.running && opened[t.id];}).length;
+  document.getElementById('stoppedCount').textContent = tools.filter(function(t){return !t.running;}).length;
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  markOpened('dashboard');
+  fetchTools();
+});
+</script>
+</body>
+</html>
