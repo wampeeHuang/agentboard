@@ -1,6 +1,6 @@
 # Agentboard · 工具架
 
-**Filesystem-as-registry toolchain control plane for AI agents.**
+**放一个 manifest.json，多一个可控工具。给人看状态，给 Agent 调 API。**
 
 Not another homelab dashboard. No YAML config file. Tools register by dropping a `manifest.json` into a directory. The dashboard auto-discovers them, checks port status at OS level, and provides one-click start/stop — for both humans and AI agents.
 
