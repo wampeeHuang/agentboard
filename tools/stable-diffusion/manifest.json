@@ -1,0 +1,14 @@
+{
+  "name": "Stable Diffusion WebUI",
+  "id": "stable-diffusion",
+  "description": "Stable Diffusion WebUI (秋叶整合包 v4.10)。⚠ 启动吃4GB+显存，不能和ComfyUI同时跑",
+  "icon": "🖼",
+  "version": "1.0.0",
+  "port": 7860,
+  "projectPath": "D:\\0-Software\\AI\\sd-webui-aki\\sd-webui-aki-v4.10\\sd-webui-aki-v4.10",
+  "url": "http://localhost:7860",
+  "startCommand": "cd /d D:\\0-Software\\AI\\sd-webui-aki\\sd-webui-aki-v4.10\\sd-webui-aki-v4.10 && python launch.py",
+  "stopCommand": "npx kill-port 7860",
+  "order": 11,
+  "category": "AIGC"
+}

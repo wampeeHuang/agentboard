@@ -1,10 +1,10 @@
 {
-  "name": "Skill 系统结构图",
   "id": "skill-diagrams",
-  "description": "自动扫描 skills/*/references/system-diagram.html，Swiss 风可视化面板。图是 skill 的第一行代码。",
+  "name": "Skill 系统结构图",
+  "description": "4 个 skill 的 Swiss 系统结构图面板。自动扫描 ~/.claude/skills/*/references/system-diagram.html",
   "icon": "📐",
   "version": "1.0.0",
   "url": "http://localhost:3099/skills",
-  "order": 1,
+  "order": 3,
   "category": "基础设施"
 }

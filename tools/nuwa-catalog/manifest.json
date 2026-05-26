@@ -1,0 +1,14 @@
+{
+  "id": "nuwa-catalog",
+  "name": "人物思维顾问局",
+  "icon": "💭",
+  "version": "1.0.0",
+  "port": 3090,
+  "projectPath": "/d/projects/nuwa-perspective-catalog",
+  "url": "http://localhost:3090",
+  "publicUrl": "https://nuwa-perspective-catalog.vercel.app",
+  "startCommand": "npx serve -l 3090 --no-clipboard",
+  "stopCommand": "npx kill-port 3090",
+  "order": 4,
+  "category": "内容"
+}

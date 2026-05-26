@@ -1,0 +1,14 @@
+{
+  "name": "MiniCPM-V 4.6",
+  "id": "minicpm-v",
+  "description": "POST /v1/chat/completions (OpenAI格式) · 文本+图片(base64)输入 · 返回thinking推理链 · 1.3B Q4_K_M · GPU~2.5GB · 图片: content数组含image_url data URI",
+  "icon": "👁",
+  "version": "1.0.0",
+  "port": 8080,
+  "projectPath": "C:\\Users\\Administrator\\llama-cpp",
+  "url": "http://localhost:8080",
+  "startCommand": "cd /d C:\\Users\\Administrator\\llama-cpp && llama-server.exe -m MiniCPM-V-4_6-Q4_K_M.gguf --mmproj mmproj-MiniCPM-V-4_6-f16.gguf --port 8080 --host 127.0.0.1 -ngl 99",
+  "stopCommand": "npx kill-port 8080",
+  "order": 0,
+  "category": "AI 模型"
+}
