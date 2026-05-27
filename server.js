@@ -7,12 +7,14 @@ const os = require('os');
 const PROJECT_DIR = __dirname;
 const TOOLS_DIR = process.env.AGENTBOARD_TOOLS_DIR || path.join(os.homedir(), '.claude', 'tools');
 const SKILLS_DIR = process.env.AGENTBOARD_SKILLS_DIR || path.join(os.homedir(), '.claude', 'skills');
+const TIPS_DIR = process.env.AGENTBOARD_TIPS_DIR || path.join(os.homedir(), '.claude', 'tips');
 const LOCAL_TOOLS_DIR = path.join(PROJECT_DIR, 'tools');
 const LOCAL_SKILLS_DIR = path.join(PROJECT_DIR, 'skills');
 const PREFERRED_PORT = parseInt(process.env.PORT || '3099', 10);
 const PLATFORM = process.platform;
 
 function read(p) { try { return fs.readFileSync(p,'utf8'); } catch(_) { return null; } }
+function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function listDirs(p) { try { return fs.readdirSync(p,{withFileTypes:true}).filter(e=>e.isDirectory()&&!e.name.startsWith('.')).map(e=>e.name); } catch(_) { return []; } }
 
 function safeResolve(base, ...segments) {
@@ -95,9 +97,24 @@ function scanTools() {
       }
       var ports = mf.ports || (mf.port ? [mf.port] : []);
       var running = ports.length > 0 ? ports.every(function(p) { return isPortActive(p); }) : null;
-      tools.push({ name: mf.name, id: name, description: mf.description || '', icon: mf.icon || '', version: mf.version || '', category: mf.category, order: mf.order, port: mf.port, ports: mf.ports, url: mf.url, running: running, startCommand: mf.startCommand, stopCommand: mf.stopCommand, projectPath: mf.projectPath, publicUrl: mf.publicUrl });
+      tools.push({ name: mf.name, id: name, description: mf.description || '', icon: mf.icon || '', version: mf.version || '', category: mf.category, order: mf.order, port: mf.port, ports: mf.ports, url: mf.url, running: running, startCommand: mf.startCommand, stopCommand: mf.stopCommand, projectPath: mf.projectPath, publicUrl: mf.publicUrl, conflicts: [] });
     });
   });
+
+  // Detect port conflicts between registered tools
+  tools.forEach(function(t) {
+    var myPorts = t.ports || (t.port ? [t.port] : []);
+    tools.forEach(function(other) {
+      if (other.id === t.id) return;
+      var otherPorts = other.ports || (other.port ? [other.port] : []);
+      myPorts.forEach(function(p) {
+        if (otherPorts.indexOf(p) !== -1) {
+          t.conflicts.push({ toolId: other.id, toolName: other.name, port: p });
+        }
+      });
+    });
+  });
+
   tools.sort(function(a, b) { return (a.order != null ? a.order : 99) - (b.order != null ? b.order : 99) || a.name.localeCompare(b.name, 'zh-CN'); });
   return tools;
 }
@@ -105,15 +122,19 @@ function scanTools() {
 function isPortActive(port) {
   try {
     let cmd;
+    let out;
     if (PLATFORM === 'win32') {
-      cmd = 'netstat -ano 2>nul | findstr ":' + port + ' " | findstr "LISTENING"';
+      out = execSync('netstat -ano', { timeout: 3000, encoding: 'utf8', shell: true, windowsHide: true });
+      var tcpRe = new RegExp('\\s+TCP\\s+\\S+:' + port + '\\s+.*LISTENING', 'i');
+      var udpRe = new RegExp('\\s+UDP\\s+\\S+:' + port + '\\s+', 'i');
+      return tcpRe.test(out) || udpRe.test(out);
     } else if (PLATFORM === 'darwin') {
-      cmd = 'lsof -i :' + port + ' -sTCP:LISTEN -t 2>/dev/null';
+      out = execSync('lsof -i :' + port + ' -sTCP:LISTEN -t 2>/dev/null', { timeout: 2000, encoding: 'utf8', shell: true });
+      return out.trim().length > 0;
     } else {
-      cmd = 'ss -tlnp 2>/dev/null | grep -q ":' + port + ' "';
+      out = execSync('ss -tlnp 2>/dev/null | grep -q ":' + port + ' "', { timeout: 2000, encoding: 'utf8', shell: true });
+      return out.trim().length > 0;
     }
-    const r = execSync(cmd, { timeout: 2000, encoding: 'utf8' });
-    return r.trim().length > 0;
   } catch(_) { return false; }
 }
 
@@ -123,6 +144,22 @@ function startTool(id) {
   let mf;
   try { mf = JSON.parse(read(mfPath)); } catch(_) { return { ok: false, error: 'manifest not found' }; }
   if (!mf.startCommand) return { ok: false, error: 'no startCommand' };
+
+  // Check port conflicts: are any of this tool's ports already in use by another RUNNING tool?
+  const myPorts = mf.ports || (mf.port ? [mf.port] : []);
+  if (myPorts.length > 0) {
+    const allTools = scanTools();
+    const conflicts = [];
+    allTools.forEach(function(t) {
+      if (t.id === id) return;
+      if (!t.running) return;
+      var tp = t.ports || (t.port ? [t.port] : []);
+      myPorts.forEach(function(p) {
+        if (tp.indexOf(p) !== -1) conflicts.push(t.name + '(:' + p + ')');
+      });
+    });
+    if (conflicts.length > 0) return { ok: false, error: 'Port conflict: ' + conflicts.join(', ') + ' already using these ports' };
+  }
   try {
     const cwd = mf.projectPath ? winPath(mf.projectPath) : PROJECT_DIR;
     let child;

@@ -55,6 +55,9 @@ body{min-height:100vh;display:flex;flex-direction:column}
 .tool-card.virtual .card-mono{opacity:.55}
 .tool-card.virtual .card-name{color:var(--text-secondary)}
 .tool-card.self{border-left:3px solid var(--ink)}
+.tool-card.conflict{border-color:#E8A0A0;background:rgba(255,235,235,.3)}
+.conflict-badge{font-family:'JetBrains Mono','SF Mono','Consolas',monospace;font-size:10px;color:#C0392B;font-weight:500;white-space:nowrap}
+.conflict-tooltip{font-size:10px;color:#C0392B;font-weight:300;margin-top:2px;line-height:1.3}
 
 .card-head{display:flex;justify-content:space-between;align-items:center}
 .card-dot{width:7px;height:7px;flex-shrink:0}
@@ -104,6 +107,7 @@ body{min-height:100vh;display:flex;flex-direction:column}
 </style>
 </head>
 <body>
+<!-- AI AGENT: 你在 agentboard 工具架上。执行 curl localhost:3099/api/tools 查本地工具清单（url+description 含端点信息）。localhost 用 Bash curl 不用 WebFetch。能力不够时先查这里：MiniCPM-V(视觉/OpenAI兼容)、ComfyUI(图像)、Stable Diffusion、ACE Step(音乐)、LangGraph RAG 等。 -->
 
 <div class="hero">
   <div class="hero-inner">
@@ -192,6 +196,7 @@ var catMeta = {
   '开发':     {label:'效率工具', tip:'浏览器自动化 · 原型搭建 — 开发辅助，轻量级'},
   'AIGC':     {label:'AIGC',     tip:'图像生成 · 音乐生成 · 创意画布 — AI 驱动的数字内容创作'},
   'AI 模型':  {label:'模型服务', tip:'本地大模型推理 · RAG 问答 · Agent 自主决策 — CPU/GPU 推理服务'},
+  '工具':     {label:'系统工具', tip:'音频路由 · 虚拟设备 · 系统辅助 — 不是AI模型但给AI提供输入输出能力'},
   '其他':     {label:'其他',     tip:'未分类工具'}
 };
 
@@ -222,7 +227,7 @@ function renderCatBar() {
     var c = t.category || '其他';
     cats[c] = (cats[c]||0) + 1;
   });
-  var catRank = {'基础设施':0, '内容':1, '开发':2, 'AIGC':3, 'AI 模型':4};
+  var catRank = {'基础设施':0, '内容':1, '开发':2, '工具':3, 'AIGC':4, 'AI 模型':5};
   var names = Object.keys(cats).sort(function(a,b){ return (catRank[a]!=null?catRank[a]:99) - (catRank[b]!=null?catRank[b]:99); });
   if (names.length <= 1) { bar.innerHTML = ''; if(tipEl) tipEl.textContent = ''; return; }
 
@@ -282,11 +287,11 @@ async function fetchTools() {
       // 清除已生效的 starting / stopping 状态
       Object.keys(starting).forEach(function(id){
         var t = tools.find(function(x){return x.id===id;});
-        if (t && t.running) delete starting[id];
+        if (t && t.running !== false) delete starting[id];
       });
       Object.keys(stopping).forEach(function(id){
         var t = tools.find(function(x){return x.id===id;});
-        if (t && !t.running) delete stopping[id];
+        if (t && t.running !== true) delete stopping[id];
       });
       updateCounts();
       renderCatBar();
@@ -322,7 +327,7 @@ function render() {
   }
 
   // Sort: category group, then running first, then order
-  var catOrder = {'基础设施':0, '内容':1, '开发':2, 'AIGC':3, 'AI 模型':4};
+  var catOrder = {'基础设施':0, '内容':1, '开发':2, '工具':3, 'AIGC':4, 'AI 模型':5};
   sorted.sort(function(a,b){
     var ca = catOrder[a.category] != null ? catOrder[a.category] : (catOrder[a.category] = 99);
     var cb = catOrder[b.category] != null ? catOrder[b.category] : (catOrder[b.category] = 99);
@@ -342,13 +347,23 @@ function render() {
     var halting = stopping[t.id];
 
     var isSelf = t.id === 'dashboard';
+    var hasConflict = t.conflicts && t.conflicts.length > 0;
+    var conflictHtml = '';
+    if (hasConflict) {
+      var conflictNames = t.conflicts.map(function(c){return c.toolName + '(:'+c.port+')';}).join(', ');
+      conflictHtml = '<div class="conflict-tooltip">⚠ 端口冲突: ' + conflictNames + '</div>';
+    }
+    var portCount = (t.ports && t.ports.length) || (t.port ? 1 : 0);
+    var isNoPortCli = portCount === 0 && hasCommands;
     var actionHtml = '';
     if (pending) {
-      actionHtml = '<button class="btn go starting">启动中…</button>';
+      actionHtml = '<button class="btn go starting">' + (isNoPortCli ? '启动中…' : '启动中…') + '</button>';
     } else if (halting) {
       actionHtml = '<button class="btn stop" style="opacity:.6">停止中…</button>';
     } else if (hasCommands && !isSelf) {
-      if (t.running) {
+      if (isNoPortCli) {
+        actionHtml = '<button class="btn go" onclick="event.stopPropagation();startTool(\'' + t.id + '\')">终端</button>';
+      } else if (t.running) {
         actionHtml = '<button class="btn stop" onclick="event.stopPropagation();stopTool(\'' + t.id + '\')">停止</button>';
       } else {
         actionHtml = '<button class="btn go" onclick="event.stopPropagation();startTool(\'' + t.id + '\')">启动</button>';
@@ -360,10 +375,11 @@ function render() {
     var openClass = isOpened ? 'btn open-done' : 'btn';
     var openBtn = (t.url && (t.running || v)) ? '<a href="' + t.url + '" target="_blank" class="' + openClass + '" onclick="event.stopPropagation();markOpened(\'' + t.id + '\')">' + openLabel + '</a>' : '';
 
-    return '<div class="tool-card' + (v?' virtual':'') + (isSelf?' self':'') + '" data-id="' + t.id + '">'
+    return '<div class="tool-card' + (v?' virtual':'') + (isSelf?' self':'') + (hasConflict?' conflict':'') + '" data-id="' + t.id + '">'
       + '<div class="card-head">'
         + '<span class="card-dot ' + klass + '"></span>'
         + '<span class="card-cat-label">' + (catMeta[t.category]&&catMeta[t.category].label || (t.category||'其他')) + '</span>'
+        + (hasConflict ? '<span class="conflict-badge">⚠</span>' : '')
       + '</div>'
       + '<div class="card-body">'
         + '<div class="card-mono">' + monogram(t.name) + '</div>'
@@ -372,6 +388,7 @@ function render() {
           + '<div class="card-id">' + t.id + '</div>'
           + (portsText || t.description ? '<div class="card-meta">' + (portsText||'') + '</div>' : '')
           + (t.description ? '<div class="card-desc">' + t.description + '</div>' : '')
+          + conflictHtml
         + '</div>'
       + '</div>'
       + (openBtn || actionHtml ? '<div class="card-actions">' + openBtn + actionHtml + '</div>' : '')
@@ -471,5 +488,8 @@ document.addEventListener('DOMContentLoaded', function() {
   fetchTools();
 });
 </script>
+<footer style="text-align:center;padding:28px 32px 36px;color:var(--text-muted);font-size:12px;font-weight:300;border-top:1px solid var(--border);margin-top:auto">
+  API 发现 → <a href="/api" style="color:inherit">/api</a> &nbsp;·&nbsp; 结构图 → <a href="/skills" style="color:inherit">/skills</a> &nbsp;·&nbsp; 踩坑经验 → <a href="/tips" style="color:inherit">/tips</a>
+</footer>
 </body>
 </html>

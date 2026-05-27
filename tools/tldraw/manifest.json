@@ -4,11 +4,11 @@
   "description": "tldraw 无限画布 — MIT开源，47k stars，自由接入API",
   "icon": "🎨",
   "version": "1.0.0",
-  "port": 5173,
+  "port": 5178,
   "projectPath": "C:\\Users\\Administrator\\projects\\tldraw-canvas",
-  "url": "http://localhost:5173",
-  "startCommand": "cd C:\\Users\\Administrator\\projects\\tldraw-canvas && npm run dev",
-  "stopCommand": "npx kill-port 5173",
+  "url": "http://localhost:5178",
+  "startCommand": "cd C:\\Users\\Administrator\\projects\\tldraw-canvas && npm run dev -- --port 5178",
+  "stopCommand": "npx kill-port 5178",
   "order": 10,
   "category": "AIGC"
 }
