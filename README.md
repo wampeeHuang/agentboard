@@ -16,19 +16,6 @@ Not another homelab dashboard. No YAML config file. Tools register by dropping a
     └── manifest.json
 ```
 
-## Why this exists
-
-Existing dashboards (Dashy, Heimdall, Homer, Homarr) are built for **humans** to configure manually. Agentboard is built for **AI agents** — an agent can `Write` a manifest.json, `exec` a startCommand, and `curl /api/tools` to verify status. The filesystem IS the registry.
-
-| | Dashy/Heimdall/Homer | Agentboard |
-|---|---|---|
-| Config | YAML file, human-edited | manifest.json per tool, agent-writable |
-| Discovery | Manual config | Auto-scanned from directory |
-| Status check | HTTP ping | OS-level `netstat`/`lsof`/`ss` |
-| Start/Stop | Not built in | Shell commands from manifest |
-| Agent API | None | REST API with schema discovery |
-| For AI agents | No | Yes — designed for it |
-
 ## Quick start
 
 ```bash
@@ -190,6 +177,49 @@ No database migration. No config file merge conflicts. The filesystem is the sou
 | macOS | `lsof -i` | `sh -c <command>` |
 | Linux | `ss -tlnp` | `sh -c <command>` |
 
+## Skill diagrams
+
+Agentboard auto-discovers `system-diagram.html` files from skill directories. Every skill with a `references/system-diagram.html` appears on the `/skills` gallery — no config, no registration.
+
+```
+~/.claude/skills/
+├── evolution-cat-article/
+│   └── references/
+│       └── system-diagram.html    →  appears on /skills automatically
+├── my-custom-skill/
+│   └── references/
+│       └── system-diagram.html
+└── ...
+```
+
+### How diagrams are generated
+
+Each diagram is an HTML file filled from a shared template. The workflow:
+
+1. **Human** sends `http://localhost:3099/skills` to their agent
+2. **Agent** reads the page, finds the embedded instructions, loads `template.html` + `schema.md`
+3. **Agent** reads the skill's `SKILL.md` and fills every `{{PLACEHOLDER}}` in the template
+4. **Output** lands at `<skill-dir>/references/system-diagram.html` — appears on `/skills` on next refresh
+
+```
+~/.claude/skills/system-diagram/
+├── template.html    →  144-line shared CSS framework with {{PLACEHOLDER}} markers
+└── schema.md        →  fill rules + CSS version tag (v1)
+```
+
+Update a skill's SKILL.md → tell agent to sync the diagram. Change template CSS → bump version in schema.md → agent regenerates all diagrams.
+
+Template and schema ship in `skills/system-diagram/` in this repo.
+
+### Endpoints
+
+| Method | Path | Description |
+|---|---|---|
+| GET | `/skills` | Gallery of all discovered skill diagrams |
+| GET | `/skills/:name` | Raw HTML of a specific diagram |
+
+The gallery scans `SKILLS_DIR` (default `~/.claude/skills`) on every request. New diagram dropped in → appears on next refresh.
+
 ## Design principles
 
 - **Filesystem as registry** — no database, no config file, no schema migration
@@ -199,13 +229,13 @@ No database migration. No config file merge conflicts. The filesystem is the sou
 
 ## Why this approach
 
-Agentboard inverts the homelab dashboard model. Dashy/Heimdall/Homer ask humans to maintain a YAML file. Agentboard treats the filesystem as the registry — if an agent can write a file, it can register a tool. There's no separate "configure this tool" step because the manifest IS the configuration.
+The filesystem is the registry. If an agent can write a file, it can register a tool. The manifest IS the configuration — no separate "add to dashboard" step.
 
-**For humans**: looking at the dashboard tells you what's running, what's stopped, what needs attention. Click a button to start or stop. No terminal, no `docker ps`, no remembering which port is which.
+**For humans**: see what's running, what's stopped, what needs attention. Click to start or stop. No terminal, no `docker ps`, no remembering ports.
 
-**For AI agents**: `GET /api` discovers the API surface. `GET /api/tools` reads tool status. `POST /api/tools/start/:id` launches a tool. `POST /api/tools/stop/:id` stops it. Every operation is a single HTTP call — no state machine, no session, no authentication dance.
+**For AI agents**: `GET /api` → discover. `GET /api/tools` → read status. `POST /api/tools/start/:id` → launch. `POST /api/tools/stop/:id` → stop. Every operation is a single HTTP call.
 
-**Self-referencing**: the dashboard registers itself as a tool (`category: 基础设施`, `order: 0`). It can manage its own start/stop through its own API. This is both a practical feature and a proof that the model works.
+**Self-referencing**: agentboard registers itself as a tool. It can manage its own start/stop through its own API.
 
 ## Deployment verification
 
@@ -215,6 +245,8 @@ After cloning and `npm install`, verify these work:
 - [ ] `curl http://localhost:3099/api` returns API discovery doc
 - [ ] `curl http://localhost:3099/api/tools` lists demo tools
 - [ ] `curl -X POST http://localhost:3099/api/tools/start/agentboard` returns `{ ok: true }`
+- [ ] `curl http://localhost:3099/skills` returns skill gallery (even if empty)
+- [ ] Opening `http://localhost:3099/skills` shows the gallery page
 - [ ] Opening `http://localhost:3099` shows the dashboard with tools rendered
 - [ ] Port check works on your OS: `netstat -ano` (Windows) / `lsof -i` (macOS) / `ss -tlnp` (Linux)
 

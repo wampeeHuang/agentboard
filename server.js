@@ -153,9 +153,9 @@ function skillIndexHTML(diagrams) {
     var kpiTags = d.kpis.map(function(k) {
       return '<span class="kpi"><b>' + k.v + '</b> ' + k.l + '</span>';
     }).join('');
-    return '<div class="card-wrap" draggable="true" data-skill="' + d.name + '">' +
+    return '<div class="card-wrap" data-skill="' + d.name + '">' +
       '<a href="/skills/' + d.name + '" target="_blank" class="card">' +
-        '<span class="card-grip">⋮⋮</span>' +
+        '<span class="card-grip" draggable="true">⋮⋮</span>' +
         '<div class="card-mono">' + d.mono + '</div>' +
         '<div class="card-body">' +
           '<div class="card-name">' + d.heading + '</div>' +
@@ -188,13 +188,13 @@ function skillIndexHTML(diagrams) {
 '  .card-wrap{flex:0 0 420px;position:relative;user-select:text;-webkit-user-select:text}\n' +
 '  .card-wrap.dragging{opacity:.35}\n' +
 '  .card-wrap.drag-over::before{content:"";position:absolute;inset:0;border:2px solid #002FA7;z-index:2;pointer-events:none}\n' +
-'  .card{display:flex;align-items:flex-start;gap:2.4vw;background:#FAFAF8;padding:3vh 2.4vw;text-decoration:none;color:inherit;transition:background .15s,box-shadow .15s;min-height:28vh;cursor:grab;user-select:text;-webkit-user-select:text;overflow:hidden;border:1px solid #E0E0DC;box-shadow:0 1px 3px rgba(0,0,0,.06);position:relative}\n' +
-'  .card-grip{position:absolute;top:12px;right:12px;color:#B0B0AC;font-family:"JetBrains Mono","SF Mono","Consolas",monospace;font-size:14px;opacity:.35;line-height:1;pointer-events:none}\n' +
-'  .card:active{cursor:grabbing}\n' +
+'  .card{display:flex;align-items:flex-start;gap:28px;background:#FAFAF8;padding:22px 28px;text-decoration:none;color:inherit;transition:background .15s,box-shadow .15s;height:220px;user-select:text;-webkit-user-select:text;overflow:hidden;border:1px solid #E0E0DC;box-shadow:0 1px 3px rgba(0,0,0,.06);position:relative}\n' +
+'  .card-grip{position:absolute;top:12px;right:12px;color:#B0B0AC;font-family:"JetBrains Mono","SF Mono","Consolas",monospace;font-size:14px;opacity:.35;line-height:1;cursor:grab;user-select:none;-webkit-user-select:none}\n' +
+'  .card-grip:active{cursor:grabbing}\n' +
 '  .card:hover{background:#F0F0EC}\n' +
 '  .card-mono{flex-shrink:0;width:52px;height:52px;background:#002FA7;color:#FAFAF8;display:flex;align-items:center;justify-content:center;font-family:"JetBrains Mono","SF Mono","Consolas",monospace;font-size:18px;font-weight:500;letter-spacing:.02em;margin-top:2px}\n' +
-'  .card-body{display:flex;flex-direction:column;gap:1vh;min-width:0}\n' +
-'  .card-name{font-size:min(2vw,2.6vh);font-weight:300;letter-spacing:-0.01em}\n' +
+'  .card-body{display:flex;flex-direction:column;gap:10px;min-width:0}\n' +
+'  .card-name{font-size:18px;font-weight:300;letter-spacing:-0.01em}\n' +
 '  .card-deck{font-size:13px;font-weight:300;color:#555;line-height:1.55;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}\n' +
 '  .card-kpis{display:flex;flex-wrap:wrap;gap:6px;margin-top:2px}\n' +
 '  .kpi{font-size:11px;font-weight:300;color:#737373;background:#F2F2F0;padding:3px 8px;letter-spacing:.01em}\n' +
@@ -209,7 +209,8 @@ function skillIndexHTML(diagrams) {
 '  .phil-body strong{font-weight:500;color:#0A0A0A}\n' +
 '  .footer-bottom{margin-top:0;padding-top:18px;border-top:1px solid #E0E0DC;font-size:11px;color:#999;font-family:"JetBrains Mono","SF Mono","Consolas",monospace;display:flex;align-items:center;justify-content:space-between}\n' +
 '</style>\n</head>\n<body>\n' +
-'<div class="hero">\n  <div class="hero-inner">\n    <div class="hero-mono">SKILL DIAGRAMS</div>\n    <h1>Skill 系统结构图</h1>\n    <div class="tagline">图是 skill 的第一行代码</div>\n    <div class="hero-sub">' + diagrams.length + ' 个 skill · Swiss International Style · 每次请求实时扫描，新增图落盘即现</div>\n    <p class="hint">拖动卡片排序 · 点击新标签页打开 · 文字可直接复制</p>\n    <button class="refresh-btn" id="refreshBtn" onclick="refreshSkills()">⟳ 刷新扫描</button>\n  </div>\n</div>\n' +
+'<!-- AI AGENT: 模板 ~/.claude/skills/system-diagram/template.html  规则 ~/.claude/skills/system-diagram/schema.md  输出 <skill-dir>/references/system-diagram.html  触发=用户显式请求(发本页URL/说"加图"/"更新结构图")。非自动——不是所有skill都要HTML图  流程=读SKILL.md→加载模板→按schema.md填充→写图  -->\n' +
+'<div class="hero">\n  <div class="hero-inner">\n    <div class="hero-mono">SKILL DIAGRAMS</div>\n    <h1>Skill 系统结构图</h1>\n    <div class="tagline">图是 skill 的第一行代码。新建或修改 Skill 时，把本页链接发给 Agent，它会自动生成结构图。</div>\n    <div class="hero-sub">' + diagrams.length + ' 个 skill · Swiss International Style · 每次请求实时扫描，新增图落盘即现</div>\n    <p class="hint">拖拽 ⋮⋮ 排序 · 点击卡片打开 · 文字可直接选中复制</p>\n    <button class="refresh-btn" id="refreshBtn" onclick="refreshSkills()">⟳ 刷新扫描</button>\n  </div>\n</div>\n' +
 '<div class="content"><div class="grid">' + list + '</div></div>\n' +
 '<div class="footer">\n' +
 '  <div class="phil-grid">\n' +
@@ -273,6 +274,7 @@ function skillIndexHTML(diagrams) {
 '  }\n' +
 '\n' +
 '  grid.addEventListener("dragstart",function(e){\n' +
+'    if(!e.target.classList.contains("card-grip")){e.preventDefault();return;}\n' +
 '    var wrap=e.target.closest(".card-wrap");\n' +
 '    if(!wrap)return;\n' +
 '    dragSrc=wrap;\n' +
@@ -313,10 +315,12 @@ function skillIndexHTML(diagrams) {
 '    saveOrder();\n' +
 '  });\n' +
 '\n' +
-'  // Allow text selection: prevent drag when selecting text\n' +
-'  grid.addEventListener("mousedown",function(e){\n' +
-'    // Let text selection happen naturally — only drag if mousedown on non-text area\n' +
-'    // or start drag after a small movement threshold\n' +
+'  // Prevent link nav when selecting text\n' +
+'  document.querySelectorAll(".card").forEach(function(card){\n' +
+'    var sel=false;\n' +
+'    card.addEventListener("mousedown",function(){sel=false;});\n' +
+'    card.addEventListener("mousemove",function(){sel=!!window.getSelection().toString();});\n' +
+'    card.addEventListener("click",function(e){if(sel){e.preventDefault();e.stopPropagation();sel=false;}});\n' +
 '  });\n' +
 '})();\n' +
 '</script>\n' +
@@ -337,7 +341,9 @@ function startServer() {
         'GET /api/tools': 'List all registered tools with running status',
         'POST /api/tools/start/:id': 'Start a tool by id',
         'POST /api/tools/stop/:id': 'Stop a tool by id',
-        'POST /api/tools/reorder': 'Reorder tools (body: {items: [{id, order}]})'
+        'POST /api/tools/reorder': 'Reorder tools (body: {items: [{id, order}]})',
+        'GET /skills': 'Skill system diagrams gallery (auto-scanned from filesystem)',
+        'GET /skills/:name': 'Serve individual skill system-diagram.html'
       },
       manifestSchema: {
         id: 'string — directory name under TOOLS_DIR',
@@ -368,11 +374,16 @@ function startServer() {
 
     app.get('/skills/:name', function(req, res) {
       res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
-      var filePath = safeResolve(SKILLS_DIR, req.params.name, 'references', 'system-diagram.html');
+      var filePath = safeResolve(LOCAL_SKILLS_DIR, req.params.name, 'references', 'system-diagram.html');
+      if (filePath) {
+        var html = read(filePath);
+        if (html) return res.send(html);
+      }
+      filePath = safeResolve(SKILLS_DIR, req.params.name, 'references', 'system-diagram.html');
       if (!filePath) return res.status(403).send('forbidden');
-      var html = read(filePath);
-      if (!html) return res.status(404).send('diagram not found');
-      res.send(html);
+      var html2 = read(filePath);
+      if (!html2) return res.status(404).send('diagram not found');
+      res.send(html2);
     });
   }
 
