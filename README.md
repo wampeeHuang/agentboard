@@ -1,5 +1,7 @@
 # Agentboard · 工具架
 
+> **这不是一个产品，是一份参考实现。** 路径硬编码了我的 `~/.claude/` 目录结构，server.js 750 行单体不拆模块。直接 clone 下来大概率跑不通。你要学的是这四个模式：文件系统即注册表、manifest.json 自发现、OS 级端口检测、Agent 用 curl 消费 API。看懂这四个模式，两小时自己重写一个。fork 代码不如偷想法。
+
 **放一个 manifest.json，多一个可控工具。给人看状态，给 Agent 调 API。**
 
 Not another homelab dashboard. No YAML config file. Tools register by dropping a `manifest.json` into a directory. The dashboard auto-discovers them, checks port status at OS level, and provides one-click start/stop — for both humans and AI agents.
