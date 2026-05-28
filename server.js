@@ -44,18 +44,58 @@ function scanSkillDiagrams() {
       seen[name] = true;
       var h1M = html.match(/<h1[^>]*>([\s\S]*?)<\/h1>/i);
       var deckM = html.match(/<p\s+class="deck"[^>]*>([\s\S]*?)<\/p>/i);
+      var rawH1 = h1M ? h1M[1].replace(/<[^>]*>/g, '').trim() : '';
+      var deck = deckM ? deckM[1].trim() : '';
       var kpiRe = /<div class="kv">([^<]*)<\/div>\s*<div class="kl">([^<]*)<\/div>/g;
       var kpis = [];
       var m;
       while ((m = kpiRe.exec(html)) !== null) kpis.push({ v: m[1], l: m[2] });
+
+      // heading = English/tech name, displayName = Chinese label
+      var heading = rawH1 || name;
+      var displayName = '';
+      if (/[一-鿿]/.test(rawH1)) {
+        // h1 IS Chinese — use it as displayName, fall back to dir name for heading
+        displayName = rawH1;
+        heading = name;
+      }
+
+      // If no Chinese displayName yet, try SKILL.md
+      if (!displayName) {
+        var skillMd = read(path.join(dir, name, 'SKILL.md'));
+        if (skillMd) {
+          // Try h1 for displayName
+          var zhH1 = skillMd.match(/^#\s+(.+)/m);
+          if (zhH1 && /[一-鿿]/.test(zhH1[1])) {
+            var h = zhH1[1].trim();
+            var emDash = h.indexOf(' — ');
+            displayName = emDash > 0 ? h.substring(emDash + 3).trim() : h;
+          }
+          // If deck has no Chinese, try to extract from SKILL.md body
+          if (!deck || !/[一-鿿]/.test(deck)) {
+            var lines = skillMd.split('\n');
+            var past = false;
+            for (var i = 0; i < lines.length; i++) {
+              var line = lines[i].trim();
+              if (line.startsWith('# ')) { past = true; continue; }
+              if (!past || !line || line.startsWith('#') || line.startsWith('>') || line.startsWith('```') || line.startsWith('---')) continue;
+              if (!/[一-鿿]/.test(line) || line.length < 10) continue;
+              deck = line.replace(/[*_`\[\]]/g, '').substring(0, 120);
+              break;
+            }
+          }
+        }
+      }
+
       var words = name.split(/[-_]/).filter(function(w) { return w.length > 0; });
       var mono = words.length >= 2
         ? (words[0][0] + words[words.length - 1][0]).toUpperCase()
         : name.substring(0, 2).toUpperCase();
       diagrams.push({
         name: name,
-        heading: h1M ? h1M[1].replace(/<[^>]*>/g, '').trim() : name,
-        deck: deckM ? deckM[1].trim() : '',
+        heading: heading,
+        displayName: displayName,
+        deck: deck,
         kpis: kpis,
         mono: mono,
         filePath: 'skills/' + name + '/references/system-diagram.html'
@@ -195,8 +235,9 @@ function skillIndexHTML(diagrams) {
         '<span class="card-grip" draggable="true">⋮⋮</span>' +
         '<div class="card-mono">' + d.mono + '</div>' +
         '<div class="card-body">' +
-          '<div class="card-name">' + d.heading + '</div>' +
-          (d.deck ? '<div class="card-deck">' + d.deck + '</div>' : '') +
+          '<div class="card-name">' + esc(d.heading) + '</div>' +
+          (d.displayName ? '<div class="card-cn">' + esc(d.displayName) + '</div>' : '') +
+          (d.deck ? '<div class="card-deck">' + esc(d.deck) + '</div>' : '') +
           (kpiTags ? '<div class="card-kpis">' + kpiTags + '</div>' : '') +
           '<div class="card-path">' + d.filePath + '</div>' +
         '</div>' +
@@ -221,8 +262,8 @@ function skillIndexHTML(diagrams) {
 '  .hero .refresh-btn{display:inline-flex;align-items:center;gap:6px;margin-top:8px;padding:8px 18px;font-size:13px;font-weight:500;font-family:"JetBrains Mono","SF Mono","Consolas",monospace;color:#002FA7;background:#fff;border:1px solid #fff;cursor:pointer;letter-spacing:.04em;transition:background .15s}\n' +
 '  .hero .refresh-btn:hover{background:#E8E8F0;border-color:#E8E8F0}\n' +
 '  .content{max-width:1080px;margin:0 auto;padding:6px 32px 32px}\n' +
-'  .grid{display:flex;flex-wrap:wrap;gap:12px;justify-content:center}\n' +
-'  .card-wrap{flex:0 0 420px;position:relative;user-select:text;-webkit-user-select:text}\n' +
+'  .grid{display:flex;flex-wrap:wrap;gap:12px;justify-content:flex-start}\n' +
+'  .card-wrap{flex:1 1 340px;max-width:420px;min-width:280px;position:relative;user-select:text;-webkit-user-select:text}\n' +
 '  .card-wrap.dragging{opacity:.35}\n' +
 '  .card-wrap.drag-over::before{content:"";position:absolute;inset:0;border:2px solid #002FA7;z-index:2;pointer-events:none}\n' +
 '  .card{display:flex;align-items:flex-start;gap:28px;background:#FAFAF8;padding:22px 28px;text-decoration:none;color:inherit;transition:background .15s,box-shadow .15s;height:220px;user-select:text;-webkit-user-select:text;overflow:hidden;border:1px solid #E0E0DC;box-shadow:0 1px 3px rgba(0,0,0,.06);position:relative}\n' +
@@ -231,7 +272,8 @@ function skillIndexHTML(diagrams) {
 '  .card:hover{background:#F0F0EC}\n' +
 '  .card-mono{flex-shrink:0;width:52px;height:52px;background:#002FA7;color:#FAFAF8;display:flex;align-items:center;justify-content:center;font-family:"JetBrains Mono","SF Mono","Consolas",monospace;font-size:18px;font-weight:500;letter-spacing:.02em;margin-top:2px}\n' +
 '  .card-body{display:flex;flex-direction:column;gap:10px;min-width:0}\n' +
-'  .card-name{font-size:18px;font-weight:300;letter-spacing:-0.01em}\n' +
+'  .card-name{font-size:18px;font-weight:300;letter-spacing:-0.01em;word-break:break-all}\n' +
+'  .card-cn{font-size:15px;font-weight:300;color:#002FA7;opacity:.7;letter-spacing:-0.01em}\n' +
 '  .card-deck{font-size:13px;font-weight:300;color:#555;line-height:1.55;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}\n' +
 '  .card-kpis{display:flex;flex-wrap:wrap;gap:6px;margin-top:2px}\n' +
 '  .kpi{font-size:11px;font-weight:300;color:#737373;background:#F2F2F0;padding:3px 8px;letter-spacing:.01em}\n' +
@@ -247,7 +289,7 @@ function skillIndexHTML(diagrams) {
 '  .footer-bottom{margin-top:0;padding-top:18px;border-top:1px solid #E0E0DC;font-size:11px;color:#999;font-family:"JetBrains Mono","SF Mono","Consolas",monospace;display:flex;align-items:center;justify-content:space-between}\n' +
 '</style>\n</head>\n<body>\n' +
 '<!-- AI AGENT: 模板 ~/.claude/skills/system-diagram/template.html  规则 ~/.claude/skills/system-diagram/schema.md  输出 <skill-dir>/references/system-diagram.html  触发=用户显式请求(发本页URL/说"加图"/"更新结构图")。非自动——不是所有skill都要HTML图  流程=读SKILL.md→加载模板→按schema.md填充→写图  -->\n' +
-'<div class="hero">\n  <div class="hero-inner">\n    <div class="hero-mono">SKILL DIAGRAMS</div>\n    <h1>Skill 系统结构图</h1>\n    <div class="tagline">图是 skill 的第一行代码。新建或修改 Skill 时，把本页链接发给 Agent，它会自动生成结构图。</div>\n    <div class="hero-sub">' + diagrams.length + ' 个 skill · Swiss International Style · 每次请求实时扫描，新增图落盘即现</div>\n    <p class="hint">拖拽 ⋮⋮ 排序 · 点击卡片打开 · 文字可直接选中复制</p>\n    <button class="refresh-btn" id="refreshBtn" onclick="refreshSkills()">⟳ 刷新扫描</button>\n  </div>\n</div>\n' +
+'<div class="hero">\n  <div class="hero-inner">\n    <a href="/" style="color:inherit;text-decoration:none;font-size:13px;font-family:\"JetBrains Mono\",\"SF Mono\",\"Consolas\",monospace;opacity:.5;letter-spacing:.04em">← 工具架</a>\n    <div class="hero-mono" style="margin-top:10px">SKILL DIAGRAMS</div>\n    <h1>Skill 系统结构图</h1>\n    <div class="tagline">图是 skill 的第一行代码。新建或修改 Skill 时，把本页链接发给 Agent，它会自动生成结构图。</div>\n    <div class="hero-sub">' + diagrams.length + ' 个 skill · Swiss International Style · 每次请求实时扫描，新增图落盘即现</div>\n    <p class="hint">拖拽 ⋮⋮ 排序 · 点击卡片打开 · 文字可直接选中复制</p>\n    <button class="refresh-btn" id="refreshBtn" onclick="refreshSkills()">⟳ 刷新扫描</button>\n  </div>\n</div>\n' +
 '<div class="content"><div class="grid">' + list + '</div></div>\n' +
 '<div class="footer">\n' +
 '  <div class="phil-grid">\n' +
@@ -421,6 +463,228 @@ function startServer() {
       var html2 = read(filePath);
       if (!html2) return res.status(404).send('diagram not found');
       res.send(html2);
+    });
+  }
+
+  // Tips (踩坑经验)
+  if (fs.existsSync(TIPS_DIR)) {
+    function parseTipFile(filePath) {
+      var md = read(filePath);
+      if (!md) return null;
+      var h1 = md.match(/^#\s+(.+)/m);
+      var title = h1 ? h1[1] : path.basename(filePath, '.md');
+
+      // Extract description: frontmatter > first non-heading paragraph > first ## heading
+      var desc = '';
+      var fmMatch = md.match(/^description:\s*(.+)/m);
+      if (fmMatch) {
+        desc = fmMatch[1];
+      } else {
+        // Find first meaningful text line after # title, before any ## heading
+        var lines = md.split('\n');
+        var pastTitle = false;
+        for (var i = 0; i < lines.length; i++) {
+          var line = lines[i].trim();
+          if (line.startsWith('# ') && !pastTitle) { pastTitle = true; continue; }
+          if (!pastTitle) continue;
+          if (!line || line.startsWith('#') || line.startsWith('>') || line.startsWith('```') || line.startsWith('---')) continue;
+          if (line.startsWith('- ') || line.length < 10) continue;
+          // Skip code/English-only lines: require at least one CJK char
+          if (!/[一-鿿]/.test(line)) continue;
+          if (/[()]/.test(line) && !/[一-鿿]/.test(line)) continue;
+          desc = line.replace(/[*_`]/g, '').substring(0, 80);
+          break;
+        }
+      }
+      if (!desc) {
+        var h2m = md.match(/^##\s+(.+)/m);
+        desc = h2m ? h2m[1] : '';
+      }
+
+      return { title: title, desc: desc, body: md };
+    }
+
+    function renderMarkdown(md) {
+      var body = md.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      // Remove the h1 line (title is shown separately)
+      body = body.replace(/^#\s+.*\n/, '');
+      // Code blocks
+      body = body.replace(/```(\w*)\n([\s\S]*?)```/g, function(_, lang, code) {
+        return '<pre><code>' + code.replace(/\n$/, '') + '</code></pre>';
+      });
+      // Inline code
+      body = body.replace(/`([^`]+)`/g, '<code>$1</code>');
+      // Bold
+      body = body.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+      // Italic
+      body = body.replace(/\*([^*]+)\*/g, '<em>$1</em>');
+      // Links
+      body = body.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank">$1</a>');
+      // Headings
+      body = body.replace(/^### (.+)/gm, '<h3>$1</h3>');
+      body = body.replace(/^## (.+)/gm, '<h2>$1</h2>');
+      // Unordered list items
+      body = body.replace(/^- (.+)/gm, '<li>$1</li>');
+      // Wrap consecutive <li> in <ul>
+      body = body.replace(/(<li>.*<\/li>\n?)+/g, '<ul>$&</ul>');
+      // Paragraphs: wrap non-empty, non-tag lines
+      body = body.replace(/^(?!<[a-z]|$)(.+)$/gm, '<p>$1</p>');
+      // Clean up empty <p>
+      body = body.replace(/<p>\s*<\/p>/g, '');
+      return body;
+    }
+
+    app.get('/tips', function(req, res) {
+      var files = fs.readdirSync(TIPS_DIR).filter(function(f) { return f.endsWith('.md'); }).sort();
+      var items = files.map(function(f) {
+        var tip = parseTipFile(path.join(TIPS_DIR, f));
+        return tip ? { file: f, title: tip.title, desc: tip.desc } : null;
+      }).filter(Boolean);
+
+      var cardsHtml = items.map(function(item) {
+        var words = item.title.replace(/[^一-鿿a-zA-Z]/g, ' ').split(/\s+/).filter(function(w) { return w.length > 0; });
+        var mono = words.length >= 2
+          ? (words[0][0] + words[words.length - 1][0]).toUpperCase()
+          : item.title.substring(0, 2).toUpperCase();
+        return '<div class="card-wrap" data-tip="' + item.file + '">' +
+          '<a href="/tips/' + encodeURIComponent(item.file) + '" target="_blank" class="card">' +
+            '<span class="card-grip" draggable="true">⋮⋮</span>' +
+            '<div class="card-mono">' + esc(mono) + '</div>' +
+            '<div class="card-body">' +
+              '<div class="card-name">' + esc(item.title) + '</div>' +
+              (item.desc ? '<div class="card-sub">' + esc(item.desc) + '</div>' : '') +
+            '</div>' +
+          '</a>' +
+        '</div>';
+      }).join('\n');
+
+      var html = '<!DOCTYPE html>\n<html lang="zh-CN">\n<head>\n<meta charset="UTF-8">\n<meta name="viewport" content="width=device-width, initial-scale=1.0">\n<title>踩坑经验 · Tips</title>\n' +
+        '<link rel="icon" href="data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" rx="4" fill="#002FA7"/><text x="16" y="22" text-anchor="middle" font-family="Inter,sans-serif" font-size="16" font-weight="600" fill="white">TP</text></svg>') + '">\n' +
+        '<style>\n' +
+        '  *{margin:0;padding:0;box-sizing:border-box}\n' +
+        '  body{font-family:Inter,"Microsoft YaHei UI","Noto Sans SC",sans-serif;background:#FAFAF8;color:#0A0A0A;min-height:100vh;font-weight:300;font-size:16px}\n' +
+        '  .hero{background:#002FA7;color:#FAFAF8;padding:56px 32px 48px}\n' +
+        '  .hero-inner{max-width:1080px;margin:0 auto}\n' +
+        '  .hero-mono{font-family:"JetBrains Mono","SF Mono","Consolas",monospace;font-size:10px;font-weight:500;letter-spacing:.08em;opacity:.45;margin-bottom:10px}\n' +
+        '  .hero h1{font-size:min(3.6vw,4.4vh);font-weight:200;letter-spacing:-0.02em;line-height:1.15}\n' +
+        '  .hero .tagline{font-size:15px;font-weight:300;opacity:.7;margin-top:10px;line-height:1.6}\n' +
+        '  .content{max-width:1080px;margin:0 auto;padding:6px 32px 32px}\n' +
+        '  .grid{display:flex;flex-wrap:wrap;gap:12px;justify-content:flex-start}\n' +
+        '  .card-wrap{flex:1 1 340px;max-width:420px;min-width:280px;position:relative;user-select:text;-webkit-user-select:text}\n' +
+        '  .card-wrap.dragging{opacity:.35}\n' +
+        '  .card-wrap.drag-over::before{content:"";position:absolute;inset:0;border:2px solid #002FA7;z-index:2;pointer-events:none}\n' +
+        '  .card{display:flex;align-items:flex-start;gap:28px;background:#FAFAF8;padding:22px 28px;text-decoration:none;color:inherit;transition:background .15s,box-shadow .15s;height:160px;overflow:hidden;border:1px solid #E0E0DC;box-shadow:0 1px 3px rgba(0,0,0,.06);position:relative}\n' +
+        '  .card:hover{background:#F0F0EC}\n' +
+        '  .card-grip{position:absolute;top:12px;right:12px;color:#B0B0AC;font-family:"JetBrains Mono","SF Mono","Consolas",monospace;font-size:14px;opacity:.35;line-height:1;cursor:grab;user-select:none;-webkit-user-select:none;z-index:1}\n' +
+        '  .card-grip:active{cursor:grabbing}\n' +
+        '  .card-mono{flex-shrink:0;width:52px;height:52px;background:#002FA7;color:#FAFAF8;display:flex;align-items:center;justify-content:center;font-family:"JetBrains Mono","SF Mono","Consolas",monospace;font-size:18px;font-weight:500;letter-spacing:.02em;margin-top:2px}\n' +
+        '  .card-body{display:flex;flex-direction:column;gap:10px;min-width:0}\n' +
+        '  .card-name{font-size:18px;font-weight:300;letter-spacing:-0.01em}\n' +
+        '  .card-sub{font-size:13px;font-weight:300;color:#555;line-height:1.55;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}\n' +
+        '</style>\n</head>\n<body>\n' +
+        '<div class="hero"><div class="hero-inner"><a href="/" style="color:inherit;text-decoration:none;font-size:13px;font-family:\"JetBrains Mono\",\"SF Mono\",\"Consolas\",monospace;opacity:.5;letter-spacing:.04em">← 工具架</a><div class="hero-mono" style="margin-top:10px">TIPS & PITFALLS</div><h1>踩坑经验</h1><div class="tagline">人+AI 共享操作笔记 · ' + items.length + ' 条</div></div></div>\n' +
+        '<div class="content"><div class="grid">' + cardsHtml + '</div></div>\n' +
+        '<script>\n' +
+        '(function(){\n' +
+        '  var grid=document.querySelector(".grid");\n' +
+        '  var dragSrc=null;\n' +
+        '  var KEY="tips-order";\n' +
+        '  var saved=null;\n' +
+        '  try{saved=JSON.parse(localStorage[KEY]||"[]");}catch(e){}\n' +
+        '  if(saved&&saved.length){\n' +
+        '    var cards=[].slice.call(grid.querySelectorAll(".card-wrap"));\n' +
+        '    cards.sort(function(a,b){\n' +
+        '      var ai=saved.indexOf(a.dataset.tip);\n' +
+        '      var bi=saved.indexOf(b.dataset.tip);\n' +
+        '      if(ai===-1)return 1;if(bi===-1)return -1;\n' +
+        '      return ai-bi;\n' +
+        '    });\n' +
+        '    cards.forEach(function(c){grid.appendChild(c);});\n' +
+        '  }\n' +
+        '  function saveOrder(){\n' +
+        '    var order=[].slice.call(grid.querySelectorAll(".card-wrap")).map(function(c){return c.dataset.tip;});\n' +
+        '    try{localStorage[KEY]=JSON.stringify(order);}catch(e){}\n' +
+        '  }\n' +
+        '  grid.addEventListener("dragstart",function(e){\n' +
+        '    if(!e.target.classList.contains("card-grip")){e.preventDefault();return;}\n' +
+        '    var wrap=e.target.closest(".card-wrap");\n' +
+        '    if(!wrap)return;\n' +
+        '    dragSrc=wrap;\n' +
+        '    wrap.classList.add("dragging");\n' +
+        '    e.dataTransfer.effectAllowed="move";\n' +
+        '  });\n' +
+        '  grid.addEventListener("dragend",function(e){\n' +
+        '    var wrap=e.target.closest(".card-wrap");\n' +
+        '    if(wrap)wrap.classList.remove("dragging");\n' +
+        '    dragSrc=null;\n' +
+        '    [].slice.call(grid.querySelectorAll(".drag-over")).forEach(function(c){c.classList.remove("drag-over");});\n' +
+        '  });\n' +
+        '  grid.addEventListener("dragover",function(e){\n' +
+        '    e.preventDefault();\n' +
+        '    var wrap=e.target.closest(".card-wrap");\n' +
+        '    if(!wrap||wrap===dragSrc)return;\n' +
+        '    e.dataTransfer.dropEffect="move";\n' +
+        '    wrap.classList.add("drag-over");\n' +
+        '  });\n' +
+        '  grid.addEventListener("dragleave",function(e){\n' +
+        '    var wrap=e.target.closest(".card-wrap");\n' +
+        '    if(wrap)wrap.classList.remove("drag-over");\n' +
+        '  });\n' +
+        '  grid.addEventListener("drop",function(e){\n' +
+        '    e.preventDefault();\n' +
+        '    var wrap=e.target.closest(".card-wrap");\n' +
+        '    if(!wrap||wrap===dragSrc)return;\n' +
+        '    wrap.classList.remove("drag-over");\n' +
+        '    var children=[].slice.call(grid.querySelectorAll(".card-wrap"));\n' +
+        '    var si=children.indexOf(dragSrc);\n' +
+        '    var di=children.indexOf(wrap);\n' +
+        '    if(si<di){grid.insertBefore(dragSrc,wrap.nextSibling);}\n' +
+        '    else{grid.insertBefore(dragSrc,wrap);}\n' +
+        '    saveOrder();\n' +
+        '  });\n' +
+        '  document.querySelectorAll(".card").forEach(function(card){\n' +
+        '    var sel=false;\n' +
+        '    card.addEventListener("mousedown",function(){sel=false;});\n' +
+        '    card.addEventListener("mousemove",function(){sel=!!window.getSelection().toString();});\n' +
+        '    card.addEventListener("click",function(e){if(sel){e.preventDefault();e.stopPropagation();sel=false;}});\n' +
+        '  });\n' +
+        '})();\n' +
+        '</script>\n</body>\n</html>';
+      res.send(html);
+    });
+
+    app.get('/tips/:name', function(req, res) {
+      var filePath = safeResolve(TIPS_DIR, req.params.name);
+      if (!filePath) return res.status(403).send('forbidden');
+      var tip = parseTipFile(filePath);
+      if (!tip) return res.status(404).send('tip not found');
+
+      var html = '<!DOCTYPE html>\n<html lang="zh-CN">\n<head>\n<meta charset="UTF-8">\n<meta name="viewport" content="width=device-width, initial-scale=1.0">\n<title>' + tip.title + ' · Tips</title>\n' +
+        '<link rel="icon" href="data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" rx="4" fill="#002FA7"/><text x="16" y="22" text-anchor="middle" font-family="Inter,sans-serif" font-size="16" font-weight="600" fill="white">TP</text></svg>') + '">\n' +
+        '<style>\n' +
+        '  *{margin:0;padding:0;box-sizing:border-box}\n' +
+        '  body{font-family:Inter,"Microsoft YaHei UI","Noto Sans SC",sans-serif;background:#FAFAF8;color:#0A0A0A;min-height:100vh;font-weight:300;font-size:16px;line-height:1.7}\n' +
+        '  .hero{background:#002FA7;color:#FAFAF8;padding:40px 32px 36px}\n' +
+        '  .hero-inner{max-width:720px;margin:0 auto}\n' +
+        '  .hero a{color:inherit;text-decoration:none;font-size:13px;font-family:"JetBrains Mono","SF Mono","Consolas",monospace;opacity:.6;letter-spacing:.04em}\n' +
+        '  .hero a:hover{opacity:1}\n' +
+        '  .hero h1{font-size:min(2.8vw,3.6vh);font-weight:200;letter-spacing:-0.02em;line-height:1.2;margin-top:8px}\n' +
+        '  .content{max-width:720px;margin:0 auto;padding:32px}\n' +
+        '  .content h2{font-size:20px;font-weight:400;margin:32px 0 10px;color:#0A0A0A;letter-spacing:-0.01em}\n' +
+        '  .content h3{font-size:17px;font-weight:400;margin:24px 0 8px;color:#333}\n' +
+        '  .content p{margin:8px 0;color:#333}\n' +
+        '  .content ul{margin:8px 0;padding-left:24px}\n' +
+        '  .content li{margin:4px 0;color:#333;font-size:15px}\n' +
+        '  .content code{font-family:"JetBrains Mono","SF Mono","Consolas",monospace;font-size:13px;background:#F0F0EC;padding:1px 6px}\n' +
+        '  .content pre{background:#0A0A0A;color:#FAFAF8;padding:16px 20px;margin:12px 0;overflow-x:auto;font-size:13px;line-height:1.55}\n' +
+        '  .content pre code{background:none;padding:0;color:inherit}\n' +
+        '  .content a{color:#002FA7;text-decoration:none}\n' +
+        '  .content a:hover{text-decoration:underline}\n' +
+        '  .content strong{font-weight:500;color:#0A0A0A}\n' +
+        '</style>\n</head>\n<body>\n' +
+        '<div class="hero"><div class="hero-inner"><a href="/tips">← 返回列表</a><h1>' + tip.title + '</h1></div></div>\n' +
+        '<div class="content">' + renderMarkdown(tip.body) + '</div>\n</body>\n</html>';
+      res.send(html);
     });
   }
 
