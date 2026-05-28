@@ -1,6 +1,8 @@
 # Agentboard · 工具架
 
-> **这不是一个产品，是一份参考实现。** 路径硬编码了我的 `~/.claude/` 目录结构，server.js 750 行单体不拆模块。直接 clone 下来大概率跑不通。你要学的是这四个模式：文件系统即注册表、manifest.json 自发现、OS 级端口检测、Agent 用 curl 消费 API。看懂这四个模式，两小时自己重写一个。fork 代码不如偷想法。
+> **This is not a product. It's a reference implementation.** Paths are hardcoded to my `~/.claude/` directory structure. The server is a 750-line monolith. Cloning directly will probably not work for you. What you should steal: four patterns — filesystem-as-registry, manifest.json auto-discovery, OS-level port detection, agents consume via curl. Understand these four, rebuild in two hours. Fork the ideas, not the code.
+>
+> **这不是产品，是参考实现。** 路径硬编码了我的 `~/.claude/` 目录，server.js 一个 750 行单体文件。直接 clone 大概率跑不通。偷这四个模式：文件系统即注册表、manifest.json 自发现、OS 级端口检测、Agent 用 curl 消费 API。看懂，两小时重写。fork 想法，别 fork 代码。
 
 **放一个 manifest.json，多一个可控工具。给人看状态，给 Agent 调 API。**
 
