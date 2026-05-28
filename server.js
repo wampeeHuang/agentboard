@@ -7,6 +7,7 @@ const os = require('os');
 const PROJECT_DIR = __dirname;
 const TOOLS_DIR = process.env.AGENTBOARD_TOOLS_DIR || path.join(os.homedir(), '.claude', 'tools');
 const SKILLS_DIR = process.env.AGENTBOARD_SKILLS_DIR || path.join(os.homedir(), '.claude', 'skills');
+var apiHTML = require('./api-page');
 const TIPS_DIR = process.env.AGENTBOARD_TIPS_DIR || path.join(os.homedir(), '.claude', 'tips');
 const LOCAL_TOOLS_DIR = path.join(PROJECT_DIR, 'tools');
 const LOCAL_SKILLS_DIR = path.join(PROJECT_DIR, 'skills');
@@ -225,12 +226,25 @@ function stopTool(id, callback) {
   });
 }
 
-function skillIndexHTML(diagrams) {
+function skillIndexHTML(diagrams, catMap) {
+  catMap = catMap || {};
+  var catNames = ['平台集成','内容创作','文档格式','设计创意','开发工具','思维框架','元工具'];
+  var catCounts = {};
+  diagrams.forEach(function(d) { var c = catMap[d.name] || ''; if (c) catCounts[c] = (catCounts[c] || 0) + 1; });
+  var allCount = diagrams.length;
+  var catBar = '<div class="cat-bar" id="catBar">' +
+    '<button class="cat-pill active" data-cat="all" onclick="setSkillFilter(\'all\')">全部<span class="count">' + allCount + '</span></button>' +
+    catNames.map(function(cn) {
+      if (!catCounts[cn]) return '';
+      return '<button class="cat-pill" data-cat="' + cn + '" onclick="setSkillFilter(\'' + cn + '\')">' + cn + '<span class="count">' + (catCounts[cn] || 0) + '</span></button>';
+    }).join('') +
+    '</div>';
   const list = diagrams.map(function(d) {
+    var cat = catMap[d.name] || '';
     var kpiTags = d.kpis.map(function(k) {
       return '<span class="kpi"><b>' + k.v + '</b> ' + k.l + '</span>';
     }).join('');
-    return '<div class="card-wrap" data-skill="' + d.name + '">' +
+    return '<div class="card-wrap" data-skill="' + d.name + '" data-cat="' + cat + '">' +
       '<a href="/skills/' + d.name + '" target="_blank" class="card">' +
         '<span class="card-grip" draggable="true">⋮⋮</span>' +
         '<div class="card-mono">' + d.mono + '</div>' +
@@ -261,12 +275,18 @@ function skillIndexHTML(diagrams) {
 '  .hero .hint{font-size:11px;opacity:.45;margin-top:6px;font-family:"JetBrains Mono","SF Mono","Consolas",monospace}\n' +
 '  .hero .refresh-btn{display:inline-flex;align-items:center;gap:6px;margin-top:8px;padding:8px 18px;font-size:13px;font-weight:500;font-family:"JetBrains Mono","SF Mono","Consolas",monospace;color:#002FA7;background:#fff;border:1px solid #fff;cursor:pointer;letter-spacing:.04em;transition:background .15s}\n' +
 '  .hero .refresh-btn:hover{background:#E8E8F0;border-color:#E8E8F0}\n' +
-'  .content{max-width:1080px;margin:0 auto;padding:6px 32px 32px}\n' +
+'  .content{margin:0 auto;padding:6px 32px 32px}\n' +
 '  .grid{display:flex;flex-wrap:wrap;gap:12px;justify-content:flex-start}\n' +
-'  .card-wrap{flex:1 1 340px;max-width:420px;min-width:280px;position:relative;user-select:text;-webkit-user-select:text}\n' +
+'  .card-wrap{flex:0 0 460px;position:relative;user-select:text;-webkit-user-select:text}\n' +
+'  .card-wrap.hidden-card{display:none}\n' +
+'  .cat-bar{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px}\n' +
+'  .cat-pill{padding:6px 14px;font-size:12px;font-weight:400;font-family:"JetBrains Mono","SF Mono","Consolas",monospace;letter-spacing:.03em;background:#F0F0EC;border:1px solid #E0E0DC;color:#555;cursor:pointer;transition:all .12s;display:inline-flex;align-items:center;gap:6px}\n' +
+'  .cat-pill:hover{background:#E4E4DE;color:#0A0A0A}\n' +
+'  .cat-pill.active{background:#002FA7;border-color:#002FA7;color:#FAFAF8}\n' +
+'  .cat-pill .count{font-size:10px;opacity:.7}\n' +
 '  .card-wrap.dragging{opacity:.35}\n' +
 '  .card-wrap.drag-over::before{content:"";position:absolute;inset:0;border:2px solid #002FA7;z-index:2;pointer-events:none}\n' +
-'  .card{display:flex;align-items:flex-start;gap:28px;background:#FAFAF8;padding:22px 28px;text-decoration:none;color:inherit;transition:background .15s,box-shadow .15s;height:220px;user-select:text;-webkit-user-select:text;overflow:hidden;border:1px solid #E0E0DC;box-shadow:0 1px 3px rgba(0,0,0,.06);position:relative}\n' +
+'  .card{display:flex;align-items:flex-start;gap:28px;background:#FAFAF8;padding:22px 28px;text-decoration:none;color:inherit;transition:background .15s,box-shadow .15s;height:240px;user-select:text;-webkit-user-select:text;overflow:hidden;border:1px solid #E0E0DC;box-shadow:0 1px 3px rgba(0,0,0,.06);position:relative}\n' +
 '  .card-grip{position:absolute;top:12px;right:12px;color:#B0B0AC;font-family:"JetBrains Mono","SF Mono","Consolas",monospace;font-size:14px;opacity:.35;line-height:1;cursor:grab;user-select:none;-webkit-user-select:none}\n' +
 '  .card-grip:active{cursor:grabbing}\n' +
 '  .card:hover{background:#F0F0EC}\n' +
@@ -279,7 +299,7 @@ function skillIndexHTML(diagrams) {
 '  .kpi{font-size:11px;font-weight:300;color:#737373;background:#F2F2F0;padding:3px 8px;letter-spacing:.01em}\n' +
 '  .kpi b{font-weight:500;color:#0A0A0A}\n' +
 '  .card-path{font-size:11px;font-family:"JetBrains Mono","SF Mono","Consolas",monospace;color:#B0B0AC;margin-top:2px;word-break:break-all}\n' +
-'  .footer{max-width:1080px;width:100%;margin:0 auto;padding:36px 32px;border-top:1px solid #E0E0DC}\n' +
+'  .footer{width:100%;margin:0 auto;padding:36px 32px;border-top:1px solid #E0E0DC}\n' +
 '  .phil-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1px;background:#E0E0DC;margin-bottom:32px}\n' +
 '  .phil-card{background:#FAFAF8;padding:24px 20px}\n' +
 '  .phil-num{font-family:"JetBrains Mono","SF Mono","Consolas",monospace;font-size:10px;font-weight:500;color:#002FA7;opacity:.45;margin-bottom:10px;letter-spacing:.04em}\n' +
@@ -290,7 +310,7 @@ function skillIndexHTML(diagrams) {
 '</style>\n</head>\n<body>\n' +
 '<!-- AI AGENT: 模板 ~/.claude/skills/system-diagram/template.html  规则 ~/.claude/skills/system-diagram/schema.md  输出 <skill-dir>/references/system-diagram.html  触发=用户显式请求(发本页URL/说"加图"/"更新结构图")。非自动——不是所有skill都要HTML图  流程=读SKILL.md→加载模板→按schema.md填充→写图  -->\n' +
 '<div class="hero">\n  <div class="hero-inner">\n    <a href="/" style="color:inherit;text-decoration:none;font-size:13px;font-family:\"JetBrains Mono\",\"SF Mono\",\"Consolas\",monospace;opacity:.5;letter-spacing:.04em">← 工具架</a>\n    <div class="hero-mono" style="margin-top:10px">SKILL DIAGRAMS</div>\n    <h1>Skill 系统结构图</h1>\n    <div class="tagline">图是 skill 的第一行代码。新建或修改 Skill 时，把本页链接发给 Agent，它会自动生成结构图。</div>\n    <div class="hero-sub">' + diagrams.length + ' 个 skill · Swiss International Style · 每次请求实时扫描，新增图落盘即现</div>\n    <p class="hint">拖拽 ⋮⋮ 排序 · 点击卡片打开 · 文字可直接选中复制</p>\n    <button class="refresh-btn" id="refreshBtn" onclick="refreshSkills()">⟳ 刷新扫描</button>\n  </div>\n</div>\n' +
-'<div class="content"><div class="grid">' + list + '</div></div>\n' +
+'<div class="content">' + catBar + '<div class="grid">' + list + '</div></div>\n' +
 '<div class="footer">\n' +
 '  <div class="phil-grid">\n' +
 '    <div class="phil-card">\n' +
@@ -319,6 +339,16 @@ function skillIndexHTML(diagrams) {
 '  </div>\n' +
 '</div>\n' +
 '<script>\n' +
+'var skillFilter="all";\n' +
+'function setSkillFilter(t){\n' +
+'  skillFilter=t;\n' +
+'  document.querySelectorAll(".cat-pill").forEach(function(p){p.classList.remove("active");});\n' +
+'  document.querySelectorAll(".cat-pill").forEach(function(p){if(p.dataset.cat===skillFilter)p.classList.add("active");});\n' +
+'  document.querySelectorAll(".card-wrap").forEach(function(c){\n' +
+'    if(skillFilter==="all"||c.dataset.cat===skillFilter){c.classList.remove("hidden-card");}\n' +
+'    else{c.classList.add("hidden-card");}\n' +
+'  });\n' +
+'}\n' +
 'function refreshSkills(){\n' +
 '  var btn=document.getElementById("refreshBtn");\n' +
 '  if(!btn)return;\n' +
@@ -411,7 +441,7 @@ function startServer() {
   app.use(express.json());
 
   app.get('/api', function(req, res) {
-    res.json({
+    var data = {
       name: 'Agentboard',
       version: '1.0.0',
       description: 'Filesystem-as-registry toolchain control plane for AI agents',
@@ -420,9 +450,7 @@ function startServer() {
         'GET /api/tools': 'List all registered tools with running status',
         'POST /api/tools/start/:id': 'Start a tool by id',
         'POST /api/tools/stop/:id': 'Stop a tool by id',
-        'POST /api/tools/reorder': 'Reorder tools (body: {items: [{id, order}]})',
-        'GET /skills': 'Skill system diagrams gallery (auto-scanned from filesystem)',
-        'GET /skills/:name': 'Serve individual skill system-diagram.html'
+        'POST /api/tools/reorder': 'Reorder tools (body: {items: [{id, order}]})'
       },
       manifestSchema: {
         id: 'string — directory name under TOOLS_DIR',
@@ -430,25 +458,37 @@ function startServer() {
         description: 'string',
         icon: 'string — emoji or single character',
         version: 'string',
-        category: 'string — 基础设施 | 内容 | 开发 | AIGC | AI 模型 | 其他',
-        order: 'number — sort order (default 99, lower = first)',
-        port: 'number — single port (use port or ports, not both)',
+        category: 'string',
+        order: 'number — sort order',
+        port: 'number — single port',
         ports: 'number[] — multiple ports',
-        projectPath: 'string — working directory for startCommand',
+        projectPath: 'string — working directory',
         url: 'string — browser URL when running',
         startCommand: 'string — shell command to start',
         stopCommand: 'string — shell command to stop'
       },
+      tools: (function() { try { return scanTools(); } catch(e) { return []; } })(),
       toolsDir: TOOLS_DIR,
       skillsDir: SKILLS_DIR
-    });
+    };
+    if (req.headers.accept && req.headers.accept.indexOf('text/html') !== -1) {
+      res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+      res.send(apiHTML(data));
+    } else {
+      res.json(data);
+    }
   });
 
   if (fs.existsSync(LOCAL_SKILLS_DIR) || fs.existsSync(SKILLS_DIR)) {
     app.get('/skills', function(req, res) {
       res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
       var diagrams = scanSkillDiagrams();
-      res.send(skillIndexHTML(diagrams));
+      var catMap = {};
+      try {
+        var classJson = JSON.parse(read(path.join(SKILLS_DIR, 'classification.json')));
+        catMap = classJson.skills || {};
+      } catch(e) {}
+      res.send(skillIndexHTML(diagrams, catMap));
     });
 
     app.get('/skills/:name', function(req, res) {
@@ -501,7 +541,11 @@ function startServer() {
         desc = h2m ? h2m[1] : '';
       }
 
-      return { title: title, desc: desc, body: md };
+      var tipType = '';
+      var typeMatch = md.match(/^type:\s*(.+)/m);
+      if (typeMatch) tipType = typeMatch[1];
+
+      return { title: title, desc: desc, body: md, type: tipType };
     }
 
     function renderMarkdown(md) {
@@ -538,21 +582,36 @@ function startServer() {
       var files = fs.readdirSync(TIPS_DIR).filter(function(f) { return f.endsWith('.md'); }).sort();
       var items = files.map(function(f) {
         var tip = parseTipFile(path.join(TIPS_DIR, f));
-        return tip ? { file: f, title: tip.title, desc: tip.desc } : null;
+        return tip ? { file: f, title: tip.title, desc: tip.desc, type: tip.type || 'reference' } : null;
       }).filter(Boolean);
+
+      var typeMeta = {
+        feedback: { label: '方法论', tip: '干活方法、避坑原则、工作流程——how to approach work' },
+        reference: { label: '参考', tip: '外部资源、API速查、安装指南、代码模板——where to find info' },
+        project: { label: '项目', tip: '特定系统/项目的操作知识——AionUI、微信等具体系统' },
+        user: { label: '用户', tip: '用户偏好与角色信息' }
+      };
+      var typeLabels = { feedback: 'FB', reference: 'RF', project: 'PJ', user: 'US' };
+
+      var cats = {};
+      items.forEach(function(item) { var t = item.type || 'reference'; cats[t] = (cats[t] || 0) + 1; });
+
+      var allCount = items.length;
 
       var cardsHtml = items.map(function(item) {
         var words = item.title.replace(/[^一-鿿a-zA-Z]/g, ' ').split(/\s+/).filter(function(w) { return w.length > 0; });
         var mono = words.length >= 2
           ? (words[0][0] + words[words.length - 1][0]).toUpperCase()
           : item.title.substring(0, 2).toUpperCase();
-        return '<div class="card-wrap" data-tip="' + item.file + '">' +
+        var tp = item.type || 'reference';
+        return '<div class="card-wrap" data-tip="' + item.file + '" data-type="' + tp + '">' +
           '<a href="/tips/' + encodeURIComponent(item.file) + '" target="_blank" class="card">' +
             '<span class="card-grip" draggable="true">⋮⋮</span>' +
             '<div class="card-mono">' + esc(mono) + '</div>' +
             '<div class="card-body">' +
               '<div class="card-name">' + esc(item.title) + '</div>' +
               (item.desc ? '<div class="card-sub">' + esc(item.desc) + '</div>' : '') +
+              '<span class="card-type-tag tag-' + tp + '">' + (typeLabels[tp] || tp) + '</span>' +
             '</div>' +
           '</a>' +
         '</div>';
@@ -567,24 +626,84 @@ function startServer() {
         '  .hero-inner{max-width:1080px;margin:0 auto}\n' +
         '  .hero-mono{font-family:"JetBrains Mono","SF Mono","Consolas",monospace;font-size:10px;font-weight:500;letter-spacing:.08em;opacity:.45;margin-bottom:10px}\n' +
         '  .hero h1{font-size:min(3.6vw,4.4vh);font-weight:200;letter-spacing:-0.02em;line-height:1.15}\n' +
-        '  .hero .tagline{font-size:15px;font-weight:300;opacity:.7;margin-top:10px;line-height:1.6}\n' +
-        '  .content{max-width:1080px;margin:0 auto;padding:6px 32px 32px}\n' +
+        '  .hero .tagline{font-size:15px;font-weight:300;opacity:.7;margin-top:10px;line-height:1.6;max-width:520px;letter-spacing:-0.01em}\n' +
+        '  .content{margin:0 auto;padding:6px 32px 32px}\n' +
+        '  .cat-bar{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px}\n' +
+        '  .cat-pill{padding:6px 14px;font-size:12px;font-weight:400;font-family:"JetBrains Mono","SF Mono","Consolas",monospace;letter-spacing:.03em;background:#F0F0EC;border:1px solid #E0E0DC;color:#555;cursor:pointer;transition:all .12s;display:inline-flex;align-items:center;gap:6px}\n' +
+        '  .cat-pill:hover{background:#E4E4DE;color:#0A0A0A}\n' +
+        '  .cat-pill.active{background:#002FA7;border-color:#002FA7;color:#FAFAF8}\n' +
+        '  .cat-pill .count{font-size:10px;opacity:.7}\n' +
         '  .grid{display:flex;flex-wrap:wrap;gap:12px;justify-content:flex-start}\n' +
-        '  .card-wrap{flex:1 1 340px;max-width:420px;min-width:280px;position:relative;user-select:text;-webkit-user-select:text}\n' +
+        '  .card-wrap{flex:0 0 480px;position:relative;user-select:text;-webkit-user-select:text}\n' +
+        '  .card-wrap.hidden-card{display:none}\n' +
         '  .card-wrap.dragging{opacity:.35}\n' +
         '  .card-wrap.drag-over::before{content:"";position:absolute;inset:0;border:2px solid #002FA7;z-index:2;pointer-events:none}\n' +
-        '  .card{display:flex;align-items:flex-start;gap:28px;background:#FAFAF8;padding:22px 28px;text-decoration:none;color:inherit;transition:background .15s,box-shadow .15s;height:160px;overflow:hidden;border:1px solid #E0E0DC;box-shadow:0 1px 3px rgba(0,0,0,.06);position:relative}\n' +
+        '  .card{display:flex;align-items:flex-start;gap:28px;background:#FAFAF8;padding:22px 28px;text-decoration:none;color:inherit;transition:background .15s,box-shadow .15s;height:180px;overflow:hidden;border:1px solid #E0E0DC;box-shadow:0 1px 3px rgba(0,0,0,.06);position:relative}\n' +
         '  .card:hover{background:#F0F0EC}\n' +
         '  .card-grip{position:absolute;top:12px;right:12px;color:#B0B0AC;font-family:"JetBrains Mono","SF Mono","Consolas",monospace;font-size:14px;opacity:.35;line-height:1;cursor:grab;user-select:none;-webkit-user-select:none;z-index:1}\n' +
         '  .card-grip:active{cursor:grabbing}\n' +
         '  .card-mono{flex-shrink:0;width:52px;height:52px;background:#002FA7;color:#FAFAF8;display:flex;align-items:center;justify-content:center;font-family:"JetBrains Mono","SF Mono","Consolas",monospace;font-size:18px;font-weight:500;letter-spacing:.02em;margin-top:2px}\n' +
-        '  .card-body{display:flex;flex-direction:column;gap:10px;min-width:0}\n' +
+        '  .card-body{display:flex;flex-direction:column;gap:10px;min-width:0;position:relative}\n' +
         '  .card-name{font-size:18px;font-weight:300;letter-spacing:-0.01em}\n' +
         '  .card-sub{font-size:13px;font-weight:300;color:#555;line-height:1.55;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}\n' +
+        '  .card-type-tag{position:absolute;bottom:2px;right:0;font-size:9px;font-weight:500;font-family:"JetBrains Mono","SF Mono","Consolas",monospace;letter-spacing:.04em;padding:2px 6px;opacity:.55}\n' +
+        '  .tag-feedback{color:#002FA7;background:rgba(0,47,167,.06)}\n' +
+        '  .tag-reference{color:#666;background:rgba(0,0,0,.05)}\n' +
+        '  .tag-project{color:#5a3e02;background:rgba(180,120,0,.08)}\n' +
+        '  .tag-user{color:#3a5a02;background:rgba(80,140,0,.08)}\n' +
+        '  .footer{max-width:1080px;margin:0 auto;padding:36px 32px;border-top:1px solid #E0E0DC}\n' +
+        '  .phil-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1px;background:#E0E0DC;margin-bottom:0}\n' +
+        '  .phil-card{background:#FAFAF8;padding:24px 20px}\n' +
+        '  .phil-num{font-family:"JetBrains Mono","SF Mono","Consolas",monospace;font-size:10px;font-weight:500;color:#002FA7;opacity:.45;margin-bottom:10px;letter-spacing:.04em}\n' +
+        '  .phil-title{font-size:15px;font-weight:500;color:#0A0A0A;margin-bottom:6px;letter-spacing:-0.01em;line-height:1.4}\n' +
+        '  .phil-body{font-size:12px;font-weight:300;color:#555;line-height:1.6}\n' +
+        '  .phil-body strong{font-weight:500;color:#0A0A0A}\n' +
         '</style>\n</head>\n<body>\n' +
-        '<div class="hero"><div class="hero-inner"><a href="/" style="color:inherit;text-decoration:none;font-size:13px;font-family:\"JetBrains Mono\",\"SF Mono\",\"Consolas\",monospace;opacity:.5;letter-spacing:.04em">← 工具架</a><div class="hero-mono" style="margin-top:10px">TIPS & PITFALLS</div><h1>踩坑经验</h1><div class="tagline">人+AI 共享操作笔记 · ' + items.length + ' 条</div></div></div>\n' +
-        '<div class="content"><div class="grid">' + cardsHtml + '</div></div>\n' +
+        '<div class="hero"><div class="hero-inner"><a href="/" style="color:inherit;text-decoration:none;font-size:13px;font-family:\"JetBrains Mono\",\"SF Mono\",\"Consolas\",monospace;opacity:.5;letter-spacing:.04em">← 工具架</a><div class="hero-mono" style="margin-top:10px">TIPS & PITFALLS</div><h1>踩坑经验</h1><div class="tagline">人+AI 共享操作笔记 · 踩坑即记录，分类才找得着。</div></div></div>\n' +
+        '<div class="content">\n' +
+        '<div class="cat-bar" id="catBar">' +
+          '<button class="cat-pill active" data-type="all" onclick="setTipFilter(\'all\')">全部<span class="count">' + allCount + '</span></button>' +
+          Object.keys(typeMeta).map(function(t) {
+            if (!cats[t]) return '';
+            return '<button class="cat-pill" data-type="' + t + '" onclick="setTipFilter(\'' + t + '\')">' + typeMeta[t].label + '<span class="count">' + (cats[t] || 0) + '</span></button>';
+          }).join('') +
+        '</div>\n' +
+        '<div class="grid">' + cardsHtml + '</div></div>\n' +
+        '<div class="footer">\n' +
+        '  <div class="phil-grid">\n' +
+        '    <div class="phil-card">\n' +
+        '      <div class="phil-num">01</div>\n' +
+        '      <div class="phil-title">踩坑即记录</div>\n' +
+        '      <div class="phil-body">遇到坑立刻写，不等"完美的笔记"。<strong>半成品笔记 > 没写的经验。</strong>文件落盘即上线。</div>\n' +
+        '    </div>\n' +
+        '    <div class="phil-card">\n' +
+        '      <div class="phil-num">02</div>\n' +
+        '      <div class="phil-title">分类找得着</div>\n' +
+        '      <div class="phil-body">feedback / reference / project / user 四种类型。<strong>翻不动的那天，就是该分类的那天。</strong></div>\n' +
+        '    </div>\n' +
+        '    <div class="phil-card">\n' +
+        '      <div class="phil-num">03</div>\n' +
+        '      <div class="phil-title">人+AI 共享</div>\n' +
+        '      <div class="phil-body">人发现坑，人+AI 一起写笔记。<strong>AI 不踩坑，但 AI 擅长结构化复盘。</strong>每个 tip 是互操作产物。</div>\n' +
+        '    </div>\n' +
+        '    <div class="phil-card">\n' +
+        '      <div class="phil-num">04</div>\n' +
+        '      <div class="phil-title">单一真相源</div>\n' +
+        '      <div class="phil-body"><strong>~/.claude/tips/ 是唯一位置。</strong>不重复存 memory，不复制到项目。agentboard 直接渲染。</div>\n' +
+        '    </div>\n' +
+        '  </div>\n' +
+        '</div>\n' +
         '<script>\n' +
+        'var tipFilter="all";\n' +
+        'function setTipFilter(t){\n' +
+        '  tipFilter=t;\n' +
+        '  document.querySelectorAll(".cat-pill").forEach(function(p){p.classList.remove("active");});\n' +
+        '  document.querySelectorAll(".cat-pill").forEach(function(p){if(p.dataset.type===tipFilter)p.classList.add("active");});\n' +
+        '  document.querySelectorAll(".card-wrap").forEach(function(c){\n' +
+        '    if(tipFilter==="all"||c.dataset.type===tipFilter){c.classList.remove("hidden-card");}\n' +
+        '    else{c.classList.add("hidden-card");}\n' +
+        '  });\n' +
+        '}\n' +
         '(function(){\n' +
         '  var grid=document.querySelector(".grid");\n' +
         '  var dragSrc=null;\n' +

@@ -90,7 +90,7 @@ body{min-height:100vh;display:flex;flex-direction:column}
 
 /* Principles — above footer */
 .principles-bar{max-width:1080px;margin:0 auto;padding:32px 32px 24px}
-.principles-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border)}
+.principles-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:1px;background:var(--border)}
 .principle{background:var(--paper);padding:24px 20px}
 .principle-num{font-family:'JetBrains Mono','SF Mono','Consolas',monospace;font-size:10px;font-weight:500;color:var(--ink);opacity:.45;margin-bottom:10px;letter-spacing:.04em}
 .principle-head{font-size:15px;font-weight:500;color:var(--text);margin-bottom:6px;letter-spacing:-0.01em;line-height:1.4}
@@ -107,7 +107,7 @@ body{min-height:100vh;display:flex;flex-direction:column}
 </style>
 </head>
 <body>
-<!-- AI AGENT: 你在 agentboard 工具架上。执行 curl localhost:3099/api/tools 查本地工具清单（url+description 含端点信息）。localhost 用 Bash curl 不用 WebFetch。能力不够时先查这里：MiniCPM-V(视觉/OpenAI兼容)、ComfyUI(图像)、Stable Diffusion、ACE Step(音乐)、LangGraph RAG 等。 -->
+<!-- AI AGENT: 你在 agentboard 工具架上。执行 curl localhost:3099/api/tools 查本地工具清单（url+description 含端点信息）。localhost 用 Bash curl 不用 WebFetch。能力不够时先查这里：MiniCPM-V(视觉/OpenAI兼容)、ComfyUI(图像)、Stable Diffusion、ACE Step(音乐)、LangGraph RAG 等。API key/凭证/模型连接信息在 ~/.claude/tips/ 是唯一真相源（apis.md + models-and-providers.md），不重复存。 -->
 
 <div class="hero">
   <div class="hero-inner">
@@ -169,6 +169,11 @@ body{min-height:100vh;display:flex;flex-direction:column}
       <div class="principle-num">04</div>
       <div class="principle-head">文件即注册，无数据库</div>
       <div class="principle-body">一个 manifest.json 就是一个工具。没有中心配置，没有 YAML 编排文件。删掉文件夹即下架。</div>
+    </div>
+    <div class="principle">
+      <div class="principle-num">05</div>
+      <div class="principle-head">唯一真相源</div>
+      <div class="principle-body">一份数据，一处维护，到处引用。<strong>复制 = 漂移 = bug。</strong>API key 只在 tips/，工具定义只在 manifest.json，不重复存 memory，不复制到项目。</div>
     </div>
   </div>
 </div>
