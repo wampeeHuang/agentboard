@@ -1,5 +1,5 @@
 # Agentboard 架构原则
-type: feedback
+type: fact
 
 ## 核心理念
 文件即注册，状态即界面。

@@ -1,5 +1,5 @@
 # .claude 备份策略
-type: feedback
+type: method
 
 `~/.claude/` 目录是 Claude Code 的全部状态，丢失后无法自动恢复。
 

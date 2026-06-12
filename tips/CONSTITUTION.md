@@ -34,7 +34,7 @@
 
 ```markdown
 # 一句话标题（洞察，不是主题）
-type: feedback | reference
+type: diagnosis | method | fact
 date: YYYY-MM-DD
 source: 触发写入的事件/任务简述
 
@@ -42,22 +42,34 @@ source: 触发写入的事件/任务简述
 （你看到了什么）
 
 ## 根因
-（为什么发生）
+（为什么发生——diagnosis必填，method/fact可省略）
 
-## 修复
-（怎么修好的）
+## 修复/步骤
+（怎么修好的 / 怎么做）
 
 ## 预防
 （下次怎么避免）
 ```
 
+### 分类标准
+
+三类，同一维度：**这条日志回答什么问题**。
+
+| 分类 | 回答什么 | 判定 | 示例 |
+|------|---------|------|------|
+| `diagnosis` | 为什么X会这样？ | 因果链：从现象追溯到根因 | gh超时但git正常 → 因为gh不走git proxy |
+| `method` | 怎么做X？ | 可执行的步骤序列 | 备份顺序：.claude.json → tools/ → skills/ |
+| `fact` | X在哪/是什么？ | 具体数据：路径、版本、架构 | 工具注册在 ~/.agentboard/tools/ 下 |
+
+互斥检验：一条日志不可能同时主要回答"为什么"又主要回答"怎么做"——诉求不同，写出来重点不同。
+
 ### 格式约束
 
-- type 必填：`feedback`（踩坑教训）/ `reference`（外部资源指针）/ `pattern`（跨项目复用模式）
+- type 必填
 - 一个文件一个洞察。不要合集
 - 100 行以内。超过说明拆得不够细
 - 中文为主，代码/变量名英文
-- 文件名用 kebab-case，语义化：`localstorage-parse-not-array.md` 好于 `tip3.md`
+- 文件名用 kebab-case，语义化
 
 ---
 
@@ -83,13 +95,16 @@ source: 触发写入的事件/任务简述
 
 ---
 
-## 五、当前状态
+## 五、当前日志清单
 
-| 文件 | 状态 | 备注 |
+| 文件 | type | 状态 |
 |------|------|------|
-| `agentboard-architecture.md` | ⚠️ 需复审 | 部分内容与 constitution.md 重叠 |
-| `agentboard-tools-lifecycle.md` | ❌ 含旧路径 | `~/.claude/tools/` 应更新为 `~/.agentboard/tools/` |
-| `backup-strategy.md` | ⚠️ 需复审 | 基于旧版 `.claude/` 布局，部分过时 |
+| `gh-cli-proxy.md` | diagnosis | ✅ |
+| `double-serverjs.md` | diagnosis | ✅ |
+| `cloud-reset-lessons.md` | diagnosis | ✅ |
+| `agentboard-tools-lifecycle.md` | method | ✅ 路径已修正为 ~/.agentboard/ |
+| `backup-strategy.md` | method | ⚠️ 基于旧版 .claude/ 布局，部分过时 |
+| `agentboard-architecture.md` | fact | ⚠️ 部分内容与 constitution.md 重叠 |
 
 ---
 

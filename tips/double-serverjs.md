@@ -1,5 +1,5 @@
 # 双 server.js 版本分歧
-type: feedback
+type: diagnosis
 date: 2026-06-12
 source: .agentboard/server.js 和 Projects/agentboard/server.js 两个版本并行
 

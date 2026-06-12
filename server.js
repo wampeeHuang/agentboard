@@ -600,19 +600,18 @@ function startServer() {
     }
 
     app.get('/tips', function(req, res) {
-      var files = fs.readdirSync(TIPS_DIR).filter(function(f) { return f.endsWith('.md'); }).sort();
+      var files = fs.readdirSync(TIPS_DIR).filter(function(f) { return f.endsWith('.md') && f !== 'CONSTITUTION.md'; }).sort();
       var items = files.map(function(f) {
         var tip = parseTipFile(path.join(TIPS_DIR, f));
-        return tip ? { file: f, title: tip.title, desc: tip.desc, type: tip.type || 'reference' } : null;
+        return tip ? { file: f, title: tip.title, desc: tip.desc, type: tip.type || 'diagnosis' } : null;
       }).filter(Boolean);
 
       var typeMeta = {
-        feedback: { label: '方法论', tip: '干活方法、避坑原则、工作流程——how to approach work' },
-        reference: { label: '参考', tip: '外部资源、API速查、安装指南、代码模板——where to find info' },
-        project: { label: '项目', tip: '特定系统/项目的操作知识——AionUI、微信等具体系统' },
-        user: { label: '用户', tip: '用户偏好与角色信息' }
+        diagnosis: { label: '诊断', tip: '为什么X会这样？因果链路追踪' },
+        method: { label: '方法', tip: '怎么做X？可执行的步骤序列' },
+        fact: { label: '事实', tip: 'X在哪/是什么？路径、版本、架构等具体数据' }
       };
-      var typeLabels = { feedback: 'FB', reference: 'RF', project: 'PJ', user: 'US' };
+      var typeLabels = { diagnosis: 'DX', method: 'MT', fact: 'FT' };
 
       var cats = {};
       items.forEach(function(item) { var t = item.type || 'reference'; cats[t] = (cats[t] || 0) + 1; });
@@ -700,7 +699,7 @@ function startServer() {
         '    <div class="phil-card">\n' +
         '      <div class="phil-num">02</div>\n' +
         '      <div class="phil-title">分类找得着</div>\n' +
-        '      <div class="phil-body">feedback / reference / project / user 四种类型。<strong>翻不动的那天，就是该分类的那天。</strong></div>\n' +
+        '      <div class="phil-body">diagnosis / method / fact 三种类型。<strong>翻不动的那天，就是该分类的那天。</strong></div>\n' +
         '    </div>\n' +
         '    <div class="phil-card">\n' +
         '      <div class="phil-num">03</div>\n' +

@@ -1,5 +1,5 @@
 # gh CLI 不走 git proxy
-type: feedback
+type: diagnosis
 date: 2026-06-12
 source: gh repo clone 超时，git clone 正常
 

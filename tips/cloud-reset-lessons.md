@@ -1,5 +1,5 @@
 # Cloud 重置事故教训
-type: feedback
+type: diagnosis
 date: 2026-06-11
 source: OpenClaw Cloud 实例重置，gateway 丢失
 
