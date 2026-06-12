@@ -9,6 +9,7 @@
   "type": "background",
   "autoStart": true,
   "statusFile": "%USERPROFILE%\\.claude\\cron-logs\\cron-YYYY-MM-DD.log",
+  "url": "http://localhost:3099/cron",
   "projectPath": "%USERPROFILE%\\.claude\\cron-runner.js",
   "logPath": "%USERPROFILE%\\.claude\\cron-logs\\"
 }

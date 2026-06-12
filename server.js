@@ -671,6 +671,39 @@ function startServer() {
   // --- Tools API ---
   app.get('/api/tools', function(req, res) {
     var tools = scanTools();
+    // Inject cron task cards from shared config (single source of truth)
+    try {
+      var cfgPath = path.join(os.homedir(), '.claude', 'cron-config.json');
+      var cfg = JSON.parse(fs.readFileSync(cfgPath, 'utf-8'));
+      var iconMap = { '认知深读': '📖', 'AI信号': '📡', '每日选题': '📰', '个体户巡检': '🏪', '保障房巡检': '🏠', '税无忧巡检': '🧾', '竞品调研': '🔍' };
+      var baseOrder = 39;
+      if (cfg.daily && cfg.daily.tasks) {
+        cfg.daily.tasks.forEach(function(t, i) {
+          var id = 'cron-' + t.name;
+          tools.push({
+            name: t.name, id: id,
+            description: '每日 08:00 窗口 · 最长' + cfg.daily.timeoutMin + 'min · 预算$' + cfg.daily.budgetUSD,
+            icon: iconMap[t.name] || '⏰', version: '2.0.0', category: '职能', order: baseOrder + i,
+            url: 'http://localhost:3099/cron/' + id,
+            running: null, projectPath: '%USERPROFILE%\\.claude\\cron-runner.js',
+            type: 'background', owner: '', trigger: '', children: [], conflicts: []
+          });
+        });
+      }
+      if (cfg.patrols && cfg.patrols.tasks) {
+        cfg.patrols.tasks.forEach(function(t, i) {
+          var id = 'cron-' + t.name;
+          tools.push({
+            name: t.name, id: id,
+            description: '巡检窗口 ' + cfg.patrols.windowHour + ':' + String(cfg.patrols.windowMinute).padStart(2,'0') + ' · 最长' + cfg.patrols.timeoutMin + 'min',
+            icon: iconMap[t.name] || '🔍', version: '2.0.0', category: '职能', order: baseOrder + (cfg.daily?cfg.daily.tasks.length:0) + i,
+            url: 'http://localhost:3099/cron/' + id,
+            running: null, projectPath: '%USERPROFILE%\\.claude\\cron-runner.js',
+            type: 'background', owner: '', trigger: '', children: [], conflicts: []
+          });
+        });
+      }
+    } catch(_) {}
     res.json({ ok: true, tools: tools });
   });
 
@@ -741,6 +774,189 @@ function startServer() {
     res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
     var body = commandsIndexHTML();
     res.send(pageShell('命令', 'Claude Code 内置命令参考', body, 'commands', BUILTIN_COMMANDS.length));
+  });
+
+  // ── Cron task registry (reads shared config — single source of truth) ──
+  var cronConfigPath = path.join(os.homedir(), '.claude', 'cron-config.json');
+  var cronConfig = {};
+  try { cronConfig = JSON.parse(fs.readFileSync(cronConfigPath, 'utf-8')); } catch(_) {}
+
+  function buildCronTaskId(name) { return 'cron-' + name; }
+
+  function buildScheduleText(task, cfg) {
+    if (task.daysOfWeek) return '每周' + ['日','一','二','三','四','五','六'][task.daysOfWeek[0]] + ' ' + cfg.windowHour + ':' + String(cfg.windowMinute).padStart(2,'0');
+    if (task.months && task.daysOfMonth) return task.months.map(function(m){return m+'月'}).join('/') + ' ' + task.daysOfMonth[0] + '日 ' + cfg.windowHour + ':' + String(cfg.windowMinute).padStart(2,'0');
+    return '每日 ' + cfg.windowHour + ':' + String(cfg.windowMinute).padStart(2,'0');
+  }
+
+  var CRON_TASKS = [];
+  var promptDir = (cronConfig.daily && cronConfig.daily.promptDir || '').replace('%USERPROFILE%', os.homedir());
+  if (cronConfig.daily && cronConfig.daily.tasks) {
+    cronConfig.daily.tasks.forEach(function(t) {
+      CRON_TASKS.push({
+        id: buildCronTaskId(t.name), name: t.name,
+        schedule: buildScheduleText(t, cronConfig.daily),
+        type: 'daily', logName: t.name,
+        promptFile: path.join(promptDir, t.promptFile)
+      });
+    });
+  }
+  if (cronConfig.patrols && cronConfig.patrols.tasks) {
+    cronConfig.patrols.tasks.forEach(function(t) {
+      CRON_TASKS.push({
+        id: buildCronTaskId(t.name), name: t.name,
+        schedule: buildScheduleText(t, cronConfig.patrols),
+        type: 'patrol', logName: t.name,
+        patrolPath: t.projectPath + '/patrol.json'
+      });
+    });
+  }
+
+  function getTaskPrompt(task) {
+    if (task.promptFile && fs.existsSync(task.promptFile)) {
+      return fs.readFileSync(task.promptFile, 'utf-8').trim();
+    }
+    if (task.patrolPath && fs.existsSync(task.patrolPath)) {
+      try {
+        var cfg = JSON.parse(fs.readFileSync(task.patrolPath, 'utf-8'));
+        return cfg.prompt || '';
+      } catch(_) {}
+    }
+    return '';
+  }
+
+  function getTaskLogLines(task) {
+    var today = new Date().toISOString().slice(0, 10);
+    var logPath = path.join(os.homedir(), '.claude', 'cron-logs', 'cron-' + today + '.log');
+    if (!fs.existsSync(logPath)) return [];
+    var lines = fs.readFileSync(logPath, 'utf-8').split('\n').filter(function(l) {
+      return l.indexOf('[' + task.logName + ']') !== -1;
+    });
+    return lines.slice(-20);
+  }
+
+  function getTodayLogTail(n) {
+    var today = new Date().toISOString().slice(0, 10);
+    var logPath = path.join(os.homedir(), '.claude', 'cron-logs', 'cron-' + today + '.log');
+    if (!fs.existsSync(logPath)) return '';
+    var lines = fs.readFileSync(logPath, 'utf-8').split('\n');
+    return lines.slice(-(n || 60)).join('\n');
+  }
+
+  // Cron overview — all 7 tasks + today's log tail
+  app.get('/cron', function(req, res) {
+    res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+    var today = new Date().toISOString().slice(0, 10);
+    var now = new Date();
+    var currentMinute = now.getHours() * 60 + now.getMinutes();
+    var dailyWindow = currentMinute >= 480 && currentMinute < 720 ? '（窗口中）' : (currentMinute < 480 ? '（等待 08:00）' : '（今日窗口已过）');
+    var patrolWindow = currentMinute >= 547 && currentMinute < 787 ? '（窗口中）' : (currentMinute < 547 ? '（等待 9:07）' : '（今日窗口已过）');
+
+    var cards = CRON_TASKS.map(function(t) {
+      var prompt = getTaskPrompt(t);
+      var promptLen = prompt ? prompt.length : 0;
+      var logs = getTaskLogLines(t);
+      var lastLog = logs.length > 0 ? logs[logs.length-1].slice(0, 100) : '今日无记录';
+      return '<div style="border:1px solid var(--border);padding:14px 18px;margin-bottom:10px">' +
+        '<div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">' +
+          '<span style="font-size:18px">' + (t.type==='daily'?'📋':'🔍') + '</span>' +
+          '<a href="/cron/' + t.id + '" style="font-size:15px;font-weight:500;color:var(--ink);text-decoration:none">' + t.name + '</a>' +
+          '<span style="font-size:10px;color:var(--text-muted);margin-left:auto">' + t.schedule + '</span>' +
+        '</div>' +
+        '<div style="font-size:11px;color:var(--text-muted);font-family:monospace">prompt: ' + promptLen + ' chars · ' + t.type + ' · <span style="color:' + (logs.length>0?'var(--status-on)':'var(--status-off)') + '">' + (logs.length>0?'今日有记录':'今日无记录') + '</span></div>' +
+        '<div style="font-size:10px;color:var(--text-muted);margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + lastLog + '</div>' +
+      '</div>';
+    }).join('');
+
+    var logTail = getTodayLogTail(30);
+    var body = '<h2 style="font-weight:300;margin-bottom:6px">7 个定时任务</h2>' +
+      '<p style="font-size:12px;color:var(--text-muted);margin-bottom:4px">' + today + ' · 日常窗口 ' + dailyWindow + ' · 巡检窗口 ' + patrolWindow + '</p>' +
+      '<p style="font-size:11px;color:var(--text-muted);margin-bottom:16px"><a href="/cron/log" style="color:var(--ink)">查看完整日志 →</a></p>' +
+      cards +
+      '<h2 style="font-weight:300;margin-top:28px">今日日志（最近30行）</h2>' +
+      '<pre style="background:#0a0a0a;color:#e0e0e0;padding:16px;font-size:11px;font-family:monospace;line-height:1.6;overflow-x:auto;max-height:400px;overflow-y:auto">' + (logTail || '（暂无）') + '</pre>';
+    res.send(pageShell('定时任务', 'cron-runner 总览', body, 'cron', 7));
+  });
+
+  // Cron task detail — full settings + prompt + log
+  app.get('/cron/:id', function(req, res) {
+    res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+    var task = CRON_TASKS.find(function(t) { return t.id === req.params.id; });
+    if (!task) return res.status(404).send(pageShell('未找到', '任务不存在', '<p>任务 <code>' + req.params.id + '</code> 未找到。</p><p><a href="/cron">← 返回总览</a></p>', 'cron', null));
+    var prompt = getTaskPrompt(task);
+    var logs = getTaskLogLines(task);
+
+    // Build settings table from shared config
+    var cfg = task.type === 'daily' ? cronConfig.daily : cronConfig.patrols;
+    var windowStart = cfg.windowHour + ':' + String(cfg.windowMinute).padStart(2,'0');
+    var windowEndH = cfg.windowHour + Math.floor((cfg.windowMinute + cfg.windowDurationMin) / 60);
+    var windowEndM = (cfg.windowMinute + cfg.windowDurationMin) % 60;
+    var windowEnd = windowEndH + ':' + String(windowEndM).padStart(2,'0');
+    var windowLabel = windowStart + ' — ' + windowEnd + '（' + Math.floor(cfg.windowDurationMin/60) + '小时）';
+    var timeoutLabel = cfg.timeoutMin + ' 分钟';
+    var budgetLabel = '$' + cfg.budgetUSD + ' USD / 次';
+
+    var settingsRows = '';
+    settingsRows += '<tr><td>类型</td><td>' + (task.type==='daily'?'日常任务':'巡检任务') + '</td></tr>';
+    settingsRows += '<tr><td>窗口</td><td>' + windowLabel + '</td></tr>';
+    settingsRows += '<tr><td>超时</td><td>' + timeoutLabel + '</td></tr>';
+    settingsRows += '<tr><td>预算</td><td>' + budgetLabel + '</td></tr>';
+    if (task.type === 'daily') {
+      settingsRows += '<tr><td>Prompt 文件</td><td><code>' + (task.promptFile || '') + '</code></td></tr>';
+      settingsRows += '<tr><td>运行目录</td><td><code>' + cronConfig.daily.cwd.replace('%USERPROFILE%','%USERPROFILE%') + '</code></td></tr>';
+    } else {
+      settingsRows += '<tr><td>巡检配置文件</td><td><code>' + (task.patrolPath || '') + '</code></td></tr>';
+      if (task.patrolPath && fs.existsSync(task.patrolPath)) {
+        try {
+          var patrolCfg = JSON.parse(fs.readFileSync(task.patrolPath, 'utf-8'));
+          settingsRows += '<tr><td>上次巡检</td><td>' + (patrolCfg.lastRun || '无记录') + '</td></tr>';
+          var rh = patrolCfg.runHistory || [];
+          if (rh.length > 0) {
+            settingsRows += '<tr><td>最近结果</td><td>' + rh[0].result + ' — ' + (rh[0].summary || '') + '</td></tr>';
+            settingsRows += '<tr><td>巡检历史</td><td>' + rh.length + ' 条记录（保留最近10条）</td></tr>';
+          }
+        } catch(_) {}
+      }
+    }
+    settingsRows += '<tr><td>配置来源</td><td><code>%USERPROFILE%\\.claude\\cron-config.json</code></td></tr>';
+    settingsRows += '<tr><td>调度器</td><td><code>%USERPROFILE%\\.claude\\cron-runner.js</code></td></tr>';
+    // Last run info from log
+    var lastEntry = logs.length > 0 ? logs[logs.length-1] : null;
+    if (lastEntry) {
+      var isOk = lastEntry.indexOf('OK') !== -1;
+      settingsRows += '<tr><td>今日执行</td><td style="color:' + (isOk ? 'var(--status-on)' : '#C0392B') + '">' + (isOk ? '已成功' : '已执行（见日志）') + '</td></tr>';
+    } else {
+      settingsRows += '<tr><td>今日执行</td><td style="color:var(--text-muted)">尚未执行</td></tr>';
+    }
+
+    var body = '<p style="font-size:12px;color:var(--text-muted);margin-bottom:4px"><a href="/cron">← 返回总览</a></p>' +
+      '<h2 style="font-weight:300;margin-bottom:4px">' + task.name + '</h2>' +
+      '<p style="font-size:13px;color:var(--text-secondary);margin-bottom:4px">' + task.schedule + '</p>' +
+      '<h3 style="font-size:14px;font-weight:500;margin:20px 0 8px">执行设置</h3>' +
+      '<table style="font-size:12px;border-collapse:collapse;margin-bottom:20px">' +
+        '<colgroup><col style="width:120px"><col></colgroup>' +
+        settingsRows +
+      '</table>' +
+      '<h3 style="font-size:14px;font-weight:500;margin-bottom:8px">Workflow Prompt（' + prompt.length + ' chars）</h3>' +
+      '<pre style="background:#f5f5f5;padding:16px;font-size:11px;font-family:monospace;line-height:1.6;overflow-x:auto;max-height:500px;overflow-y:auto;white-space:pre-wrap">' + (prompt || '（无法读取 prompt）') + '</pre>' +
+      '<h3 style="font-size:14px;font-weight:500;margin:20px 0 8px">今日日志（' + logs.length + ' 条）</h3>' +
+      '<pre style="background:#0a0a0a;color:#e0e0e0;padding:16px;font-size:11px;font-family:monospace;line-height:1.6;overflow-x:auto;max-height:300px;overflow-y:auto">' + (logs.join('\n') || '（暂无）') + '</pre>';
+    res.send(pageShell(task.name, '定时任务详情', body, 'cron', null));
+  });
+
+  // Full log page
+  app.get('/cron/log', function(req, res) {
+    res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+    var today = new Date().toISOString().slice(0, 10);
+    var logPath = path.join(os.homedir(), '.claude', 'cron-logs', 'cron-' + today + '.log');
+    var logText = '';
+    if (fs.existsSync(logPath)) {
+      logText = fs.readFileSync(logPath, 'utf-8');
+    }
+    var body = '<p style="font-size:12px;color:var(--text-muted);margin-bottom:4px"><a href="/cron">← 返回总览</a></p>' +
+      '<h2 style="font-weight:300;margin-bottom:4px">完整日志 · ' + today + '</h2>' +
+      '<pre style="background:#0a0a0a;color:#e0e0e0;padding:16px;font-size:11px;font-family:monospace;line-height:1.6;overflow-x:auto;max-height:70vh;overflow-y:auto">' + (logText || '（暂无）') + '</pre>';
+    res.send(pageShell('定时任务日志', 'cron-runner 完整日志', body, 'cron', null));
   });
 
   // Workspace sub-page — scan project directories
