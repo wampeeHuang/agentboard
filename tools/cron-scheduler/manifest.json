@@ -1,14 +1,14 @@
 {
   "name": "定时任务调度",
   "id": "cron-scheduler",
-  "description": "定时任务管理中心 — 7个定时任务：AI信号/每日选题/认知深读/个体户巡检/保障房巡检/税无忧巡检/竞品调研 · 基于 OpenClaw cron",
+  "description": "进化猫日报自动化 — 每天08:00-12:00窗口串行执行3个任务(认知深读→AI信号→每日选题)。开机自启，无需手动干预。",
   "icon": "⏰",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "category": "职能",
   "order": 38,
-  "port": 3093,
-  "url": "http://localhost:3093",
-  "projectPath": "%USERPROFILE%\\.claude\\cron-jobs",
-  "startCommand": "echo 定时任务由 OpenClaw cron 管理",
-  "stopCommand": "echo 停止所有定时任务: openclaw cron list"
+  "type": "background",
+  "autoStart": true,
+  "statusFile": "%USERPROFILE%\\.claude\\cron-logs\\cron-YYYY-MM-DD.log",
+  "projectPath": "%USERPROFILE%\\.claude\\cron-runner.js",
+  "logPath": "%USERPROFILE%\\.claude\\cron-logs\\"
 }

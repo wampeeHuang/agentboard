@@ -77,7 +77,7 @@ source: 触发写入的事件/任务简述
 
 | 类别 | 判断标准 | 放哪 |
 |------|---------|------|
-| 项目设计文档 | 描述系统怎么设计的 | `constitution.md` |
+| 项目设计文档 | 描述系统怎么设计的 | `design-spec.md` |
 | 当前状态快照 | 工具数、端口号、运行状态 | `state/` — 自动落盘 |
 | 代码逻辑 | 能从代码本身读懂的 | 代码就是真相源 |
 | 操作历史 | 谁在什么时候做了什么 | `state/call-log.jsonl` |
@@ -104,7 +104,7 @@ source: 触发写入的事件/任务简述
 | `cloud-reset-lessons.md` | diagnosis | ✅ |
 | `agentboard-tools-lifecycle.md` | method | ✅ 路径已修正为 ~/.agentboard/ |
 | `backup-strategy.md` | method | ⚠️ 基于旧版 .claude/ 布局，部分过时 |
-| `agentboard-architecture.md` | fact | ⚠️ 部分内容与 constitution.md 重叠 |
+| `agentboard-architecture.md` | fact | ⚠️ 部分内容与 design-spec.md 重叠 |
 
 ---
 
