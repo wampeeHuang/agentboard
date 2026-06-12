@@ -1,10 +1,11 @@
 {
   "name": "语音合成 CosyVoice 3",
   "id": "cosyvoice3",
+  "owner": "外部",
   "description": "阿里通义语音合成 · 0.5B参数 · 4种推理模式：预训练音色/3s极速复刻/跨语种复刻/自然语言控制 · 支持流式输出 · 单说话人配音最佳中文开源方案",
   "icon": "🎙",
   "version": "1.0.0",
-  "category": "创作",
+  "category": "推理",
   "order": 18,
   "port": 8000,
   "url": "http://localhost:8000",

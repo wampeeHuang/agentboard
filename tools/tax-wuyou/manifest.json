@@ -8,6 +8,7 @@
   "order": 10,
   "port": 3457,
   "url": "http://localhost:3457",
+  "publicUrl": "https://shuiwuyou.evopearl.com/",
   "projectPath": "D:\\Claude code_workspace\\2026-05-31-电商会计驾驶舱",
   "startCommand": "cd /d \"D:\\Claude code_workspace\\2026-05-31-电商会计驾驶舱\" && node server.js",
   "stopCommand": "npx kill-port 3457"

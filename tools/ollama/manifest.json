@@ -1,6 +1,7 @@
 {
   "name": "Ollama",
   "id": "ollama",
+  "owner": "外部",
   "description": "本地 LLM 推理服务 · 管理模型列表/拉取/运行 · Ollama API 兼容",
   "icon": "🦙",
   "version": "1.0.0",

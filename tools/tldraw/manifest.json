@@ -1,6 +1,7 @@
 {
   "name": "无限画布 tldraw Canvas",
   "id": "tldraw",
+  "owner": "外部",
   "description": "tldraw 无限画布 — MIT开源，47k stars，自由接入API",
   "icon": "🎨",
   "version": "1.0.0",

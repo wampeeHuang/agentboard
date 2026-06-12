@@ -1,6 +1,7 @@
 {
   "name": "浏览器控制 MCP Chrome DevTools",
   "id": "mcp-chrome",
+  "owner": "外部",
   "description": "Chrome DevTools MCP — 浏览器自动化入口。Profile: ~/.cache/chrome-devtools-mcp/chrome-profile。Claude Code内通过 mcp__ChromeDevTools__* 工具调用",
   "icon": "🌐",
   "version": "1.0.0",

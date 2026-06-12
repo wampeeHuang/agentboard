@@ -752,11 +752,12 @@ function startServer() {
       var fullPath = path.join(basePath, name);
       var stat = fs.statSync(fullPath);
       if (!stat.isDirectory()) return;
-      if (name.startsWith('_')) return;
-      if (name === 'node_modules' || name === '.git') return;
+      if (name.startsWith('.') || name.startsWith('_')) return;
+      if (name === 'node_modules') return;
 
       var meta = {};
-      try { meta = JSON.parse(read(path.join(fullPath, '.project.json'))); } catch(_) {}
+      var raw = read(path.join(fullPath, '.project.json'));
+      if (raw) { try { var parsed = JSON.parse(raw); if (parsed) meta = parsed; } catch(_) {} }
 
       var latest = stat.mtime;
       try {
@@ -821,21 +822,21 @@ function startServer() {
       catCounts[p.recency] = (catCounts[p.recency] || 0) + 1;
     });
 
-    var statusBar = '<div class="cat-bar">' +
-      '<button class="cat-pill active" data-filter="all" onclick="setFilter(\'all\')">全部<span class="count">' + projects.length + '</span></button>' +
-      '<button class="cat-pill" data-filter="active" onclick="setFilter(\'active\')">🟢 活跃<span class="count">' + (catCounts.active || 0) + '</span></button>' +
-      '<button class="cat-pill" data-filter="archived" onclick="setFilter(\'archived\')">🟡 已归档<span class="count">' + (catCounts.archived || 0) + '</span></button>' +
-      '<button class="cat-pill" data-filter="abandoned" onclick="setFilter(\'abandoned\')">⚫ 已放弃<span class="count">' + (catCounts.abandoned || 0) + '</span></button>' +
-      '<button class="cat-pill" data-filter="undefined" onclick="setFilter(\'undefined\')">⚪ 待定义<span class="count">' + (catCounts.undefined || 0) + '</span></button>' +
-      '</div>';
+    var statusBar = '<div class="cat-bar-group"><span class="cat-bar-label">状态</span><div class="cat-bar" id="status-bar">' +
+      '<button class="cat-pill active" data-filter="all" onclick="setFilter(\'all\')" title="显示所有状态">全部<span class="count">' + projects.length + '</span></button>' +
+      '<button class="cat-pill" data-filter="active" onclick="setFilter(\'active\')" title="正在推进的项目">🟢 活跃<span class="count">' + (catCounts.active || 0) + '</span></button>' +
+      '<button class="cat-pill" data-filter="archived" onclick="setFilter(\'archived\')" title="已完成或暂停，保留备查">🟡 已归档<span class="count">' + (catCounts.archived || 0) + '</span></button>' +
+      '<button class="cat-pill" data-filter="abandoned" onclick="setFilter(\'abandoned\')" title="不再维护的项目">⚫ 已放弃<span class="count">' + (catCounts.abandoned || 0) + '</span></button>' +
+      '<button class="cat-pill" data-filter="undefined" onclick="setFilter(\'undefined\')" title="尚未定义状态的项目">⚪ 待定义<span class="count">' + (catCounts.undefined || 0) + '</span></button>' +
+      '</div></div>';
 
-    var recencyBar = '<div class="cat-bar" style="margin-top:-8px">' +
-      '<span style="font-size:10px;color:var(--text-muted);margin-right:4px;font-family:\'JetBrains Mono\',monospace\">时间</span>' +
-      '<button class="cat-pill" data-filter="week" onclick="setRecencyFilter(\'week\')">⏱ 7天内<span class="count">' + (catCounts.week || 0) + '</span></button>' +
-      '<button class="cat-pill" data-filter="halfMonth" onclick="setRecencyFilter(\'halfMonth\')">📅 15天内<span class="count">' + (catCounts.halfMonth || 0) + '</span></button>' +
-      '<button class="cat-pill" data-filter="month" onclick="setRecencyFilter(\'month\')">🗓 30天内<span class="count">' + (catCounts.month || 0) + '</span></button>' +
-      '<button class="cat-pill" data-filter="older" onclick="setRecencyFilter(\'older\')">🏛 超过30天<span class="count">' + (catCounts.older || 0) + '</span></button>' +
-      '</div>';
+    var recencyBar = '<div class="cat-bar-group"><span class="cat-bar-label">时间</span><div class="cat-bar" id="recency-bar">' +
+      '<button class="cat-pill" data-filter="all" onclick="setRecencyFilter(\'all\')" title="显示所有时间">全部<span class="count">' + projects.length + '</span></button>' +
+      '<button class="cat-pill" data-filter="week" onclick="setRecencyFilter(\'week\')" title="最近7天内有文件修改">⏱ 7天内<span class="count">' + (catCounts.week || 0) + '</span></button>' +
+      '<button class="cat-pill" data-filter="halfMonth" onclick="setRecencyFilter(\'halfMonth\')" title="最近15天内有文件修改">📅 15天内<span class="count">' + (catCounts.halfMonth || 0) + '</span></button>' +
+      '<button class="cat-pill" data-filter="month" onclick="setRecencyFilter(\'month\')" title="最近30天内有文件修改">🗓 30天内<span class="count">' + (catCounts.month || 0) + '</span></button>' +
+      '<button class="cat-pill" data-filter="older" onclick="setRecencyFilter(\'older\')" title="超过30天未修改">🏛 超过30天<span class="count">' + (catCounts.older || 0) + '</span></button>' +
+      '</div></div>';
 
     var cards = projects.map(function(p) {
       var daysText = p.daysAgo === 0 ? '今天' : (p.daysAgo + '天前');
@@ -862,11 +863,11 @@ function startServer() {
     }).join('\n');
 
     return '<style>\n' +
-      '.cat-bar{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}\n' +
-      '.cat-pill{padding:5px 12px;font-size:12px;font-weight:400;font-family:"JetBrains Mono",monospace;letter-spacing:.03em;background:var(--paper-tint);border:1px solid var(--border);color:var(--text-secondary);cursor:pointer;transition:all .12s;display:inline-flex;align-items:center;gap:5px}\n' +
-      '.cat-pill:hover{background:#E4E4DE;color:var(--text)}\n' +
-      '.cat-pill.active{background:var(--ink);border-color:var(--ink);color:var(--paper)}\n' +
-      '.cat-pill .count{font-size:10px;opacity:.7}\n' +
+      '.cat-bar-group{display:flex;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap}\n' +
+      '.cat-bar-label{font-size:11px;font-weight:500;font-family:"JetBrains Mono",monospace;color:var(--text-muted);letter-spacing:.05em;min-width:32px;flex-shrink:0}\n' +
+      '.cat-bar{display:flex;flex-wrap:wrap;gap:6px;flex:1}\n' +
+      '.cat-bar .cat-pill{flex:1;min-width:80px;justify-content:center;padding:5px 12px;font-size:12px;font-weight:400;font-family:"JetBrains Mono",monospace;letter-spacing:.03em;background:var(--paper-tint);border:1px solid var(--border);color:var(--text-secondary);cursor:pointer;transition:all .12s;display:inline-flex;align-items:center;gap:5px;white-space:nowrap}\n' +
+      '.cat-bar .cat-pill:hover{background:#E4E4DE;color:var(--text)}\n' +
       '.proj-grid{display:grid;grid-template-columns:repeat(auto-fill, minmax(280px, 1fr));gap:12px;margin-top:8px}\n' +
       '.proj-card{background:var(--paper);padding:20px;display:flex;flex-direction:column;gap:6px;transition:transform .15s,box-shadow .15s;box-shadow:var(--shadow-border),var(--shadow-card)}\n' +
       '.proj-card:hover{transform:translateY(-1px);box-shadow:var(--shadow-border),var(--shadow-card-hover)}\n' +
@@ -898,7 +899,6 @@ function startServer() {
       '.page h1{font-size:28px;font-weight:200;letter-spacing:-0.02em;color:var(--ink);margin-bottom:4px}\n' +
       '.page .ws-subtitle{font-size:13px;color:var(--text-muted);font-weight:300;margin-bottom:20px;font-family:"JetBrains Mono",monospace}\n' +
     '</style>\n' +
-    '<a class="back-link" href="/">← 返回工具架</a>\n' +
     '<h1>' + esc(meta.name) + '</h1>\n' +
     '<div class="ws-subtitle">' + esc(meta.projectPath) + ' · ' + projects.length + ' 个子项目</div>\n' +
     statusBar + recencyBar +
@@ -914,12 +914,12 @@ function startServer() {
     '}\n' +
     'function setFilter(t) {\n' +
     '  currentStatus = t;\n' +
-    '  document.querySelectorAll(".cat-bar:first-of-type .cat-pill").forEach(function(p){p.classList.toggle("active", p.dataset.filter === t);});\n' +
+    '  document.querySelectorAll("#status-bar .cat-pill").forEach(function(p){p.classList.toggle("active", p.dataset.filter === t);});\n' +
     '  applyFilters();\n' +
     '}\n' +
     'function setRecencyFilter(t) {\n' +
     '  currentRecency = t;\n' +
-    '  document.querySelectorAll(".cat-bar:nth-of-type(2) .cat-pill").forEach(function(p){p.classList.toggle("active", p.dataset.filter === t);});\n' +
+    '  document.querySelectorAll("#recency-bar .cat-pill").forEach(function(p){p.classList.toggle("active", p.dataset.filter === t);});\n' +
     '  applyFilters();\n' +
     '}' +
     '<\/script>';
@@ -929,19 +929,14 @@ function startServer() {
 
   // Workspace sub-page
   app.get('/workspace/:id', function(req, res) {
-    try {
-      res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
-      var mfPath = findManifest(req.params.id);
-      if (!mfPath) return res.status(404).send('找不到工作区');
-      var mf = JSON.parse(read(mfPath));
-      if (!mf.projectPath) return res.status(400).send('该工具不是工作区');
-      var projects = scanWorkspace(mf.projectPath);
-      var body = workspaceHTML(projects, mf);
-      res.send(pageShell(mf.name, mf.projectPath, body, 'workspace', projects.length));
-    } catch(e) {
-      console.error('Workspace error:', e.message, e.stack);
-      res.status(500).send('Error: ' + e.message);
-    }
+    res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+    var mfPath = findManifest(req.params.id);
+    if (!mfPath) return res.status(404).send('找不到工作区');
+    var mf = JSON.parse(read(mfPath));
+    if (!mf.projectPath) return res.status(400).send('该工具不是工作区');
+    var projects = scanWorkspace(mf.projectPath);
+    var body = workspaceHTML(projects, mf);
+    res.send(pageShell(mf.name, mf.projectPath, body, 'workspace', projects.length + ' 个子项目'));
   });
 
   // Open workspace sub-directory

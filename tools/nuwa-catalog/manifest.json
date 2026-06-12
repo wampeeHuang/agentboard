@@ -8,7 +8,7 @@
   "order": 4,
   "port": 3090,
   "url": "http://localhost:3090",
-  "publicUrl": "https://nuwa-perspective-catalog.vercel.app",
+  "publicUrl": "https://minds.evopearl.com/",
   "projectPath": "/d/projects/nuwa-perspective-catalog",
   "startCommand": "npx serve -l 3090 --no-clipboard",
   "stopCommand": "npx kill-port 3090"

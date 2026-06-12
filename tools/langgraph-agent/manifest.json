@@ -1,6 +1,7 @@
 {
   "name": "RAG Tool + Agent",
   "id": "langgraph-agent",
+  "owner": "外部",
   "description": "Agent 自主决定何时查知识库 — LangGraph ReAct + search_knowledge_base tool",
   "icon": "🤖",
   "version": "1.0.0",

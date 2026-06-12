@@ -1,6 +1,7 @@
 {
   "name": "ComfyUI",
   "id": "comfyui",
+  "owner": "外部",
   "description": "ComfyUI 节点式AI图像生成工作流。⚠ 启动吃4GB+显存，确认GPU空闲再开",
   "icon": "🧩",
   "version": "1.0.0",

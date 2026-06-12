@@ -1,6 +1,7 @@
 {
   "name": "LangGraph RAG 问答",
   "id": "langgraph-rag",
+  "owner": "外部",
   "description": "检索增强生成问答系统 — DeepSeek LLM + 本地 Embedding + ChromaDB",
   "icon": "🧠",
   "version": "1.0.0",

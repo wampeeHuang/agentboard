@@ -1,10 +1,11 @@
 {
   "name": "飞书 · Claude code 终端",
   "id": "feishu-bot-claude-code",
+  "owner": "外部",
   "description": "「Claude code 终端」(cli_aa992600d0215cb2) → Claude Code。机器人名即定位——改名后告诉我同步卡片。重启后 Startup VBS 自动拉起。",
   "icon": "🕊",
   "version": "0.1.31",
-  "category": "职能",
+  "category": "推理",
   "order": 9,
   "startCommand": "cscript //nologo \"%USERPROFILE%\\.lark-channel\\launch-claude-code-bot.vbs\"",
   "stopCommand": "lark-channel-bridge kill 1"

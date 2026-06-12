@@ -1,6 +1,7 @@
 {
   "name": "Stable Diffusion WebUI",
   "id": "stable-diffusion",
+  "owner": "外部",
   "description": "Stable Diffusion WebUI (秋叶整合包 v4.10)。⚠ 启动吃4GB+显存，不能和ComfyUI同时跑",
   "icon": "🖼",
   "version": "1.0.0",

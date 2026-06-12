@@ -4,7 +4,7 @@
   "description": "字节跳动 SeedEdit 3.0 图像编辑 API — 火山引擎视觉智能 · 异步两阶段提交",
   "icon": "🖌",
   "version": "1.0.0",
-  "category": "创作",
+  "category": "推理",
   "order": 33,
   "apiBase": "https://visual.volcengineapi.com",
   "apiKeyName": "VOLCENGINE_AK_SK",
