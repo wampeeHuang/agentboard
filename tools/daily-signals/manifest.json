@@ -1,0 +1,12 @@
+{
+  "name": "每日 AI 信号流",
+  "id": "daily-signals",
+  "description": "进化猫每日 AI 市场与技术趋势洞察，策展式信息流。data.evopearl.com 公开访问",
+  "icon": "📡",
+  "version": "1.0.0",
+  "category": "查阅",
+  "order": 6,
+  "url": "https://data.evopearl.com/",
+  "publicUrl": "https://data.evopearl.com/",
+  "projectPath": "D:\\Claude code_workspace\\2026-05-13-进化猫每日信号"
+}

@@ -1,0 +1,13 @@
+{
+  "name": "项目空间 · 工作区",
+  "id": "workspace-projects",
+  "description": "所有项目代码和工具的工作目录。含 30+ 子项目：排版工匠、税无忧、保障房导航、品牌设计局、语音合成、html-video 等。每个子目录 = 一个独立项目。",
+  "icon": "📁",
+  "version": "1.0.0",
+  "category": "工作区",
+  "type": "folder",
+  "order": 50,
+  "projectPath": "D:\\Claude code_workspace",
+  "startCommand": "start \"\" \"D:\\Claude code_workspace\"",
+  "stopCommand": "echo 文件夹无需停止"
+}

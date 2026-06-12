@@ -1,0 +1,13 @@
+{
+  "name": "图文管理 · 进化猫小绿书",
+  "id": "workspace-infographics",
+  "description": "进化猫小绿书/图文内容生产目录。20+ 套认知图鉴和知识卡片项目。含 Musk、Feynman、Paul Graham、MrBeast、TIM 潘天鸿等人物认知图鉴，以及 RAG 入门、安全对齐、Caveman 等主题图文。",
+  "icon": "🖼",
+  "version": "1.0.0",
+  "category": "工作区",
+  "type": "folder",
+  "order": 52,
+  "projectPath": "D:\\HHH\\自媒体\\进化猫-图文\\AI合集",
+  "startCommand": "start \"\" \"D:\\HHH\\自媒体\\进化猫-图文\\AI合集\"",
+  "stopCommand": "echo 文件夹无需停止"
+}

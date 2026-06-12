@@ -1,4 +1,4 @@
-const express = require('express');
+﻿const express = require('express');
 const fs = require('fs');
 const path = require('path');
 const { exec, execSync, spawn } = require('child_process');
@@ -18,6 +18,7 @@ const PLATFORM = process.platform;
 
 function read(p) { try { return fs.readFileSync(p,'utf8'); } catch(_) { return null; } }
 function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function monogram(name) { var s = (name||'').trim(); var en = s.match(/[A-Za-z][A-Za-z\s]+/); if (en) { var w = en[0].split(/\s+/).filter(Boolean); if (w.length >= 2) return (w[0][0] + w[w.length-1][0]).toUpperCase(); if (w.length === 1 && w[0].length >= 2) return w[0].substring(0,2).toUpperCase(); } var cn = s.replace(/[^一-鿿]/g,''); if (cn.length >= 2) return cn[0] + cn[cn.length-1]; var ascii = s.replace(/[^A-Za-z0-9]/g,''); if (ascii.length >= 2) return ascii.substring(0,2).toUpperCase(); return (s.substring(0,2) || '??').toUpperCase(); }
 function listDirs(p) { try { return fs.readdirSync(p,{withFileTypes:true}).filter(e=>e.isDirectory()&&!e.name.startsWith('.')).map(e=>e.name); } catch(_) { return []; } }
 
 var _persCache = null;
@@ -164,26 +165,7 @@ var CHINESE_NAMES = {
   'nuwa-skill': '女娲技能',
   'evolution-cat-infographic': '进化猫图文流水线',
   'guizang-social-card-skill': '归藏社交卡片',
-  'perspective-lei-jun': '雷军视角',
-  'perspective-liu-cixin': '刘慈欣视角',
-  'perspective-zhang-xiaolong': '张小龙视角',
-  'perspective-zhang-yiming': '张一鸣视角',
-  'perspective-zhang-xuefeng': '张雪峰视角',
-  'perspective-wan-weigang': '万维钢视角',
-  'perspective-shen-yifei': '沈亦斐视角',
-  'perspective-sun-yuchen': '孙宇晨视角',
-  'perspective-yu-jun': '俞军视角',
-  'perspective-liang-ning': '梁宁视角',
-  'perspective-keda': '柯达视角',
-  'perspective-dotey': 'Dotey 视角',
-  'perspective-cat-wu': 'Cat Wu 视角',
-  'perspective-youyu-designer': '鱿鱼设计师视角',
-  'perspective-x-mentor': 'X 导师视角',
-  'perspective-tim-pan': 'Tim Pan 视角',
-  'perspective-jiaoshouyixiaoxing': '教授一小星视角',
-  'perspective-alchainhust': 'Alchain Hust 视角',
-  'perspective-liuxunzimo': '刘勋子墨视角',
-  'perspective-zara-zhang': 'Zara Zhang 视角',
+  'guizang-ppt-skill': '归藏PPT',
   'claude-mem': '记忆系统',
   'find-docs': '文档查找',
   'huashu-research': '花叔调研',
@@ -297,6 +279,7 @@ function classifySkill(name, desc) {
     'skill-creator': '思维与方法',
     'evolution-cat-infographic': '写作与文档',
     'guizang-social-card-skill': '视觉与设计',
+    'guizang-ppt-skill': '视觉与设计',
     'claude-mem': '思维与方法',
     'find-docs': '开发与工具',
     'huashu-research': '思维与方法',
@@ -356,7 +339,7 @@ function scanTools() {
       }
       var ports = mf.ports || (mf.port ? [mf.port] : []);
       var running = ports.length > 0 ? ports.every(function(p) { return isPortActive(p); }) : null;
-      tools.push({ name: mf.name, id: name, description: mf.description || '', icon: mf.icon || '', version: mf.version || '', category: mf.category, order: mf.order, port: mf.port, ports: mf.ports, url: mf.url, running: running, startCommand: mf.startCommand, stopCommand: mf.stopCommand, projectPath: mf.projectPath, publicUrl: mf.publicUrl, owner: mf.owner || '', apiBase: mf.apiBase, conflicts: [] });
+      tools.push({ name: mf.name, id: name, description: mf.description || '', icon: mf.icon || '', version: mf.version || '', category: mf.category, order: mf.order, port: mf.port, ports: mf.ports, url: mf.url, running: running, startCommand: mf.startCommand, stopCommand: mf.stopCommand, projectPath: mf.projectPath, publicUrl: mf.publicUrl, owner: mf.owner || '', apiBase: mf.apiBase, type: mf.type || 'service', trigger: mf.trigger || '', children: mf.children || [], conflicts: [] });
     });
   });
 
@@ -529,6 +512,119 @@ function skillIndexHTML(skills) {
     '})});\n' +
     '<\/script>';
 }
+
+
+// Built-in Claude Code slash commands organized by category
+var BUILTIN_COMMANDS = [
+  {cat:'会话控制',trigger:'clear',name:'清空对话',desc:'清空当前会话的所有对话历史和上下文'},
+  {cat:'会话控制',trigger:'compact',name:'压缩上下文',desc:'压缩上下文窗口，释放 token 配额，保留关键信息'},
+  {cat:'会话控制',trigger:'context',name:'上下文用量',desc:'查看当前会话的上下文/缓存使用情况和 token 统计'},
+  {cat:'会话控制',trigger:'copy',name:'复制回复',desc:'将 Claude 最近一次回复内容复制到剪贴板'},
+  {cat:'会话控制',trigger:'cost',name:'API 费用',desc:'查看当前会话累计的 API 调用费用'},
+  {cat:'会话控制',trigger:'resume',name:'恢复会话',desc:'交互式选择并恢复之前的会话记录'},
+  {cat:'会话控制',trigger:'status',name:'运行状态',desc:'查看 Claude Code 当前运行状态和会话信息'},
+  {cat:'会话控制',trigger:'model',name:'切换模型',desc:'切换当前会话使用的 AI 模型（sonnet/opus/haiku）'},
+  {cat:'会话控制',trigger:'fast',name:'快速模式',desc:'切换快速模式（Opus 低延迟输出），适用于快速响应'},
+  {cat:'会话控制',trigger:'upgrade',name:'升级版本',desc:'检查并升级 Claude Code 到最新版本'},
+  {cat:'配置管理',trigger:'config',name:'配置管理',desc:'查看和修改 Claude Code 各项配置（模型、权限等）'},
+  {cat:'配置管理',trigger:'theme',name:'切换主题',desc:'切换终端界面的配色主题（亮色/暗色）'},
+  {cat:'配置管理',trigger:'permissions',name:'权限管理',desc:'管理工具的权限模式和审批规则'},
+  {cat:'配置管理',trigger:'output-style',name:'输出风格',desc:'设置 Claude 回复的输出风格和格式偏好'},
+  {cat:'配置管理',trigger:'verbose',name:'详细输出',desc:'切换详细输出模式，显示更多调试信息'},
+  {cat:'配置管理',trigger:'auto-compact',name:'自动压缩',desc:'切换自动上下文压缩功能开关'},
+  {cat:'项目管理',trigger:'init',name:'项目初始化',desc:'在当前目录创建 CLAUDE.md 项目配置文件'},
+  {cat:'项目管理',trigger:'project',name:'项目管理',desc:'管理项目级别的 Claude Code 设置和状态'},
+  {cat:'项目管理',trigger:'agents',name:'Agent 管理',desc:'配置和管理后台运行的 AI Agent 实例'},
+  {cat:'项目管理',trigger:'mcp',name:'MCP 管理',desc:'配置和管理 MCP（Model Context Protocol）服务器'},
+  {cat:'项目管理',trigger:'plugin',name:'插件管理',desc:'安装和管理 Claude Code 插件扩展'},
+  {cat:'项目管理',trigger:'add-dir',name:'添加目录',desc:'添加额外的工作目录以供 Claude 工具访问'},
+  {cat:'项目管理',trigger:'worktree',name:'工作树',desc:'创建 Git worktree 隔离工作环境'},
+  {cat:'代码分析',trigger:'review',name:'代码审查',desc:'对当前代码变更进行审查，输出改进建议'},
+  {cat:'代码分析',trigger:'test',name:'运行测试',desc:'运行项目的测试套件并分析结果'},
+  {cat:'代码分析',trigger:'lint',name:'代码检查',desc:'运行代码 Lint 检查，输出规范问题和修复建议'},
+  {cat:'代码分析',trigger:'explain',name:'解释代码',desc:'解释选中代码段或文件的逻辑和设计意图'},
+  {cat:'代码分析',trigger:'pr-comments',name:'PR 评论',desc:'为当前分支的 PR 自动生成评论和说明'},
+  {cat:'代码分析',trigger:'ultrareview',name:'云端审查',desc:'使用云端多 Agent 对当前分支进行深度代码审查'},
+  {cat:'记忆系统',trigger:'memory',name:'持久记忆',desc:'查看、编辑和管理 Claude Code 的持久化记忆'},
+  {cat:'记忆系统',trigger:'remember',name:'记住内容',desc:'让 Claude 记住当前讨论的关键信息供后续使用'},
+  {cat:'IDE 集成',trigger:'ide',name:'IDE 连接',desc:'自动连接可用的 IDE 编辑器（VS Code / JetBrains）'},
+  {cat:'IDE 集成',trigger:'terminal-setup',name:'终端设置',desc:'在终端中设置 Claude Code 的快捷键绑定'},
+  {cat:'账户认证',trigger:'login',name:'账户登录',desc:'登录 Anthropic 账户以使用 Claude Code'},
+  {cat:'账户认证',trigger:'logout',name:'账户登出',desc:'登出当前 Anthropic 账户'},
+  {cat:'账户认证',trigger:'auth',name:'认证管理',desc:'管理认证方式和凭据（API Key / OAuth）'},
+  {cat:'账户认证',trigger:'setup-token',name:'设置 Token',desc:'设置长期有效的 API 认证令牌（需订阅）'},
+  {cat:'诊断帮助',trigger:'help',name:'帮助信息',desc:'显示 Claude Code 帮助文档和可用命令列表'},
+  {cat:'诊断帮助',trigger:'doctor',name:'系统诊断',desc:'检查 Claude Code 运行健康和自动更新状态'}
+];
+
+function commandsIndexHTML() {
+  var catOrder = ['会话控制','配置管理','项目管理','代码分析','记忆系统','IDE 集成','账户认证','诊断帮助'];
+  var catCounts = {};
+  BUILTIN_COMMANDS.forEach(function(c) { catCounts[c.cat] = (catCounts[c.cat] || 0) + 1; });
+  var cmdsByCat = {};
+  BUILTIN_COMMANDS.forEach(function(c) {
+    if (!cmdsByCat[c.cat]) cmdsByCat[c.cat] = [];
+    cmdsByCat[c.cat].push(c);
+  });
+
+  var bar = '<div class="cat-bar">' +
+    '<button class="cat-pill active" data-cat="all" onclick="setFilter(\'all\')">全部<span class="count">' + BUILTIN_COMMANDS.length + '</span></button>' +
+    catOrder.map(function(cn) {
+      if (!catCounts[cn]) return '';
+      return '<button class="cat-pill" data-cat="' + esc(cn) + '" onclick="setFilter(\'' + esc(cn) + '\')">' + cn + '<span class="count">' + (catCounts[cn] || 0) + '</span></button>';
+    }).join('') +
+    '</div>';
+
+  var html = '';
+  catOrder.forEach(function(cat) {
+    var cmds = cmdsByCat[cat];
+    if (!cmds) return;
+    html += '<div class="cmd-section" data-cat="' + esc(cat) + '"><h2>' + esc(cat) + ' <span style="font-weight:300;font-size:13px;color:var(--text-muted)">' + cmds.length + ' 个命令</span></h2>';
+    html += '<div class="cmd-table-wrap"><table class="cmd-table"><thead><tr><th style="width:160px">命令</th><th style="width:140px">名称</th><th>说明</th></tr></thead><tbody>';
+    cmds.forEach(function(c) {
+      html += '<tr>' +
+        '<td><code class="cmd-code">/' + esc(c.trigger) + '</code></td>' +
+        '<td>' + esc(c.name) + '</td>' +
+        '<td class="cmd-desc">' + esc(c.desc) + '</td>' +
+      '</tr>';
+    });
+    html += '</tbody></table></div></div>';
+  });
+
+  return '<style>\n' +
+    '.cat-bar{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:24px}\n' +
+    '.cat-pill{padding:5px 12px;font-size:12px;font-weight:400;font-family:"JetBrains Mono",monospace;letter-spacing:.03em;background:var(--paper-tint);border:1px solid var(--border);color:var(--text-secondary);cursor:pointer;transition:all .12s;display:inline-flex;align-items:center;gap:5px}\n' +
+    '.cat-pill:hover{background:#E4E4DE;color:var(--text)}\n' +
+    '.cat-pill.active{background:var(--ink);border-color:var(--ink);color:var(--paper)}\n' +
+    '.cat-pill .count{font-size:10px;opacity:.7}\n' +
+    '.cmd-section h2{font-size:18px;font-weight:500;color:var(--text);margin:36px 0 12px;padding-top:16px;border-top:1px solid var(--border)}\n' +
+    '.cmd-table-wrap{overflow-x:auto}\n' +
+    '.cmd-table{width:100%;border-collapse:collapse;font-size:13px;margin-bottom:8px}\n' +
+    '.cmd-table th{background:var(--paper-tint);font-weight:500;font-size:12px;padding:8px 12px;border:1px solid var(--border);text-align:left;white-space:nowrap}\n' +
+    '.cmd-table td{padding:8px 12px;border:1px solid var(--border);font-size:13px;line-height:1.5}\n' +
+    '.cmd-code{font-family:"JetBrains Mono","SF Mono","Consolas",monospace;font-size:12px;background:var(--paper-tint);padding:2px 6px;color:var(--ink);white-space:nowrap}\n' +
+    '.cmd-desc{color:var(--text-secondary);font-size:12px}\n' +
+    '.back-link{display:inline-block;margin-bottom:20px;font-size:13px;font-weight:300;color:var(--text-secondary);text-decoration:none;border:1px solid var(--border);padding:6px 16px;transition:all .15s}\n' +
+    '.back-link:hover{border-color:var(--ink);color:var(--ink)}\n' +
+    '.page h1{font-size:28px;font-weight:200;letter-spacing:-0.02em;color:var(--ink);margin-bottom:8px}\n' +
+    '.page .subtitle{font-size:13px;color:var(--text-muted);font-weight:300;margin-bottom:24px}\n' +
+  '</style>\n' +
+  '<h1>Claude Code 命令</h1>\n' +
+  '<div class="subtitle">内置斜杠命令参考 · 在 Claude Code 会话中输入 <code>/</code> + 命令名即可触发</div>\n' +
+  bar +
+  html +
+  '<script>\n' +
+  'function setFilter(t){' +
+  '  document.querySelectorAll(".cat-pill").forEach(function(p){p.classList.remove("active");});' +
+  '  document.querySelectorAll(".cat-pill").forEach(function(p){if(p.dataset.cat===t)p.classList.add("active");});' +
+  '  document.querySelectorAll(".cmd-section").forEach(function(s){' +
+  '    if(t==="all"||s.dataset.cat===t){s.style.display="";}else{s.style.display="none";}' +
+  '  });' +
+  '}' +
+  '<\/script>';
+}
+
+
 function startServer() {
   const app = express();
   app.use(express.json());
@@ -638,6 +734,226 @@ function startServer() {
     var skills = scanAllSkills();
     var body = skillIndexHTML(skills);
     res.send(pageShell('技能', 'Claude Code 技能目录', body, 'skills', skills.length));
+  });
+
+  // Commands (Claude Code 内置命令参考)
+  app.get('/commands', function(req, res) {
+    res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+    var body = commandsIndexHTML();
+    res.send(pageShell('命令', 'Claude Code 内置命令参考', body, 'commands', BUILTIN_COMMANDS.length));
+  });
+
+  // Workspace sub-page — scan project directories
+  function scanWorkspace(basePath) {
+    if (!fs.existsSync(basePath)) return [];
+    var projects = [];
+    var entries = fs.readdirSync(basePath);
+    entries.forEach(function(name) {
+      var fullPath = path.join(basePath, name);
+      var stat = fs.statSync(fullPath);
+      if (!stat.isDirectory()) return;
+      if (name.startsWith('_')) return;
+      if (name === 'node_modules' || name === '.git') return;
+
+      var meta = {};
+      try { meta = JSON.parse(read(path.join(fullPath, '.project.json'))); } catch(_) {}
+
+      var latest = stat.mtime;
+      try {
+        walkDir(fullPath, function(subPath) {
+          try {
+            var s = fs.statSync(subPath);
+            if (s.mtime > latest) latest = s.mtime;
+          } catch(_) {}
+        });
+      } catch(_) {}
+
+      var daysAgo = Math.floor((Date.now() - latest.getTime()) / 86400000);
+      var recency = daysAgo <= 7 ? 'week' : (daysAgo <= 15 ? 'halfMonth' : (daysAgo <= 30 ? 'month' : 'older'));
+      var recencyLabel = daysAgo <= 7 ? '7天内' : (daysAgo <= 15 ? '15天内' : (daysAgo <= 30 ? '30天内' : '超过30天'));
+
+      var status = meta.status || 'undefined';
+      var statusLabel = status === 'active' ? '活跃' : (status === 'archived' ? '已归档' : (status === 'abandoned' ? '已放弃' : '待定义'));
+      var statusDot = status === 'active' ? 'on' : (status === 'archived' ? 'warn' : (status === 'abandoned' ? 'off' : 'none'));
+
+      projects.push({
+        dir: name,
+        name: meta.name || name,
+        description: meta.description || '',
+        status: status,
+        statusLabel: statusLabel,
+        statusDot: statusDot,
+        recency: recency,
+        recencyLabel: recencyLabel,
+        daysAgo: daysAgo
+      });
+    });
+
+    var statusOrder = {active:0, undefined:1, archived:2, abandoned:3};
+    var recencyOrder = {week:0, halfMonth:1, month:2, older:3};
+    projects.sort(function(a,b) {
+      var sa = statusOrder[a.status] != null ? statusOrder[a.status] : 99;
+      var sb = statusOrder[b.status] != null ? statusOrder[b.status] : 99;
+      if (sa !== sb) return sa - sb;
+      return (recencyOrder[a.recency] || 99) - (recencyOrder[b.recency] || 99);
+    });
+    return projects;
+  }
+
+  function walkDir(dir, cb) {
+    var entries = fs.readdirSync(dir);
+    for (var i = 0; i < entries.length; i++) {
+      var p = path.join(dir, entries[i]);
+      try {
+        var s = fs.statSync(p);
+        if (s.isDirectory()) {
+          if (entries[i] === 'node_modules' || entries[i] === '.git' || entries[i] === '_runtime') continue;
+          walkDir(p, cb);
+        } else { cb(p); }
+      } catch(_) {}
+    }
+  }
+
+  function workspaceHTML(projects, meta) {
+    var catCounts = {all: projects.length};
+    projects.forEach(function(p) {
+      catCounts[p.status] = (catCounts[p.status] || 0) + 1;
+      catCounts[p.recency] = (catCounts[p.recency] || 0) + 1;
+    });
+
+    var statusBar = '<div class="cat-bar">' +
+      '<button class="cat-pill active" data-filter="all" onclick="setFilter(\'all\')">全部<span class="count">' + projects.length + '</span></button>' +
+      '<button class="cat-pill" data-filter="active" onclick="setFilter(\'active\')">🟢 活跃<span class="count">' + (catCounts.active || 0) + '</span></button>' +
+      '<button class="cat-pill" data-filter="archived" onclick="setFilter(\'archived\')">🟡 已归档<span class="count">' + (catCounts.archived || 0) + '</span></button>' +
+      '<button class="cat-pill" data-filter="abandoned" onclick="setFilter(\'abandoned\')">⚫ 已放弃<span class="count">' + (catCounts.abandoned || 0) + '</span></button>' +
+      '<button class="cat-pill" data-filter="undefined" onclick="setFilter(\'undefined\')">⚪ 待定义<span class="count">' + (catCounts.undefined || 0) + '</span></button>' +
+      '</div>';
+
+    var recencyBar = '<div class="cat-bar" style="margin-top:-8px">' +
+      '<span style="font-size:10px;color:var(--text-muted);margin-right:4px;font-family:\'JetBrains Mono\',monospace\">时间</span>' +
+      '<button class="cat-pill" data-filter="week" onclick="setRecencyFilter(\'week\')">⏱ 7天内<span class="count">' + (catCounts.week || 0) + '</span></button>' +
+      '<button class="cat-pill" data-filter="halfMonth" onclick="setRecencyFilter(\'halfMonth\')">📅 15天内<span class="count">' + (catCounts.halfMonth || 0) + '</span></button>' +
+      '<button class="cat-pill" data-filter="month" onclick="setRecencyFilter(\'month\')">🗓 30天内<span class="count">' + (catCounts.month || 0) + '</span></button>' +
+      '<button class="cat-pill" data-filter="older" onclick="setRecencyFilter(\'older\')">🏛 超过30天<span class="count">' + (catCounts.older || 0) + '</span></button>' +
+      '</div>';
+
+    var cards = projects.map(function(p) {
+      var daysText = p.daysAgo === 0 ? '今天' : (p.daysAgo + '天前');
+      return '<div class="proj-card" data-status="' + p.status + '" data-recency="' + p.recency + '">' +
+        '<div class="card-body">' +
+          '<div class="card-mono">' + esc(monogram(p.name)) + '</div>' +
+          '<div class="card-info">' +
+            '<div class="card-name">' +
+              '<span class="status-dot ' + p.statusDot + '"></span>' +
+              esc(p.name) +
+              '<span class="status-tag tag-' + p.status + '">' + p.statusLabel + '</span>' +
+            '</div>' +
+            '<div class="card-dir">' + esc(p.dir) + '</div>' +
+            (p.description ? '<div class="card-desc">' + esc(p.description) + '</div>' : '<div class="card-desc" style="color:var(--text-muted);font-style:italic">暂无简介 · 添加 .project.json 描述此项目</div>') +
+            '<div class="card-meta">' +
+              '<span class="recency-badge badge-' + p.recency + '">' + p.recencyLabel + ' · ' + daysText + '</span>' +
+            '</div>' +
+          '</div>' +
+        '</div>' +
+        '<div class="card-actions">' +
+          '<button class="btn go" onclick="fetch(\'/workspace/' + encodeURIComponent(meta.id) + '/' + encodeURIComponent(p.dir) + '\')">打开文件夹</button>' +
+        '</div>' +
+      '</div>';
+    }).join('\n');
+
+    return '<style>\n' +
+      '.cat-bar{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}\n' +
+      '.cat-pill{padding:5px 12px;font-size:12px;font-weight:400;font-family:"JetBrains Mono",monospace;letter-spacing:.03em;background:var(--paper-tint);border:1px solid var(--border);color:var(--text-secondary);cursor:pointer;transition:all .12s;display:inline-flex;align-items:center;gap:5px}\n' +
+      '.cat-pill:hover{background:#E4E4DE;color:var(--text)}\n' +
+      '.cat-pill.active{background:var(--ink);border-color:var(--ink);color:var(--paper)}\n' +
+      '.cat-pill .count{font-size:10px;opacity:.7}\n' +
+      '.proj-grid{display:grid;grid-template-columns:repeat(auto-fill, minmax(280px, 1fr));gap:12px;margin-top:8px}\n' +
+      '.proj-card{background:var(--paper);padding:20px;display:flex;flex-direction:column;gap:6px;transition:transform .15s,box-shadow .15s;box-shadow:var(--shadow-border),var(--shadow-card)}\n' +
+      '.proj-card:hover{transform:translateY(-1px);box-shadow:var(--shadow-border),var(--shadow-card-hover)}\n' +
+      '.card-body{display:flex;align-items:flex-start;gap:12px;flex:1}\n' +
+      '.card-mono{flex-shrink:0;width:40px;height:40px;background:var(--ink);color:var(--paper);display:flex;align-items:center;justify-content:center;font-family:"JetBrains Mono",monospace;font-size:13px;font-weight:500}\n' +
+      '.card-info{flex:1;min-width:0}\n' +
+      '.card-name{font-size:15px;font-weight:400;letter-spacing:-0.01em;line-height:1.4;display:flex;align-items:center;gap:8px;flex-wrap:wrap}\n' +
+      '.card-dir{font-size:10px;font-family:"JetBrains Mono",monospace;color:var(--text-muted);margin-top:1px}\n' +
+      '.card-desc{font-size:11px;color:var(--text-secondary);font-weight:300;line-height:1.45;margin-top:6px}\n' +
+      '.card-meta{margin-top:4px}\n' +
+      '.card-actions{margin-top:4px}\n' +
+      '.status-dot{width:7px;height:7px;flex-shrink:0;border-radius:50%}\n' +
+      '.status-dot.on{background:var(--status-on);animation:pulse 2s ease-in-out infinite}\n' +
+      '.status-dot.warn{background:#D97706}\n' +
+      '.status-dot.off{background:var(--status-off)}\n' +
+      '.status-dot.none{background:var(--border)}\n' +
+      '.status-tag{font-size:10px;padding:1px 6px;font-weight:400;font-family:"JetBrains Mono",monospace}\n' +
+      '.tag-active{color:var(--status-on);background:rgba(26,138,63,.08)}\n' +
+      '.tag-archived{color:#D97706;background:rgba(217,119,6,.08)}\n' +
+      '.tag-abandoned{color:var(--text-muted);background:rgba(153,153,153,.08)}\n' +
+      '.tag-undefined{color:var(--text-muted);background:var(--paper-tint)}\n' +
+      '.recency-badge{font-size:10px;padding:1px 6px;font-weight:400}\n' +
+      '.badge-week{color:#1A8A3F;background:rgba(26,138,63,.08)}\n' +
+      '.badge-halfMonth{color:#8B5CF6;background:rgba(139,92,246,.08)}\n' +
+      '.badge-month{color:#D97706;background:rgba(217,119,6,.08)}\n' +
+      '.badge-older{color:var(--text-muted);background:var(--paper-tint)}\n' +
+      '.back-link{display:inline-block;margin-bottom:20px;font-size:13px;font-weight:300;color:var(--text-secondary);text-decoration:none;border:1px solid var(--border);padding:6px 16px;transition:all .15s}\n' +
+      '.back-link:hover{border-color:var(--ink);color:var(--ink)}\n' +
+      '.page h1{font-size:28px;font-weight:200;letter-spacing:-0.02em;color:var(--ink);margin-bottom:4px}\n' +
+      '.page .ws-subtitle{font-size:13px;color:var(--text-muted);font-weight:300;margin-bottom:20px;font-family:"JetBrains Mono",monospace}\n' +
+    '</style>\n' +
+    '<a class="back-link" href="/">← 返回工具架</a>\n' +
+    '<h1>' + esc(meta.name) + '</h1>\n' +
+    '<div class="ws-subtitle">' + esc(meta.projectPath) + ' · ' + projects.length + ' 个子项目</div>\n' +
+    statusBar + recencyBar +
+    '<div class="proj-grid">' + cards + '</div>' +
+    '<script>\n' +
+    'var currentStatus = "all"; var currentRecency = "all";\n' +
+    'function applyFilters() {\n' +
+    '  document.querySelectorAll(".proj-card").forEach(function(c) {\n' +
+    '    var s = currentStatus === "all" || c.dataset.status === currentStatus;\n' +
+    '    var r = currentRecency === "all" || c.dataset.recency === currentRecency;\n' +
+    '    c.style.display = (s && r) ? "flex" : "none";\n' +
+    '  });\n' +
+    '}\n' +
+    'function setFilter(t) {\n' +
+    '  currentStatus = t;\n' +
+    '  document.querySelectorAll(".cat-bar:first-of-type .cat-pill").forEach(function(p){p.classList.toggle("active", p.dataset.filter === t);});\n' +
+    '  applyFilters();\n' +
+    '}\n' +
+    'function setRecencyFilter(t) {\n' +
+    '  currentRecency = t;\n' +
+    '  document.querySelectorAll(".cat-bar:nth-of-type(2) .cat-pill").forEach(function(p){p.classList.toggle("active", p.dataset.filter === t);});\n' +
+    '  applyFilters();\n' +
+    '}' +
+    '<\/script>';
+
+    // Also serve /open-dir for workspace subdirs via existing /open-dir route
+  }
+
+  // Workspace sub-page
+  app.get('/workspace/:id', function(req, res) {
+    try {
+      res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+      var mfPath = findManifest(req.params.id);
+      if (!mfPath) return res.status(404).send('找不到工作区');
+      var mf = JSON.parse(read(mfPath));
+      if (!mf.projectPath) return res.status(400).send('该工具不是工作区');
+      var projects = scanWorkspace(mf.projectPath);
+      var body = workspaceHTML(projects, mf);
+      res.send(pageShell(mf.name, mf.projectPath, body, 'workspace', projects.length));
+    } catch(e) {
+      console.error('Workspace error:', e.message, e.stack);
+      res.status(500).send('Error: ' + e.message);
+    }
+  });
+
+  // Open workspace sub-directory
+  app.get('/workspace/:id/:subdir', function(req, res) {
+    var mfPath = findManifest(req.params.id);
+    if (!mfPath) return res.status(404).send('not found');
+    var mf = JSON.parse(read(mfPath));
+    if (!mf.projectPath) return res.status(400).send('not a workspace');
+    var dir = path.join(mf.projectPath, req.params.subdir);
+    if (!fs.existsSync(dir)) return res.status(404).send('directory not found');
+    openFolder(dir);
+    res.json({ok:true,opened:dir});
   });
 
   // Individual skill system-diagram
@@ -905,6 +1221,9 @@ function startServer() {
         '      <div class="phil-body"><strong>~/.agentboard/tips/ 是唯一位置。</strong>不重复存 memory，不复制到项目。agentboard 直接渲染。</div>\n' +
         '    </div>\n' +
         '  </div>\n' +
+        '</div>\n' +
+        '<div style="max-width:1080px;margin:0 auto;padding:0 32px 24px;font-size:11px;opacity:.35;font-family:\"JetBrains Mono\",\"SF Mono\",\"Consolas\",monospace">\n' +
+        '  <a href="/tips/CONSTITUTION.md" style="color:inherit">写入标准 → CONSTITUTION.md</a>（五问 &middot; 格式 &middot; 分类）\n' +
         '</div>\n' +
         '<script>\n' +
         'var tipFilter="all";\n' +
@@ -1467,6 +1786,7 @@ function startServer() {
     }
     var assetToolCount = listDirs(TOOLS_DIR).length;
     var assetSkillCount = fs.existsSync(SKILLS_DIR) ? listDirs(SKILLS_DIR).length : 0;
+    var assetCommandCount = BUILTIN_COMMANDS.length;
     var assetTipCount = fs.existsSync(TIPS_DIR) ? fs.readdirSync(TIPS_DIR).filter(function(f){ return f.endsWith('.md'); }).length : 0;
     var designSpecLines = (read(path.join(PROJECT_DIR, 'design-spec.md')) || '').split('\n').length;
     var repoSpecLines = (read(path.join(PROJECT_DIR, 'repo-spec.md')) || '').split('\n').length;
@@ -1492,7 +1812,7 @@ function startServer() {
       todayCalls: tdy,
       byCaller: { agent: tc.agent||0, browser: tc.browser||0, unknown: tc.unknown||0 },
       byAction: { list: ta.list||0, control: (ta.control||0)+(ta.detail||0), admin: ta.admin||0 },
-      assets: { tools: assetToolCount, skills: assetSkillCount, tips: assetTipCount, designSpec: designSpecLines, repoSpec: repoSpecLines, global: globalLines, api: apiEndpoints, cron: cronTasks, startup: startupCount, minds: loadPerspectives().length }
+      assets: { tools: assetToolCount, skills: assetSkillCount, commands: assetCommandCount, tips: assetTipCount, designSpec: designSpecLines, repoSpec: repoSpecLines, global: globalLines, api: apiEndpoints, cron: cronTasks, startup: startupCount, minds: loadPerspectives().length }
     });
     html = html.replace('<!--STATS_SNAPSHOT-->', '<script>window.__stats=' + snap + '</script>');
     res.type('html').send(html);

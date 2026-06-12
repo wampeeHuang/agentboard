@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
@@ -75,8 +75,30 @@ body{min-height:100vh;display:flex;flex-direction:column}
 .badge-API{color:#8B5CF6;background:rgba(139,92,246,.08)}
 .badge-CLI{color:#D97706;background:rgba(217,119,6,.08)}
 .badge-Web{color:#3B82F6;background:rgba(59,130,246,.08)}
+.badge-命令{color:#8B5CF6;background:rgba(139,92,246,.08)}
+.badge-文件夹{color:#D97706;background:rgba(217,119,6,.08)}
 .owner-badge{font-size:9px;font-weight:400;color:var(--text-muted);padding:0 5px;border:1px solid var(--border);font-family:'JetBrains Mono','SF Mono','Consolas',monospace;letter-spacing:.04em;line-height:1.6;display:inline-flex;align-items:center}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+
+.cmd-card{height:200px;border-left:2px solid #8B5CF6}
+.folder-card{height:200px;border-left:2px solid #D97706}
+.card-dot.cmd{background:#8B5CF6}
+.card-dot.folder{background:#D97706}
+.card-trigger{font-family:'JetBrains Mono','SF Mono','Consolas',monospace;font-size:11px;color:var(--ink);background:var(--paper-tint);padding:1px 6px;white-space:nowrap}
+.cmd-hint{font-size:10px;color:var(--text-muted);font-family:'JetBrains Mono','SF Mono','Consolas',monospace;padding:3px 8px;border:1px solid var(--border);white-space:nowrap}
+.group-card{min-height:auto;height:auto;border-left:2px solid var(--ink)}
+.group-toggle{font-size:11px;color:var(--ink);cursor:pointer;padding:4px 12px;border:1px solid var(--border);background:var(--paper);font-family:inherit;display:inline-flex;align-items:center;gap:4px;white-space:nowrap}
+.group-toggle:hover{background:var(--paper-tint);border-color:var(--ink)}
+.card-children{display:none;padding:8px 14px 12px;border-top:1px solid var(--border);margin:0 14px}
+.group-card.expanded .card-children{display:block}
+.group-child{display:flex;align-items:center;gap:8px;padding:5px 0;font-size:12px;border-bottom:1px solid var(--paper-tint)}
+.group-child:last-child{border-bottom:none}
+.group-child .gc-icon{font-size:13px;flex-shrink:0;width:22px;text-align:center}
+.group-child .gc-trigger{font-family:'JetBrains Mono','SF Mono','Consolas',monospace;font-size:10px;color:var(--ink);background:var(--paper-tint);padding:1px 6px;min-width:100px;white-space:nowrap}
+.group-child .gc-name{font-weight:400;font-size:12px;white-space:nowrap}
+.group-child .gc-desc{color:var(--text-muted);font-size:11px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.group-count{font-size:11px;color:var(--text-muted);font-family:'JetBrains Mono','SF Mono','Consolas',monospace}
+.badge-命令组{color:var(--ink);background:rgba(var(--ink-rgb),.08)}
 
 .card-body{display:flex;align-items:flex-start;gap:14px;flex:1;padding:0 14px}
 .card-mono{flex-shrink:0;width:44px;height:44px;background:var(--ink);color:var(--paper);display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono','SF Mono','Consolas',monospace;font-size:14px;font-weight:500}
@@ -97,6 +119,8 @@ body{min-height:100vh;display:flex;flex-direction:column}
 .btn.stop:hover{background:#C0392B;border-color:#C0392B;color:#fff}
 .btn.open-done{background:var(--status-on);border-color:var(--status-on);color:#fff;font-weight:500}
 .btn.open-done:hover{background:#157A34;border-color:#157A34;color:#fff}
+.btn.public{background:var(--paper);border-color:var(--ink);color:var(--ink);font-weight:500}
+.btn.public:hover{background:var(--ink);color:var(--paper)}
 
 /* Filter bar */
 .filter-bar{max-width:1080px;margin:0 auto;padding:4px 32px}
@@ -188,6 +212,7 @@ OCR:  Tesseract OCR (pytesseract)
       <span class="nav-sep"></span>
       <a href="/" title="工具注册表" id="assetTools">工具</a>
       <a href="/skills" title="Claude Code 技能" id="assetSkills">技能</a>
+	      <a href="/commands" title="Claude Code 内置命令参考" id="assetCommands">命令</a>
       <a href="/tips" title="操作日志" id="assetTips">操作日志</a>
       <a href="/api" title="API 文档" id="assetApi">API</a>
       <span class="nav-sep"></span>
@@ -219,6 +244,11 @@ OCR:  Tesseract OCR (pytesseract)
       <span class="stat-num" id="stoppedCount">—</span>
       <span class="stat-label">未启动</span>
     </div>
+    <span class="stat-sep">|</span>
+    <div class="stat-card" data-filter="public" onclick="setPublicStatFilter()" id="publicStat">
+      <span class="stat-num" id="publicCount">—</span>
+      <span class="stat-label">公开站</span>
+    </div>
   </div>
   <input class="search-input" placeholder="搜索…" oninput="render()" id="searchInput">
   <button class="btn-refresh" onclick="fetchTools()" id="refreshBtn">刷新</button>
@@ -245,6 +275,10 @@ OCR:  Tesseract OCR (pytesseract)
     <span class="filter-dim">归属</span>
     <button class="filter-pill" data-owner="自建" onclick="setOwnerFilter('自建')" title="自己部署和运维的工具，有启动/停止命令">自建工具<span class="pill-cnt">0</span></button>
     <button class="filter-pill" data-owner="外部" onclick="setOwnerFilter('外部')" title="第三方服务或平台，无需自己运维">外部<span class="pill-cnt">0</span></button>
+  </div>
+  <div class="filter-row">
+    <span class="filter-dim">部署</span>
+    <button class="filter-pill" data-public="true" onclick="setPublicFilter(true)">公开站<span class="pill-cnt">0</span></button>
   </div>
 </div>
 
@@ -317,10 +351,12 @@ var starting = {}; // id → true when waiting for start
 var stopping = {}; // id → true when waiting for stop
 var opened = {};   // id → true when user clicked "打开" this session
 try { opened = JSON.parse(sessionStorage.getItem('opened')||'{}'); } catch(_) {}
+var expandedGroups = {};
 var filter = 'all';
 var domainFilter = 'all';
 var formFilter = 'all';
 var ownerFilter = 'all';
+var publicFilter = false;
 
 // 领域映射：category → 领域
 var domainMap = {
@@ -357,6 +393,7 @@ var catMeta = {
 function setFilter(f) {
   if (filter === f && f !== 'all') { filter = 'all'; }
   else { filter = f; }
+  publicFilter = false; syncPublicUI();
   document.querySelectorAll('.stat-card').forEach(function(c){ c.classList.remove('active'); });
   var card = document.querySelector('.stat-card[data-filter="' + filter + '"]');
   if (card) card.classList.add('active');
@@ -387,6 +424,35 @@ function setOwnerFilter(o) {
   render();
 }
 
+function setPublicFilter(v) {
+  publicFilter = !publicFilter;
+  syncPublicUI();
+  render();
+}
+
+function setPublicStatFilter() {
+  publicFilter = !publicFilter;
+  syncPublicUI();
+  // 清除其他 stat card 的 active 状态
+  document.querySelectorAll('.stat-card').forEach(function(c){ c.classList.remove('active'); });
+  if (publicFilter) {
+    var stat = document.getElementById('publicStat');
+    if (stat) stat.classList.add('active');
+  } else {
+    var allStat = document.querySelector('.stat-card[data-filter="all"]');
+    if (allStat) allStat.classList.add('active');
+  }
+  render();
+}
+
+function syncPublicUI() {
+  document.querySelectorAll('.filter-pill[data-public]').forEach(function(p){ p.classList.remove('active'); });
+  if (publicFilter) {
+    var pill = document.querySelector('.filter-pill[data-public]');
+    if (pill) pill.classList.add('active');
+  }
+}
+
 function getSearchTerm() {
   var inp = document.getElementById('searchInput');
   return (inp && inp.value || '').trim().toLowerCase();
@@ -414,6 +480,9 @@ function isVirtual(t) {
 
 // 形态检测：本地/API/CLI/Web
 function getToolForm(t) {
+	  if (t.type === 'command') return '命令';
+	  if (t.type === 'folder') return '文件夹';
+	  if (t.type === 'group') return '命令组';
   var hasPorts = (t.ports && t.ports.length > 0) || t.port;
   var hasCommands = t.startCommand || t.stopCommand;
   var hasApi = t.apiBase;
@@ -445,6 +514,7 @@ function getToolOwner(t) {
       var setT = function(id, label, count) { var el = document.getElementById(id); if (el) el.title = label + ' · ' + count; };
       setT('assetTools', '工具注册表', s.assets.tools + ' 个');
       setT('assetSkills', 'Claude Code 技能', s.assets.skills + ' 个');
+	      setT('assetCommands', 'Claude Code 内置命令', s.assets.commands + ' 个');
       setT('assetTips', '操作日志', s.assets.tips + ' 条');
       setT('assetDesignSpec', '设计规范', s.assets.designSpec + ' 行');
       setT('assetRepoSpec', '工程规范', s.assets.repoSpec + ' 行');
@@ -509,16 +579,17 @@ function getFilterDesc() {
   if (domainFilter !== 'all') parts.push(domainFilter);
   if (formFilter !== 'all') parts.push(formFilter);
   if (ownerFilter !== 'all') parts.push(ownerFilter === '自建' ? '自建工具' : '外部');
+  if (publicFilter) parts.push('已部署公开站');
   return parts.length ? parts.join(' · ') : '全部工具';
 }
 
 function resetAllFilters() {
-  filter = 'all'; domainFilter = 'all'; formFilter = 'all'; ownerFilter = 'all';
+  filter = 'all'; domainFilter = 'all'; formFilter = 'all'; ownerFilter = 'all'; publicFilter = false;
   document.getElementById('searchInput').value = '';
   document.querySelectorAll('.stat-card').forEach(function(c){ c.classList.remove('active'); });
   var allStat = document.querySelector('.stat-card[data-filter="all"]');
   if (allStat) allStat.classList.add('active');
-  document.querySelectorAll('.filter-pill[data-domain],.filter-pill[data-form],.filter-pill[data-owner]').forEach(function(p){ p.classList.remove('active'); });
+  document.querySelectorAll('.filter-pill[data-domain],.filter-pill[data-form],.filter-pill[data-owner],.filter-pill[data-public]').forEach(function(p){ p.classList.remove('active'); });
   render();
 }
 
@@ -543,6 +614,9 @@ function updatePillCounts() {
     var pill = document.querySelector('.filter-pill[data-owner="' + o + '"] .pill-cnt');
     if (pill) pill.textContent = ownerCounts[o] || 0;
   });
+  var publicCnt = tools.filter(function(t){ return t.publicUrl; }).length;
+  var publicPill = document.querySelector('.filter-pill[data-public] .pill-cnt');
+  if (publicPill) publicPill.textContent = publicCnt;
 }
 
 function render() {
@@ -561,6 +635,7 @@ function render() {
   if (domainFilter !== 'all') sorted = sorted.filter(function(t){return (domainMap[t.category||'其他']||'职能') === domainFilter;});
   if (formFilter !== 'all') sorted = sorted.filter(function(t){return getToolForm(t) === formFilter;});
   if (ownerFilter !== 'all') sorted = sorted.filter(function(t){return getToolOwner(t) === ownerFilter;});
+  if (publicFilter) sorted = sorted.filter(function(t){return t.publicUrl;});
   var search = getSearchTerm();
   if (search) {
     sorted = sorted.filter(function(t){
@@ -612,19 +687,53 @@ function render() {
     var portsText = ports.length ? '端口 ' + ports.map(function(p){return ':'+p;}).join(', ') : '';
     var v = isVirtual(t);
     var hasCommands = t.startCommand || t.stopCommand;
-    var klass = t.running ? 'on' : 'off';
+    var cmdType = t.type || 'service';
+		var klass = cmdType === 'command' ? 'cmd' : (cmdType === 'folder' ? 'folder' : (t.running ? 'on' : 'off'));
     var pending = starting[t.id];
     var halting = stopping[t.id];
 
     var isSelf = t.id === 'dashboard';
     var portCount = (t.ports && t.ports.length) || (t.port ? 1 : 0);
     var isNoPortCli = portCount === 0 && hasCommands;
+
+    // Group card rendering
+    if (cmdType === 'group') {
+      var children = t.children || [];
+      var childHtml = children.map(function(c){
+        return '<div class="group-child">' +
+          '<span class="gc-icon">' + (c.icon||'') + '</span>' +
+          '<span class="gc-trigger">/' + c.trigger + '</span>' +
+          '<span class="gc-name">' + c.name + '</span>' +
+          '<span class="gc-desc">' + (c.desc||'') + '</span>' +
+        '</div>';
+      }).join('');
+      var expanded = expandedGroups[t.id];
+      return '<div class="tool-card group-card' + (expanded?' expanded':'') + '" data-id="' + t.id + '">'
+        + '<div class="card-body">'
+          + '<div class="card-mono">' + (t.icon||monogram(t.name)) + '</div>'
+          + '<div class="card-info">'
+            + '<div class="card-name">' + t.name + '</div>'
+            + '<div class="card-id">' + t.id + '</div>'
+            + '<div class="card-meta"><span class="group-count">' + children.length + ' 个命令</span></div>'
+            + (t.description ? '<div class="card-desc">' + t.description + '</div>' : '')
+          + '</div>'
+        + '</div>'
+        + '<div class="card-children">' + childHtml + '</div>'
+        + '<div class="card-actions">'
+          + '<button class="group-toggle" onclick="event.stopPropagation();toggleGroup(\'' + t.id + '\')">' + (expanded ? '收起 ▴' : '展开 ▾ (' + children.length + '个)') + '</button>'
+          + '<span class="card-badges"><span class="form-badge badge-命令组">命令组</span></span>'
+        + '</div>'
+      + '</div>';
+    }
+
     var actionHtml = '';
     if (pending) {
       actionHtml = '<button class="btn go starting">' + (isNoPortCli ? '启动中…' : '启动中…') + '</button>';
     } else if (halting) {
       actionHtml = '<button class="btn stop" style="opacity:.6">停止中…</button>';
-    } else if (hasCommands && !isSelf) {
+    } else if (cmdType === 'folder') {
+      actionHtml = '<button class="btn go" onclick="event.stopPropagation();location.href=\'/workspace/' + t.id + '\'">查看项目</button>';
+    } else if (hasCommands && !isSelf && cmdType !== 'command') {
       if (isNoPortCli) {
         actionHtml = '<button class="btn go" onclick="event.stopPropagation();startTool(\'' + t.id + '\')">终端</button>';
       } else if (t.running) {
@@ -643,8 +752,10 @@ function render() {
     var openLabel = isOpened ? '打开中' : '打开';
     var openClass = isOpened ? 'btn open-done' : 'btn';
     var openBtn = (t.url && (t.running || v)) ? '<a href="' + t.url + '" target="_blank" class="' + openClass + '" onclick="event.stopPropagation();markOpened(\'' + t.id + '\')">' + openLabel + '</a>' : '';
+    var publicBtn = t.publicUrl ? '<a href="' + t.publicUrl + '" target="_blank" class="btn public" onclick="event.stopPropagation()" title="公开站: ' + t.publicUrl + '">公开站</a>' : '';
 
-    return '<div class="tool-card' + (v?' virtual':'') + (isSelf?' self':'') + '" data-id="' + t.id + '" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)">'
+    var extraClass = v ? ' virtual' : ''; if (isSelf) extraClass += ' self'; if (cmdType === 'command') extraClass += ' cmd-card'; if (cmdType === 'folder') extraClass += ' folder-card';
+	return '<div class="tool-card' + extraClass + '" data-id="' + t.id + '" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)"' + (cmdType === 'folder' ? ' onclick="location.href=\'/workspace/' + t.id + '\'" style="cursor:pointer"' : '') + '>'
       + '<span class="card-dot ' + klass + '"></span>'
       + '<div class="card-drag-handle" title="拖拽排序" draggable="true" ondragstart="handleDragStart(event)" ondragend="handleDragEnd(event)"></div>'
       + '<div class="card-body">'
@@ -652,13 +763,18 @@ function render() {
         + '<div class="card-info">'
           + '<div class="card-name">' + (t.icon||'') + ' ' + t.name + '</div>'
           + '<div class="card-id">' + t.id + '</div>'
-          + (portsText || t.description ? '<div class="card-meta">' + (portsText||'') + '</div>' : '')
+          + (cmdType === 'command' && t.trigger ? '<div class="card-meta"><span class="card-trigger">/' + t.trigger + '</span></div>' : (portsText ? '<div class="card-meta">' + portsText + '</div>' : (cmdType === 'folder' ? '<div class="card-meta">文件夹</div>' : '')))
           + (t.description ? '<div class="card-desc" title="' + t.description.replace(/"/g,'&quot;') + '">' + t.description + '</div>' : '')
         + '</div>'
       + '</div>'
-      + '<div class="card-actions">' + (openBtn||'') + (actionHtml||'') + '<span class="card-badges">' + formBadge + ownerBadge + '</span></div>'
+      + '<div class="card-actions">' + (cmdType === 'command' ? '<span class="cmd-hint">在 Claude Code 中输入</span>' : (openBtn||'') + (actionHtml||'') + (publicBtn||'')) + '<span class="card-badges">' + formBadge + ownerBadge + '</span></div>'
     + '</div>';
   }).join('');
+}
+
+function toggleGroup(id) {
+  expandedGroups[id] = !expandedGroups[id];
+  render();
 }
 
 function markOpened(id) {
@@ -759,6 +875,7 @@ function updateCounts() {
   document.getElementById('openableCount').textContent = tools.filter(function(t){return (t.running || isVirtual(t)) && !opened[t.id] && t.url;}).length;
   document.getElementById('openedCount').textContent = tools.filter(function(t){return (t.running || isVirtual(t)) && opened[t.id] && t.url;}).length;
   document.getElementById('stoppedCount').textContent = tools.filter(function(t){return t.running === false;}).length;
+  document.getElementById('publicCount').textContent = tools.filter(function(t){return t.publicUrl;}).length;
 }
 
 function saveCardOrder() {
