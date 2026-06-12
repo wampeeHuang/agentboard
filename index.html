@@ -254,7 +254,6 @@ OCR:  Tesseract OCR (pytesseract)
   <button class="btn-refresh" onclick="fetchTools()" id="refreshBtn">刷新</button>
 </div>
 
-<div class="section-label">筛选</div>
 <div class="filter-bar">
   <div class="filter-row">
     <span class="filter-dim">领域</span>
@@ -371,7 +370,8 @@ var domainMap = {
   '推理': '推理',
   '创作': '创作',
   '职能': '职能',
-  '工具': '职能'
+  '工具': '职能',
+  '工作区': '职能'
 };
 
 // 分类显示名 + 悬停解释。key 匹配 manifest.json 里的 category 字段
@@ -598,7 +598,7 @@ function updatePillCounts() {
   var formCounts = {};
   var ownerCounts = {};
   tools.forEach(function(t) {
-    var c = t.category || '其他'; domainCounts[c] = (domainCounts[c] || 0) + 1;
+    var c = domainMap[t.category||'其他'] || '职能'; domainCounts[c] = (domainCounts[c] || 0) + 1;
     var f = getToolForm(t); formCounts[f] = (formCounts[f] || 0) + 1;
     var o = getToolOwner(t); ownerCounts[o] = (ownerCounts[o] || 0) + 1;
   });
