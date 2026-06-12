@@ -137,6 +137,80 @@ function winPath(p) {
   return m ? m[1].toUpperCase() + ':\\' + p.slice(3) : p;
 }
 
+// Chinese skill name -> SKILL.md name: field not used, map ourselves
+var CHINESE_NAMES = {
+  'algorithmic-art': '算法艺术',
+  'brand-guidelines': '品牌设计指南',
+  'canvas-design': '画布设计',
+  'claude-api': 'Claude API 开发',
+  'doc-coauthoring': '文档协同写作',
+  'docx': 'Word 文档处理',
+  'frontend-design': '前端界面设计',
+  'internal-comms': '内部沟通文案',
+  'mcp-builder': 'MCP 服务构建',
+  'pdf': 'PDF 文档处理',
+  'pptx': 'PPT 演示文稿',
+  'skill-creator': '技能创建器',
+  'slack-gif-creator': 'Slack GIF 制作',
+  'theme-factory': '主题工厂',
+  'web-artifacts-builder': 'Web 构件生成',
+  'webapp-testing': 'Web 应用测试',
+  'xlsx': 'Excel 表格处理',
+  'beautiful-feishu-whiteboard': '飞书白板设计',
+  'beautiful-html-templates': '精美 HTML 模板',
+  'codebase-to-course': '代码库转课程',
+  'frontend-slides-editable': '可编辑幻灯片',
+  'huashu-design': '花叔设计',
+  'nuwa-skill': '女娲技能',
+  'evolution-cat-infographic': '进化猫图文流水线',
+  'guizang-social-card-skill': '归藏社交卡片',
+  'perspective-lei-jun': '雷军视角',
+  'perspective-liu-cixin': '刘慈欣视角',
+  'perspective-zhang-xiaolong': '张小龙视角',
+  'perspective-zhang-yiming': '张一鸣视角',
+  'perspective-zhang-xuefeng': '张雪峰视角',
+  'perspective-wan-weigang': '万维钢视角',
+  'perspective-shen-yifei': '沈亦斐视角',
+  'perspective-sun-yuchen': '孙宇晨视角',
+  'perspective-yu-jun': '俞军视角',
+  'perspective-liang-ning': '梁宁视角',
+  'perspective-keda': '柯达视角',
+  'perspective-dotey': 'Dotey 视角',
+  'perspective-cat-wu': 'Cat Wu 视角',
+  'perspective-youyu-designer': '鱿鱼设计师视角',
+  'perspective-x-mentor': 'X 导师视角',
+  'perspective-tim-pan': 'Tim Pan 视角',
+  'perspective-jiaoshouyixiaoxing': '教授一小星视角',
+  'perspective-alchainhust': 'Alchain Hust 视角',
+  'perspective-liuxunzimo': '刘勋子墨视角',
+  'perspective-zara-zhang': 'Zara Zhang 视角',
+  'claude-mem': '记忆系统',
+  'find-docs': '文档查找',
+  'huashu-research': '花叔调研',
+  'wechat-article-reader': '微信文章阅读',
+  'video-analyzer': '视频分析',
+  'perspective-router': '视角路由器',
+  'evolution-cat-article': '进化猫文章写作',
+  'skill-craftsmanship-framework': '工匠框架',
+  'social-image-publisher': '矩阵图文发布',
+  'anysearch': 'AnySearch 搜索',
+  'opencli-usage': 'OpenCLI 使用指南',
+  'opencli-adapter-author': 'OpenCLI 适配器编写',
+  'opencli-autofix': 'OpenCLI 自动修复',
+  'opencli-browser': 'OpenCLI 浏览器',
+  'opencli-browser-sitemap': 'OpenCLI 站点地图',
+  'opencli-sitemap-author': 'OpenCLI 站点地图编写',
+  'smart-search': '智能搜索'
+};
+function getChineseName(name) {
+  if (CHINESE_NAMES[name]) return CHINESE_NAMES[name];
+  if (name.indexOf('perspective-') === 0) {
+    var person = name.slice('perspective-'.length).replace(/-/g, ' ');
+    return person.replace(/\b\w/g, function(c) { return c.toUpperCase(); }) + ' 视角';
+  }
+  return name;
+}
+
 function scanAllSkills() {
   var seen = {};
   var skills = [];
@@ -149,10 +223,22 @@ function scanAllSkills() {
     var fm = {};
     var fmMatch = skillMd.match(/^---\r?\n([\s\S]*?)\r?\n---/);
     if (fmMatch) {
-      fmMatch[1].split('\n').forEach(function(line) {
+      var lines = fmMatch[1].split('\n');
+      var mlKey = null, mlVal = [];
+      for (var i = 0; i < lines.length; i++) {
+        var line = lines[i];
         var m = line.match(/^(\w+):\s*(.+)/);
-        if (m) fm[m[1]] = m[2].trim();
-      });
+        if (m) {
+          if (mlKey) { fm[mlKey] = mlVal.join('\n').trim(); mlKey = null; mlVal = []; }
+          var val = m[2].trim();
+          if (val === '|' || val === '>') { mlKey = m[1]; }
+          else { fm[m[1]] = val; }
+        } else if (mlKey) {
+          var im = line.match(/^\s{2,}(.+)/);
+          if (im) { mlVal.push(im[1]); }
+        }
+      }
+      if (mlKey) { fm[mlKey] = mlVal.join('\n').trim(); }
     }
     var desc = fm.description || '';
     if (!desc) {
@@ -172,7 +258,7 @@ function scanAllSkills() {
       : name.substring(0, 2).toUpperCase();
     skills.push({
       name: name,
-      displayName: fm.name || name,
+      displayName: getChineseName(name),
       description: desc,
       trigger: fm.trigger || '',
       mono: mono,
@@ -184,22 +270,58 @@ function scanAllSkills() {
 }
 
 function classifySkill(name, desc) {
+  // 单一维度：技能产出什么
+  var MAP = {
+    'algorithmic-art': '视觉与设计',
+    'beautiful-feishu-whiteboard': '视觉与设计',
+    'brand-guidelines': '视觉与设计',
+    'canvas-design': '视觉与设计',
+    'frontend-design': '视觉与设计',
+    'huashu-design': '视觉与设计',
+    'theme-factory': '视觉与设计',
+    'slack-gif-creator': '视觉与设计',
+    'frontend-slides-editable': '视觉与设计',
+    'doc-coauthoring': '写作与文档',
+    'internal-comms': '写作与文档',
+    'codebase-to-course': '写作与文档',
+    'docx': '文件与格式',
+    'pptx': '文件与格式',
+    'xlsx': '文件与格式',
+    'pdf': '文件与格式',
+    'claude-api': '开发与工具',
+    'mcp-builder': '开发与工具',
+    'web-artifacts-builder': '开发与工具',
+    'webapp-testing': '开发与工具',
+    'perspective-router': '思维与方法',
+    'nuwa-skill': '思维与方法',
+    'skill-creator': '思维与方法',
+    'evolution-cat-infographic': '写作与文档',
+    'guizang-social-card-skill': '视觉与设计',
+    'claude-mem': '思维与方法',
+    'find-docs': '开发与工具',
+    'huashu-research': '思维与方法',
+    'wechat-article-reader': '写作与文档',
+    'video-analyzer': '开发与工具',
+    'beautiful-html-templates': '视觉与设计',
+    'evolution-cat-article': '写作与文档',
+    'skill-craftsmanship-framework': '思维与方法',
+    'social-image-publisher': '开发与工具',
+    'anysearch': '开发与工具',
+    'opencli-usage': '开发与工具',
+    'opencli-adapter-author': '开发与工具',
+    'opencli-autofix': '开发与工具',
+    'opencli-browser': '开发与工具',
+    'opencli-browser-sitemap': '开发与工具',
+    'opencli-sitemap-author': '开发与工具',
+    'smart-search': '开发与工具'
+  };
+  if (MAP[name]) return MAP[name];
   var s = (name + ' ' + (desc || '')).toLowerCase();
-  var rules = [
-    ['写作与内容', /article|writing|writer|write|novel|script|content|\u6587\u7ae0|\u5199\u4f5c|\u521b\u4f5c|\u5c0f\u8bf4|\u5267\u672c|\u6307\u5357|\u590d\u76d8|\u6559\u7a0b/],
-    ['图像与设计', /image|design|diagram|art|infographic|cover|icon|illustrat|canvas|graphic|\u56fe|\u753b|\u8bbe\u8ba1|\u6f2b\u753b|\u6d77\u62a5/],
-    ['发布与分发', /post|publish|social|\u5206\u53d1|\u53d1\u5e03|\u63a8\u9001/],
-    ['格式与转换', /markdown|format|convert|pdf|docx|xlsx|pptx|translate|parse|\u538b\u7f29|\u8f6c\u6362|\u683c\u5f0f|\u7ffb\u8bd1/],
-    ['开发与工程', /git|commit|\bcli\b|test|lint|code|browser|playwright|editor|automation|debug|review|\u5f00\u53d1|\u5de5\u7a0b|\u63a7\u5236|\u5de5\u5177/],
-    ['搜索与研究', /search|research|fact.check|news|find|web\s|\u641c\u7d22|\u7814\u7a76|\u65b0\u95fb|\u4e8b\u5b9e/],
-    ['Agent与自动化', /agent|memory|auto.updater|system|desktop|bot|\u81ea\u52a8\u5316|\u8bb0\u5fc6/],
-    ['风格与视角', /perspective|style|voice|mentor|\u98ce\u683c|\u89c6\u89d2|\u4eba\u7269/],
-    ['协作与办公', /feishu|notion|tencent|slack|collab|\u98de\u4e66|\u534f\u4f5c|\u529e\u516c/],
-    ['元技能', /skill.creator|skill.finder|skilllint|vetter|self.improving|release.skill|meta|\u5143/]
-  ];
-  for (var i = 0; i < rules.length; i++) {
-    if (rules[i][1].test(s)) return rules[i][0];
-  }
+  if (/(design|art|theme|visual|brand|canvas|illustrat|gif|animation|whiteboard|feishu)/i.test(s)) return '视觉与设计';
+  if (/(writ|doc|article|internal.comm|report|blog|memo|faq)/i.test(s)) return '写作与文档';
+  if (/(pdf|docx|xlsx|pptx?|excel|word|powerpoint|format|convert|markdown|csv|spreadsheet)/i.test(s)) return '文件与格式';
+  if (/(api|mcp|sdk|server|code|test|debug|build|deploy|playwright|browser|automation|cli|git|npm|node|react|tailwind|component)/i.test(s)) return '开发与工具';
+  if (/(perspective|mindset|framework|think|mentor|philosophy|methodology|distill)/i.test(s)) return '思维与方法';
   return '其他';
 }
 
@@ -234,7 +356,7 @@ function scanTools() {
       }
       var ports = mf.ports || (mf.port ? [mf.port] : []);
       var running = ports.length > 0 ? ports.every(function(p) { return isPortActive(p); }) : null;
-      tools.push({ name: mf.name, id: name, description: mf.description || '', icon: mf.icon || '', version: mf.version || '', category: mf.category, order: mf.order, port: mf.port, ports: mf.ports, url: mf.url, running: running, startCommand: mf.startCommand, stopCommand: mf.stopCommand, projectPath: mf.projectPath, publicUrl: mf.publicUrl, conflicts: [] });
+      tools.push({ name: mf.name, id: name, description: mf.description || '', icon: mf.icon || '', version: mf.version || '', category: mf.category, order: mf.order, port: mf.port, ports: mf.ports, url: mf.url, running: running, startCommand: mf.startCommand, stopCommand: mf.stopCommand, projectPath: mf.projectPath, publicUrl: mf.publicUrl, owner: mf.owner || '', apiBase: mf.apiBase, conflicts: [] });
     });
   });
 
@@ -331,7 +453,7 @@ function stopTool(id, callback) {
 }
 
 function skillIndexHTML(skills) {
-  var catNames = ['写作与内容','图像与设计','发布与分发','格式与转换','开发与工程','搜索与研究','Agent与自动化','风格与视角','协作与办公','元技能','其他'];
+  var catNames = ['视觉与设计','写作与文档','文件与格式','开发与工具','思维与方法'];
   var catCounts = {};
   skills.forEach(function(s) { var c = s.category || '其他'; catCounts[c] = (catCounts[c] || 0) + 1; });
   var bar = '<div class="cat-bar">' +
@@ -343,32 +465,36 @@ function skillIndexHTML(skills) {
     '</div>';
   var cards = skills.map(function(s) {
     return '<div class="skill-card" data-cat="' + s.category + '">' +
-      '<div class="skill-mono">' + esc(s.mono) + '</div>' +
-      '<div class="skill-info">' +
-        '<div class="skill-name">' + esc(s.displayName || s.name) + '</div>' +
-        '<div class="skill-id">' + esc(s.name) + '</div>' +
-        (s.description ? '<div class="skill-desc">' + esc(s.description) + '</div>' : '') +
-        (s.trigger ? '<div class="skill-trigger"><span>触发</span> ' + esc(s.trigger) + '</div>' : '') +
-        '<div class="skill-folder" title="点击复制路径: ' + esc(s.folderPath) + '">' +
-          '<span class="folder-icon">📂</span>' +
-          '<span class="folder-path">' + esc(s.folderPath) + '</span>' +
-          '<button class="folder-open" onclick="event.stopPropagation();fetch(\'/open-dir/' + encodeURIComponent(s.name) + '\')" title="在资源管理器打开">↗</button>' +
+      '<div class="card-body">' +
+        '<div class="card-mono">' + esc(s.mono) + '</div>' +
+        '<div class="card-info">' +
+          '<div class="card-name">' + esc(s.name) + '</div>' +
+          '<div class="card-sub">' + esc(s.displayName || s.name) + '</div>' +
+          (s.description ? '<div class="card-desc" title="' + esc(s.description) + '"><b>简介</b> ' + esc(s.description) + '</div>' : '') +
+          (s.trigger ? '<div class="skill-trigger"><span>触发</span> ' + esc(s.trigger) + '</div>' : '') +
+          '<div class="skill-folder" title="点击复制路径: ' + esc(s.folderPath) + '">' +
+            '<span class="folder-path">' + esc(s.folderPath) + '</span>' +
+            '<button class="folder-open" onclick="event.stopPropagation();fetch(\'/open-dir/' + encodeURIComponent(s.name) + '\')" title="在资源管理器打开">↗</button>' +
+          '</div>' +
         '</div>' +
       '</div>' +
     '</div>';
   }).join('\n');
   return '<style>\n' +
-'.skill-grid{display:flex;flex-wrap:wrap;gap:10px;margin-top:8px}\n' +
-'.skill-card{flex:0 0 360px;display:flex;align-items:flex-start;gap:14px;background:var(--paper);padding:16px 20px;border:1px solid var(--border)}\n' +
-'.skill-card:hover{background:var(--paper-tint)}\n' +
-'.skill-mono{flex-shrink:0;width:40px;height:40px;background:var(--ink);color:var(--paper);display:flex;align-items:center;justify-content:center;font-family:"JetBrains Mono",monospace;font-size:14px;font-weight:500}\n' +
-'.skill-info{min-width:0;display:flex;flex-direction:column;gap:4px}\n' +
-'.skill-name{font-size:15px;font-weight:400;letter-spacing:-0.01em}\n' +
-'.skill-id{font-size:11px;font-family:"JetBrains Mono",monospace;color:var(--text-muted)}\n' +
-'.skill-desc{font-size:12px;color:var(--text-secondary);line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}\n' +
-'.skill-trigger{font-size:11px;color:var(--text-muted);margin-top:2px}\n' +
+'.skill-grid{display:grid;grid-template-columns:repeat(auto-fill, minmax(260px, 1fr));gap:12px;margin-top:8px}\n' +
+'.skill-card{background:var(--paper);padding:20px;display:flex;flex-direction:column;gap:10px;transition:transform .15s,box-shadow .15s;position:relative;box-shadow:var(--shadow-border),var(--shadow-card);cursor:default}\n' +
+'.skill-card:hover{transform:translateY(-1px);box-shadow:var(--shadow-border),var(--shadow-card-hover)}\n' +
+'.card-body{display:flex;align-items:flex-start;gap:12px;flex:1}\n' +
+'.card-mono{flex-shrink:0;width:40px;height:40px;background:var(--ink);color:var(--paper);display:flex;align-items:center;justify-content:center;font-family:"JetBrains Mono",monospace;font-size:13px;font-weight:500}\n' +
+'.card-info{flex:1;min-width:0}\n' +
+'.card-name{font-size:16px;font-weight:300;letter-spacing:-0.01em;line-height:1.35}\n' +
+'.card-sub{font-size:12px;color:var(--text-muted);font-weight:300;line-height:1.35;margin-top:2px}\n' +
+'.card-desc{font-size:11px;color:var(--text-secondary);font-weight:300;line-height:1.45;margin-top:6px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}\n' +
+'.card-desc b{font-weight:500;color:var(--text)}\n' +
+'.skill-card:hover .card-desc{-webkit-line-clamp:unset;overflow:visible}\n' +
+'.skill-trigger{font-size:11px;color:var(--text-muted);margin-top:4px}\n' +
 '.skill-trigger span{font-size:9px;font-weight:500;color:var(--ink);border:1px solid var(--ink);padding:0 4px;margin-right:4px}\n' +
-'.skill-folder{font-size:11px;font-family:"JetBrains Mono",monospace;color:var(--text-muted);margin-top:6px;display:flex;align-items:center;gap:4px;cursor:pointer;padding:3px 6px;border-radius:3px;background:var(--paper-tint);transition:background .12s}\n' +
+'.skill-folder{font-size:11px;font-family:"JetBrains Mono",monospace;color:var(--text-muted);margin-top:6px;display:flex;align-items:center;gap:4px;cursor:pointer;padding:2px 6px;background:var(--paper-tint);transition:background .12s}\n' +
 '.skill-folder:hover{background:rgba(0,47,167,0.06)}\n' +
 '.skill-folder .folder-path{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:10px}\n' +
 '.skill-folder .folder-open{background:none;border:1px solid var(--border);color:var(--text-muted);cursor:pointer;font-size:12px;padding:1px 4px;line-height:1;flex-shrink:0}\n' +
@@ -380,8 +506,10 @@ function skillIndexHTML(skills) {
 '.cat-pill:hover{background:#E4E4DE;color:var(--text)}\n' +
 '.cat-pill.active{background:var(--ink);border-color:var(--ink);color:var(--paper)}\n' +
 '.cat-pill .count{font-size:10px;opacity:.7}\n' +
+'.back-link{display:inline-block;margin-bottom:20px;font-size:13px;font-weight:300;color:var(--text-secondary);text-decoration:none;border:1px solid var(--border);padding:6px 16px;transition:all .15s}\n' +
+'.back-link:hover{border-color:var(--ink);color:var(--ink)}\n' +
 '</style>\n' +
-    bar + '<div class="skill-grid">' + cards + '</div>' +
+    '<a class="back-link" href="/">← 返回工具架</a>' + bar + '<div class="skill-grid">' + cards + '</div>' +
     '<div class="folder-toast" id="folderToast"></div>' +
     '<script>\n' +
     'function setSkillFilter(t){\n' +
@@ -527,6 +655,72 @@ function startServer() {
     res.send(html2);
   });
 
+  // Diagrams index — only skills with system-diagram.html
+  app.get('/diagrams', function(req, res) {
+    res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+    var diagrams = [];
+    var seen = {};
+    var dirs = [LOCAL_SKILLS_DIR, SKILLS_DIR];
+    dirs.forEach(function(dir) {
+      if (!fs.existsSync(dir)) return;
+      listDirs(dir).forEach(function(name) {
+        if (seen[name]) return;
+        seen[name] = true;
+        var diagramPath = path.join(dir, name, 'references', 'system-diagram.html');
+        if (!fs.existsSync(diagramPath)) return;
+        var skillMd = read(path.join(dir, name, 'SKILL.md'));
+        var displayName = name;
+        var desc = '';
+        if (skillMd) {
+          var fmMatch = skillMd.match(/^---\r?\n([\s\S]*?)\r?\n---/);
+          if (fmMatch) {
+            var descMatch = fmMatch[1].match(/description:\s*(.+)/);
+            if (descMatch) desc = descMatch[1].trim();
+          }
+          if (!desc) {
+            var body2 = skillMd.replace(/^---[\s\S]*?---\n*/, '').replace(/^#\s+.*\n*/, '');
+            var firstLine = body2.split('\n').find(function(l) { return l.trim() && !l.trim().startsWith('#') && !l.trim().startsWith('>') && l.trim().length > 10; });
+            if (firstLine) desc = firstLine.trim().substring(0, 120);
+          }
+        }
+        var cnName = getChineseName(name);
+        diagrams.push({ name: name, displayName: cnName, description: desc });
+      });
+    });
+    diagrams.sort(function(a, b) { return a.displayName.localeCompare(b.displayName, 'zh-CN'); });
+    var cards = diagrams.map(function(d) {
+      var words = d.name.split(/[-_]/).filter(function(w) { return w.length > 0; });
+      var mono = words.length >= 2 ? (words[0][0] + words[words.length-1][0]).toUpperCase() : d.name.substring(0,2).toUpperCase();
+      return '<a href="/skills/' + esc(d.name) + '" class="diagram-card" target="_blank">' +
+        '<div class="card-mono">' + esc(mono) + '</div>' +
+        '<div class="card-info">' +
+          '<div class="card-name">' + esc(d.displayName) + '</div>' +
+          '<div class="card-sub">' + esc(d.name) + '</div>' +
+          (d.description ? '<div class="card-desc">' + esc(d.description) + '</div>' : '') +
+          '<div class="card-link">打开结构图 →</div>' +
+        '</div>' +
+      '</a>';
+    }).join('\n');
+
+    var body = '<style>\n' +
+      '.diagram-grid{display:grid;grid-template-columns:repeat(auto-fill, minmax(320px, 1fr));gap:12px;margin-top:8px}\n' +
+      '.diagram-card{background:var(--paper);padding:20px;display:flex;align-items:flex-start;gap:14px;transition:transform .15s,box-shadow .15s;box-shadow:var(--shadow-border),var(--shadow-card);text-decoration:none;color:inherit}\n' +
+      '.diagram-card:hover{transform:translateY(-1px);box-shadow:var(--shadow-border),var(--shadow-card-hover)}\n' +
+      '.diagram-card .card-mono{flex-shrink:0;width:44px;height:44px;background:var(--ink);color:var(--paper);display:flex;align-items:center;justify-content:center;font-family:"JetBrains Mono",monospace;font-size:14px;font-weight:500}\n' +
+      '.diagram-card .card-info{flex:1;min-width:0}\n' +
+      '.diagram-card .card-name{font-size:16px;font-weight:300;letter-spacing:-0.01em;line-height:1.35}\n' +
+      '.diagram-card .card-sub{font-size:11px;font-family:"JetBrains Mono",monospace;color:var(--text-muted);margin-top:1px}\n' +
+      '.diagram-card .card-desc{font-size:11px;color:var(--text-secondary);font-weight:300;line-height:1.5;margin-top:6px}\n' +
+      '.diagram-card .card-link{font-size:11px;color:var(--ink);font-weight:500;margin-top:6px}\n' +
+      '.back-link{display:inline-block;margin-bottom:20px;font-size:13px;font-weight:300;color:var(--text-secondary);text-decoration:none;border:1px solid var(--border);padding:6px 16px;transition:all .15s}\n' +
+      '.back-link:hover{border-color:var(--ink);color:var(--ink)}\n' +
+      '</style>\n' +
+      '<a class="back-link" href="/">\u2190 \u8FD4\u56DE\u5DE5\u5177\u67B6</a>' +
+      '<div class="diagram-grid">' + cards + '</div>';
+
+    res.send(pageShell('\u7ED3\u6784\u56FE', 'Skill \u7CFB\u7EDF\u7ED3\u6784\u56FE', body, null, diagrams.length));
+  });
+
   // Tips (操作日志)
   if (fs.existsSync(TIPS_DIR)) {
     function parseTipFile(filePath) {
@@ -667,10 +861,9 @@ function startServer() {
         '  .card-name{font-size:18px;font-weight:300;letter-spacing:-0.01em}\n' +
         '  .card-sub{font-size:13px;font-weight:300;color:#555;line-height:1.55;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}\n' +
         '  .card-type-tag{position:absolute;bottom:2px;right:0;font-size:9px;font-weight:500;font-family:"JetBrains Mono","SF Mono","Consolas",monospace;letter-spacing:.04em;padding:2px 6px;opacity:.55}\n' +
-        '  .tag-feedback{color:#002FA7;background:rgba(0,47,167,.06)}\n' +
-        '  .tag-reference{color:#666;background:rgba(0,0,0,.05)}\n' +
-        '  .tag-project{color:#5a3e02;background:rgba(180,120,0,.08)}\n' +
-        '  .tag-user{color:#3a5a02;background:rgba(80,140,0,.08)}\n' +
+        '  .tag-diagnosis{color:#002FA7;background:rgba(0,47,167,.06)}\n' +
+        '  .tag-method{color:#1A8A3F;background:rgba(26,138,63,.06)}\n' +
+        '  .tag-fact{color:#666;background:rgba(0,0,0,.05)}\n' +
         '  .footer{max-width:1080px;margin:0 auto;padding:36px 32px;border-top:1px solid #E0E0DC}\n' +
         '  .phil-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1px;background:#E0E0DC;margin-bottom:0}\n' +
         '  .phil-card{background:#FAFAF8;padding:24px 20px}\n' +
@@ -948,22 +1141,22 @@ function startServer() {
     });
   });
 
-  // Constitution page
-  app.get('/constitution', function(req, res) {
-    var md = read(path.join(PROJECT_DIR, 'constitution.md'));
-    if (!md) return res.status(500).send('constitution.md missing');
+  // Design spec page
+  app.get('/design-spec', function(req, res) {
+    var md = read(path.join(PROJECT_DIR, 'design-spec.md'));
+    if (!md) return res.status(500).send('design-spec.md missing');
     var html = renderMarkdown(md);
-    var full = '<!DOCTYPE html>\n<html lang="zh-CN">\n<head>\n<meta charset="UTF-8">\n<meta name="viewport" content="width=device-width,initial-scale=1.0">\n<title>设计宪法 · Agentboard</title>\n<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 32 32\'%3E%3Crect width=\'32\' height=\'32\' rx=\'4\' fill=\'%23002FA7\'/%3E%3Ctext x=\'16\' y=\'22\' text-anchor=\'middle\' font-family=\'Inter,sans-serif\' font-size=\'16\' font-weight=\'600\' fill=\'white\'%3E法%3C/text%3E%3C/svg%3E">\n<link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600&family=Noto+Sans+SC:wght@200;300;400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">\n<style>\n:root{--ink:#002FA7;--paper:#FAFAF8;--border:#E0E0DC;--text:#0A0A0A;--text-secondary:#555;--text-muted:#999;font-family:\'Inter\',\'Noto Sans SC\',sans-serif;color:var(--text);background:var(--paper);font-weight:300;font-size:16px}*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}body{min-height:100vh}.nav{background:var(--ink);padding:12px 24px}.nav a{color:rgba(255,255,255,.7);text-decoration:none;font-size:13px;font-weight:300}.nav a:hover{color:#fff}.nav b{color:#fff;font-weight:500;margin-right:12px}.page{max-width:800px;margin:0 auto;padding:40px 24px 80px}.page h1{font-size:28px;font-weight:200;letter-spacing:-0.02em;color:var(--ink);margin-bottom:24px}.page h2{font-size:18px;font-weight:500;color:var(--text);margin:36px 0 12px;padding-top:16px;border-top:1px solid var(--border)}.page h3{font-size:15px;font-weight:500;color:var(--text);margin:24px 0 8px}.page p,.page li{font-size:14px;line-height:1.8;color:var(--text-secondary);margin:6px 0}.page ul,.page ol{padding-left:20px;margin:8px 0}.page strong{font-weight:500;color:var(--text)}.page code{font-family:\'JetBrains Mono\',monospace;font-size:12px;background:var(--paper-tint, #F2F2F0);padding:1px 5px}.page pre{background:#f5f5f5;padding:16px;overflow-x:auto;font-size:12px;line-height:1.6;margin:12px 0}.page pre code{background:none;padding:0}.page table{width:100%;border-collapse:collapse;margin:12px 0;font-size:13px}.page th,.page td{padding:8px 12px;border:1px solid var(--border);text-align:left;font-size:13px}.page th{background:var(--paper-tint, #F2F2F0);font-weight:500;font-size:12px}.page blockquote{border-left:3px solid var(--ink);margin:12px 0;padding:4px 16px;color:var(--text-secondary);font-size:13px}.page hr{border:none;border-top:1px solid var(--border);margin:24px 0}.page em{color:var(--text-secondary)}.line-count{font-size:11px;color:var(--text-muted);margin-bottom:20px;font-family:\'JetBrains Mono\',monospace}.back-link{display:inline-block;margin-top:40px;font-size:13px;color:var(--ink);text-decoration:none;border:1px solid var(--border);padding:6px 16px}.back-link:hover{border-color:var(--ink)}\n</style>\n</head>\n<body>\n<div class="nav"><a href="/"><b>Agentboard</b></a> <a href="/">工具架</a> · <a href="/skills">技能</a> · <a href="/tips">操作日志</a> · <a href="/constitution" style="color:#fff">设计宪法</a> · <a href="/rules">管理规则</a> · <a href="/global">全局宪法</a></div>\n<div class="page"><div class="line-count">' + md.split('\n').length + ' 行</div>\n' + html + '\n<a class="back-link" href="/">← 返回工具架</a>\n</div>\n</body>\n</html>';
+    var full = '<!DOCTYPE html>\n<html lang="zh-CN">\n<head>\n<meta charset="UTF-8">\n<meta name="viewport" content="width=device-width,initial-scale=1.0">\n<title>设计规范 · Agentboard</title>\n<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 32 32\'%3E%3Crect width=\'32\' height=\'32\' rx=\'4\' fill=\'%23002FA7\'/%3E%3Ctext x=\'16\' y=\'22\' text-anchor=\'middle\' font-family=\'Inter,sans-serif\' font-size=\'16\' font-weight=\'600\' fill=\'white\'%3E法%3C/text%3E%3C/svg%3E">\n<link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600&family=Noto+Sans+SC:wght@200;300;400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">\n<style>\n:root{--ink:#002FA7;--paper:#FAFAF8;--border:#E0E0DC;--text:#0A0A0A;--text-secondary:#555;--text-muted:#999;font-family:\'Inter\',\'Noto Sans SC\',sans-serif;color:var(--text);background:var(--paper);font-weight:300;font-size:16px}*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}body{min-height:100vh}.nav{background:var(--ink);padding:12px 24px}.nav a{color:rgba(255,255,255,.7);text-decoration:none;font-size:13px;font-weight:300}.nav a:hover{color:#fff}.nav b{color:#fff;font-weight:500;margin-right:12px}.page{max-width:800px;margin:0 auto;padding:40px 24px 80px}.page h1{font-size:28px;font-weight:200;letter-spacing:-0.02em;color:var(--ink);margin-bottom:24px}.page h2{font-size:18px;font-weight:500;color:var(--text);margin:36px 0 12px;padding-top:16px;border-top:1px solid var(--border)}.page h3{font-size:15px;font-weight:500;color:var(--text);margin:24px 0 8px}.page p,.page li{font-size:14px;line-height:1.8;color:var(--text-secondary);margin:6px 0}.page ul,.page ol{padding-left:20px;margin:8px 0}.page strong{font-weight:500;color:var(--text)}.page code{font-family:\'JetBrains Mono\',monospace;font-size:12px;background:var(--paper-tint, #F2F2F0);padding:1px 5px}.page pre{background:#f5f5f5;padding:16px;overflow-x:auto;font-size:12px;line-height:1.6;margin:12px 0}.page pre code{background:none;padding:0}.page table{width:100%;border-collapse:collapse;margin:12px 0;font-size:13px}.page th,.page td{padding:8px 12px;border:1px solid var(--border);text-align:left;font-size:13px}.page th{background:var(--paper-tint, #F2F2F0);font-weight:500;font-size:12px}.page blockquote{border-left:3px solid var(--ink);margin:12px 0;padding:4px 16px;color:var(--text-secondary);font-size:13px}.page hr{border:none;border-top:1px solid var(--border);margin:24px 0}.page em{color:var(--text-secondary)}.line-count{font-size:11px;color:var(--text-muted);margin-bottom:20px;font-family:\'JetBrains Mono\',monospace}.back-link{display:inline-block;margin-top:40px;font-size:13px;color:var(--ink);text-decoration:none;border:1px solid var(--border);padding:6px 16px}.back-link:hover{border-color:var(--ink)}\n</style>\n</head>\n<body>\n<div class="nav"><a href="/"><b>Agentboard</b></a> <a href="/">工具架</a> · <a href="/skills">技能</a> · <a href="/tips">操作日志</a> · <a href="/design-spec" style="color:#fff">设计规范</a> · <a href="/repo-spec">工程规范</a> · <a href="/global">全局宪法</a></div>\n<div class="page"><div class="line-count">' + md.split('\n').length + ' 行</div>\n' + html + '\n<a class="back-link" href="/">← 返回工具架</a>\n</div>\n</body>\n</html>';
     res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
     res.type('html').send(full);
   });
 
-  // Rules page
-  app.get('/rules', function(req, res) {
-    var md = read(path.join(PROJECT_DIR, 'rules.md'));
-    if (!md) return res.status(500).send('rules.md missing');
+  // Repo spec page
+  app.get('/repo-spec', function(req, res) {
+    var md = read(path.join(PROJECT_DIR, 'repo-spec.md'));
+    if (!md) return res.status(500).send('repo-spec.md missing');
     var html = renderMarkdown(md);
-    var full = pageShell('管理规则', '管理规则', html, 'rules', md.split('\n').length);
+    var full = pageShell('工程规范', '工程规范', html, 'repo-spec', md.split('\n').length);
     res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
     res.type('html').send(full);
   });
@@ -1137,22 +1330,7 @@ function startServer() {
   });
 
   function pageShell(title, heading, body, active, lines) {
-    var navItems = [
-      { label: '思维顾问', href: '/minds', id: 'minds' },
-      { label: '工具架', href: '/', id: 'home' },
-      { label: '技能', href: '/skills', id: 'skills' },
-      { label: '操作日志', href: '/tips', id: 'tips' },
-      { label: '设计宪法', href: '/constitution', id: 'constitution' },
-      { label: '管理规则', href: '/rules', id: 'rules' },
-      { label: '全局宪法', href: '/global', id: 'global' }
-    ,
-      { label: '启动项', href: '/startup', id: 'startup' }
-    ];
-    var navHTML = navItems.map(function(item) {
-      var isActive = item.id === active;
-      return '<a href=\"' + item.href + '\"' + (isActive ? ' style=\"color:#fff\"' : '') + '>' + item.label + '</a>';
-    }).join(' · ');
-    return '<!DOCTYPE html>\n<html lang=\"zh-CN\">\n<head>\n<meta charset=\"UTF-8\">\n<meta name=\"viewport\" content=\"width=device-width,initial-scale=1.0\">\n<title>' + esc(title) + ' · Agentboard</title>\n<link rel=\"icon\" href=\"data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 32 32\'%3E%3Crect width=\'32\' height=\'32\' rx=\'4\' fill=\'%23002FA7\'/%3E%3Ctext x=\'16\' y=\'22\' text-anchor=\'middle\' font-family=\'Inter,sans-serif\' font-size=\'16\' font-weight=\'600\' fill=\'white\'%3E法%3C/text%3E%3C/svg%3E">\n<link href=\"https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600&family=Noto+Sans+SC:wght@200;300;400;500;700&family=JetBrains+Mono:wght@400;500&display=swap\" rel=\"stylesheet\">\n<style>\n:root{--ink:#002FA7;--paper:#FAFAF8;--border:#E0E0DC;--text:#0A0A0A;--text-secondary:#555;--text-muted:#999;font-family:\'Inter\',\'Noto Sans SC\',sans-serif;color:var(--text);background:var(--paper);font-weight:300;font-size:16px}*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}body{min-height:100vh}.nav{background:var(--ink);padding:12px 24px}.nav a{color:rgba(255,255,255,.7);text-decoration:none;font-size:13px;font-weight:300}.nav a:hover{color:#fff}.nav b{color:#fff;font-weight:500;margin-right:12px}.page{max-width:800px;margin:0 auto;padding:40px 24px 80px}.page h1{font-size:28px;font-weight:200;letter-spacing:-0.02em;color:var(--ink);margin-bottom:24px}.page h2{font-size:18px;font-weight:500;color:var(--text);margin:36px 0 12px;padding-top:16px;border-top:1px solid var(--border)}.page h3{font-size:15px;font-weight:500;color:var(--text);margin:24px 0 8px}.page p,.page li{font-size:14px;line-height:1.8;color:var(--text-secondary);margin:6px 0}.page ul,.page ol{padding-left:20px;margin:8px 0}.page strong{font-weight:500;color:var(--text)}.page code{font-family:\'JetBrains Mono\',monospace;font-size:12px;background:var(--paper-tint, #F2F2F0);padding:1px 5px}.page pre{background:#f5f5f5;padding:16px;overflow-x:auto;font-size:12px;line-height:1.6;margin:12px 0}.page pre code{background:none;padding:0}.page table{width:100%;border-collapse:collapse;margin:12px 0;font-size:13px}.page th,.page td{padding:8px 12px;border:1px solid var(--border);text-align:left;font-size:13px}.page th{background:var(--paper-tint, #F2F2F0);font-weight:500;font-size:12px}.page blockquote{border-left:3px solid var(--ink);margin:12px 0;padding:4px 16px;color:var(--text-secondary);font-size:13px}.page hr{border:none;border-top:1px solid var(--border);margin:24px 0}.page em{color:var(--text-secondary)}.line-count{font-size:11px;color:var(--text-muted);margin-bottom:20px;font-family:\'JetBrains Mono\',monospace}.back-link{display:inline-block;margin-top:40px;font-size:13px;color:var(--ink);text-decoration:none;border:1px solid var(--border);padding:6px 16px}.back-link:hover{border-color:var(--ink)}\n</style>\n</head>\n<body>\n<div class=\"nav\"><a href=\"/\"><b>Agentboard</b></a> ' + navHTML + '</div>\n<div class=\"page\"><div class=\"line-count\">' + (lines || '') + ' 行</div>\n' + body + '\n<a class=\"back-link\" href=\"/\">← 返回工具架</a>\n</div>\n</body>\n</html>';
+    return '<!DOCTYPE html>\n<html lang=\"zh-CN\">\n<head>\n<meta charset=\"UTF-8\">\n<meta name=\"viewport\" content=\"width=device-width,initial-scale=1.0\">\n<title>' + esc(title) + ' · Agentboard</title>\n<link rel=\"icon\" href=\"data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 32 32\'%3E%3Crect width=\'32\' height=\'32\' rx=\'4\' fill=\'%23002FA7\'/%3E%3Ctext x=\'16\' y=\'22\' text-anchor=\'middle\' font-family=\'Inter,sans-serif\' font-size=\'16\' font-weight=\'600\' fill=\'white\'%3E法%3C/text%3E%3C/svg%3E">\n<link href=\"https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600&family=Noto+Sans+SC:wght@200;300;400;500;700&family=JetBrains+Mono:wght@400;500&display=swap\" rel=\"stylesheet\">\n<style>\n:root{--ink:#002FA7;--ink-rgb:0,47,167;--paper:#FAFAF8;--paper-tint:#F2F2F0;--border:#E0E0DC;--text:#0A0A0A;--text-secondary:#555;--text-muted:#999;--shadow-border:0 0 0 1px rgba(0,0,0,0.08);--shadow-card:0 1px 3px rgba(0,0,0,0.06);--shadow-card-hover:0 2px 8px rgba(0,0,0,0.1);font-family:\'Inter\',\'Noto Sans SC\',sans-serif;color:var(--text);background:var(--paper);font-weight:300;font-size:16px}*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}body{min-height:100vh}.header{background:var(--ink);padding:14px 32px;display:flex;align-items:center;gap:24px}.header-brand{font-family:\'JetBrains Mono\',monospace;font-size:12px;font-weight:500;letter-spacing:.06em;color:var(--paper);text-decoration:none;white-space:nowrap;opacity:.9}.header-back{font-family:\'JetBrains Mono\',monospace;font-size:11px;font-weight:400;color:var(--paper);text-decoration:none;opacity:.7;margin-left:auto;transition:opacity .15s}.header-back:hover{opacity:1}.page{max-width:1080px;margin:0 auto;padding:40px 32px 80px}.page h1{font-size:28px;font-weight:200;letter-spacing:-0.02em;color:var(--ink);margin-bottom:24px}.page h2{font-size:18px;font-weight:500;color:var(--text);margin:36px 0 12px;padding-top:16px;border-top:1px solid var(--border)}.page h3{font-size:15px;font-weight:500;color:var(--text);margin:24px 0 8px}.page p,.page li{font-size:14px;line-height:1.8;color:var(--text-secondary);margin:6px 0}.page ul,.page ol{padding-left:20px;margin:8px 0}.page strong{font-weight:500;color:var(--text)}.page code{font-family:\'JetBrains Mono\',monospace;font-size:12px;background:var(--paper-tint);padding:1px 5px}.page pre{background:#f5f5f5;padding:16px;overflow-x:auto;font-size:12px;line-height:1.6;margin:12px 0}.page pre code{background:none;padding:0}.page table{width:100%;border-collapse:collapse;margin:12px 0;font-size:13px}.page th,.page td{padding:8px 12px;border:1px solid var(--border);text-align:left;font-size:13px}.page th{background:var(--paper-tint);font-weight:500;font-size:12px}.page blockquote{border-left:3px solid var(--ink);margin:12px 0;padding:4px 16px;color:var(--text-secondary);font-size:13px}.page hr{border:none;border-top:1px solid var(--border);margin:24px 0}.page em{color:var(--text-secondary)}.line-count{font-size:11px;color:var(--text-muted);margin-bottom:20px;font-family:\'JetBrains Mono\',monospace}.back-link{display:inline-block;margin-top:40px;font-size:13px;color:var(--ink);text-decoration:none;border:1px solid var(--border);padding:6px 16px}.back-link:hover{border-color:var(--ink)}\n</style>\n</head>\n<body>\n<div class=\"header\"><a class=\"header-brand\" href=\"/\">AGENTBOARD</a><a class=\"header-back\" href=\"/\">&#8592; 返回工具架</a></div>\n<div class=\"page\"><div class=\"line-count\">' + (lines || '') + ' 行</div>\n' + body + '\n</div>\n</body>\n</html>';
   }
 
   function renderMarkdown(md) {
@@ -1290,8 +1468,8 @@ function startServer() {
     var assetToolCount = listDirs(TOOLS_DIR).length;
     var assetSkillCount = fs.existsSync(SKILLS_DIR) ? listDirs(SKILLS_DIR).length : 0;
     var assetTipCount = fs.existsSync(TIPS_DIR) ? fs.readdirSync(TIPS_DIR).filter(function(f){ return f.endsWith('.md'); }).length : 0;
-    var constitutionLines = (read(path.join(PROJECT_DIR, 'constitution.md')) || '').split('\n').length;
-    var rulesLines = (read(path.join(PROJECT_DIR, 'rules.md')) || '').split('\n').length;
+    var designSpecLines = (read(path.join(PROJECT_DIR, 'design-spec.md')) || '').split('\n').length;
+    var repoSpecLines = (read(path.join(PROJECT_DIR, 'repo-spec.md')) || '').split('\n').length;
     var globalLines = (read(path.join(os.homedir(), '.claude', 'CLAUDE.md')) || '').split('\n').length;
     var apiEndpoints = 0;
     try { app._router.stack.forEach(function(r){ if (r.route && r.route.path && r.route.path.indexOf('/api/') === 0) apiEndpoints++; }); } catch(_) {}
@@ -1314,7 +1492,7 @@ function startServer() {
       todayCalls: tdy,
       byCaller: { agent: tc.agent||0, browser: tc.browser||0, unknown: tc.unknown||0 },
       byAction: { list: ta.list||0, control: (ta.control||0)+(ta.detail||0), admin: ta.admin||0 },
-      assets: { tools: assetToolCount, skills: assetSkillCount, tips: assetTipCount, constitution: constitutionLines, rules: rulesLines, global: globalLines, api: apiEndpoints, cron: cronTasks, startup: startupCount, minds: loadPerspectives().length }
+      assets: { tools: assetToolCount, skills: assetSkillCount, tips: assetTipCount, designSpec: designSpecLines, repoSpec: repoSpecLines, global: globalLines, api: apiEndpoints, cron: cronTasks, startup: startupCount, minds: loadPerspectives().length }
     });
     html = html.replace('<!--STATS_SNAPSHOT-->', '<script>window.__stats=' + snap + '</script>');
     res.type('html').send(html);

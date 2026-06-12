@@ -13,31 +13,37 @@
   --ink:#002FA7; --ink-rgb:0,47,167; --paper:#FAFAF8; --paper-tint:#F2F2F0;
   --border:#E0E0DC; --text:#0A0A0A; --text-secondary:#555; --text-muted:#999;
   --status-on:#1A8A3F; --status-off:#BBB;
+  --shadow-border:0 0 0 1px rgba(0,0,0,0.08);
+  --shadow-card:0 1px 3px rgba(0,0,0,0.06);
+  --shadow-card-hover:0 2px 8px rgba(0,0,0,0.1);
   font-family:'Inter','Noto Sans SC',sans-serif; color:var(--text); background:var(--paper);
   font-weight:300; font-size:16px;
 }
 body{min-height:100vh;display:flex;flex-direction:column}
 
-/* Hero */
-.hero{background:var(--ink);color:var(--paper);padding:56px 32px 48px}
-.hero-inner{max-width:1080px;margin:0 auto}
-.hero-mono{font-family:'JetBrains Mono','SF Mono','Consolas',monospace;font-size:10px;font-weight:500;letter-spacing:.08em;opacity:.45;margin-bottom:10px}
-.hero h1{font-size:min(3vw,5vh);font-weight:200;letter-spacing:-0.02em;line-height:1.15}
-.hero h1 b{font-weight:500}
-.hero .tagline{font-size:14px;font-weight:300;opacity:.5;margin-top:10px;line-height:1.6;max-width:520px}
-.asset-bar{display:flex;gap:1px;background:rgba(255,255,255,.08);margin-top:24px;max-width:720px}
-.asset-item{flex:1;text-align:center;padding:12px 8px;text-decoration:none;color:rgba(255,255,255,.6);transition:all .15s;display:flex;align-items:center;justify-content:center}
-.asset-item:hover{background:rgba(255,255,255,.1);color:#fff}
-.asset-label{font-size:12px;font-weight:400;display:block}
+/* Header */
+.header{background:var(--ink);color:var(--paper);padding:14px 32px 10px}
+.header-top{display:flex;align-items:center;gap:16px;max-width:1080px;margin:0 auto}
+.header-brand{display:flex;align-items:center;gap:8px;text-decoration:none;color:var(--paper);white-space:nowrap}
+.header-logo{width:22px;height:22px;background:var(--paper);display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono','SF Mono','Consolas',monospace;font-size:11px;font-weight:600;color:var(--ink)}
+.header-name{font-size:14px;font-weight:400;letter-spacing:.02em;opacity:.95}
+.header-cn{font-family:'JetBrains Mono','SF Mono','Consolas',monospace;font-size:10px;font-weight:400;opacity:.35;margin-left:4px;letter-spacing:.03em}
+.header-nav{display:flex;align-items:center;gap:2px;flex:1;justify-content:flex-end}
+.header-nav a{color:rgba(255,255,255,.55);text-decoration:none;font-size:12px;font-weight:300;padding:6px 10px;transition:color .15s;white-space:nowrap}
+.header-nav a:hover{color:#fff}
+.header-nav a.active{color:#fff;font-weight:500}
+.header-nav .nav-sep{width:1px;height:14px;background:rgba(255,255,255,.15);margin:0 6px}
+.header-philo{max-width:1080px;margin:0 auto;font-size:11px;font-weight:300;opacity:.35;padding:2px 0 0 30px;letter-spacing:.02em}
 
 /* Stats bar */
-.toolbar{max-width:1080px;margin:0 auto;padding:16px 32px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--border)}
-.stats-row{display:flex;gap:1px;background:var(--border);border:1px solid var(--border);flex:1;max-width:560px}
-.stat-card{flex:1;background:var(--paper);padding:10px 14px;text-align:center;cursor:pointer;transition:background .15s;border-bottom:2px solid transparent}
-.stat-card:hover{background:var(--paper-tint)}
-.stat-card.active{border-bottom-color:var(--ink)}
-.stat-num{font-size:26px;font-weight:200;letter-spacing:-0.02em;color:var(--text);line-height:1.15;display:block}
-.stat-label{font-size:11px;color:var(--text-muted);font-weight:300;margin-top:1px;display:block;white-space:nowrap}
+.toolbar{max-width:1080px;margin:0 auto;padding:16px 32px;display:flex;align-items:center;gap:16px;border-bottom:1px solid var(--border)}
+.stats-row{display:flex;align-items:center;gap:16px;flex:1}
+.stat-card{display:flex;align-items:baseline;gap:4px;cursor:pointer;padding:4px 0;border:none;background:none;transition:opacity .15s}
+.stat-card:hover{opacity:.7}
+.stat-card .stat-num{font-size:24px;font-weight:200;letter-spacing:-0.02em;color:var(--text);line-height:1}
+.stat-card .stat-label{font-size:11px;color:var(--text-muted);font-weight:300}
+.stat-card.active .stat-num{color:var(--ink);font-weight:400}
+.stat-sep{color:var(--border);font-weight:200;font-size:14px}
 .search-input{border:1px solid var(--border);padding:6px 12px;font-size:13px;font-family:inherit;font-weight:300;background:var(--paper);color:var(--text);width:150px;outline:none;flex-shrink:0}
 .search-input:focus{border-color:var(--ink)}
 .search-input::placeholder{color:var(--text-muted)}
@@ -47,44 +53,41 @@ body{min-height:100vh;display:flex;flex-direction:column}
 @keyframes spin{to{transform:rotate(360deg)}}
 
 /* Tool grid */
-.content{flex:1;max-width:1080px;width:100%;margin:0 auto;padding:6px 32px 32px}
-.tool-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px;margin-top:8px}
-.tool-card{background:var(--paper);padding:16px;display:flex;flex-direction:column;gap:10px;transition:opacity .15s,transform .15s,border-color .15s,box-shadow .15s;position:relative;border:1px solid var(--border);box-shadow:0 1px 3px rgba(0,0,0,.06)}
-.tool-card:hover{background:var(--paper-tint);box-shadow:0 2px 8px rgba(0,0,0,.1)}
-.tool-card.virtual .card-mono{opacity:.55}
-.tool-card.virtual .card-name{color:var(--text-secondary)}
+.content{flex:1;max-width:1080px;width:100%;margin:0 auto;padding:8px 32px 32px}
+.tool-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;margin-top:4px}
+.tool-card{background:var(--paper);padding:28px 14px 20px;display:flex;flex-direction:column;gap:8px;transition:transform .15s,box-shadow .15s;position:relative;box-shadow:var(--shadow-border),var(--shadow-card);height:230px}
+.tool-card:hover{transform:translateY(-1px);box-shadow:var(--shadow-border),var(--shadow-card-hover)}
 .tool-card.self{border-left:3px solid var(--ink)}
 
-.card-dot{position:absolute;top:14px;left:14px;width:7px;height:7px;z-index:1}
+.card-dot{position:absolute;top:14px;left:14px;width:7px;height:7px;z-index:2}
 .card-dot.on{background:var(--status-on);animation:pulse 2s ease-in-out infinite}
 .card-dot.off{background:var(--status-off)}
 .card-cat-label{font-size:10px;color:var(--text-muted);font-weight:300;letter-spacing:.02em}
 .card-badges{display:flex;gap:4px;margin-left:auto}
-.card-drag-handle{cursor:grab;position:absolute;top:14px;right:14px;width:12px;height:18px;opacity:.28;transition:opacity .15s;z-index:1;user-select:none}
+.card-drag-handle{cursor:grab;position:absolute;top:10px;right:14px;width:12px;height:18px;opacity:.28;transition:opacity .15s;z-index:1;user-select:none}
 .card-drag-handle:hover{opacity:.75}
 .card-drag-handle:active{cursor:grabbing}
 .card-drag-handle::after{content:'';position:absolute;width:3px;height:3px;background:currentColor;border-radius:50%;top:0;left:3px;box-shadow:0 6px 0 currentColor,0 12px 0 currentColor,6px 0 0 currentColor,6px 6px 0 currentColor,6px 12px 0 currentColor}
 .tool-card.dragging{opacity:.35;transform:scale(.97)}
 .tool-card.drag-over{border-color:var(--ink);box-shadow:0 0 0 2px rgba(var(--ink-rgb),.25)}
-.tool-card{transition:opacity .15s,transform .15s,border-color .15s,box-shadow .15s}
-.form-badge{font-size:9px;font-weight:500;font-family:'JetBrains Mono','SF Mono','Consolas',monospace;padding:1px 5px;letter-spacing:.04em}
+.form-badge{font-size:9px;font-weight:500;font-family:'JetBrains Mono','SF Mono','Consolas',monospace;padding:0 5px;letter-spacing:.04em;line-height:1.6;display:inline-flex;align-items:center}
 .badge-本地{color:var(--status-on);background:rgba(26,138,63,.08)}
 .badge-API{color:#8B5CF6;background:rgba(139,92,246,.08)}
 .badge-CLI{color:#D97706;background:rgba(217,119,6,.08)}
 .badge-Web{color:#3B82F6;background:rgba(59,130,246,.08)}
-.owner-badge{font-size:9px;font-weight:400;color:var(--text-muted);padding:1px 5px;border:1px solid var(--border);font-family:'JetBrains Mono','SF Mono','Consolas',monospace;letter-spacing:.04em}
+.owner-badge{font-size:9px;font-weight:400;color:var(--text-muted);padding:0 5px;border:1px solid var(--border);font-family:'JetBrains Mono','SF Mono','Consolas',monospace;letter-spacing:.04em;line-height:1.6;display:inline-flex;align-items:center}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
 
-.card-body{display:flex;align-items:flex-start;gap:12px;flex:1}
-.card-mono{flex-shrink:0;width:36px;height:36px;background:var(--ink);color:var(--paper);display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono','SF Mono','Consolas',monospace;font-size:12px;font-weight:500}
+.card-body{display:flex;align-items:flex-start;gap:14px;flex:1;padding:0 14px}
+.card-mono{flex-shrink:0;width:44px;height:44px;background:var(--ink);color:var(--paper);display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono','SF Mono','Consolas',monospace;font-size:14px;font-weight:500}
 .card-info{flex:1;min-width:0}
-.card-name{font-size:15px;font-weight:400;letter-spacing:-0.01em;line-height:1.35}
+.card-name{font-size:16px;font-weight:300;letter-spacing:-0.01em;line-height:1.4;margin-bottom:2px}
 .card-id{font-size:11px;font-family:'JetBrains Mono','SF Mono','Consolas',monospace;color:var(--text-muted);font-weight:400;display:block;margin-top:1px}
-.card-meta{font-size:11px;color:var(--text-muted);font-weight:300;margin-top:4px;display:flex;align-items:center;gap:8px}
+.card-meta{font-size:11px;color:var(--text-muted);font-weight:300;margin-top:6px;display:flex;align-items:center;gap:8px}
 .card-port{font-family:'JetBrains Mono','SF Mono','Consolas',monospace;color:var(--text-muted)}
-.card-desc{font-size:11px;color:var(--text-secondary);font-weight:300;line-height:1.45;margin-top:4px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.card-desc{font-size:11px;color:var(--text-secondary);font-weight:300;line-height:1.5;margin-top:6px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
 
-.card-actions{display:flex;gap:8px;margin-top:2px}
+.card-actions{display:flex;gap:8px}
 .btn{padding:4px 12px;border:1px solid var(--border);background:var(--paper);font-size:12px;font-family:inherit;font-weight:400;cursor:pointer;color:var(--text-secondary);text-decoration:none;display:inline-flex;align-items:center;white-space:nowrap}
 .btn:hover{border-color:var(--ink);color:var(--ink)}
 .btn.go{background:#2D2D2D;border-color:#2D2D2D;color:#fff;font-weight:500}
@@ -95,13 +98,13 @@ body{min-height:100vh;display:flex;flex-direction:column}
 .btn.open-done{background:var(--status-on);border-color:var(--status-on);color:#fff;font-weight:500}
 .btn.open-done:hover{background:#157A34;border-color:#157A34;color:#fff}
 
-/* Three-tier filter */
+/* Filter bar */
 .filter-bar{max-width:1080px;margin:0 auto;padding:4px 32px}
-.filter-row{display:flex;align-items:center;gap:6px;margin-bottom:4px}
-.filter-label{font-size:11px;font-weight:400;color:var(--text-muted);white-space:nowrap;font-family:'JetBrains Mono','SF Mono','Consolas',monospace;letter-spacing:.02em;min-width:58px}
-.filter-pill{padding:3px 10px;border:1px solid var(--border);background:var(--paper);font-size:12px;font-family:inherit;font-weight:400;cursor:pointer;color:var(--text-secondary);white-space:nowrap;transition:all .12s}
-.filter-pill:hover{border-color:var(--ink);color:var(--ink)}
-.filter-pill.active{background:var(--ink);border-color:var(--ink);color:var(--paper)}
+.filter-row{display:flex;align-items:center;gap:4px;margin-bottom:4px}
+.filter-dim{font-size:10px;font-weight:400;color:var(--text-muted);white-space:nowrap;font-family:'JetBrains Mono','SF Mono','Consolas',monospace;letter-spacing:.02em;width:36px;flex-shrink:0;opacity:.45;user-select:none}
+.filter-pill{padding:3px 10px;background:none;font-size:12px;font-family:inherit;font-weight:400;cursor:pointer;color:var(--text-secondary);white-space:nowrap;transition:all .12s;border:none;border-radius:999px}
+.filter-pill:hover{color:var(--ink)}
+.filter-pill.active{background:var(--ink);color:var(--paper)}.filter-pill.active:hover{background:var(--ink);opacity:.7}.pill-cnt{font-size:9px;opacity:.45;margin-left:3px;font-family:'JetBrains Mono','SF Mono','Consolas',monospace}.filter-pill.active .pill-cnt{opacity:.55}
 
 /* Principles — above footer */
 .principles-bar{max-width:1080px;margin:0 auto;padding:32px 32px 24px}
@@ -122,15 +125,15 @@ body{min-height:100vh;display:flex;flex-direction:column}
 .empty .reset-link{color:var(--ink);cursor:pointer;text-decoration:underline;font-size:13px;margin-top:12px;display:inline-block}
 
 /* Section grouping */
-.section-label{max-width:1080px;margin:0 auto;padding:14px 32px 0;font-size:10px;font-weight:500;color:var(--text-muted);font-family:'JetBrains Mono','SF Mono','Consolas',monospace;letter-spacing:.06em;text-transform:uppercase;opacity:.55}
+.section-label{font-size:10px;font-weight:400;color:var(--text-muted);font-family:'JetBrains Mono','SF Mono','Consolas',monospace;letter-spacing:.03em;text-transform:uppercase}
 .section-divider{max-width:1080px;margin:0 auto;padding:0 32px;height:1px;background:var(--border);opacity:.5}
 
 /* Filter count */
-.filter-count{max-width:1080px;margin:0 auto;padding:0 32px 8px;font-size:11px;color:var(--text-muted);font-weight:300;min-height:22px}
+.filter-count{font-size:11px;color:var(--text-muted);font-weight:300;min-height:22px;padding:0 0 4px 0}
 .filter-count strong{color:var(--text);font-weight:500}
 
 /* Call stats */
-.call-stats-bar{max-width:1080px;margin:0 auto;padding:6px 32px;display:flex;align-items:center;gap:14px;font-size:11px;color:var(--text-muted);font-weight:300;border-bottom:1px solid var(--border)}
+.call-stats-bar{max-width:1080px;margin:0 auto;padding:12px 32px;display:flex;align-items:center;gap:14px;font-size:11px;color:var(--text-muted);font-weight:300;border-top:1px solid var(--border)}
 .call-stats-bar b{color:var(--text);font-weight:400}
 .call-stats-sep{color:var(--border);font-weight:200}
 .call-stats-group{display:flex;gap:10px}
@@ -144,7 +147,7 @@ body{min-height:100vh;display:flex;flex-direction:column}
 .call-stats-dot.admin{background:var(--text-muted)}
 
 /* Domain hint */
-.domain-hint{max-width:1080px;margin:0 auto;padding:0 32px 8px;font-size:10px;color:var(--text-muted);opacity:.55;font-weight:300;line-height:1.6}
+.domain-hint{max-width:1080px;margin:0 auto;padding:2px 32px 6px;font-size:10px;color:var(--text-muted);opacity:.45;font-weight:300}
 
 /* Stop confirm */
 .btn.stop.confirming{background:#C0392B;border-color:#C0392B;color:#fff;animation:pulse .4s ease-in-out 3}
@@ -171,42 +174,47 @@ OCR:  Tesseract OCR (pytesseract)
 ─━ 用 curl localhost:3099/api/tools 查完整清单 ━─
 -->
 
-<div class="hero">
-  <div class="hero-inner">
-    <div class="hero-mono">AGENTBOARD</div>
-    <h1><b>工具架</b></h1>
-    <div class="tagline" style="font-size:15px;opacity:.7;font-weight:300;max-width:520px">文件即注册，状态即界面</div>
-    <div class="tagline">Agent 注册，自动发现，实时状态——人只管看。</div>
-        <div class="asset-bar" id="assetBar">
-      <a class="asset-item" href="/" title="工具注册表" id="assetTools"><span class="asset-label">工具</span></a>
-      <a class="asset-item" href="/skills" title="Claude Code 技能" id="assetSkills"><span class="asset-label">技能</span></a>
-      <a class="asset-item" href="/tips" title="操作日志" id="assetTips"><span class="asset-label">日志</span></a>
-      <a class="asset-item" href="/constitution" title="设计宪法" id="assetConstitution"><span class="asset-label">设计宪法</span></a>
-      <a class="asset-item" href="/rules" title="管理规则" id="assetRules"><span class="asset-label">管理规则</span></a>
-      <a class="asset-item" href="/global" title="全局宪法" id="assetGlobal"><span class="asset-label">全局宪法</span></a>
-      <a class="asset-item" href="/api" title="API 文档" id="assetApi"><span class="asset-label">API</span></a>
-      <a class="asset-item" href="#" title="定时巡检任务" style="opacity:.6" id="assetCron"><span class="asset-label">定时</span></a>
-      <a class="asset-item" href="/startup" title="开机自启动项" id="assetStartup"><span class="asset-label">启动项</span></a>
-      <a class="asset-item" href="/minds" title="人物思维顾问" id="assetMinds"><span class="asset-label">思维顾问</span></a>
+<div class="header">
+  <div class="header-top">
+    <a href="/" class="header-brand">
+      <span class="header-logo">工</span>
+      <span class="header-name">工具架</span>
+      <span class="header-cn">AGENTBOARD</span>
+    </a>
+    <div class="header-nav" id="assetBar">
+      <a href="/global" title="Claude Code 全局宪法" id="assetGlobal">全局宪法</a>
+      <a href="/design-spec" title="设计规范" id="assetDesignSpec">设计规范</a>
+      <a href="/repo-spec" title="工程规范" id="assetRepoSpec">工程规范</a>
+      <span class="nav-sep"></span>
+      <a href="/" title="工具注册表" id="assetTools">工具</a>
+      <a href="/skills" title="Claude Code 技能" id="assetSkills">技能</a>
+      <a href="/tips" title="操作日志" id="assetTips">操作日志</a>
+      <a href="/api" title="API 文档" id="assetApi">API</a>
+      <span class="nav-sep"></span>
+      <a href="#" title="定时巡检任务" id="assetCron">定时任务</a>
+      <a href="/startup" title="开机自启动" id="assetStartup">开机自启动</a>
     </div>
   </div>
+  <div class="header-philo">文件即注册，状态即界面</div>
 </div>
 
-<div class="section-label">按状态</div>
 <div class="toolbar">
   <div class="stats-row" id="statsRow">
     <div class="stat-card active" data-filter="all" onclick="setFilter('all')">
       <span class="stat-num" id="totalCount">—</span>
-      <span class="stat-label">全部状态</span>
+      <span class="stat-label">全部</span>
     </div>
+    <span class="stat-sep">·</span>
     <div class="stat-card" data-filter="opened" onclick="setFilter('opened')">
       <span class="stat-num" id="openedCount">—</span>
       <span class="stat-label">打开中</span>
     </div>
+    <span class="stat-sep">·</span>
     <div class="stat-card" data-filter="openable" onclick="setFilter('openable')">
       <span class="stat-num" id="openableCount">—</span>
       <span class="stat-label">可打开</span>
     </div>
+    <span class="stat-sep">·</span>
     <div class="stat-card" data-filter="stopped" onclick="setFilter('stopped')">
       <span class="stat-num" id="stoppedCount">—</span>
       <span class="stat-label">未启动</span>
@@ -216,50 +224,32 @@ OCR:  Tesseract OCR (pytesseract)
   <button class="btn-refresh" onclick="fetchTools()" id="refreshBtn">刷新</button>
 </div>
 
-<div class="section-label">按属性</div>
+<div class="section-label">筛选</div>
 <div class="filter-bar">
   <div class="filter-row">
-    <span class="filter-label" onclick="setDomainFilter('all')" style="cursor:pointer" title="点击显示全部领域">全部领域</span>
-    <button class="filter-pill" data-domain="获取" onclick="setDomainFilter('获取')" title="数据接入、网页抓取、API调用 — 从外部获取信息的工具">获取</button>
-    <button class="filter-pill" data-domain="查阅" onclick="setDomainFilter('查阅')" title="内容浏览、知识检索、可视化面板 — 浏览和发现，不跑模型">查阅</button>
-    <button class="filter-pill" data-domain="推理" onclick="setDomainFilter('推理')" title="AI模型推理、RAG问答、Agent决策 — 让机器思考和判断">推理</button>
-    <button class="filter-pill" data-domain="创作" onclick="setDomainFilter('创作')" title="AIGC内容生成、图像/文本/音乐创作 — AI驱动的数字内容生产">创作</button>
-    <button class="filter-pill" data-domain="职能" onclick="setDomainFilter('职能')" title="开发辅助、效率增强、系统运维 — 让开发更顺畅的工具">职能</button>
+    <span class="filter-dim">领域</span>
+    <button class="filter-pill" data-domain="获取" onclick="setDomainFilter('获取')" title="数据接入、网页抓取、API调用 — 从外部获取信息的工具">获取<span class="pill-cnt">0</span></button>
+    <button class="filter-pill" data-domain="查阅" onclick="setDomainFilter('查阅')" title="内容浏览、知识检索、可视化面板 — 浏览和发现，不跑模型">查阅<span class="pill-cnt">0</span></button>
+    <button class="filter-pill" data-domain="推理" onclick="setDomainFilter('推理')" title="AI模型推理、RAG问答、Agent决策 — 让机器思考和判断">推理<span class="pill-cnt">0</span></button>
+    <button class="filter-pill" data-domain="创作" onclick="setDomainFilter('创作')" title="AIGC内容生成、图像/文本/音乐创作 — AI驱动的数字内容生产">创作<span class="pill-cnt">0</span></button>
+    <button class="filter-pill" data-domain="职能" onclick="setDomainFilter('职能')" title="开发辅助、效率增强、系统运维 — 让开发更顺畅的工具">职能<span class="pill-cnt">0</span></button>
   </div>
   <div class="filter-row">
-    <span class="filter-label" onclick="setFormFilter('all')" style="cursor:pointer" title="点击显示全部形态">全部形态</span>
-    <button class="filter-pill" data-form="本地" onclick="setFormFilter('本地')" title="本地运行的服务，有端口号，需手动启动/停止">本地</button>
-    <button class="filter-pill" data-form="API" onclick="setFormFilter('API')" title="远程API调用，通过 apiBase 配置连接，无需本地运行">API</button>
-    <button class="filter-pill" data-form="CLI" onclick="setFormFilter('CLI')" title="命令行工具，有启动命令但无端口，在终端中使用">CLI</button>
-    <button class="filter-pill" data-form="Web" onclick="setFormFilter('Web')" title="外部网站或Web服务，通过URL访问，无本地进程">Web</button>
+    <span class="filter-dim">形态</span>
+    <button class="filter-pill" data-form="本地" onclick="setFormFilter('本地')" title="本地运行的服务，有端口号，需手动启动/停止">本地<span class="pill-cnt">0</span></button>
+    <button class="filter-pill" data-form="API" onclick="setFormFilter('API')" title="远程API调用，通过 apiBase 配置连接，无需本地运行">API<span class="pill-cnt">0</span></button>
+    <button class="filter-pill" data-form="CLI" onclick="setFormFilter('CLI')" title="命令行工具，有启动命令但无端口，在终端中使用">CLI<span class="pill-cnt">0</span></button>
+    <button class="filter-pill" data-form="Web" onclick="setFormFilter('Web')" title="外部网站或Web服务，通过URL访问，无本地进程">Web<span class="pill-cnt">0</span></button>
   </div>
   <div class="filter-row">
-    <span class="filter-label" onclick="setOwnerFilter('all')" style="cursor:pointer" title="点击显示全部归属">全部归属</span>
-    <button class="filter-pill" data-owner="自建" onclick="setOwnerFilter('自建')" title="自己部署和运维的工具，有启动/停止命令">自建工具</button>
-    <button class="filter-pill" data-owner="外部" onclick="setOwnerFilter('外部')" title="第三方服务或平台，无需自己运维">外部</button>
+    <span class="filter-dim">归属</span>
+    <button class="filter-pill" data-owner="自建" onclick="setOwnerFilter('自建')" title="自己部署和运维的工具，有启动/停止命令">自建工具<span class="pill-cnt">0</span></button>
+    <button class="filter-pill" data-owner="外部" onclick="setOwnerFilter('外部')" title="第三方服务或平台，无需自己运维">外部<span class="pill-cnt">0</span></button>
   </div>
 </div>
-
-<div class="domain-hint">获取=数据入口 · 查阅=浏览发现 · 推理=智能判断 · 创作=内容生产 · 职能=开发运维</div>
-<div class="filter-count" id="filterCount"></div>
 
 <!--STATS_SNAPSHOT-->
 <div id="errBox" style="display:none;background:#fff0f0;color:#c00;padding:8px 32px;font-size:12px;font-family:monospace;border-bottom:1px solid #fcc;max-width:1080px;margin:0 auto;word-break:break-all"></div>
-<div class="call-stats-bar" id="callStatsBar">
-  <span class="call-stats-label">操作日志</span>
-  <span>今日 <b id="callToday">—</b></span>
-  <span class="call-stats-sep">·</span>
-  <span class="call-stats-group">
-    <span><span class="call-stats-dot agent"></span>Agent <b id="callAgent">—</b></span>
-    <span><span class="call-stats-dot browser"></span>浏览器 <b id="callBrowser">—</b></span>
-  </span>
-  <span class="call-stats-sep">·</span>
-  <span class="call-stats-group">
-    <span><span class="call-stats-dot list"></span>列表 <b id="callList">—</b></span>
-    <span><span class="call-stats-dot control"></span>管控 <b id="callControl">—</b></span>
-  </span>
-</div>
-
 <div class="content">
   <div class="tool-grid" id="toolGrid"></div>
 </div>
@@ -288,6 +278,22 @@ OCR:  Tesseract OCR (pytesseract)
     </div>
   </div>
 </div>
+
+<div class="call-stats-bar" id="callStatsBar">
+  <span class="call-stats-label">操作日志</span>
+  <span>今日 <b id="callToday">—</b></span>
+  <span class="call-stats-sep">·</span>
+  <span class="call-stats-group">
+    <span><span class="call-stats-dot agent"></span>Agent <b id="callAgent">—</b></span>
+    <span><span class="call-stats-dot browser"></span>浏览器 <b id="callBrowser">—</b></span>
+  </span>
+  <span class="call-stats-sep">·</span>
+  <span class="call-stats-group">
+    <span><span class="call-stats-dot list"></span>列表 <b id="callList">—</b></span>
+    <span><span class="call-stats-dot control"></span>管控 <b id="callControl">—</b></span>
+  </span>
+</div>
+
 
 <div class="footer">
   <div class="footer-bottom">
@@ -349,9 +355,10 @@ var catMeta = {
 };
 
 function setFilter(f) {
-  filter = f;
+  if (filter === f && f !== 'all') { filter = 'all'; }
+  else { filter = f; }
   document.querySelectorAll('.stat-card').forEach(function(c){ c.classList.remove('active'); });
-  var card = document.querySelector('.stat-card[data-filter="' + f + '"]');
+  var card = document.querySelector('.stat-card[data-filter="' + filter + '"]');
   if (card) card.classList.add('active');
   render();
 }
@@ -359,30 +366,24 @@ function setFilter(f) {
 function setDomainFilter(d) {
   domainFilter = (domainFilter === d) ? 'all' : d;
   document.querySelectorAll('.filter-pill[data-domain]').forEach(function(p){ p.classList.remove('active'); });
-  if (domainFilter !== 'all') {
-    var pill = document.querySelector('.filter-pill[data-domain="' + domainFilter + '"]');
-    if (pill) pill.classList.add('active');
-  }
+  var pill = document.querySelector('.filter-pill[data-domain="' + domainFilter + '"]');
+  if (pill) pill.classList.add('active');
   render();
 }
 
 function setFormFilter(f) {
   formFilter = (formFilter === f) ? 'all' : f;
   document.querySelectorAll('.filter-pill[data-form]').forEach(function(p){ p.classList.remove('active'); });
-  if (formFilter !== 'all') {
-    var pill = document.querySelector('.filter-pill[data-form="' + formFilter + '"]');
-    if (pill) pill.classList.add('active');
-  }
+  var pill = document.querySelector('.filter-pill[data-form="' + formFilter + '"]');
+  if (pill) pill.classList.add('active');
   render();
 }
 
 function setOwnerFilter(o) {
   ownerFilter = (ownerFilter === o) ? 'all' : o;
   document.querySelectorAll('.filter-pill[data-owner]').forEach(function(p){ p.classList.remove('active'); });
-  if (ownerFilter !== 'all') {
-    var pill = document.querySelector('.filter-pill[data-owner="' + ownerFilter + '"]');
-    if (pill) pill.classList.add('active');
-  }
+  var pill = document.querySelector('.filter-pill[data-owner="' + ownerFilter + '"]');
+  if (pill) pill.classList.add('active');
   render();
 }
 
@@ -425,6 +426,7 @@ function getToolForm(t) {
 
 // 归属检测：自建/外部
 function getToolOwner(t) {
+  if (t.owner) return t.owner;
   if (t.startCommand || t.stopCommand) return '自建';
   return '外部';
 }
@@ -444,13 +446,13 @@ function getToolOwner(t) {
       setT('assetTools', '工具注册表', s.assets.tools + ' 个');
       setT('assetSkills', 'Claude Code 技能', s.assets.skills + ' 个');
       setT('assetTips', '操作日志', s.assets.tips + ' 条');
-      setT('assetConstitution', '设计宪法', s.assets.constitution + ' 行');
-      setT('assetRules', '管理规则', s.assets.rules + ' 行');
+      setT('assetDesignSpec', '设计规范', s.assets.designSpec + ' 行');
+      setT('assetRepoSpec', '工程规范', s.assets.repoSpec + ' 行');
       setT('assetGlobal', '全局宪法', s.assets.global + ' 行');
       setT('assetApi', 'API 文档', s.assets.api + ' 个端点');
       setT('assetCron', '定时巡检', s.assets.cron + ' 个任务');
       setT('assetStartup', '开机自启动', s.assets.startup + ' 项');
-      setT('assetMinds', '人物思维顾问', s.assets.minds + ' 位');
+
     }
   }
 })();
@@ -479,6 +481,7 @@ async function fetchTools() {
     var data = await res.json();
     if (data.ok) {
       tools = data.tools;
+      updatePillCounts();
       // 清除已生效的 starting / stopping 状态
       Object.keys(starting).forEach(function(id){
         var t = tools.find(function(x){return x.id===id;});
@@ -510,9 +513,36 @@ function getFilterDesc() {
 }
 
 function resetAllFilters() {
-  domainFilter = 'all'; formFilter = 'all'; ownerFilter = 'all';
+  filter = 'all'; domainFilter = 'all'; formFilter = 'all'; ownerFilter = 'all';
+  document.getElementById('searchInput').value = '';
+  document.querySelectorAll('.stat-card').forEach(function(c){ c.classList.remove('active'); });
+  var allStat = document.querySelector('.stat-card[data-filter="all"]');
+  if (allStat) allStat.classList.add('active');
   document.querySelectorAll('.filter-pill[data-domain],.filter-pill[data-form],.filter-pill[data-owner]').forEach(function(p){ p.classList.remove('active'); });
   render();
+}
+
+function updatePillCounts() {
+  var domainCounts = {};
+  var formCounts = {};
+  var ownerCounts = {};
+  tools.forEach(function(t) {
+    var c = t.category || '其他'; domainCounts[c] = (domainCounts[c] || 0) + 1;
+    var f = getToolForm(t); formCounts[f] = (formCounts[f] || 0) + 1;
+    var o = getToolOwner(t); ownerCounts[o] = (ownerCounts[o] || 0) + 1;
+  });
+  ['获取','查阅','推理','创作','职能'].forEach(function(c) {
+    var pill = document.querySelector('.filter-pill[data-domain="' + c + '"] .pill-cnt');
+    if (pill) pill.textContent = domainCounts[c] || 0;
+  });
+  ['本地','API','CLI','Web'].forEach(function(f) {
+    var pill = document.querySelector('.filter-pill[data-form="' + f + '"] .pill-cnt');
+    if (pill) pill.textContent = formCounts[f] || 0;
+  });
+  ['自建','外部'].forEach(function(o) {
+    var pill = document.querySelector('.filter-pill[data-owner="' + o + '"] .pill-cnt');
+    if (pill) pill.textContent = ownerCounts[o] || 0;
+  });
 }
 
 function render() {
@@ -623,7 +653,7 @@ function render() {
           + '<div class="card-name">' + (t.icon||'') + ' ' + t.name + '</div>'
           + '<div class="card-id">' + t.id + '</div>'
           + (portsText || t.description ? '<div class="card-meta">' + (portsText||'') + '</div>' : '')
-          + (t.description ? '<div class="card-desc">' + t.description + '</div>' : '')
+          + (t.description ? '<div class="card-desc" title="' + t.description.replace(/"/g,'&quot;') + '">' + t.description + '</div>' : '')
         + '</div>'
       + '</div>'
       + '<div class="card-actions">' + (openBtn||'') + (actionHtml||'') + '<span class="card-badges">' + formBadge + ownerBadge + '</span></div>'
@@ -737,6 +767,7 @@ function saveCardOrder() {
   cards.forEach(function(c){ ids.push(c.getAttribute('data-id')); });
   var saved = [];
   try { saved = JSON.parse(localStorage.getItem('agentboard-card-order') || '[]'); } catch(_) {}
+  if (!Array.isArray(saved)) saved = [];
   var existing = {};
   saved.forEach(function(id, idx){ existing[id] = idx; });
   ids.forEach(function(id){ delete existing[id]; });
@@ -802,6 +833,7 @@ function handleDragEnd(e) {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
+  try { var co = JSON.parse(localStorage.getItem('agentboard-card-order') || '[]'); if (!Array.isArray(co)) localStorage.removeItem('agentboard-card-order'); } catch(_) { localStorage.removeItem('agentboard-card-order'); }
   markOpened('dashboard');
   fetchTools();
   fetchStats();
