@@ -1,0 +1,22 @@
+{
+  "name": "aigoapi 模型聚合",
+  "id": "aigoapi",
+  "description": "AI模型聚合平台 — GPT-5.4 / Claude Opus 4.7 / Gemini 3.1 / DeepSeek 3.2 · OpenAI兼容",
+  "icon": "🔀",
+  "version": "1.0.0",
+  "category": "推理",
+  "order": 34,
+  "apiBase": "https://aigoapi.com/v1",
+  "apiKeyName": "AIGOAPI_KEY",
+  "models": [
+    { "id": "gpt-5.4", "type": "文本" },
+    { "id": "gpt-image-2", "type": "图片" },
+    { "id": "claude-opus-4-7", "type": "文本" },
+    { "id": "claude-sonnet-4-6", "type": "文本" },
+    { "id": "deepseek-3.2", "type": "文本" },
+    { "id": "gemini-3.1-pro-preview", "type": "文本" },
+    { "id": "gemini-3.1-flash-image", "type": "图片" },
+    { "id": "glm-5", "type": "文本" }
+  ],
+  "url": "https://aigoapi.com"
+}

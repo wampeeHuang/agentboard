@@ -1,14 +1,14 @@
 {
-  "name": "ACE Step 音乐生成",
+  "name": "音乐生成 ACE Step",
   "id": "ace-step",
   "description": "AI音乐生成工具。⚠ 启动吃掉6GB+显存，确认内存够再开",
   "icon": "🎵",
   "version": "1.0.0",
-  "port": 5173,
-  "projectPath": "D:\\HHH\\tools\\ace-step-ui",
-  "url": "http://localhost:5173",
-  "startCommand": "node D:\\HHH\\tools\\ace-step-ui\\launcher.cjs",
-  "stopCommand": "npx kill-port 5173",
+  "category": "创作",
   "order": 7,
-  "category": "AIGC"
+  "port": 5173,
+  "url": "http://localhost:5173",
+  "projectPath": "D:\\HHH\\tools\\ace-step-ui",
+  "startCommand": "node D:\\HHH\\tools\\ace-step-ui\\launcher.cjs",
+  "stopCommand": "npx kill-port 5173"
 }

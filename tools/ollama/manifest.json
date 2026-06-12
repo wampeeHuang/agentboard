@@ -1,0 +1,13 @@
+{
+  "name": "Ollama",
+  "id": "ollama",
+  "description": "本地 LLM 推理服务 · 管理模型列表/拉取/运行 · Ollama API 兼容",
+  "icon": "🦙",
+  "version": "1.0.0",
+  "category": "推理",
+  "order": 13,
+  "port": 11434,
+  "url": "http://localhost:11434",
+  "startCommand": "echo Ollama 通常已开机自启。手动启动：ollama serve",
+  "stopCommand": "npx kill-port 11434"
+}

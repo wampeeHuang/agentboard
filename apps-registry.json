@@ -1,0 +1,123 @@
+{
+  "description": "公网部署应用注册表。每个应用的唯一真相源。AI Agent 启动时读此文件发现所有可用应用。工具架面板展示同一份数据。",
+  "updated": "2026-06-09T18:00",
+  "apps": [
+    {
+      "id": "data.evopearl.com",
+      "name": "进化猫每日信号站",
+      "url": "https://data.evopearl.com",
+      "description": "AI 信号 + 认知深读 + 每日选题，三个板块的每日信息流。Anthropic 暖象牙白设计。",
+      "category": "内容",
+      "status": "live",
+      "host": "腾讯云 DNSPod → Vercel (evopearl-data)",
+      "logo": "https://data.evopearl.com/logo.svg",
+      "endpoints": {
+        "config": "https://data.evopearl.com/config.json",
+        "data": "https://data.evopearl.com/data/{task}/{date}.json"
+      },
+      "agentNote": "配置和数据结构见 config.json。每日数据文件格式：data/{task}/YYYY-MM-DD.json。三个 task: ai-signal, deep-read, daily-selection。"
+    },
+    {
+      "id": "forma.evopearl.com",
+      "name": "排版工匠 Forma",
+      "url": "https://forma.evopearl.com",
+      "description": "AI Agent 排版引擎。Markdown → 微信/社媒排版，四款版式切换。Agent 写，Forma 排，人审核即发布。",
+      "category": "工具",
+      "status": "live",
+      "host": "腾讯云 DNSPod → Vercel (forma-typesetting)",
+      "localDev": "http://localhost:3100",
+      "endpoints": {
+        "llms.txt": "https://forma.evopearl.com/llms.txt",
+        "llms-full.txt": "https://forma.evopearl.com/llms-full.txt",
+        "openapi.json": "https://forma.evopearl.com/openapi.json",
+        "view": "https://forma.evopearl.com/view",
+        "docs": "https://forma.evopearl.com/docs"
+      },
+      "agentNote": "llms.txt 和 openapi.json 是 AI 自动发现入口。本地 dev 在 :3100，逻辑同生产。"
+    },
+    {
+      "id": "minds.evopearl.com",
+      "name": "人物思维顾问局",
+      "url": "https://minds.evopearl.com",
+      "description": "39 位人物思维顾问目录站，Anthropic 暖象牙白 + 陶土色系，单 HTML 纯静态。",
+      "category": "内容",
+      "status": "live",
+      "host": "腾讯云 DNSPod → Vercel (nuwa-perspective-catalog)",
+      "localDev": "http://localhost:3090",
+      "logo": "https://minds.evopearl.com/logo.svg",
+      "altUrls": ["https://nuwa-perspective-catalog.vercel.app"],
+      "agentNote": "目录页每张卡片含人物摘要和思维框架。GitHub: https://github.com/wampeeHuang/nuwa-perspective-catalog"
+    },
+    {
+      "id": "agentboard",
+      "name": "工具架 Agentboard",
+      "url": "http://localhost:3099",
+      "description": "本地工具/Skill/项目/应用管理面板。AI 可调用 /api/routes 发现可用工具。",
+      "category": "基础设施",
+      "status": "local",
+      "localDev": "http://localhost:3099",
+      "endpoints": {
+        "api": "http://localhost:3099/api/routes",
+        "tools": "http://localhost:3099/tools",
+        "skills": "http://localhost:3099/skills",
+        "projects": "http://localhost:3099/projects",
+        "apps": "http://localhost:3099/apps"
+      },
+      "agentNote": "本地服务，仅本机可访问。AI 通过读取 apps-registry.json 和 manifest.json 直接获取注册信息。"
+    },
+    {
+      "id": "shuiwuyou.evopearl.com",
+      "name": "税无忧",
+      "url": "https://shuiwuyou.evopearl.com",
+      "description": "电商个体户税务体检工具——自动记账+刷单检测+税务估算，零会计知识门槛",
+      "category": "工具",
+      "status": "live",
+      "host": "腾讯云 DNSPod → Vercel (tax-wuyou)",
+      "localDev": "http://localhost:3457",
+      "altUrls": ["https://tax.evopearl.com"],
+      "endpoints": {
+        "manifest": "https://shuiwuyou.evopearl.com/api/manifest",
+        "status": "https://shuiwuyou.evopearl.com/api/status",
+        "calculate": "https://shuiwuyou.evopearl.com/api/calculate"
+      },
+      "agentNote": "Vercel 部署。CSV 直传算税用 POST /api/calculate。完整文件导入(xlsx/pdf)仅本地可用。本地 dev :3457。"
+    },
+    {
+      "id": "gallery.evopearl.com",
+      "name": "版式画廊",
+      "url": "https://gallery.evopearl.com",
+      "description": "43套设计模板统一索引 — AI可查询、预览、调用。CSS变量合约，四款版式切换。",
+      "category": "查阅",
+      "status": "live",
+      "host": "腾讯云 DNSPod → Vercel (layout-gallery)",
+      "logo": "/assets/logo-gallery.svg",
+      "localDev": "http://localhost:3080",
+      "endpoints": {
+        "registry": "https://gallery.evopearl.com/api/registry",
+        "design-styles": "https://gallery.evopearl.com/api/design-styles"
+      },
+      "agentNote": "Vercel 部署。/api/registry 返回43模板完整索引。模板HTML通过 /templates/ 静态路径直接访问。本地 dev :3080。"
+    },
+    {
+      "id": "agentboard-cloudflare",
+      "name": "工具架 Agentboard（公网）",
+      "url": "https://lived-scan-afternoon-logging.trycloudflare.com",
+      "description": "工具架 Cloudflare Tunnel 公网临时通道。域名固定后更新。",
+      "category": "基础设施",
+      "status": "live",
+      "host": "Cloudflare Tunnel → localhost:3099",
+      "agentNote": "临时公网地址，Cloudflare Tunnel 每次重启会变。固定域名后续替换。"
+    },
+    {
+      "id": "forma-local",
+      "name": "排版工匠 Forma（本地）",
+      "url": "http://localhost:3100",
+      "description": "Forma 本地开发服务器，Next.js dev。功能与 forma.evopearl.com 一致。",
+      "category": "工具",
+      "status": "local",
+      "localDev": "http://localhost:3100",
+      "productionUrl": "https://forma.evopearl.com",
+      "agentNote": "本地开发版。生产用 forma.evopearl.com。两者功能一致。"
+    }
+  ]
+}

@@ -1,14 +1,14 @@
 {
-  "name": "MCP Chrome DevTools",
+  "name": "浏览器控制 MCP Chrome DevTools",
   "id": "mcp-chrome",
   "description": "Chrome DevTools MCP — 浏览器自动化入口。Profile: ~/.cache/chrome-devtools-mcp/chrome-profile。Claude Code内通过 mcp__ChromeDevTools__* 工具调用",
   "icon": "🌐",
   "version": "1.0.0",
-  "port": 9222,
-  "projectPath": "C:\\Users\\Administrator\\.cache\\chrome-devtools-mcp\\chrome-profile",
-  "url": "http://localhost:9222",
-  "startCommand": "echo MCP-Chrome 由 Claude Code 自动管理，无需手动启动",
-  "stopCommand": "npx kill-port 9222",
+  "category": "获取",
   "order": 9,
-  "category": "开发"
+  "port": 9222,
+  "url": "http://localhost:9222",
+  "projectPath": "%USERPROFILE%\\.cache\\chrome-devtools-mcp\\chrome-profile",
+  "startCommand": "echo MCP-Chrome 由 Claude Code 自动管理，无需手动启动",
+  "stopCommand": "npx kill-port 9222"
 }

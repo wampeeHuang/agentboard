@@ -1,0 +1,12 @@
+{
+  "name": "Hermes",
+  "id": "hermes",
+  "description": "CLI AI Agent · hermes -z \"prompt\" 单次调用 · hermes chat 交互模式 · 管理 skills/plugins/mcp/sessions",
+  "icon": "🪽",
+  "version": "1.0.0",
+  "category": "推理",
+  "order": 15,
+  "url": "http://localhost:3099",
+  "startCommand": "wt powershell -NoExit -Command hermes",
+  "stopCommand": "taskkill /FI \"WINDOWTITLE eq hermes*\" 2>nul"
+}

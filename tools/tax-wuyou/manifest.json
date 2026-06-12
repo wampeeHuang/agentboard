@@ -1,0 +1,14 @@
+{
+  "name": "税无忧 · 电商税务体检",
+  "id": "tax-wuyou",
+  "description": "淘宝订单导入 → 自动分类 → 刷单剔除 → 税务估算。个体户每季度报税前看一眼。",
+  "icon": "🏪",
+  "version": "1.0.0",
+  "category": "职能",
+  "order": 10,
+  "port": 3457,
+  "url": "http://localhost:3457",
+  "projectPath": "D:\\Claude code_workspace\\2026-05-31-电商会计驾驶舱",
+  "startCommand": "cd /d \"D:\\Claude code_workspace\\2026-05-31-电商会计驾驶舱\" && node server.js",
+  "stopCommand": "npx kill-port 3457"
+}

@@ -4,11 +4,11 @@
   "description": "ComfyUI 节点式AI图像生成工作流。⚠ 启动吃4GB+显存，确认GPU空闲再开",
   "icon": "🧩",
   "version": "1.0.0",
-  "port": 8188,
-  "projectPath": "D:\\0-Software\\AI\\ComfyUI-master",
-  "url": "http://localhost:8188",
-  "startCommand": "cd /d D:\\0-Software\\AI\\ComfyUI-master && python main.py --listen 0.0.0.0 --port 8188 --enable-cors-header",
-  "stopCommand": "npx kill-port 8188",
+  "category": "创作",
   "order": 6,
-  "category": "AIGC"
+  "port": 8188,
+  "url": "http://localhost:8188",
+  "projectPath": "D:\\0-Software\\AI\\ComfyUI-master",
+  "startCommand": "cd /d D:\\0-Software\\AI\\ComfyUI-master && python main.py --listen 0.0.0.0 --port 8188 --enable-cors-header",
+  "stopCommand": "npx kill-port 8188"
 }

@@ -6,7 +6,13 @@
   "scripts": {
     "start": "node server.js"
   },
-  "keywords": ["ai-agent", "tool-dashboard", "control-plane", "toolchain", "homelab"],
+  "keywords": [
+    "ai-agent",
+    "tool-dashboard",
+    "control-plane",
+    "toolchain",
+    "homelab"
+  ],
   "license": "MIT",
   "engines": {
     "node": ">=18"

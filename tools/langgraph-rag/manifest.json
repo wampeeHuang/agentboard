@@ -4,11 +4,11 @@
   "description": "检索增强生成问答系统 — DeepSeek LLM + 本地 Embedding + ChromaDB",
   "icon": "🧠",
   "version": "1.0.0",
-  "port": 8766,
-  "projectPath": "C:\\Users\\Administrator\\Projects\\langgraph-rag",
-  "url": "http://localhost:8766/ask",
-  "startCommand": "start /b C:\\Users\\Administrator\\AppData\\Local\\Python\\bin\\python.exe rag_app.py serve",
-  "stopCommand": "npx kill-port 8766",
+  "category": "推理",
   "order": 8,
-  "category": "AI 模型"
+  "port": 8766,
+  "url": "http://localhost:8766/ask",
+  "projectPath": "%USERPROFILE%\\Projects\\langgraph-rag",
+  "startCommand": "start /b %USERPROFILE%\\AppData\\Local\\Python\\bin\\python.exe rag_app.py serve",
+  "stopCommand": "npx kill-port 8766"
 }

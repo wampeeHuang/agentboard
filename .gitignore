@@ -1,4 +1,5 @@
 node_modules/
 _runtime/
 *.log
-.DS_Store
+patrol-result.json
+.env

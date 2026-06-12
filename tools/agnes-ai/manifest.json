@@ -1,0 +1,10 @@
+{
+  "name": "免费 API Agnes",
+  "id": "agnes-ai",
+  "description": "全球Top 9 AI Lab · 全模态免费API · agnes-2.0-flash(文本) / agnes-image-2.0-flash(图片) / agnes-video-v2.0(视频) · 接口兼容OpenAI格式",
+  "icon": "🆓",
+  "version": "1.0.0",
+  "category": "推理",
+  "order": 18,
+  "url": "https://platform.agnes-ai.com"
+}

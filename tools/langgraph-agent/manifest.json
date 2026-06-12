@@ -1,14 +1,14 @@
 {
-  "name": "Agent + RAG Tool",
+  "name": "RAG Tool + Agent",
   "id": "langgraph-agent",
   "description": "Agent 自主决定何时查知识库 — LangGraph ReAct + search_knowledge_base tool",
   "icon": "🤖",
   "version": "1.0.0",
-  "port": 8767,
-  "projectPath": "C:\\Users\\Administrator\\Projects\\langgraph-rag",
-  "url": "http://localhost:8767",
-  "startCommand": "start /b C:\\Users\\Administrator\\AppData\\Local\\Python\\bin\\python.exe agent_app.py serve",
-  "stopCommand": "npx kill-port 8767",
+  "category": "推理",
   "order": 5,
-  "category": "AI 模型"
+  "port": 8767,
+  "url": "http://localhost:8767",
+  "projectPath": "%USERPROFILE%\\Projects\\langgraph-rag",
+  "startCommand": "start /b %USERPROFILE%\\AppData\\Local\\Python\\bin\\python.exe agent_app.py serve",
+  "stopCommand": "npx kill-port 8767"
 }

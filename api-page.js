@@ -153,7 +153,7 @@ module.exports = function apiHTML(data) {
   '  <h1>HTTP API 端点参考 / Endpoint Reference</h1>\n' +
   '  <div class="tagline">Agentboard JSON API — ' + cards.length + ' 个端点，返回 JSON / ' + cards.length + ' JSON endpoints — GET 端点可点击直达</div>\n' +
   '  <div class="ver">v' + esc(data.version) + '</div>\n' +
-  '  <div class="truth-note">唯一真相源 / Single source of truth — 工具状态由 <code>~/.claude/tools/*/manifest.json</code> 定义，API key/凭证在 <a href="/tips" style="color:inherit;text-decoration:underline">/tips</a>，此处为实时投影。</div>\n' +
+  '  <div class="truth-note">唯一真相源 / Single source of truth — 工具状态由 <code>~/.agentboard/tools/*/manifest.json</code> 定义。操作记录见 <a href="/tips" style="color:inherit;text-decoration:underline">/tips</a>。</div>\n' +
   '</div></div>\n' +
   '<div class="content">\n' +
   '  <div class="section-bar"><h2>全部端点 All Endpoints</h2><span class="section-count">' + cards.length + ' 个</span></div>\n' +

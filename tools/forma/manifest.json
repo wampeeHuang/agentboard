@@ -1,0 +1,14 @@
+{
+  "name": "排版工匠",
+  "id": "forma",
+  "description": "Markdown→微信HTML排版。When to use: 文章要发微信公众号时。流程: ①写好markdown，图片用 ![alt](images/xxx.png) 引用 ②图片放markdown同目录的images/文件夹 ③执行: node chicpage/scripts/generate-wechat-html.mjs <markdown路径> --name <文章名> ④打开 http://localhost:3100/view/<文章名> 在手机模拟框预览 ⑤点「复制到微信」一键粘贴。swiss主题=Klein蓝#002FA7+Inter字体+无衬线。自动内联样式+图片base64。并行多篇互不冲突。复制页: http://localhost:3100/copy-wechat.html?article=<文章名>。编辑器: http://localhost:3100/edit",
+  "icon": "📄",
+  "version": "1.0.0",
+  "category": "职能",
+  "order": 17,
+  "port": 3100,
+  "url": "http://localhost:3100",
+  "projectPath": "D:\\Claude code_workspace\\chicpage-tool",
+  "startCommand": "cd /d D:\\Claude code_workspace\\chicpage-tool\\chicpage && npm run dev",
+  "stopCommand": "npx kill-port 3100"
+}

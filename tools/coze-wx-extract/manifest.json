@@ -1,0 +1,10 @@
+{
+  "name": "微信文章提取 Coze",
+  "id": "coze-wx-extract",
+  "description": "python3 D:/claude_workspace/tools/coze_wx_extract.py \"<微信文章URL>\" --direct 2>&1 | head -300。--direct 模式免费、快、不消耗 Coze 额度。微信有验证墙时去掉 --direct 切 Coze API 模式。提取微信公众号文章正文，返回纯文本。",
+  "icon": "📄",
+  "version": "1.0.0",
+  "category": "获取",
+  "order": 99,
+  "url": "https://www.coze.cn/space/7563883761365254184/bot/7634402982662602794"
+}

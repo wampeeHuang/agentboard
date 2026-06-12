@@ -1,0 +1,14 @@
+{
+  "name": "个体户驾驶舱",
+  "id": "个体户驾驶舱",
+  "description": "深圳个体工商户一站式管理面板：税务·社保·工商，申报日历+快捷入口+关键信息知识库",
+  "icon": "🏪",
+  "version": "1.0.0",
+  "category": "职能",
+  "order": 30,
+  "port": 3456,
+  "url": "http://localhost:3456",
+  "projectPath": "D:\\Claude code_workspace\\2026-05-31-个体户驾驶舱",
+  "startCommand": "cd D:\\Claude code_workspace\\2026-05-31-个体户驾驶舱 && node server.js",
+  "stopCommand": "npx kill-port 3456"
+}

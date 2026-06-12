@@ -1,0 +1,14 @@
+{
+  "name": "ttyd · Claude Code 终端",
+  "id": "ttyd-claude",
+  "description": "Web 终端暴露 Claude Code CLI——平板远程访问入口",
+  "icon": "⚡",
+  "version": "1.0.0",
+  "category": "职能",
+  "order": 32,
+  "port": 3092,
+  "url": "http://localhost:3092",
+  "projectPath": "%USERPROFILE%\\.claude",
+  "startCommand": "powershell -WindowStyle Hidden -File %USERPROFILE%\\.claude\\ttyd-daemon.ps1",
+  "stopCommand": "npx kill-port 3092"
+}

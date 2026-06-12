@@ -1,0 +1,12 @@
+{
+  "name": "Claude Code",
+  "id": "claude-code",
+  "description": "Anthropic Claude Code CLI · claude --dangerously-skip-permissions 启动 · 项目级 AI 编程助手",
+  "icon": "◈",
+  "version": "1.0.0",
+  "category": "职能",
+  "order": 16,
+  "url": "http://localhost:3099",
+  "startCommand": "wt powershell -NoExit -Command \"claude --dangerously-skip-permissions\"",
+  "stopCommand": "echo Claude Code 在终端运行，关闭窗口即可"
+}

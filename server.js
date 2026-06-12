@@ -5,10 +5,12 @@ const { exec, execSync, spawn } = require('child_process');
 const os = require('os');
 
 const PROJECT_DIR = __dirname;
-const TOOLS_DIR = process.env.AGENTBOARD_TOOLS_DIR || path.join(os.homedir(), '.claude', 'tools');
+const AGENTBOARD_HOME = process.env.AGENTBOARD_HOME || path.join(os.homedir(), '.agentboard');
+const TOOLS_DIR = process.env.AGENTBOARD_TOOLS_DIR || path.join(AGENTBOARD_HOME, 'tools');
+const TOOLS_DIRS = [TOOLS_DIR];
 const SKILLS_DIR = process.env.AGENTBOARD_SKILLS_DIR || path.join(os.homedir(), '.claude', 'skills');
 var apiHTML = require('./api-page');
-const TIPS_DIR = process.env.AGENTBOARD_TIPS_DIR || path.join(os.homedir(), '.claude', 'tips');
+const TIPS_DIR = process.env.AGENTBOARD_TIPS_DIR || path.join(AGENTBOARD_HOME, 'tips');
 const LOCAL_TOOLS_DIR = path.join(PROJECT_DIR, 'tools');
 const LOCAL_SKILLS_DIR = path.join(PROJECT_DIR, 'skills');
 const PREFERRED_PORT = parseInt(process.env.PORT || '3099', 10);
@@ -17,6 +19,109 @@ const PLATFORM = process.platform;
 function read(p) { try { return fs.readFileSync(p,'utf8'); } catch(_) { return null; } }
 function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function listDirs(p) { try { return fs.readdirSync(p,{withFileTypes:true}).filter(e=>e.isDirectory()&&!e.name.startsWith('.')).map(e=>e.name); } catch(_) { return []; } }
+
+var _persCache = null;
+function loadPerspectives() {
+  if (_persCache) return _persCache;
+  var result = [];
+  if (!fs.existsSync(SKILLS_DIR)) { _persCache = result; return result; }
+  listDirs(SKILLS_DIR).forEach(function(name) {
+    if (!name.startsWith('perspective-')) return;
+    var skillMd = read(path.join(SKILLS_DIR, name, 'SKILL.md'));
+    if (!skillMd) return;
+    var fm = {};
+    var fmMatch = skillMd.match(/^---\r?\n([\s\S]*?)\r?\n---/);
+    var body = '';
+    if (fmMatch) {
+      fmMatch[1].split('\n').forEach(function(line) {
+        var m = line.match(/^(\w+):\s*(.+)/);
+        if (m) fm[m[1]] = m[2].trim();
+      });
+      body = skillMd.substring(fmMatch[0].length).trim();
+    } else { body = skillMd.trim(); }
+    body = body.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+    // Extract name_cn and name_en from trigger field
+    var triggerParts = (fm.trigger || '').split(',').map(function(s) { return s.trim(); });
+    var name_cn = triggerParts[0] || '';
+    var name_en = triggerParts[1] || '';
+    // Oneliner: from description or fallback to body
+    var desc = fm.description || '';
+    if (desc.startsWith('|')) desc = desc.substring(1).trim();
+    desc = desc.replace(/\n\s+/g, ' ');
+    var oneliner = desc.split(/[。.，,\n]/)[0].trim();
+    if (!oneliner || oneliner.length < 5) {
+      // Fallback: first meaningful line from body
+      var bodyLines = body.split('\n');
+      for (var bi = 0; bi < bodyLines.length; bi++) {
+        var bl = bodyLines[bi].trim();
+        if (bl && !bl.startsWith('#') && !bl.startsWith('>') && bl.length > 10) {
+          oneliner = bl.replace(/\r/g, '').substring(0, 100);
+          break;
+        }
+      }
+    }
+    if (oneliner.length > 100) oneliner = oneliner.substring(0, 100) + '...';
+    // Extract model names from markdown body (look for ### under 核心心智模型 section)
+    var modelNames = [];
+    var modelSection = body.match(/##\s*(?:核心心智模型|Core Mental Models|心智模型)[\s\S]*?(?=## |$)/);
+    var searchBody = modelSection ? modelSection[0] : '';
+    var modelRe = /^###\s+(.+)$/gm;
+    var mm;
+    while ((mm = modelRe.exec(searchBody)) !== null) {
+      var mn = mm[1].trim();
+      if (mn && !/^(?:使用说明|角色扮演|触发|规则|注意|排除|Step |激活|示例|自动|误激活|Gate )/.test(mn)) {
+        modelNames.push(mn);
+      }
+    }
+    // Category
+    var category = classifyPerspective(name, body, desc);
+    result.push({
+      id: name,
+      name_cn: name_cn,
+      name_en: name_en,
+      oneliner: oneliner,
+      category: category,
+      modelPills: modelNames.slice(0, 4),
+      body: body,
+      description: desc,
+      trigger: fm.trigger || ''
+    });
+  });
+  _persCache = result;
+  return result;
+}
+
+function classifyPerspective(name, body, desc) {
+  // Only use name + description — body contains methodology instructions, not identity signals
+  var firstPara = '';
+  if (body) {
+    var bp = body.split(/##\s/)[0]; // only first section before any ## heading
+    if (bp) firstPara = bp.substring(0, 300); // at most 300 chars
+  }
+  var s = (name + ' ' + (desc || '') + ' ' + firstPara).toLowerCase();
+  // Order: strong profession signals first, generic terms (设计) last
+  var sciRe = /physics|quantum|science|物理|量子|宇宙|天体|相对论|科学|霍金/;
+  var aiRe = /ai\b|llm|gpt|machine.learn|deep.learn|transformer|neural|人工智能|深度学习|机器学习|神经网络|cuda|自动驾驶/;
+  var bizRe = /founder|startup|venture|invest|创始|创业|投资|商业|增长|商业模式|创始人|企业家|产品方法论|硅谷/;
+  var mktRe = /marketing|advertising|copywriting|brand|营销|广告|品牌|文案|消费者|销售信|科学广告/;
+  var litRe = /novel|fiction|sci\.fi|小说|科幻|文学|散文|出版|三体|写作/;
+  var filmRe = /film|movie|director|cinema|电影|导演|影视|镜头|摄影|映画|动画|编剧|制片|cinematograph/;
+  var socialRe = /politic|trump|政治|社会|总统|懂王|选举|美国|政/;
+  var eduRe = /teach|learn|education|mentor|教育|导师|老师|高考|考研|网课|培训/;
+  var philoRe = /philosoph|哲学|思想|认知|随机|反脆弱|黑天鹅|不确定性/;
+  var designRe = /architect|建筑设计|室内设计|工业设计|平面设计|交互设计|用户体验|建筑师|室内装修|住宅设计|家居设计|产品设计|工业设计|设计方法论/;
+  if (sciRe.test(s)) return '科学/技术';
+  if (aiRe.test(s)) return '人工智能';
+  if (bizRe.test(s)) return '商业/经济';
+  if (mktRe.test(s)) return '营销/传播';
+  if (litRe.test(s)) return '文学/人文';
+  if (filmRe.test(s)) return '影视/创作';
+  if (socialRe.test(s)) return '社会/政治';
+  if (eduRe.test(s)) return '教育/学习';
+  if (philoRe.test(s)) return '哲学/思想';
+  if (designRe.test(s)) return '设计/艺术';
+  return '其他';
+}
 
 function safeResolve(base, ...segments) {
   const resolved = path.resolve(path.join(base, ...segments));
@@ -32,78 +137,70 @@ function winPath(p) {
   return m ? m[1].toUpperCase() + ':\\' + p.slice(3) : p;
 }
 
-function scanSkillDiagrams() {
+function scanAllSkills() {
   var seen = {};
-  var diagrams = [];
-  [LOCAL_SKILLS_DIR, SKILLS_DIR].forEach(function(dir) {
-    if (!fs.existsSync(dir)) return;
-    listDirs(dir).forEach(function(name) {
-      if (seen[name]) return;
-      var filePath = path.join(dir, name, 'references', 'system-diagram.html');
-      var html = read(filePath);
-      if (!html) return;
-      seen[name] = true;
-      var h1M = html.match(/<h1[^>]*>([\s\S]*?)<\/h1>/i);
-      var deckM = html.match(/<p\s+class="deck"[^>]*>([\s\S]*?)<\/p>/i);
-      var rawH1 = h1M ? h1M[1].replace(/<[^>]*>/g, '').trim() : '';
-      var deck = deckM ? deckM[1].trim() : '';
-      var kpiRe = /<div class="kv">([^<]*)<\/div>\s*<div class="kl">([^<]*)<\/div>/g;
-      var kpis = [];
-      var m;
-      while ((m = kpiRe.exec(html)) !== null) kpis.push({ v: m[1], l: m[2] });
-
-      // heading = English/tech name, displayName = Chinese label
-      var heading = rawH1 || name;
-      var displayName = '';
-      if (/[一-鿿]/.test(rawH1)) {
-        // h1 IS Chinese — use it as displayName, fall back to dir name for heading
-        displayName = rawH1;
-        heading = name;
-      }
-
-      // If no Chinese displayName yet, try SKILL.md
-      if (!displayName) {
-        var skillMd = read(path.join(dir, name, 'SKILL.md'));
-        if (skillMd) {
-          // Try h1 for displayName
-          var zhH1 = skillMd.match(/^#\s+(.+)/m);
-          if (zhH1 && /[一-鿿]/.test(zhH1[1])) {
-            var h = zhH1[1].trim();
-            var emDash = h.indexOf(' — ');
-            displayName = emDash > 0 ? h.substring(emDash + 3).trim() : h;
-          }
-          // If deck has no Chinese, try to extract from SKILL.md body
-          if (!deck || !/[一-鿿]/.test(deck)) {
-            var lines = skillMd.split('\n');
-            var past = false;
-            for (var i = 0; i < lines.length; i++) {
-              var line = lines[i].trim();
-              if (line.startsWith('# ')) { past = true; continue; }
-              if (!past || !line || line.startsWith('#') || line.startsWith('>') || line.startsWith('```') || line.startsWith('---')) continue;
-              if (!/[一-鿿]/.test(line) || line.length < 10) continue;
-              deck = line.replace(/[*_`\[\]]/g, '').substring(0, 120);
-              break;
-            }
-          }
+  var skills = [];
+  if (!fs.existsSync(SKILLS_DIR)) return skills;
+  listDirs(SKILLS_DIR).forEach(function(name) {
+    if (seen[name]) return;
+    seen[name] = true;
+    var skillMd = read(path.join(SKILLS_DIR, name, 'SKILL.md'));
+    if (!skillMd) return;
+    var fm = {};
+    var fmMatch = skillMd.match(/^---\r?\n([\s\S]*?)\r?\n---/);
+    if (fmMatch) {
+      fmMatch[1].split('\n').forEach(function(line) {
+        var m = line.match(/^(\w+):\s*(.+)/);
+        if (m) fm[m[1]] = m[2].trim();
+      });
+    }
+    var desc = fm.description || '';
+    if (!desc) {
+      var body = skillMd.replace(/^---[\s\S]*?---\n*/, '').replace(/^#\s+.*\n*/, '');
+      var lines = body.split('\n');
+      for (var i = 0; i < lines.length; i++) {
+        var line = lines[i].trim();
+        if (line && !line.startsWith('#') && !line.startsWith('>') && line.length > 10) {
+          desc = line.substring(0, 120);
+          break;
         }
       }
-
-      var words = name.split(/[-_]/).filter(function(w) { return w.length > 0; });
-      var mono = words.length >= 2
-        ? (words[0][0] + words[words.length - 1][0]).toUpperCase()
-        : name.substring(0, 2).toUpperCase();
-      diagrams.push({
-        name: name,
-        heading: heading,
-        displayName: displayName,
-        deck: deck,
-        kpis: kpis,
-        mono: mono,
-        filePath: 'skills/' + name + '/references/system-diagram.html'
-      });
+    }
+    var words = name.split(/[-_]/).filter(function(w) { return w.length > 0; });
+    var mono = words.length >= 2
+      ? (words[0][0] + words[words.length - 1][0]).toUpperCase()
+      : name.substring(0, 2).toUpperCase();
+    skills.push({
+      name: name,
+      displayName: fm.name || name,
+      description: desc,
+      trigger: fm.trigger || '',
+      mono: mono,
+      category: classifySkill(name, desc),
+      folderPath: path.join(SKILLS_DIR, name)
     });
   });
-  return diagrams;
+  return skills;
+}
+
+function classifySkill(name, desc) {
+  var s = (name + ' ' + (desc || '')).toLowerCase();
+  var rules = [
+    ['写作与内容', /article|writing|writer|write|novel|script|content|\u6587\u7ae0|\u5199\u4f5c|\u521b\u4f5c|\u5c0f\u8bf4|\u5267\u672c|\u6307\u5357|\u590d\u76d8|\u6559\u7a0b/],
+    ['图像与设计', /image|design|diagram|art|infographic|cover|icon|illustrat|canvas|graphic|\u56fe|\u753b|\u8bbe\u8ba1|\u6f2b\u753b|\u6d77\u62a5/],
+    ['发布与分发', /post|publish|social|\u5206\u53d1|\u53d1\u5e03|\u63a8\u9001/],
+    ['格式与转换', /markdown|format|convert|pdf|docx|xlsx|pptx|translate|parse|\u538b\u7f29|\u8f6c\u6362|\u683c\u5f0f|\u7ffb\u8bd1/],
+    ['开发与工程', /git|commit|\bcli\b|test|lint|code|browser|playwright|editor|automation|debug|review|\u5f00\u53d1|\u5de5\u7a0b|\u63a7\u5236|\u5de5\u5177/],
+    ['搜索与研究', /search|research|fact.check|news|find|web\s|\u641c\u7d22|\u7814\u7a76|\u65b0\u95fb|\u4e8b\u5b9e/],
+    ['Agent与自动化', /agent|memory|auto.updater|system|desktop|bot|\u81ea\u52a8\u5316|\u8bb0\u5fc6/],
+    ['风格与视角', /perspective|style|voice|mentor|\u98ce\u683c|\u89c6\u89d2|\u4eba\u7269/],
+    ['协作与办公', /feishu|notion|tencent|slack|collab|\u98de\u4e66|\u534f\u4f5c|\u529e\u516c/],
+    ['元技能', /skill.creator|skill.finder|skilllint|vetter|self.improving|release.skill|meta|\u5143/]
+  ];
+  for (var i = 0; i < rules.length; i++) {
+    if (rules[i][1].test(s)) return rules[i][0];
+  }
+  return '其他';
 }
 
 function extractMeta(projectPath) {
@@ -120,8 +217,7 @@ function extractMeta(projectPath) {
 function scanTools() {
   var seen = {};
   var tools = [];
-  // Scan both repo's ./tools/ (demo) and user's ~/.claude/tools/
-  [LOCAL_TOOLS_DIR, TOOLS_DIR].forEach(function(dir) {
+  TOOLS_DIRS.concat([LOCAL_TOOLS_DIR]).forEach(function(dir) {
     if (!fs.existsSync(dir)) return;
     var names = listDirs(dir);
     names.forEach(function(name) {
@@ -179,8 +275,16 @@ function isPortActive(port) {
   } catch(_) { return false; }
 }
 
+function findManifest(id) {
+  for (var i = 0; i < TOOLS_DIRS.length; i++) {
+    var p = safeResolve(TOOLS_DIRS[i], id, 'manifest.json');
+    if (p && fs.existsSync(p)) return p;
+  }
+  return safeResolve(TOOLS_DIR, id, 'manifest.json'); // fallback for new tools
+}
+
 function startTool(id) {
-  const mfPath = safeResolve(TOOLS_DIR, id, 'manifest.json');
+  const mfPath = findManifest(id);
   if (!mfPath) return { ok: false, error: 'forbidden' };
   let mf;
   try { mf = JSON.parse(read(mfPath)); } catch(_) { return { ok: false, error: 'manifest not found' }; }
@@ -215,7 +319,7 @@ function startTool(id) {
 }
 
 function stopTool(id, callback) {
-  const mfPath = safeResolve(TOOLS_DIR, id, 'manifest.json');
+  const mfPath = findManifest(id);
   if (!mfPath) return callback(null, { ok: false, error: 'forbidden' });
   let mf;
   try { mf = JSON.parse(read(mfPath)); } catch(_) { return callback(null, { ok: false, error: 'manifest not found' }); }
@@ -226,216 +330,77 @@ function stopTool(id, callback) {
   });
 }
 
-function skillIndexHTML(diagrams, catMap) {
-  catMap = catMap || {};
-  var catNames = ['平台集成','内容创作','文档格式','设计创意','开发工具','思维框架','元工具'];
+function skillIndexHTML(skills) {
+  var catNames = ['写作与内容','图像与设计','发布与分发','格式与转换','开发与工程','搜索与研究','Agent与自动化','风格与视角','协作与办公','元技能','其他'];
   var catCounts = {};
-  diagrams.forEach(function(d) { var c = catMap[d.name] || ''; if (c) catCounts[c] = (catCounts[c] || 0) + 1; });
-  var allCount = diagrams.length;
-  var catBar = '<div class="cat-bar" id="catBar">' +
-    '<button class="cat-pill active" data-cat="all" onclick="setSkillFilter(\'all\')">全部<span class="count">' + allCount + '</span></button>' +
+  skills.forEach(function(s) { var c = s.category || '其他'; catCounts[c] = (catCounts[c] || 0) + 1; });
+  var bar = '<div class="cat-bar">' +
+    '<button class="cat-pill active" data-cat="all" onclick="setSkillFilter(\'all\')">全部<span class="count">' + skills.length + '</span></button>' +
     catNames.map(function(cn) {
       if (!catCounts[cn]) return '';
       return '<button class="cat-pill" data-cat="' + cn + '" onclick="setSkillFilter(\'' + cn + '\')">' + cn + '<span class="count">' + (catCounts[cn] || 0) + '</span></button>';
     }).join('') +
     '</div>';
-  const list = diagrams.map(function(d) {
-    var cat = catMap[d.name] || '';
-    var kpiTags = d.kpis.map(function(k) {
-      return '<span class="kpi"><b>' + k.v + '</b> ' + k.l + '</span>';
-    }).join('');
-    return '<div class="card-wrap" data-skill="' + d.name + '" data-cat="' + cat + '">' +
-      '<a href="/skills/' + d.name + '" target="_blank" class="card">' +
-        '<span class="card-grip" draggable="true">⋮⋮</span>' +
-        '<div class="card-mono">' + d.mono + '</div>' +
-        '<div class="card-body">' +
-          '<div class="card-name">' + esc(d.heading) + '</div>' +
-          (d.displayName ? '<div class="card-cn">' + esc(d.displayName) + '</div>' : '') +
-          (d.deck ? '<div class="card-deck">' + esc(d.deck) + '</div>' : '') +
-          (kpiTags ? '<div class="card-kpis">' + kpiTags + '</div>' : '') +
-          '<div class="card-path">' + d.filePath + '</div>' +
+  var cards = skills.map(function(s) {
+    return '<div class="skill-card" data-cat="' + s.category + '">' +
+      '<div class="skill-mono">' + esc(s.mono) + '</div>' +
+      '<div class="skill-info">' +
+        '<div class="skill-name">' + esc(s.displayName || s.name) + '</div>' +
+        '<div class="skill-id">' + esc(s.name) + '</div>' +
+        (s.description ? '<div class="skill-desc">' + esc(s.description) + '</div>' : '') +
+        (s.trigger ? '<div class="skill-trigger"><span>触发</span> ' + esc(s.trigger) + '</div>' : '') +
+        '<div class="skill-folder" title="点击复制路径: ' + esc(s.folderPath) + '">' +
+          '<span class="folder-icon">📂</span>' +
+          '<span class="folder-path">' + esc(s.folderPath) + '</span>' +
+          '<button class="folder-open" onclick="event.stopPropagation();fetch(\'/open-dir/' + encodeURIComponent(s.name) + '\')" title="在资源管理器打开">↗</button>' +
         '</div>' +
-      '</a>' +
+      '</div>' +
     '</div>';
   }).join('\n');
-
-  return '<!DOCTYPE html>\n<html lang="zh-CN">\n<head>\n<meta charset="UTF-8">\n<meta name="viewport" content="width=device-width, initial-scale=1.0">\n<title>Skill 系统结构图</title>\n' +
-'<link rel="icon" href="data:image/svg+xml,' +
-  encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" rx="4" fill="#002FA7"/><text x="16" y="22" text-anchor="middle" font-family="Inter,sans-serif" font-size="16" font-weight="600" fill="white">SK</text></svg>') +
-'">\n' +
-'<style>\n' +
-'  *{margin:0;padding:0;box-sizing:border-box}\n' +
-'  body{font-family:Inter,"Microsoft YaHei UI","Noto Sans SC",sans-serif;background:#FAFAF8;color:#0A0A0A;min-height:100vh;font-weight:300;font-size:16px}\n' +
-'  .hero{background:#002FA7;color:#FAFAF8;padding:56px 32px 48px}\n' +
-'  .hero-inner{max-width:1080px;margin:0 auto}\n' +
-'  .hero-mono{font-family:"JetBrains Mono","SF Mono","Consolas",monospace;font-size:10px;font-weight:500;letter-spacing:.08em;opacity:.45;margin-bottom:10px}\n' +
-'  .hero h1{font-size:min(3.6vw,4.4vh);font-weight:200;letter-spacing:-0.02em;line-height:1.15}\n' +
-'  .hero .tagline{font-size:15px;font-weight:300;opacity:.7;margin-top:10px;line-height:1.6;max-width:520px;letter-spacing:-0.01em}\n' +
-'  .hero .hero-sub{font-size:13px;font-weight:300;opacity:.5;margin-top:6px;line-height:1.5}\n' +
-'  .hero .hint{font-size:11px;opacity:.45;margin-top:6px;font-family:"JetBrains Mono","SF Mono","Consolas",monospace}\n' +
-'  .hero .refresh-btn{display:inline-flex;align-items:center;gap:6px;margin-top:8px;padding:8px 18px;font-size:13px;font-weight:500;font-family:"JetBrains Mono","SF Mono","Consolas",monospace;color:#002FA7;background:#fff;border:1px solid #fff;cursor:pointer;letter-spacing:.04em;transition:background .15s}\n' +
-'  .hero .refresh-btn:hover{background:#E8E8F0;border-color:#E8E8F0}\n' +
-'  .content{margin:0 auto;padding:6px 32px 32px}\n' +
-'  .grid{display:flex;flex-wrap:wrap;gap:12px;justify-content:flex-start}\n' +
-'  .card-wrap{flex:0 0 460px;position:relative;user-select:text;-webkit-user-select:text}\n' +
-'  .card-wrap.hidden-card{display:none}\n' +
-'  .cat-bar{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px}\n' +
-'  .cat-pill{padding:6px 14px;font-size:12px;font-weight:400;font-family:"JetBrains Mono","SF Mono","Consolas",monospace;letter-spacing:.03em;background:#F0F0EC;border:1px solid #E0E0DC;color:#555;cursor:pointer;transition:all .12s;display:inline-flex;align-items:center;gap:6px}\n' +
-'  .cat-pill:hover{background:#E4E4DE;color:#0A0A0A}\n' +
-'  .cat-pill.active{background:#002FA7;border-color:#002FA7;color:#FAFAF8}\n' +
-'  .cat-pill .count{font-size:10px;opacity:.7}\n' +
-'  .card-wrap.dragging{opacity:.35}\n' +
-'  .card-wrap.drag-over::before{content:"";position:absolute;inset:0;border:2px solid #002FA7;z-index:2;pointer-events:none}\n' +
-'  .card{display:flex;align-items:flex-start;gap:28px;background:#FAFAF8;padding:22px 28px;text-decoration:none;color:inherit;transition:background .15s,box-shadow .15s;height:240px;user-select:text;-webkit-user-select:text;overflow:hidden;border:1px solid #E0E0DC;box-shadow:0 1px 3px rgba(0,0,0,.06);position:relative}\n' +
-'  .card-grip{position:absolute;top:12px;right:12px;color:#B0B0AC;font-family:"JetBrains Mono","SF Mono","Consolas",monospace;font-size:14px;opacity:.35;line-height:1;cursor:grab;user-select:none;-webkit-user-select:none}\n' +
-'  .card-grip:active{cursor:grabbing}\n' +
-'  .card:hover{background:#F0F0EC}\n' +
-'  .card-mono{flex-shrink:0;width:52px;height:52px;background:#002FA7;color:#FAFAF8;display:flex;align-items:center;justify-content:center;font-family:"JetBrains Mono","SF Mono","Consolas",monospace;font-size:18px;font-weight:500;letter-spacing:.02em;margin-top:2px}\n' +
-'  .card-body{display:flex;flex-direction:column;gap:10px;min-width:0}\n' +
-'  .card-name{font-size:18px;font-weight:300;letter-spacing:-0.01em;word-break:break-all}\n' +
-'  .card-cn{font-size:15px;font-weight:300;color:#002FA7;opacity:.7;letter-spacing:-0.01em}\n' +
-'  .card-deck{font-size:13px;font-weight:300;color:#555;line-height:1.55;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}\n' +
-'  .card-kpis{display:flex;flex-wrap:wrap;gap:6px;margin-top:2px}\n' +
-'  .kpi{font-size:11px;font-weight:300;color:#737373;background:#F2F2F0;padding:3px 8px;letter-spacing:.01em}\n' +
-'  .kpi b{font-weight:500;color:#0A0A0A}\n' +
-'  .card-path{font-size:11px;font-family:"JetBrains Mono","SF Mono","Consolas",monospace;color:#B0B0AC;margin-top:2px;word-break:break-all}\n' +
-'  .footer{width:100%;margin:0 auto;padding:36px 32px;border-top:1px solid #E0E0DC}\n' +
-'  .phil-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1px;background:#E0E0DC;margin-bottom:32px}\n' +
-'  .phil-card{background:#FAFAF8;padding:24px 20px}\n' +
-'  .phil-num{font-family:"JetBrains Mono","SF Mono","Consolas",monospace;font-size:10px;font-weight:500;color:#002FA7;opacity:.45;margin-bottom:10px;letter-spacing:.04em}\n' +
-'  .phil-title{font-size:15px;font-weight:500;color:#0A0A0A;margin-bottom:6px;letter-spacing:-0.01em;line-height:1.4}\n' +
-'  .phil-body{font-size:12px;font-weight:300;color:#555;line-height:1.6}\n' +
-'  .phil-body strong{font-weight:500;color:#0A0A0A}\n' +
-'  .footer-bottom{margin-top:0;padding-top:18px;border-top:1px solid #E0E0DC;font-size:11px;color:#999;font-family:"JetBrains Mono","SF Mono","Consolas",monospace;display:flex;align-items:center;justify-content:space-between}\n' +
-'</style>\n</head>\n<body>\n' +
-'<!-- AI AGENT: 模板 ~/.claude/skills/system-diagram/template.html  规则 ~/.claude/skills/system-diagram/schema.md  输出 <skill-dir>/references/system-diagram.html  触发=用户显式请求(发本页URL/说"加图"/"更新结构图")。非自动——不是所有skill都要HTML图  流程=读SKILL.md→加载模板→按schema.md填充→写图  -->\n' +
-'<div class="hero">\n  <div class="hero-inner">\n    <a href="/" style="color:inherit;text-decoration:none;font-size:13px;font-family:\"JetBrains Mono\",\"SF Mono\",\"Consolas\",monospace;opacity:.5;letter-spacing:.04em">← 工具架</a>\n    <div class="hero-mono" style="margin-top:10px">SKILL DIAGRAMS</div>\n    <h1>Skill 系统结构图</h1>\n    <div class="tagline">图是 skill 的第一行代码。新建或修改 Skill 时，把本页链接发给 Agent，它会自动生成结构图。</div>\n    <div class="hero-sub">' + diagrams.length + ' 个 skill · Swiss International Style · 每次请求实时扫描，新增图落盘即现</div>\n    <p class="hint">拖拽 ⋮⋮ 排序 · 点击卡片打开 · 文字可直接选中复制</p>\n    <button class="refresh-btn" id="refreshBtn" onclick="refreshSkills()">⟳ 刷新扫描</button>\n  </div>\n</div>\n' +
-'<div class="content">' + catBar + '<div class="grid">' + list + '</div></div>\n' +
-'<div class="footer">\n' +
-'  <div class="phil-grid">\n' +
-'    <div class="phil-card">\n' +
-'      <div class="phil-num">01</div>\n' +
-'      <div class="phil-title">图乱 = 设计乱</div>\n' +
-'      <div class="phil-body">结构图画不清楚的 skill，prompt 链路一定也糊。HTML 图是<strong>设计的第一份可执行规范</strong>。</div>\n' +
-'    </div>\n' +
-'    <div class="phil-card">\n' +
-'      <div class="phil-num">02</div>\n' +
-'      <div class="phil-title">Karpathy 循环</div>\n' +
-'      <div class="phil-body"><strong>可视化 → 暴露问题 → 改源头 → 更新图。</strong>不是写完代码再补图。图是侦探工具，图和代码永远同步。</div>\n' +
-'    </div>\n' +
-'    <div class="phil-card">\n' +
-'      <div class="phil-num">03</div>\n' +
-'      <div class="phil-title">HTML 即结构校验器</div>\n' +
-'      <div class="phil-body">传统文档写完就过时。HTML 结构图是<strong>活的</strong>——新增 skill 落盘即现，改图刷新即见。</div>\n' +
-'    </div>\n' +
-'    <div class="phil-card">\n' +
-'      <div class="phil-num">04</div>\n' +
-'      <div class="phil-title">Agent 也能读</div>\n' +
-'      <div class="phil-body">system-diagram.html = skill 的<strong>自述文件</strong>。Agent 打开就能理解架构和数据流。不做第二个 README，做唯一的结构真相源。</div>\n' +
-'    </div>\n' +
-'  </div>\n' +
-'  <div class="footer-bottom">\n' +
-'    <span>扫描目录：' + SKILLS_DIR.replace(/\\/g, '\\\\') + '\\*\\references\\system-diagram.html</span>\n' +
-'  </div>\n' +
-'</div>\n' +
-'<script>\n' +
-'var skillFilter="all";\n' +
-'function setSkillFilter(t){\n' +
-'  skillFilter=t;\n' +
-'  document.querySelectorAll(".cat-pill").forEach(function(p){p.classList.remove("active");});\n' +
-'  document.querySelectorAll(".cat-pill").forEach(function(p){if(p.dataset.cat===skillFilter)p.classList.add("active");});\n' +
-'  document.querySelectorAll(".card-wrap").forEach(function(c){\n' +
-'    if(skillFilter==="all"||c.dataset.cat===skillFilter){c.classList.remove("hidden-card");}\n' +
-'    else{c.classList.add("hidden-card");}\n' +
-'  });\n' +
-'}\n' +
-'function refreshSkills(){\n' +
-'  var btn=document.getElementById("refreshBtn");\n' +
-'  if(!btn)return;\n' +
-'  btn.textContent="⟳ 刷新中…";\n' +
-'  btn.disabled=true;\n' +
-'  btn.style.opacity="0.5";\n' +
-'  btn.style.cursor="wait";\n' +
-'  setTimeout(function(){location.reload(true);},250);\n' +
-'}\n' +
-'(function(){\n' +
-'  var grid=document.querySelector(".grid");\n' +
-'  var dragSrc=null;\n' +
-'  var KEY="skill-diagrams-order";\n' +
-'\n' +
-'  // Restore saved order on load\n' +
-'  var saved=null;\n' +
-'  try{saved=JSON.parse(localStorage[KEY]||"[]");}catch(e){}\n' +
-'  if(saved&&saved.length){\n' +
-'    var cards=[].slice.call(grid.querySelectorAll(".card-wrap"));\n' +
-'    cards.sort(function(a,b){\n' +
-'      var ai=saved.indexOf(a.dataset.skill);\n' +
-'      var bi=saved.indexOf(b.dataset.skill);\n' +
-'      if(ai===-1)return 1;if(bi===-1)return -1;\n' +
-'      return ai-bi;\n' +
-'    });\n' +
-'    cards.forEach(function(c){grid.appendChild(c);});\n' +
-'  }\n' +
-'\n' +
-'  function saveOrder(){\n' +
-'    var order=[].slice.call(grid.querySelectorAll(".card-wrap")).map(function(c){return c.dataset.skill;});\n' +
-'    try{localStorage[KEY]=JSON.stringify(order);}catch(e){}\n' +
-'  }\n' +
-'\n' +
-'  grid.addEventListener("dragstart",function(e){\n' +
-'    if(!e.target.classList.contains("card-grip")){e.preventDefault();return;}\n' +
-'    var wrap=e.target.closest(".card-wrap");\n' +
-'    if(!wrap)return;\n' +
-'    dragSrc=wrap;\n' +
-'    wrap.classList.add("dragging");\n' +
-'    e.dataTransfer.effectAllowed="move";\n' +
-'  });\n' +
-'\n' +
-'  grid.addEventListener("dragend",function(e){\n' +
-'    var wrap=e.target.closest(".card-wrap");\n' +
-'    if(wrap)wrap.classList.remove("dragging");\n' +
-'    dragSrc=null;\n' +
-'    [].slice.call(grid.querySelectorAll(".drag-over")).forEach(function(c){c.classList.remove("drag-over");});\n' +
-'  });\n' +
-'\n' +
-'  grid.addEventListener("dragover",function(e){\n' +
-'    e.preventDefault();\n' +
-'    var wrap=e.target.closest(".card-wrap");\n' +
-'    if(!wrap||wrap===dragSrc)return;\n' +
-'    e.dataTransfer.dropEffect="move";\n' +
-'    wrap.classList.add("drag-over");\n' +
-'  });\n' +
-'\n' +
-'  grid.addEventListener("dragleave",function(e){\n' +
-'    var wrap=e.target.closest(".card-wrap");\n' +
-'    if(wrap)wrap.classList.remove("drag-over");\n' +
-'  });\n' +
-'\n' +
-'  grid.addEventListener("drop",function(e){\n' +
-'    e.preventDefault();\n' +
-'    var wrap=e.target.closest(".card-wrap");\n' +
-'    if(!wrap||wrap===dragSrc)return;\n' +
-'    wrap.classList.remove("drag-over");\n' +
-'    var children=[].slice.call(grid.querySelectorAll(".card-wrap"));\n' +
-'    var si=children.indexOf(dragSrc);\n' +
-'    var di=children.indexOf(wrap);\n' +
-'    if(si<di){grid.insertBefore(dragSrc,wrap.nextSibling);}\n' +
-'    else{grid.insertBefore(dragSrc,wrap);}\n' +
-'    saveOrder();\n' +
-'  });\n' +
-'\n' +
-'  // Prevent link nav when selecting text\n' +
-'  document.querySelectorAll(".card").forEach(function(card){\n' +
-'    var sel=false;\n' +
-'    card.addEventListener("mousedown",function(){sel=false;});\n' +
-'    card.addEventListener("mousemove",function(){sel=!!window.getSelection().toString();});\n' +
-'    card.addEventListener("click",function(e){if(sel){e.preventDefault();e.stopPropagation();sel=false;}});\n' +
-'  });\n' +
-'})();\n' +
-'</script>\n' +
-'</body>\n</html>';
+  return '<style>\n' +
+'.skill-grid{display:flex;flex-wrap:wrap;gap:10px;margin-top:8px}\n' +
+'.skill-card{flex:0 0 360px;display:flex;align-items:flex-start;gap:14px;background:var(--paper);padding:16px 20px;border:1px solid var(--border)}\n' +
+'.skill-card:hover{background:var(--paper-tint)}\n' +
+'.skill-mono{flex-shrink:0;width:40px;height:40px;background:var(--ink);color:var(--paper);display:flex;align-items:center;justify-content:center;font-family:"JetBrains Mono",monospace;font-size:14px;font-weight:500}\n' +
+'.skill-info{min-width:0;display:flex;flex-direction:column;gap:4px}\n' +
+'.skill-name{font-size:15px;font-weight:400;letter-spacing:-0.01em}\n' +
+'.skill-id{font-size:11px;font-family:"JetBrains Mono",monospace;color:var(--text-muted)}\n' +
+'.skill-desc{font-size:12px;color:var(--text-secondary);line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}\n' +
+'.skill-trigger{font-size:11px;color:var(--text-muted);margin-top:2px}\n' +
+'.skill-trigger span{font-size:9px;font-weight:500;color:var(--ink);border:1px solid var(--ink);padding:0 4px;margin-right:4px}\n' +
+'.skill-folder{font-size:11px;font-family:"JetBrains Mono",monospace;color:var(--text-muted);margin-top:6px;display:flex;align-items:center;gap:4px;cursor:pointer;padding:3px 6px;border-radius:3px;background:var(--paper-tint);transition:background .12s}\n' +
+'.skill-folder:hover{background:rgba(0,47,167,0.06)}\n' +
+'.skill-folder .folder-path{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:10px}\n' +
+'.skill-folder .folder-open{background:none;border:1px solid var(--border);color:var(--text-muted);cursor:pointer;font-size:12px;padding:1px 4px;line-height:1;flex-shrink:0}\n' +
+'.skill-folder .folder-open:hover{background:var(--ink);color:var(--paper)}\n' +
+'.folder-toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--paper);padding:8px 20px;font-family:"JetBrains Mono",monospace;font-size:12px;z-index:999;opacity:0;transition:opacity .2s;pointer-events:none}\n' +
+'.folder-toast.show{opacity:1}\n' +
+'.cat-bar{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px}\n' +
+'.cat-pill{padding:5px 12px;font-size:12px;font-weight:400;font-family:"JetBrains Mono",monospace;letter-spacing:.03em;background:var(--paper-tint, #F2F2F0);border:1px solid var(--border);color:var(--text-secondary);cursor:pointer;transition:all .12s;display:inline-flex;align-items:center;gap:5px}\n' +
+'.cat-pill:hover{background:#E4E4DE;color:var(--text)}\n' +
+'.cat-pill.active{background:var(--ink);border-color:var(--ink);color:var(--paper)}\n' +
+'.cat-pill .count{font-size:10px;opacity:.7}\n' +
+'</style>\n' +
+    bar + '<div class="skill-grid">' + cards + '</div>' +
+    '<div class="folder-toast" id="folderToast"></div>' +
+    '<script>\n' +
+    'function setSkillFilter(t){\n' +
+    '  document.querySelectorAll(".cat-pill").forEach(function(p){p.classList.remove("active");});\n' +
+    '  document.querySelectorAll(".cat-pill").forEach(function(p){if(p.dataset.cat===t)p.classList.add("active");});\n' +
+    '  document.querySelectorAll(".skill-card").forEach(function(c){\n' +
+    '    if(t==="all"||c.dataset.cat===t){c.style.display="flex";}else{c.style.display="none";}\n' +
+    '  });\n' +
+    '}\n' +
+    'document.querySelectorAll(".skill-folder").forEach(function(el){el.addEventListener("click",function(e){\n' +
+    '  if(e.target.closest(".folder-open"))return;\n' +
+    '  var path=el.getAttribute("title").replace("点击复制路径: ","");\n' +
+    '  navigator.clipboard.writeText(path).then(function(){\n' +
+    '    var t=document.getElementById("folderToast");t.textContent="已复制: "+path;t.classList.add("show");\n' +
+    '    setTimeout(function(){t.classList.remove("show")},2000);\n' +
+    '  });\n' +
+    '})});\n' +
+    '<\/script>';
 }
-
 function startServer() {
   const app = express();
   app.use(express.json());
@@ -479,34 +444,90 @@ function startServer() {
     }
   });
 
-  if (fs.existsSync(LOCAL_SKILLS_DIR) || fs.existsSync(SKILLS_DIR)) {
-    app.get('/skills', function(req, res) {
-      res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
-      var diagrams = scanSkillDiagrams();
-      var catMap = {};
+  // --- Tools API ---
+  app.get('/api/tools', function(req, res) {
+    var tools = scanTools();
+    res.json({ ok: true, tools: tools });
+  });
+
+  app.get('/api/tools/:id', function(req, res) {
+    var tools = scanTools();
+    var tool = null;
+    for (var i = 0; i < tools.length; i++) {
+      if (tools[i].id === req.params.id) { tool = tools[i]; break; }
+    }
+    if (!tool) return res.status(404).json({ ok: false, error: 'tool not found' });
+    res.json({ ok: true, tool: tool });
+  });
+
+  app.post('/api/tools/start/:id', function(req, res) {
+    var result = startTool(req.params.id);
+    res.json(result);
+  });
+
+  app.post('/api/tools/stop/:id', function(req, res) {
+    stopTool(req.params.id, function(err, result) {
+      if (err) return res.status(500).json({ ok: false, error: err.message });
+      res.json(result);
+    });
+  });
+
+  app.post('/api/tools/reorder', function(req, res) {
+    var items = req.body && req.body.items;
+    if (!Array.isArray(items)) return res.status(400).json({ ok: false, error: 'items array required' });
+    var results = [];
+    for (var i = 0; i < items.length; i++) {
+      var item = items[i];
+      var mfPath = findManifest(item.id);
+      if (!mfPath) { results.push({ id: item.id, ok: false, error: 'not found' }); continue; }
       try {
-        var classJson = JSON.parse(read(path.join(SKILLS_DIR, 'classification.json')));
-        catMap = classJson.skills || {};
-      } catch(e) {}
-      res.send(skillIndexHTML(diagrams, catMap));
-    });
-
-    app.get('/skills/:name', function(req, res) {
-      res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
-      var filePath = safeResolve(LOCAL_SKILLS_DIR, req.params.name, 'references', 'system-diagram.html');
-      if (filePath) {
-        var html = read(filePath);
-        if (html) return res.send(html);
+        var mf = JSON.parse(read(mfPath));
+        mf.order = item.order;
+        fs.writeFileSync(mfPath, JSON.stringify(mf, null, 2) + '\n', 'utf8');
+        results.push({ id: item.id, ok: true });
+      } catch(e) {
+        results.push({ id: item.id, ok: false, error: e.message });
       }
-      filePath = safeResolve(SKILLS_DIR, req.params.name, 'references', 'system-diagram.html');
-      if (!filePath) return res.status(403).send('forbidden');
-      var html2 = read(filePath);
-      if (!html2) return res.status(404).send('diagram not found');
-      res.send(html2);
-    });
-  }
+    }
+    res.json({ ok: true, results: results });
+  });
 
-  // Tips (踩坑经验)
+  // Open skill folder in file explorer
+  app.get('/open-dir/:name', function(req, res) {
+    var name = req.params.name;
+    // Validate: only allow perspective-* or known skill names
+    if (!/^[a-zA-Z][-a-zA-Z0-9_.]*$/.test(name)) return res.status(400).send('invalid name');
+    var dir = path.join(SKILLS_DIR, name);
+    if (!fs.existsSync(dir)) return res.status(404).send('directory not found');
+    var cmd = 'start "" "' + dir + '"';
+    require('child_process').exec(cmd);
+    res.json({ ok: true, path: dir });
+  });
+
+  // Skills (Claude Code 技能目录 — 只读索引)
+  app.get('/skills', function(req, res) {
+    res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+    var skills = scanAllSkills();
+    var body = skillIndexHTML(skills);
+    res.send(pageShell('技能', 'Claude Code 技能目录', body, 'skills', skills.length));
+  });
+
+  // Individual skill system-diagram
+  app.get('/skills/:name', function(req, res) {
+    res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+    var filePath = safeResolve(LOCAL_SKILLS_DIR, req.params.name, 'references', 'system-diagram.html');
+    if (filePath) {
+      var html = read(filePath);
+      if (html) return res.send(html);
+    }
+    filePath = safeResolve(SKILLS_DIR, req.params.name, 'references', 'system-diagram.html');
+    if (!filePath) return res.status(403).send('forbidden');
+    var html2 = read(filePath);
+    if (!html2) return res.status(404).send('diagram not found');
+    res.send(html2);
+  });
+
+  // Tips (操作日志)
   if (fs.existsSync(TIPS_DIR)) {
     function parseTipFile(filePath) {
       var md = read(filePath);
@@ -617,7 +638,7 @@ function startServer() {
         '</div>';
       }).join('\n');
 
-      var html = '<!DOCTYPE html>\n<html lang="zh-CN">\n<head>\n<meta charset="UTF-8">\n<meta name="viewport" content="width=device-width, initial-scale=1.0">\n<title>踩坑经验 · Tips</title>\n' +
+      var html = '<!DOCTYPE html>\n<html lang="zh-CN">\n<head>\n<meta charset="UTF-8">\n<meta name="viewport" content="width=device-width, initial-scale=1.0">\n<title>操作日志 · Tips</title>\n' +
         '<link rel="icon" href="data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" rx="4" fill="#002FA7"/><text x="16" y="22" text-anchor="middle" font-family="Inter,sans-serif" font-size="16" font-weight="600" fill="white">TP</text></svg>') + '">\n' +
         '<style>\n' +
         '  *{margin:0;padding:0;box-sizing:border-box}\n' +
@@ -659,7 +680,7 @@ function startServer() {
         '  .phil-body{font-size:12px;font-weight:300;color:#555;line-height:1.6}\n' +
         '  .phil-body strong{font-weight:500;color:#0A0A0A}\n' +
         '</style>\n</head>\n<body>\n' +
-        '<div class="hero"><div class="hero-inner"><a href="/" style="color:inherit;text-decoration:none;font-size:13px;font-family:\"JetBrains Mono\",\"SF Mono\",\"Consolas\",monospace;opacity:.5;letter-spacing:.04em">← 工具架</a><div class="hero-mono" style="margin-top:10px">TIPS & PITFALLS</div><h1>踩坑经验</h1><div class="tagline">人+AI 共享操作笔记 · 踩坑即记录，分类才找得着。</div></div></div>\n' +
+        '<div class="hero"><div class="hero-inner"><a href="/" style="color:inherit;text-decoration:none;font-size:13px;font-family:\"JetBrains Mono\",\"SF Mono\",\"Consolas\",monospace;opacity:.5;letter-spacing:.04em">← 工具架</a><div class="hero-mono" style="margin-top:10px">OPERATIONS LOG</div><h1>操作日志</h1><div class="tagline">人+AI 共享操作记录。踩坑即记，分类即检索。</div></div></div>\n' +
         '<div class="content">\n' +
         '<div class="cat-bar" id="catBar">' +
           '<button class="cat-pill active" data-type="all" onclick="setTipFilter(\'all\')">全部<span class="count">' + allCount + '</span></button>' +
@@ -674,7 +695,7 @@ function startServer() {
         '    <div class="phil-card">\n' +
         '      <div class="phil-num">01</div>\n' +
         '      <div class="phil-title">踩坑即记录</div>\n' +
-        '      <div class="phil-body">遇到坑立刻写，不等"完美的笔记"。<strong>半成品笔记 > 没写的经验。</strong>文件落盘即上线。</div>\n' +
+        '      <div class="phil-body">遇到坑立刻写，不等"完美的笔记"。<strong>半成品笔记 > 没写的记录。</strong>文件落盘即上线。</div>\n' +
         '    </div>\n' +
         '    <div class="phil-card">\n' +
         '      <div class="phil-num">02</div>\n' +
@@ -689,7 +710,7 @@ function startServer() {
         '    <div class="phil-card">\n' +
         '      <div class="phil-num">04</div>\n' +
         '      <div class="phil-title">单一真相源</div>\n' +
-        '      <div class="phil-body"><strong>~/.claude/tips/ 是唯一位置。</strong>不重复存 memory，不复制到项目。agentboard 直接渲染。</div>\n' +
+        '      <div class="phil-body"><strong>~/.agentboard/tips/ 是唯一位置。</strong>不重复存 memory，不复制到项目。agentboard 直接渲染。</div>\n' +
         '    </div>\n' +
         '  </div>\n' +
         '</div>\n' +
@@ -807,61 +828,507 @@ function startServer() {
     });
   }
 
+  // --- request logging (in-memory + file) ---
+  var LOG_FILE = path.join(AGENTBOARD_HOME, 'state', 'api-calls.jsonl');
+  var apiLog = []; // [{ts, method, path, ua, caller, action, target}]
+  var apiCounts = {}; // { '/api/tools': {count, first, last}, ... } — kept for backward compat
+  try { fs.mkdirSync(path.dirname(LOG_FILE), {recursive:true}); } catch(_) {}
+
+  // classify: who called
+  function classifyCaller(ua) {
+    if (!ua) return 'unknown';
+    if (/curl|axios|node-fetch|python-requests|httpie/i.test(ua)) return 'agent';
+    if (/Mozilla.*(Chrome|Firefox|Safari|Edge)/i.test(ua)) return 'browser';
+    if (/Java|Go-http|Ruby/i.test(ua)) return 'agent';
+    return 'unknown';
+  }
+
+  // classify: what kind of operation
+  function classifyAction(method, path) {
+    if (path === '/api/tools' && method === 'GET') return 'list';
+    if (/^\/api\/tools\/[^/]+$/.test(path) && method === 'GET') return 'detail';
+    if (/^\/api\/tools\/(start|stop)\//.test(path) && method === 'POST') return 'control';
+    if (path === '/api/tools/reorder' && method === 'POST') return 'control';
+    if (path === '/api/stats' && method === 'GET') return 'admin';
+    if (path === '/api/tips' || path.startsWith('/api/tips/')) return 'admin';
+    return 'admin'; // fallback
+  }
+
+  // extract tool id from path: /api/tools/start/forma → forma
+  function classifyTarget(path) {
+    var m = path.match(/^\/api\/tools\/(?:start|stop)\/([a-zA-Z0-9_-]+)/);
+    if (m) return m[1];
+    m = path.match(/^\/api\/tools\/([a-zA-Z0-9_-]+)$/);
+    if (m && m[1] !== 'reorder') return m[1];
+    return null;
+  }
+
+  // load existing log
+  try {
+    var existing = read(LOG_FILE);
+    if (existing) {
+      var lines = existing.trim().split('\n');
+      for (var li = 0; li < lines.length; li++) {
+        try { var entry = JSON.parse(lines[li]); if (entry) apiLog.push(entry); } catch(_) {}
+      }
+    }
+  } catch(_) {}
+
+  // rebuild counts from log (backward compat key)
+  for (var ai = 0; ai < apiLog.length; ai++) {
+    var e = apiLog[ai]; var k = (e.method||'GET') + ' ' + (e.path||'/');
+    if (!apiCounts[k]) apiCounts[k] = { count: 0, first: e.ts, last: e.ts };
+    apiCounts[k].count++; apiCounts[k].last = e.ts;
+    // backfill classification for old entries
+    if (!e.caller) e.caller = classifyCaller(e.ua||'');
+    if (!e.action) e.action = classifyAction(e.method||'GET', e.path||'/');
+    if (!e.target) e.target = classifyTarget(e.path||'/');
+  }
+
+  function logApiCall(method, p, ua) {
+    var entry = {
+      ts: new Date().toISOString(),
+      method: method, path: p,
+      ua: (ua||'').slice(0, 120),
+      caller: classifyCaller(ua||''),
+      action: classifyAction(method, p),
+      target: classifyTarget(p)
+    };
+    apiLog.push(entry);
+    var k = method + ' ' + p;
+    if (!apiCounts[k]) apiCounts[k] = { count: 0, first: entry.ts, last: entry.ts };
+    apiCounts[k].count++; apiCounts[k].last = entry.ts;
+    try { fs.appendFileSync(LOG_FILE, JSON.stringify(entry) + '\n', 'utf8'); } catch(_) {}
+  }
+  app.use(function(req, res, next) {
+    if (req.path.startsWith('/api/')) logApiCall(req.method, req.path, req.get('user-agent')||'');
+    next();
+  });
+
+  app.get('/api/stats', function(req, res) {
+    var now = new Date();
+    var today = now.toISOString().slice(0, 10);
+
+    // aggregates
+    var total = apiLog.length;
+    var byCaller = { agent: 0, browser: 0, unknown: 0 };
+    var byAction = { list: 0, detail: 0, control: 0, admin: 0 };
+    var byTool = {}; // { toolId: calls }
+    var todayByCaller = { agent: 0, browser: 0, unknown: 0 };
+    var todayByAction = { list: 0, detail: 0, control: 0, admin: 0 };
+    var todayCount = 0;
+
+    for (var i = 0; i < apiLog.length; i++) {
+      var e = apiLog[i];
+      var c = e.caller || 'unknown';
+      var a = e.action || 'admin';
+      if (byCaller.hasOwnProperty(c)) byCaller[c]++; else byCaller[c] = 1;
+      byAction[a] = (byAction[a]||0) + 1;
+      if (e.target) byTool[e.target] = (byTool[e.target]||0) + 1;
+
+      if ((e.ts||'').slice(0,10) === today) {
+        todayCount++;
+        if (todayByCaller.hasOwnProperty(c)) todayByCaller[c]++; else todayByCaller[c] = 1;
+        todayByAction[a] = (todayByAction[a]||0) + 1;
+      }
+    }
+
+    // sort tools by call count desc, top 10
+    var toolRank = Object.keys(byTool).sort(function(a,b){ return byTool[b] - byTool[a]; }).slice(0,10).map(function(k){ return { id: k, calls: byTool[k] }; });
+
+    res.json({
+      ok: true,
+      since: apiLog.length ? apiLog[0].ts : null,
+      totalCalls: total,
+      todayCalls: todayCount,
+      byCaller: { all: byCaller, today: todayByCaller },
+      byAction: { all: byAction, today: todayByAction },
+      byTool: toolRank,
+      // backward compat
+      byEndpoint: apiCounts
+    });
+  });
+
+  // Constitution page
+  app.get('/constitution', function(req, res) {
+    var md = read(path.join(PROJECT_DIR, 'constitution.md'));
+    if (!md) return res.status(500).send('constitution.md missing');
+    var html = renderMarkdown(md);
+    var full = '<!DOCTYPE html>\n<html lang="zh-CN">\n<head>\n<meta charset="UTF-8">\n<meta name="viewport" content="width=device-width,initial-scale=1.0">\n<title>设计宪法 · Agentboard</title>\n<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 32 32\'%3E%3Crect width=\'32\' height=\'32\' rx=\'4\' fill=\'%23002FA7\'/%3E%3Ctext x=\'16\' y=\'22\' text-anchor=\'middle\' font-family=\'Inter,sans-serif\' font-size=\'16\' font-weight=\'600\' fill=\'white\'%3E法%3C/text%3E%3C/svg%3E">\n<link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600&family=Noto+Sans+SC:wght@200;300;400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">\n<style>\n:root{--ink:#002FA7;--paper:#FAFAF8;--border:#E0E0DC;--text:#0A0A0A;--text-secondary:#555;--text-muted:#999;font-family:\'Inter\',\'Noto Sans SC\',sans-serif;color:var(--text);background:var(--paper);font-weight:300;font-size:16px}*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}body{min-height:100vh}.nav{background:var(--ink);padding:12px 24px}.nav a{color:rgba(255,255,255,.7);text-decoration:none;font-size:13px;font-weight:300}.nav a:hover{color:#fff}.nav b{color:#fff;font-weight:500;margin-right:12px}.page{max-width:800px;margin:0 auto;padding:40px 24px 80px}.page h1{font-size:28px;font-weight:200;letter-spacing:-0.02em;color:var(--ink);margin-bottom:24px}.page h2{font-size:18px;font-weight:500;color:var(--text);margin:36px 0 12px;padding-top:16px;border-top:1px solid var(--border)}.page h3{font-size:15px;font-weight:500;color:var(--text);margin:24px 0 8px}.page p,.page li{font-size:14px;line-height:1.8;color:var(--text-secondary);margin:6px 0}.page ul,.page ol{padding-left:20px;margin:8px 0}.page strong{font-weight:500;color:var(--text)}.page code{font-family:\'JetBrains Mono\',monospace;font-size:12px;background:var(--paper-tint, #F2F2F0);padding:1px 5px}.page pre{background:#f5f5f5;padding:16px;overflow-x:auto;font-size:12px;line-height:1.6;margin:12px 0}.page pre code{background:none;padding:0}.page table{width:100%;border-collapse:collapse;margin:12px 0;font-size:13px}.page th,.page td{padding:8px 12px;border:1px solid var(--border);text-align:left;font-size:13px}.page th{background:var(--paper-tint, #F2F2F0);font-weight:500;font-size:12px}.page blockquote{border-left:3px solid var(--ink);margin:12px 0;padding:4px 16px;color:var(--text-secondary);font-size:13px}.page hr{border:none;border-top:1px solid var(--border);margin:24px 0}.page em{color:var(--text-secondary)}.line-count{font-size:11px;color:var(--text-muted);margin-bottom:20px;font-family:\'JetBrains Mono\',monospace}.back-link{display:inline-block;margin-top:40px;font-size:13px;color:var(--ink);text-decoration:none;border:1px solid var(--border);padding:6px 16px}.back-link:hover{border-color:var(--ink)}\n</style>\n</head>\n<body>\n<div class="nav"><a href="/"><b>Agentboard</b></a> <a href="/">工具架</a> · <a href="/skills">技能</a> · <a href="/tips">操作日志</a> · <a href="/constitution" style="color:#fff">设计宪法</a> · <a href="/rules">管理规则</a> · <a href="/global">全局宪法</a></div>\n<div class="page"><div class="line-count">' + md.split('\n').length + ' 行</div>\n' + html + '\n<a class="back-link" href="/">← 返回工具架</a>\n</div>\n</body>\n</html>';
+    res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.type('html').send(full);
+  });
+
+  // Rules page
+  app.get('/rules', function(req, res) {
+    var md = read(path.join(PROJECT_DIR, 'rules.md'));
+    if (!md) return res.status(500).send('rules.md missing');
+    var html = renderMarkdown(md);
+    var full = pageShell('管理规则', '管理规则', html, 'rules', md.split('\n').length);
+    res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.type('html').send(full);
+  });
+
+  // Global constitution (renders CLAUDE.md)
+  app.get('/global', function(req, res) {
+    var claudeMdPath = path.join(os.homedir(), '.claude', 'CLAUDE.md');
+    var md = read(claudeMdPath);
+    if (!md) return res.status(500).send('CLAUDE.md not found at ' + claudeMdPath);
+    var html = renderMarkdown(md);
+    var full = pageShell('全局宪法', '全局宪法', html, 'global', md.split('\n').length);
+    res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.type('html').send(full);
+  });
+
+  // --- Minds (人物思维顾问) ---
+  var MINDS_CATEGORIES = ['影视/创作','设计/艺术','社会/政治','教育/学习','文学/人文','科学/技术','营销/传播','商业/经济','哲学/思想','人工智能','其他'];
+
+  app.get('/minds', function(req, res) {
+    var minds = loadPerspectives();
+    if (!minds.length) return res.status(500).send('perspectives not found');
+
+    // Build category counts
+    var catCounts = {};
+    minds.forEach(function(m) { var c = m.category || '其他'; catCounts[c] = (catCounts[c] || 0) + 1; });
+
+    // Category nav
+    var catNav = '<div class="cat-nav" id="catNav"><button class="cat-nav-btn active" data-cat="all" onclick="setMindFilter(\'all\')">全部<span class="cnt">' + minds.length + '</span></button>';
+    MINDS_CATEGORIES.forEach(function(cat) {
+      if (catCounts[cat]) {
+        catNav += '<button class="cat-nav-btn" data-cat="' + cat + '" onclick="setMindFilter(\'' + cat + '\')">' + cat + '<span class="cnt">' + (catCounts[cat] || 0) + '</span></button>';
+      }
+    });
+    catNav += '</div>';
+
+    // Card grid
+    var cardsHtml = minds.map(function(ch, idx) {
+      var tags = (ch.modelPills || []).slice(0, 3).map(function(m) { return '<span>' + esc(m) + '</span>'; }).join('');
+      var colorIdx = idx % 5;
+      var colors = ['cinnabar','azure','malachite','indigo','ochre'];
+      return '<div class="mind-card" data-cat="' + esc(ch.category) + '" data-id="' + ch.id + '" onclick="location=\'/minds/' + encodeURIComponent(ch.id) + '\'">' +
+        '<div class="mind-card-bar bar-' + colors[colorIdx] + '"></div>' +
+        '<div class="mind-card-body">' +
+          '<div class="mind-card-name">' + esc(ch.name_cn) + '</div>' +
+          '<div class="mind-card-en">' + esc(ch.name_en) + '</div>' +
+          '<div class="mind-card-line">' + esc(ch.oneliner) + '</div>' +
+          (tags ? '<div class="mind-card-pills">' + tags + '</div>' : '') +
+        '</div>' +
+      '</div>';
+    }).join('\n');
+
+    var html = '<!DOCTYPE html>\n<html lang="zh-CN">\n<head>\n<meta charset="UTF-8">\n<meta name="viewport" content="width=device-width,initial-scale=1.0">\n<title>' + minds.length + ' 位思维顾问 · Agentboard</title>\n<link rel="icon" href="data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" rx="4" fill="#002FA7"/><text x="16" y="22" text-anchor="middle" font-family="Inter,sans-serif" font-size="16" font-weight="600" fill="white">思</text></svg>') + '">\n<link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600&family=Noto+Sans+SC:wght@200;300;400;500;700&family=Noto+Serif+SC:wght@400;500;600;700;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">\n<style>\n' +
+      ':root{--ink:#141413;--paper:#faf9f5;--paper-tint:#f5f4ed;--cinnabar:#d97757;--cinnabar-bg:rgba(217,119,87,0.08);--azure:#5088b0;--azure-bg:rgba(80,136,176,0.08);--malachite:#509070;--malachite-bg:rgba(80,144,112,0.08);--indigo:#6058a8;--indigo-bg:rgba(96,88,168,0.08);--ochre:#b89850;--ochre-bg:rgba(184,152,80,0.08);--mono:"JetBrains Mono","IBM Plex Mono",monospace;--serif:"Noto Serif SC","Source Serif 4",Georgia,serif;--sans:"DM Sans","Noto Sans SC",system-ui,sans-serif}' +
+      '*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}' +
+      'body{background:var(--paper);color:var(--ink);font-family:"Noto Sans SC","DM Sans",system-ui,sans-serif;font-weight:400;line-height:1.7;-webkit-font-smoothing:antialiased}' +
+      '.topbar{display:flex;align-items:center;gap:12px;padding:10px 24px;background:#fff;border-bottom:1px solid rgba(0,0,0,0.06);position:sticky;top:0;z-index:10}' +
+      '.topbar a{font-size:13px;color:#002FA7;text-decoration:none;font-family:var(--mono);letter-spacing:.04em}' +
+      '.topbar a:hover{opacity:.7}' +
+      '.topbar .sep{color:rgba(0,0,0,0.15)}' +
+      '.hero{padding:64px 24px 40px;text-align:center;max-width:800px;margin:0 auto}' +
+      '.hero .eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.15em;color:var(--cinnabar);opacity:.8;margin-bottom:20px}' +
+      '.hero h1{font-family:var(--serif);font-size:clamp(2.6rem,5vw,4rem);font-weight:900;line-height:1.06;letter-spacing:-0.02em}' +
+      '.hero h1 em{font-style:normal;color:var(--cinnabar)}' +
+      '.hero .deck{font-size:15px;color:rgba(20,20,19,0.5);max-width:480px;margin:12px auto 0;line-height:1.7}' +
+      '.cat-nav{display:flex;flex-wrap:wrap;justify-content:center;gap:6px;max-width:1080px;margin:0 auto 24px;padding:0 24px}' +
+      '.cat-nav-btn{padding:5px 14px;font-size:12px;font-family:var(--mono);letter-spacing:.04em;background:var(--paper-tint);border:1px solid rgba(0,0,0,0.08);color:rgba(20,20,19,0.55);cursor:pointer;border-radius:20px;transition:all .15s;display:inline-flex;align-items:center;gap:5px}' +
+      '.cat-nav-btn:hover{border-color:var(--cinnabar);color:var(--cinnabar)}' +
+      '.cat-nav-btn.active{background:var(--ink);color:var(--paper);border-color:var(--ink)}' +
+      '.cat-nav-btn .cnt{font-size:10px;opacity:.6}' +
+      '.card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:20px;max-width:1200px;margin:0 auto;padding:0 24px 80px}' +
+      '.mind-card{background:#fff;cursor:pointer;transition:all .25s;display:flex;flex-direction:column;border-radius:8px;border:1px solid rgba(0,0,0,0.06)}' +
+      '.mind-card:hover{transform:translateY(-2px);box-shadow:0 4px 8px rgba(0,0,0,0.06),0 20px 32px rgba(0,0,0,0.06);border-color:rgba(0,0,0,0.12)}' +
+      '.mind-card-bar{height:3px;flex-shrink:0}' +
+      '.bar-cinnabar{background:var(--cinnabar)}' +
+      '.bar-azure{background:var(--azure)}' +
+      '.bar-malachite{background:var(--malachite)}' +
+      '.bar-indigo{background:var(--indigo)}' +
+      '.bar-ochre{background:var(--ochre)}' +
+      '.mind-card-body{padding:22px 24px 20px;flex:1;display:flex;flex-direction:column}' +
+      '.mind-card-name{font-family:var(--serif);font-size:1.3rem;font-weight:700;color:var(--ink);line-height:1.2}' +
+      '.mind-card-en{font-size:13px;color:rgba(20,20,19,0.4);font-style:italic;margin-bottom:8px}' +
+      '.mind-card-line{font-size:13px;color:rgba(20,20,19,0.55);line-height:1.55;flex:1}' +
+      '.mind-card-pills{margin-top:12px;display:flex;flex-wrap:wrap;gap:5px}' +
+      '.mind-card-pills span{font-family:var(--mono);font-size:10px;padding:2px 8px;border-radius:10px;background:var(--paper-tint);color:rgba(20,20,19,0.45);letter-spacing:.04em}' +
+      '.mind-card.hidden{display:none}' +
+      '.back-link{display:inline-block;margin:40px 0 0 24px;font-size:13px;color:var(--cinnabar);text-decoration:none;font-family:var(--mono);letter-spacing:.04em}' +
+      '@media(max-width:768px){.hero h1{font-size:2rem}.card-grid{grid-template-columns:1fr;padding:0 16px 60px}.hero{padding:40px 16px 28px}}' +
+      '</style>\n</head>\n<body>\n' +
+      '<div class="topbar"><a href="/">Agentboard</a><span class="sep">/</span><a href="/minds" style="color:var(--ink);font-weight:500">思维顾问</a><span class="sep">·</span><a href="/skills">技能</a></div>\n' +
+      '<div class="hero"><div class="eyebrow">Huashu Nuwa · Perspective Catalog</div><h1>' + minds.length + ' 位人物<br><em>思维顾问</em></h1><p class="deck">女娲蒸馏产物。每个人物是独立可用的思维镜片——点击任意一张卡片，进入那个人物的操作系统。</p></div>\n' +
+      catNav +
+      '<div class="card-grid" id="cardGrid">' + cardsHtml + '</div>\n' +
+      '<a class="back-link" href="/">← 返回工具架</a>\n' +
+      '<script>\n' +
+      'function setMindFilter(cat){\n' +
+      '  document.querySelectorAll(".cat-nav-btn").forEach(function(b){b.classList.remove("active");});\n' +
+      '  document.querySelectorAll(".cat-nav-btn").forEach(function(b){if(b.dataset.cat===cat)b.classList.add("active");});\n' +
+      '  document.querySelectorAll(".mind-card").forEach(function(c){\n' +
+      '    if(cat==="all"||c.dataset.cat===cat){c.classList.remove("hidden");}else{c.classList.add("hidden");}\n' +
+      '  });\n' +
+      '}\n' +
+      '<\/script>\n' +
+      '</body>\n</html>';
+    res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.type('html').send(html);
+  });
+
+  // Individual mind detail
+  app.get('/minds/:id', function(req, res) {
+    var minds = loadPerspectives();
+    var ch = null;
+    for (var i = 0; i < minds.length; i++) {
+      if (minds[i].id === req.params.id) { ch = minds[i]; break; }
+    }
+    if (!ch) return res.status(404).send('perspective not found');
+
+    var bodyHtml = renderMarkdown(ch.body);
+    var triggerBadges = (ch.trigger || '').split(',').map(function(t) {
+      return '<span class="trigger-badge">' + esc(t.trim()) + '</span>';
+    }).join(' ');
+
+    var html = '<!DOCTYPE html>\n<html lang="zh-CN">\n<head>\n<meta charset="UTF-8">\n<meta name="viewport" content="width=device-width,initial-scale=1.0">\n<title>' + esc(ch.name_cn) + ' · 思维顾问</title>\n' +
+      '<link rel="icon" href="data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" rx="4" fill="#002FA7"/><text x="16" y="22" text-anchor="middle" font-family="Inter,sans-serif" font-size="16" font-weight="600" fill="white">思</text></svg>') + '">\n' +
+      '<link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600&family=Noto+Sans+SC:wght@200;300;400;500;700&family=Noto+Serif+SC:wght@400;500;600;700;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">\n' +
+      '<style>\n' +
+      ':root{--ink:#141413;--paper:#faf9f5;--paper-tint:#f5f4ed;--cinnabar:#d97757;--cinnabar-bg:rgba(217,119,87,0.08);--azure:#5088b0;--azure-bg:rgba(80,136,176,0.08);--malachite:#509070;--malachite-bg:rgba(80,144,112,0.08);--indigo:#6058a8;--indigo-bg:rgba(96,88,168,0.08);--ochre:#b89850;--ochre-bg:rgba(184,152,80,0.08);--mono:"JetBrains Mono","IBM Plex Mono",monospace;--serif:"Noto Serif SC","Source Serif 4",Georgia,serif;--sans:"DM Sans","Noto Sans SC",system-ui,sans-serif}' +
+      '*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}' +
+      'body{background:var(--paper);color:var(--ink);font-family:"Noto Sans SC","DM Sans",system-ui,sans-serif;font-weight:400;line-height:1.7;-webkit-font-smoothing:antialiased}' +
+      '.topbar{display:flex;align-items:center;gap:12px;padding:10px 24px;background:#fff;border-bottom:1px solid rgba(0,0,0,0.06);position:sticky;top:0;z-index:10}' +
+      '.topbar a{font-size:13px;color:#002FA7;text-decoration:none;font-family:var(--mono);letter-spacing:.04em}' +
+      '.topbar a:hover{opacity:.7}' +
+      '.detail-hero{max-width:760px;margin:0 auto;padding:48px 24px 28px;border-bottom:1px solid rgba(0,0,0,0.08)}' +
+      '.detail-hero .dh-name{font-family:var(--serif);font-size:clamp(2rem,4vw,3.2rem);font-weight:900;line-height:1.06;letter-spacing:.01em;margin-bottom:8px}' +
+      '.detail-hero .dh-en{font-size:1rem;color:rgba(20,20,19,0.4);font-style:italic;margin-bottom:12px}' +
+      '.detail-hero .dh-line{font-family:var(--serif);font-size:1.05rem;color:rgba(20,20,19,0.6);line-height:1.55;margin-bottom:16px}' +
+      '.trigger-strip{display:flex;flex-wrap:wrap;gap:5px;margin-top:12px}' +
+      '.trigger-badge{font-family:var(--mono);font-size:10px;padding:3px 10px;border-radius:12px;background:var(--paper-tint);color:rgba(20,20,19,0.45);border:1px solid rgba(0,0,0,0.06);letter-spacing:.04em}' +
+      '.detail-body{max-width:760px;margin:0 auto;padding:32px 24px 80px}' +
+      '.detail-body h1{font-family:var(--serif);font-size:1.8rem;font-weight:700;color:var(--ink);margin:40px 0 16px;letter-spacing:.01em;line-height:1.25}' +
+      '.detail-body h1:first-child{margin-top:0}' +
+      '.detail-body h2{font-family:var(--serif);font-size:1.25rem;font-weight:700;color:var(--ink);margin:36px 0 12px;padding-bottom:8px;border-bottom:1px solid rgba(0,0,0,0.08);line-height:1.35}' +
+      '.detail-body h3{font-family:var(--serif);font-size:1.05rem;font-weight:600;color:var(--ink);margin:24px 0 8px;line-height:1.4}' +
+      '.detail-body p{font-size:15px;line-height:1.85;color:rgba(20,20,19,0.75);margin:10px 0}' +
+      '.detail-body ul,.detail-body ol{padding-left:24px;margin:10px 0}' +
+      '.detail-body li{font-size:14px;line-height:1.85;color:rgba(20,20,19,0.7);margin:4px 0}' +
+      '.detail-body blockquote{border-left:3px solid var(--cinnabar);padding:8px 20px;margin:16px 0;color:rgba(20,20,19,0.6);font-family:var(--serif);font-size:1rem;line-height:1.7;background:var(--cinnabar-bg);border-radius:0 8px 8px 0}' +
+      '.detail-body code{font-family:var(--mono);font-size:12px;background:var(--paper-tint);padding:1px 6px;border-radius:3px;color:var(--cinnabar)}' +
+      '.detail-body pre{background:#1e1e1e;color:#e0e0e0;padding:20px 24px;overflow-x:auto;font-size:13px;line-height:1.6;margin:16px 0;border-radius:8px}' +
+      '.detail-body pre code{background:none;padding:0;color:inherit;font-size:12px}' +
+      '.detail-body hr{border:none;border-top:1px solid rgba(0,0,0,0.08);margin:36px 0}' +
+      '.detail-body strong{font-weight:600;color:var(--ink)}' +
+      '.detail-body em{color:rgba(20,20,19,0.55)}' +
+      '.detail-body table{width:100%;border-collapse:collapse;margin:16px 0;font-size:14px}' +
+      '.detail-body th,.detail-body td{padding:8px 14px;text-align:left;border:1px solid rgba(0,0,0,0.08)}' +
+      '.detail-body th{background:var(--paper-tint);font-weight:500;font-size:12px;font-family:var(--mono);letter-spacing:.04em}' +
+      '.back-link{display:inline-block;margin-top:32px;font-size:13px;color:var(--cinnabar);text-decoration:none;font-family:var(--mono);letter-spacing:.04em;border:1px solid rgba(0,0,0,0.1);padding:6px 16px;border-radius:6px}' +
+      '.back-link:hover{border-color:var(--cinnabar)}' +
+      '@media(max-width:768px){.detail-hero{padding:32px 16px 24px}.detail-body{padding:20px 16px 60px}.detail-hero .dh-name{font-size:1.6rem}.detail-body h1{font-size:1.4rem}.detail-body h2{font-size:1.15rem}.detail-body pre{padding:14px 16px}}' +
+      '</style>\n</head>\n<body>\n' +
+      '<div class="topbar"><a href="/">Agentboard</a><span class="sep">/</span><a href="/minds">思维顾问</a><span class="sep">/</span><a style="color:var(--ink);font-weight:500">' + esc(ch.name_cn) + '</a></div>\n' +
+      '<div class="detail-hero">' +
+      '<h1 class="dh-name">' + esc(ch.name_cn) + '</h1>' +
+      '<div class="dh-en">' + esc(ch.name_en) + '</div>' +
+      '<div class="dh-line">' + esc(ch.oneliner) + '</div>' +
+      '<div class="trigger-strip">' + triggerBadges + '</div>' +
+      '</div>\n' +
+      '<div class="detail-body">' + bodyHtml + '\n<a class="back-link" href="/minds">← 返回思维顾问目录</a>\n</div>\n' +
+      '</body>\n</html>';
+    res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.type('html').send(html);
+  });
+
+  function pageShell(title, heading, body, active, lines) {
+    var navItems = [
+      { label: '思维顾问', href: '/minds', id: 'minds' },
+      { label: '工具架', href: '/', id: 'home' },
+      { label: '技能', href: '/skills', id: 'skills' },
+      { label: '操作日志', href: '/tips', id: 'tips' },
+      { label: '设计宪法', href: '/constitution', id: 'constitution' },
+      { label: '管理规则', href: '/rules', id: 'rules' },
+      { label: '全局宪法', href: '/global', id: 'global' }
+    ,
+      { label: '启动项', href: '/startup', id: 'startup' }
+    ];
+    var navHTML = navItems.map(function(item) {
+      var isActive = item.id === active;
+      return '<a href=\"' + item.href + '\"' + (isActive ? ' style=\"color:#fff\"' : '') + '>' + item.label + '</a>';
+    }).join(' · ');
+    return '<!DOCTYPE html>\n<html lang=\"zh-CN\">\n<head>\n<meta charset=\"UTF-8\">\n<meta name=\"viewport\" content=\"width=device-width,initial-scale=1.0\">\n<title>' + esc(title) + ' · Agentboard</title>\n<link rel=\"icon\" href=\"data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 32 32\'%3E%3Crect width=\'32\' height=\'32\' rx=\'4\' fill=\'%23002FA7\'/%3E%3Ctext x=\'16\' y=\'22\' text-anchor=\'middle\' font-family=\'Inter,sans-serif\' font-size=\'16\' font-weight=\'600\' fill=\'white\'%3E法%3C/text%3E%3C/svg%3E">\n<link href=\"https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600&family=Noto+Sans+SC:wght@200;300;400;500;700&family=JetBrains+Mono:wght@400;500&display=swap\" rel=\"stylesheet\">\n<style>\n:root{--ink:#002FA7;--paper:#FAFAF8;--border:#E0E0DC;--text:#0A0A0A;--text-secondary:#555;--text-muted:#999;font-family:\'Inter\',\'Noto Sans SC\',sans-serif;color:var(--text);background:var(--paper);font-weight:300;font-size:16px}*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}body{min-height:100vh}.nav{background:var(--ink);padding:12px 24px}.nav a{color:rgba(255,255,255,.7);text-decoration:none;font-size:13px;font-weight:300}.nav a:hover{color:#fff}.nav b{color:#fff;font-weight:500;margin-right:12px}.page{max-width:800px;margin:0 auto;padding:40px 24px 80px}.page h1{font-size:28px;font-weight:200;letter-spacing:-0.02em;color:var(--ink);margin-bottom:24px}.page h2{font-size:18px;font-weight:500;color:var(--text);margin:36px 0 12px;padding-top:16px;border-top:1px solid var(--border)}.page h3{font-size:15px;font-weight:500;color:var(--text);margin:24px 0 8px}.page p,.page li{font-size:14px;line-height:1.8;color:var(--text-secondary);margin:6px 0}.page ul,.page ol{padding-left:20px;margin:8px 0}.page strong{font-weight:500;color:var(--text)}.page code{font-family:\'JetBrains Mono\',monospace;font-size:12px;background:var(--paper-tint, #F2F2F0);padding:1px 5px}.page pre{background:#f5f5f5;padding:16px;overflow-x:auto;font-size:12px;line-height:1.6;margin:12px 0}.page pre code{background:none;padding:0}.page table{width:100%;border-collapse:collapse;margin:12px 0;font-size:13px}.page th,.page td{padding:8px 12px;border:1px solid var(--border);text-align:left;font-size:13px}.page th{background:var(--paper-tint, #F2F2F0);font-weight:500;font-size:12px}.page blockquote{border-left:3px solid var(--ink);margin:12px 0;padding:4px 16px;color:var(--text-secondary);font-size:13px}.page hr{border:none;border-top:1px solid var(--border);margin:24px 0}.page em{color:var(--text-secondary)}.line-count{font-size:11px;color:var(--text-muted);margin-bottom:20px;font-family:\'JetBrains Mono\',monospace}.back-link{display:inline-block;margin-top:40px;font-size:13px;color:var(--ink);text-decoration:none;border:1px solid var(--border);padding:6px 16px}.back-link:hover{border-color:var(--ink)}\n</style>\n</head>\n<body>\n<div class=\"nav\"><a href=\"/\"><b>Agentboard</b></a> ' + navHTML + '</div>\n<div class=\"page\"><div class=\"line-count\">' + (lines || '') + ' 行</div>\n' + body + '\n<a class=\"back-link\" href=\"/\">← 返回工具架</a>\n</div>\n</body>\n</html>';
+  }
+
+  function renderMarkdown(md) {
+    md = md.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+    var lines = md.split('\n');
+    var out = '';
+    var inCode = false, inTable = false, inList = false, inBlockquote = false;
+    for (var i = 0; i < lines.length; i++) {
+      var line = lines[i];
+      // code blocks
+      if (line.startsWith('```')) {
+        if (inCode) { out += '</code></pre>\n'; inCode = false; }
+        else { var lang = line.slice(3).trim(); out += '<pre><code' + (lang ? ' class="language-' + esc(lang) + '"' : '') + '>'; inCode = true; }
+        continue;
+      }
+      if (inCode) { out += esc(line) + '\n'; continue; }
+      // tables
+      if (line.startsWith('|') && line.endsWith('|')) {
+        if (!inTable) { inTable = true; out += '<table>\n'; }
+        var isSep = /^\|[\s\-:]+\|$/.test(line);
+        if (isSep) continue;
+        var cells = line.slice(1, -1).split('|').map(function(c) { return c.trim(); });
+        var tag = inTable && out.indexOf('</table>') === -1 && out.lastIndexOf('<tr>') === -1 ? 'th' : 'td';
+        out += '<tr>' + cells.map(function(c) { return '<' + tag + '>' + renderInline(c) + '</' + tag + '>'; }).join('') + '</tr>\n';
+        continue;
+      } else if (inTable) {
+        out += '</table>\n';
+        inTable = false;
+      }
+      // blockquotes
+      if (line.startsWith('> ')) {
+        if (!inBlockquote) { inBlockquote = true; out += '<blockquote>\n'; }
+        out += renderInline(line.slice(2)) + '<br>\n';
+        continue;
+      } else if (inBlockquote) {
+        out += '</blockquote>\n';
+        inBlockquote = false;
+      }
+      // headings
+      if (line.startsWith('### ')) { out += '<h3>' + renderInline(line.slice(4)) + '</h3>\n'; continue; }
+      if (line.startsWith('## ')) { out += '<h2 id="' + slug(line.slice(3)) + '">' + renderInline(line.slice(3)) + '</h2>\n'; continue; }
+      if (line.startsWith('# ')) { out += '<h1>' + renderInline(line.slice(2)) + '</h1>\n'; continue; }
+      // hr
+      if (/^\-{3,}$/.test(line.trim())) { out += '<hr>\n'; continue; }
+      // lists
+      var listM = line.match(/^(\s*)[\-*]\s+(.*)/);
+      if (listM) {
+        if (!inList) { inList = true; out += '<ul>\n'; }
+        out += '<li>' + renderInline(listM[2]) + '</li>\n';
+        continue;
+      }
+      var olM = line.match(/^(\s*)\d+\.\s+(.*)/);
+      if (olM) {
+        if (!inList) { inList = true; out += '<ol>\n'; }
+        out += '<li>' + renderInline(olM[2]) + '</li>\n';
+        continue;
+      }
+      if (inList) { out += (out.lastIndexOf('<ol>') > out.lastIndexOf('<ul>') ? '</ol>\n' : '</ul>\n'); inList = false; }
+      // paragraph
+      if (line.trim()) { out += '<p>' + renderInline(line) + '</p>\n'; }
+    }
+    if (inCode) out += '</code></pre>\n';
+    if (inTable) out += '</table>\n';
+    if (inList) out += '</ul>\n';
+    if (inBlockquote) out += '</blockquote>\n';
+    return out;
+  }
+
+  function renderInline(text) {
+    return esc(text)
+      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+      .replace(/`([^`]+)`/g, '<code>$1</code>')
+      .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>')
+      .replace(/✅/g, '<span style="color:#1A8A3F">✅</span>')
+      .replace(/❌/g, '<span style="color:#C0392B">❌</span>')
+      .replace(/⬜/g, '<span style="color:var(--text-muted)">⬜</span>');
+  }
+
+  function slug(text) {
+    return text.toLowerCase().replace(/[^\w一-鿿]+/g, '-').replace(/^-|-$/g, '');
+  }
+
+  // Startup items page
+    // Startup items page
+  app.get('/startup', function(req, res) {
+    var startupDir = path.join(os.homedir(), 'AppData', 'Roaming', 'Microsoft', 'Windows', 'Start Menu', 'Programs', 'Startup');
+    var items = [];
+    try {
+      var files = fs.readdirSync(startupDir);
+      files.forEach(function(f) {
+        if (f === 'desktop.ini') return;
+        var fp = path.join(startupDir, f);
+        var stat = fs.statSync(fp);
+        items.push({ name: f.replace(/\.(lnk|bat|vbs|ps1)$/i, ''), file: f, path: fp, source: '启动文件夹', size: stat.size, mtime: stat.mtime.toISOString() });
+      });
+    } catch(_) {}
+    try {
+      var abs = ['.bat', '.vbs', '.ps1'];
+      var agentFiles = fs.readdirSync(PROJECT_DIR).filter(function(f) { return abs.indexOf(path.extname(f).toLowerCase()) !== -1; });
+      agentFiles.forEach(function(f) {
+        var fp = path.join(PROJECT_DIR, f);
+        var stat = fs.statSync(fp);
+        items.push({ name: f.replace(/\.(bat|vbs|ps1)$/i, ''), file: f, path: fp, source: 'Agentboard', size: stat.size, mtime: stat.mtime.toISOString() });
+      });
+    } catch(_) {}
+    var rows = items.map(function(item) {
+      var ext = path.extname(item.file).toLowerCase();
+      var typeLabel = ext === '.lnk' ? '快捷方式' : ext === '.bat' ? '批处理' : ext === '.vbs' ? 'VBScript' : ext === '.ps1' ? 'PowerShell' : '文件';
+      return '<tr><td><strong>' + esc(item.name) + '</strong></td><td><code>' + typeLabel + '</code></td><td style="font-size:11px;color:var(--text-muted)">' + esc(item.source) + '</td><td style="font-family:JetBrains Mono,monospace;font-size:11px">' + esc(item.file) + '</td></tr>';
+    }).join('');
+    var body = '<p class="sub">开机自启动的应用和脚本。添加：把 .bat/.vbs 快捷方式放入 <code>Startup</code> 文件夹。Agentboard 启动脚本放 <code>~/.agentboard/</code>。</p>' +
+      (items.length ? '<table><tr><th>名称</th><th>类型</th><th>来源</th><th>文件</th></tr>' + rows + '</table>' : '<p>暂无启动项</p>');
+    var full = pageShell('启动项', '启动项', body, 'startup', items.length);
+    res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.type('html').send(full);
+  });
+
+  // Home: embed initial stats for zero-loading-flash dashboard
+  app.get('/', function(req, res) {
+    var html = read(path.join(PROJECT_DIR, 'index.html'));
+    if (!html) return res.status(500).send('index.html missing');
+    var now = new Date();
+    var today = now.toISOString().slice(0, 10);
+    var tc = { agent: 0, browser: 0, unknown: 0 };
+    var ta = { list: 0, detail: 0, control: 0, admin: 0 };
+    var tdy = 0;
+    for (var i = 0; i < apiLog.length; i++) {
+      var e = apiLog[i];
+      if ((e.ts||'').slice(0,10) === today) {
+        tdy++;
+        if (tc.hasOwnProperty(e.caller)) tc[e.caller]++; else tc[e.caller] = 1;
+        ta[e.action] = (ta[e.action]||0) + 1;
+      }
+    }
+    var assetToolCount = listDirs(TOOLS_DIR).length;
+    var assetSkillCount = fs.existsSync(SKILLS_DIR) ? listDirs(SKILLS_DIR).length : 0;
+    var assetTipCount = fs.existsSync(TIPS_DIR) ? fs.readdirSync(TIPS_DIR).filter(function(f){ return f.endsWith('.md'); }).length : 0;
+    var constitutionLines = (read(path.join(PROJECT_DIR, 'constitution.md')) || '').split('\n').length;
+    var rulesLines = (read(path.join(PROJECT_DIR, 'rules.md')) || '').split('\n').length;
+    var globalLines = (read(path.join(os.homedir(), '.claude', 'CLAUDE.md')) || '').split('\n').length;
+    var apiEndpoints = 0;
+    try { app._router.stack.forEach(function(r){ if (r.route && r.route.path && r.route.path.indexOf('/api/') === 0) apiEndpoints++; }); } catch(_) {}
+    var cronTasks = (function(){
+      try { var raw = read(path.join(PROJECT_DIR, 'cron', 'tasks.json')); return raw ? JSON.parse(raw).tasks.length : 0; } catch(_) { return 0; }
+    })();
+    var startupCount = (function(){
+      var n = 0;
+      try {
+        var sd = path.join(os.homedir(), 'AppData', 'Roaming', 'Microsoft', 'Windows', 'Start Menu', 'Programs', 'Startup');
+        if (fs.existsSync(sd)) fs.readdirSync(sd).forEach(function(f){ if (f !== 'desktop.ini') n++; });
+      } catch(_) {}
+      try {
+        var abs = ['.bat', '.vbs', '.ps1'];
+        fs.readdirSync(PROJECT_DIR).forEach(function(f){ if (abs.indexOf(path.extname(f).toLowerCase()) !== -1) n++; });
+      } catch(_) {}
+      return n;
+    })();
+    var snap = JSON.stringify({
+      todayCalls: tdy,
+      byCaller: { agent: tc.agent||0, browser: tc.browser||0, unknown: tc.unknown||0 },
+      byAction: { list: ta.list||0, control: (ta.control||0)+(ta.detail||0), admin: ta.admin||0 },
+      assets: { tools: assetToolCount, skills: assetSkillCount, tips: assetTipCount, constitution: constitutionLines, rules: rulesLines, global: globalLines, api: apiEndpoints, cron: cronTasks, startup: startupCount, minds: loadPerspectives().length }
+    });
+    html = html.replace('<!--STATS_SNAPSHOT-->', '<script>window.__stats=' + snap + '</script>');
+    res.type('html').send(html);
+  });
+
   app.use(express.static(PROJECT_DIR));
 
-  app.get('/api/tools', function(req, res) {
-    try {
-      var tools = scanTools();
-      res.json({ ok: true, tools: tools });
-    } catch(e) {
-      res.status(500).json({ ok: false, error: e.message });
-    }
+  var PORT = process.env.PORT || 3099;
+  app.listen(PORT, function() {
+    console.log('Agentboard http://localhost:' + PORT);
   });
-
-  app.post('/api/tools/start/:id', function(req, res) {
-    res.json(startTool(req.params.id));
-  });
-
-  app.post('/api/tools/stop/:id', function(req, res) {
-    stopTool(req.params.id, function(_err, result) {
-      res.json(result);
-    });
-  });
-
-  app.post('/api/tools/reorder', function(req, res) {
-    var items = req.body.items;
-    if (!Array.isArray(items)) return res.status(400).json({ ok: false, error: 'items required' });
-    for (var i = 0; i < items.length; i++) {
-      var item = items[i];
-      var mfPath = safeResolve(TOOLS_DIR, item.id, 'manifest.json');
-      if (!mfPath) continue;
-      var mf;
-      try { mf = JSON.parse(read(mfPath)); } catch(_) { continue; }
-      mf.order = item.order;
-      try { fs.writeFileSync(mfPath, JSON.stringify(mf, null, 2) + '\n', 'utf8'); } catch(_) {}
-    }
-    res.json({ ok: true });
-  });
-
-  function tryListen(port) {
-    var server = app.listen(port, function() {
-      console.log('\n⚙  工具架 · Agentboard  http://localhost:' + port + '\n');
-    });
-    server.on('error', function(err) {
-      if (err.code === 'EADDRINUSE') {
-        console.error('\n  ✖ Port ' + port + ' is in use. Agentboard requires a fixed port to be discoverable.\n');
-        console.error('  Free port ' + port + ' and restart: npx kill-port ' + port + '\n');
-        process.exit(1);
-      } else { throw err; }
-    });
-  }
-  tryListen(PREFERRED_PORT);
 }
 
 if (require.main === module) {
-  console.log('\n📋 Agentboard scanning ' + TOOLS_DIR + '\n');
-  if (!fs.existsSync(TOOLS_DIR)) {
-    console.log('  ⚠ ~/.claude/tools/ does not exist. Create a manifest.json in a subdirectory to register a tool.\n');
-  }
   startServer();
 }

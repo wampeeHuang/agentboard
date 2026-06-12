@@ -1,0 +1,10 @@
+{
+  "name": "图片转文字 Tesseract OCR",
+  "id": "tesseract-ocr",
+  "description": "开源OCR引擎 — 图像文字识别。支持中文简体+英文，Python pytesseract 调用",
+  "icon": "🔍",
+  "version": "5.4.0",
+  "category": "获取",
+  "order": 30,
+  "projectPath": "C:\\Program Files\\Tesseract-OCR"
+}

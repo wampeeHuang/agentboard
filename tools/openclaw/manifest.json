@@ -1,0 +1,13 @@
+{
+  "name": "OpenClaw 网关",
+  "id": "openclaw",
+  "description": "Multi-model API gateway · openclaw models status 查模型 · openclaw gateway restart 重启",
+  "icon": "🦞",
+  "version": "1.0.0",
+  "category": "推理",
+  "order": 12,
+  "port": 18789,
+  "url": "http://localhost:18789",
+  "startCommand": "openclaw gateway restart",
+  "stopCommand": "openclaw gateway stop 2>/dev/null; npx kill-port 18789"
+}

@@ -1,0 +1,15 @@
+{
+  "name": "GLM-4.6V 视觉模型",
+  "id": "glm-46v-flash",
+  "description": "智谱 GLM-4.6V · 视觉模型 · bigmodel provider · ⚠️ 限速",
+  "icon": "👁",
+  "version": "1.0.0",
+  "category": "推理",
+  "order": 37,
+  "apiBase": "https://open.bigmodel.cn/api/paas/v4",
+  "apiKeyName": "GLM_API_KEY",
+  "models": [
+    { "id": "bigmodel/glm-4.6v", "type": "图片", "features": "限速" }
+  ],
+  "url": "https://open.bigmodel.cn"
+}

@@ -1,14 +1,14 @@
 {
   "name": "工具架 · Agentboard",
-  "id": "agentboard",
+  "id": "dashboard",
   "description": "文件即注册，状态即界面 — AI agent 工具链控制平面。扫描 ~/.claude/tools/，启动/停止/状态",
-  "order": 1,
   "icon": "⚙",
   "version": "2.1.0",
+  "category": "职能",
+  "order": 1,
   "port": 3099,
-  "projectPath": "C:\\Users\\Administrator\\.claude\\dashboard",
   "url": "http://localhost:3099",
-  "startCommand": "cd C:\\Users\\Administrator\\.claude\\dashboard && node server.js",
-  "stopCommand": "npx kill-port 3099",
-  "category": "基础设施"
+  "projectPath": "%USERPROFILE%\\.claude\\dashboard",
+  "startCommand": "cd %USERPROFILE%\\.claude\\dashboard && node server.js",
+  "stopCommand": "npx kill-port 3099"
 }

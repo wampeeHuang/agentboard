@@ -1,0 +1,12 @@
+{
+  "name": "百度云盘",
+  "id": "baidu-cloud",
+  "description": "百度网盘开放 API — OAuth 2.0 · 文件上传/下载/管理",
+  "icon": "☁",
+  "version": "1.0.0",
+  "category": "获取",
+  "order": 35,
+  "apiBase": "https://aip.baidubce.com",
+  "apiKeyName": "BAIDU_CLOUD_CREDENTIALS",
+  "url": "https://pan.baidu.com"
+}
