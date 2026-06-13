@@ -733,7 +733,7 @@ function render() {
     } else if (halting) {
       actionHtml = '<button class="btn stop" style="opacity:.6">停止中…</button>';
     } else if (cmdType === 'folder') {
-      actionHtml = '<button class="btn go" onclick="event.stopPropagation();location.href=\'/workspace/' + t.id + '\'">查看项目</button>';
+      actionHtml = '<button class="btn go" onclick="event.stopPropagation();window.open(\'/workspace/' + t.id + '\', \'_blank\')">查看项目</button>';
     } else if (hasCommands && !isSelf && cmdType !== 'command') {
       if (isNoPortCli) {
         actionHtml = '<button class="btn go" onclick="event.stopPropagation();startTool(\'' + t.id + '\')">终端</button>';
@@ -756,7 +756,7 @@ function render() {
     var publicBtn = t.publicUrl ? '<a href="' + t.publicUrl + '" target="_blank" class="btn public" onclick="event.stopPropagation()" title="公开站: ' + t.publicUrl + '">公开站</a>' : '';
 
     var extraClass = v ? ' virtual' : ''; if (isSelf) extraClass += ' self'; if (cmdType === 'command') extraClass += ' cmd-card'; if (cmdType === 'folder') extraClass += ' folder-card';
-	return '<div class="tool-card' + extraClass + '" data-id="' + t.id + '" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)"' + (cmdType === 'folder' ? ' onclick="location.href=\'/workspace/' + t.id + '\'" style="cursor:pointer"' : '') + '>'
+	return '<div class="tool-card' + extraClass + '" data-id="' + t.id + '" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)"' + (cmdType === 'folder' ? ' onclick="window.open(\'/workspace/' + t.id + '\', \'_blank\')" style="cursor:pointer"' : '') + '>'
       + '<span class="card-dot ' + klass + '"></span>'
       + '<div class="card-drag-handle" title="拖拽排序" draggable="true" ondragstart="handleDragStart(event)" ondragend="handleDragEnd(event)"></div>'
       + '<div class="card-body">'

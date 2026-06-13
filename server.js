@@ -931,12 +931,9 @@ function startServer() {
     });
 
     var statusOrder = {active:0, undefined:1, archived:2, abandoned:3};
-    var recencyOrder = {week:0, halfMonth:1, month:2, older:3};
     projects.sort(function(a,b) {
-      var sa = statusOrder[a.status] != null ? statusOrder[a.status] : 99;
-      var sb = statusOrder[b.status] != null ? statusOrder[b.status] : 99;
-      if (sa !== sb) return sa - sb;
-      return (recencyOrder[a.recency] || 99) - (recencyOrder[b.recency] || 99);
+      if (a.daysAgo !== b.daysAgo) return a.daysAgo - b.daysAgo;
+      return (statusOrder[a.status] || 99) - (statusOrder[b.status] || 99);
     });
     return projects;
   }

@@ -17,6 +17,37 @@
 - **动态注入** — `/api/tools` 从 `~/.claude/cron-config.json` 读取并注入独立 cron 卡片（已废弃）
 - **cron-scheduler** — manifest 注册，`type: "group"`，children 列出 7 个子任务，展开可见
 
+## 工具调用协议
+
+**每次操作工具前必须查 `/api/tools`**，不只是看 `running` 状态，还要读两个字段：
+
+### conflicts（互斥冲突）
+
+当前工具和其他工具的冲突关系。两种来源：
+- **manifest 声明**（手动维护）：GPU 显存互斥（ComfyUI↔SD↔MiniCPM↔ACE）、语义互斥（langgraph-agent↔langgraph-rag）
+- **端口冲突**（运行时自动检测）：两个工具抢同一个端口时会自动追加
+
+操作前检查：要启动的工具的 `conflicts` 列出的工具如果有 `running: true`，先停掉再启动，或告知用户选一个。
+
+### agent_notes（模型行为踩坑笔记）
+
+针对 DeepSeek 等模型容易在这个工具上犯的错。每条 notes 记录了：
+- 模型会误判什么场景
+- 模型的认知盲区（如"不理解异步两阶段"）
+- 操作前必须确认的前置条件
+
+**调用流程（不可跳过）**：
+
+```
+1. GET /api/tools → 找到目标工具
+2. 读 conflicts → 有 running 的冲突工具→先停或换方案
+3. 读 agent_notes → 对照自己的操作计划，有没有踩中已知盲区
+4. running: false → 启动工具
+5. running: true → 直接调
+```
+
+缺失字段 ≠ 失败——`conflicts: []` 和 `agent_notes: ""` 表示暂无已知冲突/盲区。
+
 ## 红线
 
 - **禁止删除 `tools/` 下的任何 manifest 目录**，除非用户逐文件确认
