@@ -105,6 +105,7 @@ source: 触发写入的事件/任务简述
 | `agentboard-tools-lifecycle.md` | method | ✅ 路径已修正为 ~/.agentboard/ |
 | `backup-strategy.md` | method | ⚠️ 基于旧版 .claude/ 布局，部分过时 |
 | `agentboard-architecture.md` | fact | ⚠️ 部分内容与 design-spec.md 重叠 |
+| `cron-run-ok-means-nothing.md` | diagnosis | ✅ |
 
 ---
 
