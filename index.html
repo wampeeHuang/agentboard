@@ -212,11 +212,10 @@ OCR:  Tesseract OCR (pytesseract)
       <span class="nav-sep"></span>
       <a href="/" title="工具注册表" id="assetTools">工具</a>
       <a href="/skills" title="Claude Code 技能" id="assetSkills">技能</a>
+      <a href="/diagrams" title="技能 HTML 架构图" id="assetDiagrams">架构图</a>
 	      <a href="/commands" title="Claude Code 内置命令参考" id="assetCommands">命令</a>
       <a href="/tips" title="操作日志" id="assetTips">操作日志</a>
       <a href="/api" title="API 文档" id="assetApi">API</a>
-      <span class="nav-sep"></span>
-      <a href="#" title="定时巡检任务" id="assetCron">定时任务</a>
       <a href="/startup" title="开机自启动" id="assetStartup">开机自启动</a>
     </div>
   </div>
@@ -520,7 +519,7 @@ function getToolOwner(t) {
       setT('assetRepoSpec', '工程规范', s.assets.repoSpec + ' 行');
       setT('assetGlobal', '全局宪法', s.assets.global + ' 行');
       setT('assetApi', 'API 文档', s.assets.api + ' 个端点');
-      setT('assetCron', '定时巡检', s.assets.cron + ' 个任务');
+
       setT('assetStartup', '开机自启动', s.assets.startup + ' 项');
 
     }
@@ -708,7 +707,9 @@ function render() {
         '</div>';
       }).join('');
       var expanded = expandedGroups[t.id];
-      return '<div class="tool-card group-card' + (expanded?' expanded':'') + '" data-id="' + t.id + '">'
+      return '<div class="tool-card group-card' + (expanded?' expanded':'') + '" data-id="' + t.id + '" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)">'
+        + '<span class="card-dot off"></span>'
+        + '<div class="card-drag-handle" title="拖拽排序" draggable="true" ondragstart="handleDragStart(event)" ondragend="handleDragEnd(event)"></div>'
         + '<div class="card-body">'
           + '<div class="card-mono">' + (t.icon||monogram(t.name)) + '</div>'
           + '<div class="card-info">'

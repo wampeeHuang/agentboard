@@ -1,0 +1,11 @@
+{
+  "name": "技能架构图",
+  "id": "skill-diagrams",
+  "description": "技能 HTML 系统结构图自动汇集。扫描 ~/.claude/skills/**/references/*.html，Agent 生成后自动落盘。",
+  "icon": "📐",
+  "version": "1.0.0",
+  "category": "查阅",
+  "order": 3,
+  "url": "http://localhost:3099/diagrams",
+  "type": "service"
+}

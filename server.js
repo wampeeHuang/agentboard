@@ -671,39 +671,7 @@ function startServer() {
   // --- Tools API ---
   app.get('/api/tools', function(req, res) {
     var tools = scanTools();
-    // Inject cron task cards from shared config (single source of truth)
-    try {
-      var cfgPath = path.join(os.homedir(), '.claude', 'cron-config.json');
-      var cfg = JSON.parse(fs.readFileSync(cfgPath, 'utf-8'));
-      var iconMap = { '认知深读': '📖', 'AI信号': '📡', '每日选题': '📰', '个体户巡检': '🏪', '保障房巡检': '🏠', '税无忧巡检': '🧾', '竞品调研': '🔍' };
-      var baseOrder = 39;
-      if (cfg.daily && cfg.daily.tasks) {
-        cfg.daily.tasks.forEach(function(t, i) {
-          var id = 'cron-' + t.name;
-          tools.push({
-            name: t.name, id: id,
-            description: '每日 08:00 窗口 · 最长' + cfg.daily.timeoutMin + 'min · 预算$' + cfg.daily.budgetUSD,
-            icon: iconMap[t.name] || '⏰', version: '2.0.0', category: '职能', order: baseOrder + i,
-            url: 'http://localhost:3099/cron/' + id,
-            running: null, projectPath: '%USERPROFILE%\\.claude\\cron-runner.js',
-            type: 'background', owner: '', trigger: '', children: [], conflicts: []
-          });
-        });
-      }
-      if (cfg.patrols && cfg.patrols.tasks) {
-        cfg.patrols.tasks.forEach(function(t, i) {
-          var id = 'cron-' + t.name;
-          tools.push({
-            name: t.name, id: id,
-            description: '巡检窗口 ' + cfg.patrols.windowHour + ':' + String(cfg.patrols.windowMinute).padStart(2,'0') + ' · 最长' + cfg.patrols.timeoutMin + 'min',
-            icon: iconMap[t.name] || '🔍', version: '2.0.0', category: '职能', order: baseOrder + (cfg.daily?cfg.daily.tasks.length:0) + i,
-            url: 'http://localhost:3099/cron/' + id,
-            running: null, projectPath: '%USERPROFILE%\\.claude\\cron-runner.js',
-            type: 'background', owner: '', trigger: '', children: [], conflicts: []
-          });
-        });
-      }
-    } catch(_) {}
+    // Individual cron task cards suppressed — consolidated under cron-scheduler card
     res.json({ ok: true, tools: tools });
   });
 
@@ -1182,7 +1150,7 @@ function startServer() {
     res.send(html2);
   });
 
-  // Diagrams index — only skills with system-diagram.html
+  // Diagrams index — only skills with references/system-diagram.html
   app.get('/diagrams', function(req, res) {
     res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
     var diagrams = [];
@@ -1193,37 +1161,21 @@ function startServer() {
       listDirs(dir).forEach(function(name) {
         if (seen[name]) return;
         seen[name] = true;
-        var diagramPath = path.join(dir, name, 'references', 'system-diagram.html');
-        if (!fs.existsSync(diagramPath)) return;
-        var skillMd = read(path.join(dir, name, 'SKILL.md'));
-        var displayName = name;
-        var desc = '';
-        if (skillMd) {
-          var fmMatch = skillMd.match(/^---\r?\n([\s\S]*?)\r?\n---/);
-          if (fmMatch) {
-            var descMatch = fmMatch[1].match(/description:\s*(.+)/);
-            if (descMatch) desc = descMatch[1].trim();
-          }
-          if (!desc) {
-            var body2 = skillMd.replace(/^---[\s\S]*?---\n*/, '').replace(/^#\s+.*\n*/, '');
-            var firstLine = body2.split('\n').find(function(l) { return l.trim() && !l.trim().startsWith('#') && !l.trim().startsWith('>') && l.trim().length > 10; });
-            if (firstLine) desc = firstLine.trim().substring(0, 120);
-          }
-        }
+        var filePath = path.join(dir, name, 'references', 'system-diagram.html');
+        if (!fs.existsSync(filePath)) return;
         var cnName = getChineseName(name);
-        diagrams.push({ name: name, displayName: cnName, description: desc });
+        diagrams.push({ skill: name, file: 'system-diagram.html', displayName: cnName });
       });
     });
     diagrams.sort(function(a, b) { return a.displayName.localeCompare(b.displayName, 'zh-CN'); });
     var cards = diagrams.map(function(d) {
-      var words = d.name.split(/[-_]/).filter(function(w) { return w.length > 0; });
-      var mono = words.length >= 2 ? (words[0][0] + words[words.length-1][0]).toUpperCase() : d.name.substring(0,2).toUpperCase();
-      return '<a href="/skills/' + esc(d.name) + '" class="diagram-card" target="_blank">' +
+      var words = d.skill.split(/[-_]/).filter(function(w) { return w.length > 0; });
+      var mono = words.length >= 2 ? (words[0][0] + words[words.length-1][0]).toUpperCase() : d.skill.substring(0,2).toUpperCase();
+      return '<a href="/skill-html/' + esc(d.skill) + '/system-diagram.html" class="diagram-card" target="_blank">' +
         '<div class="card-mono">' + esc(mono) + '</div>' +
         '<div class="card-info">' +
           '<div class="card-name">' + esc(d.displayName) + '</div>' +
-          '<div class="card-sub">' + esc(d.name) + '</div>' +
-          (d.description ? '<div class="card-desc">' + esc(d.description) + '</div>' : '') +
+          '<div class="card-sub">' + esc(d.skill) + '</div>' +
           '<div class="card-link">打开结构图 →</div>' +
         '</div>' +
       '</a>';
@@ -1245,7 +1197,15 @@ function startServer() {
       '<a class="back-link" href="/">\u2190 \u8FD4\u56DE\u5DE5\u5177\u67B6</a>' +
       '<div class="diagram-grid">' + cards + '</div>';
 
-    res.send(pageShell('\u7ED3\u6784\u56FE', 'Skill \u7CFB\u7EDF\u7ED3\u6784\u56FE', body, null, diagrams.length));
+    res.send(pageShell('\u7ED3\u6784\u56FE', 'Skill HTML \u67B6\u6784\u56FE', body, null, diagrams.length));
+  });
+
+  // Serve individual HTML from skill references/
+  app.get('/skill-html/:skill/:file', function(req, res) {
+    var fp = safeResolve(SKILLS_DIR, req.params.skill, 'references', req.params.file);
+    if (!fp || !fs.existsSync(fp)) { fp = safeResolve(LOCAL_SKILLS_DIR, req.params.skill, 'references', req.params.file); }
+    if (!fp || !fs.existsSync(fp)) return res.status(404).send('not found');
+    res.type('html').send(read(fp));
   });
 
   // Tips (操作日志)
@@ -1860,7 +1820,7 @@ function startServer() {
   });
 
   function pageShell(title, heading, body, active, lines) {
-    return '<!DOCTYPE html>\n<html lang=\"zh-CN\">\n<head>\n<meta charset=\"UTF-8\">\n<meta name=\"viewport\" content=\"width=device-width,initial-scale=1.0\">\n<title>' + esc(title) + ' · Agentboard</title>\n<link rel=\"icon\" href=\"data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 32 32\'%3E%3Crect width=\'32\' height=\'32\' rx=\'4\' fill=\'%23002FA7\'/%3E%3Ctext x=\'16\' y=\'22\' text-anchor=\'middle\' font-family=\'Inter,sans-serif\' font-size=\'16\' font-weight=\'600\' fill=\'white\'%3E法%3C/text%3E%3C/svg%3E">\n<link href=\"https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600&family=Noto+Sans+SC:wght@200;300;400;500;700&family=JetBrains+Mono:wght@400;500&display=swap\" rel=\"stylesheet\">\n<style>\n:root{--ink:#002FA7;--ink-rgb:0,47,167;--paper:#FAFAF8;--paper-tint:#F2F2F0;--border:#E0E0DC;--text:#0A0A0A;--text-secondary:#555;--text-muted:#999;--shadow-border:0 0 0 1px rgba(0,0,0,0.08);--shadow-card:0 1px 3px rgba(0,0,0,0.06);--shadow-card-hover:0 2px 8px rgba(0,0,0,0.1);font-family:\'Inter\',\'Noto Sans SC\',sans-serif;color:var(--text);background:var(--paper);font-weight:300;font-size:16px}*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}body{min-height:100vh}.header{background:var(--ink);padding:14px 32px;display:flex;align-items:center;gap:24px}.header-brand{font-family:\'JetBrains Mono\',monospace;font-size:12px;font-weight:500;letter-spacing:.06em;color:var(--paper);text-decoration:none;white-space:nowrap;opacity:.9}.header-back{font-family:\'JetBrains Mono\',monospace;font-size:11px;font-weight:400;color:var(--paper);text-decoration:none;opacity:.7;margin-left:auto;transition:opacity .15s}.header-back:hover{opacity:1}.page{max-width:1080px;margin:0 auto;padding:40px 32px 80px}.page h1{font-size:28px;font-weight:200;letter-spacing:-0.02em;color:var(--ink);margin-bottom:24px}.page h2{font-size:18px;font-weight:500;color:var(--text);margin:36px 0 12px;padding-top:16px;border-top:1px solid var(--border)}.page h3{font-size:15px;font-weight:500;color:var(--text);margin:24px 0 8px}.page p,.page li{font-size:14px;line-height:1.8;color:var(--text-secondary);margin:6px 0}.page ul,.page ol{padding-left:20px;margin:8px 0}.page strong{font-weight:500;color:var(--text)}.page code{font-family:\'JetBrains Mono\',monospace;font-size:12px;background:var(--paper-tint);padding:1px 5px}.page pre{background:#f5f5f5;padding:16px;overflow-x:auto;font-size:12px;line-height:1.6;margin:12px 0}.page pre code{background:none;padding:0}.page table{width:100%;border-collapse:collapse;margin:12px 0;font-size:13px}.page th,.page td{padding:8px 12px;border:1px solid var(--border);text-align:left;font-size:13px}.page th{background:var(--paper-tint);font-weight:500;font-size:12px}.page blockquote{border-left:3px solid var(--ink);margin:12px 0;padding:4px 16px;color:var(--text-secondary);font-size:13px}.page hr{border:none;border-top:1px solid var(--border);margin:24px 0}.page em{color:var(--text-secondary)}.line-count{font-size:11px;color:var(--text-muted);margin-bottom:20px;font-family:\'JetBrains Mono\',monospace}.back-link{display:inline-block;margin-top:40px;font-size:13px;color:var(--ink);text-decoration:none;border:1px solid var(--border);padding:6px 16px}.back-link:hover{border-color:var(--ink)}\n</style>\n</head>\n<body>\n<div class=\"header\"><a class=\"header-brand\" href=\"/\">AGENTBOARD</a><a class=\"header-back\" href=\"/\">&#8592; 返回工具架</a></div>\n<div class=\"page\"><div class=\"line-count\">' + (lines || '') + ' 行</div>\n' + body + '\n</div>\n</body>\n</html>';
+    return '<!DOCTYPE html>\n<html lang=\"zh-CN\">\n<head>\n<meta charset=\"UTF-8\">\n<meta name=\"viewport\" content=\"width=device-width,initial-scale=1.0\">\n<title>' + esc(title) + ' · Agentboard</title>\n<link rel=\"icon\" href=\"data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 32 32\'%3E%3Crect width=\'32\' height=\'32\' rx=\'4\' fill=\'%23002FA7\'/%3E%3Ctext x=\'16\' y=\'22\' text-anchor=\'middle\' font-family=\'Inter,sans-serif\' font-size=\'16\' font-weight=\'600\' fill=\'white\'%3E法%3C/text%3E%3C/svg%3E">\n<link href=\"https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600&family=Noto+Sans+SC:wght@200;300;400;500;700&family=JetBrains+Mono:wght@400;500&display=swap\" rel=\"stylesheet\">\n<style>\n:root{--ink:#002FA7;--ink-rgb:0,47,167;--paper:#FAFAF8;--paper-tint:#F2F2F0;--border:#E0E0DC;--text:#0A0A0A;--text-secondary:#555;--text-muted:#999;--shadow-border:0 0 0 1px rgba(0,0,0,0.08);--shadow-card:0 1px 3px rgba(0,0,0,0.06);--shadow-card-hover:0 2px 8px rgba(0,0,0,0.1);font-family:\'Inter\',\'Noto Sans SC\',sans-serif;color:var(--text);background:var(--paper);font-weight:300;font-size:16px}*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}body{min-height:100vh}.header{background:var(--ink);padding:14px 32px;display:flex;align-items:center;gap:24px}.header-brand{font-family:\'JetBrains Mono\',monospace;font-size:12px;font-weight:500;letter-spacing:.06em;color:var(--paper);text-decoration:none;white-space:nowrap;opacity:.9}.header-back{font-family:\'JetBrains Mono\',monospace;font-size:11px;font-weight:400;color:var(--paper);text-decoration:none;opacity:.7;margin-left:auto;transition:opacity .15s}.header-back:hover{opacity:1}.page{max-width:1080px;margin:0 auto;padding:40px 32px 80px}.page h1{font-size:28px;font-weight:200;letter-spacing:-0.02em;color:var(--ink);margin-bottom:24px}.page h2{font-size:18px;font-weight:500;color:var(--text);margin:36px 0 12px;padding-top:16px;border-top:1px solid var(--border)}.page h3{font-size:15px;font-weight:500;color:var(--text);margin:24px 0 8px}.page p,.page li{font-size:14px;line-height:1.8;color:var(--text-secondary);margin:6px 0}.page ul,.page ol{padding-left:20px;margin:8px 0}.page strong{font-weight:500;color:var(--text)}.page code{font-family:\'JetBrains Mono\',monospace;font-size:12px;background:var(--paper-tint);padding:1px 5px}.page pre{background:#f5f5f5;padding:16px;overflow-x:auto;font-size:12px;line-height:1.6;margin:12px 0}.page pre code{background:none;padding:0}.page table{width:100%;border-collapse:collapse;margin:12px 0;font-size:13px}.page th,.page td{padding:8px 12px;border:1px solid var(--border);text-align:left;font-size:13px}.page th{background:var(--paper-tint);font-weight:500;font-size:12px}.page blockquote{border-left:3px solid var(--ink);margin:12px 0;padding:4px 16px;color:var(--text-secondary);font-size:13px}.page hr{border:none;border-top:1px solid var(--border);margin:24px 0}.page em{color:var(--text-secondary)}.line-count{font-size:11px;color:var(--text-muted);margin-bottom:20px;font-family:\'JetBrains Mono\',monospace}.back-link{display:inline-block;margin-top:40px;font-size:13px;color:var(--ink);text-decoration:none;border:1px solid var(--border);padding:6px 16px}.back-link:hover{border-color:var(--ink)}\n</style>\n</head>\n<body>\n<div class=\"header\"><a class=\"header-brand\" href=\"/\">AGENTBOARD</a><a class=\"header-back\" href=\"/\">&#8592; 返回工具架</a> <a class=\"header-back\" href=\"/diagrams\">架构图</a></div>\n<div class=\"page\"><div class=\"line-count\">' + (lines || '') + ' 行</div>\n' + body + '\n</div>\n</body>\n</html>';
   }
 
   function renderMarkdown(md) {
