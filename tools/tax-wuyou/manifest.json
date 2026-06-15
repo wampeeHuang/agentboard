@@ -1,7 +1,7 @@
 {
   "name": "税无忧 · 电商税务体检",
   "id": "tax-wuyou",
-  "description": "淘宝订单导入 → 自动分类 → 刷单剔除 → 税务估算。个体户每季度报税前看一眼。",
+  "description": "【用途】淘宝订单导入→自动分类→刷单剔除→税务估算。个体户季度报税工具。【何时用】季度报税前、需要估算应纳税额时。【何时不用】无淘宝订单→不适用。日常记账→不需要。【返回】Web UI :3457【延迟】<1s【端口】3457",
   "icon": "🏪",
   "version": "1.0.0",
   "category": "职能",
@@ -11,5 +11,7 @@
   "publicUrl": "https://shuiwuyou.evopearl.com/",
   "projectPath": "D:\\Claude code_workspace\\2026-05-31-电商会计驾驶舱",
   "startCommand": "cd /d \"D:\\Claude code_workspace\\2026-05-31-电商会计驾驶舱\" && node server.js",
-  "stopCommand": "npx kill-port 3457"
+  "stopCommand": "npx kill-port 3457",
+  "conflicts": [],
+  "agent_notes": "个体户每季度报税前用。和个体户驾驶舱(3456)互补——驾驶舱管全貌，税无忧管电商税务。公开域名shuiwuyou.evopearl.com。"
 }

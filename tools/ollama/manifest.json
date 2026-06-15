@@ -2,7 +2,7 @@
   "name": "Ollama",
   "id": "ollama",
   "owner": "外部",
-  "description": "本地 LLM 推理服务 · 管理模型列表/拉取/运行 · Ollama API 兼容",
+  "description": "【用途】本地LLM推理服务，管理本地模型列表/拉取/运行。通常开机自启。【何时用】需要拉取新模型、查看本地模型列表、测试本地推理。【何时不用】只是用模型→OpenClaw/aigoapi已统一代理，不直接调ollama。模型管理之外→不需要碰。【返回】CLI/JSON【端口】11434",
   "icon": "🦙",
   "version": "1.0.0",
   "category": "推理",
@@ -10,5 +10,7 @@
   "port": 11434,
   "url": "http://localhost:11434",
   "startCommand": "echo Ollama 通常已开机自启。手动启动：ollama serve",
-  "stopCommand": "npx kill-port 11434"
+  "stopCommand": "npx kill-port 11434",
+  "conflicts": [],
+  "agent_notes": "通常已自启。DeepSeek不需要本地模型也能跑——除非明确要跑本地开源模型，否则不要拉取新模型（下载慢且占磁盘）。"
 }

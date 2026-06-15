@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Loop Console</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Noto+Sans+SC:wght@400;500;600;700&family=Noto+Serif+SC:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #faf9f5;
+  --bg-alt: #f5f4ed;
+  --bg-card: #ffffff;
+  --fg: #141413;
+  --fg-2: #30302e;
+  --fg-3: #5e5d59;
+  --fg-dim: #94938d;
+  --accent: #1a1a1a;
+  --accent-2: #3b82f6;
+  --green: #3b7d4b;  --green-bg: rgba(59,125,75,0.06);
+  --yellow: #c7902b; --yellow-bg: rgba(199,144,43,0.06);
+  --red: #c44e3e;    --red-bg: rgba(196,78,62,0.05);
+  --border: #e8e6dc;
+  --border-light: #d1cfc5;
+  --shadow: 0 1px 3px rgba(0,0,0,0.04);
+  --f-display: "Source Serif 4", "Noto Serif SC", Georgia, serif;
+  --f-body: "Inter", "Noto Sans SC", system-ui, sans-serif;
+  --f-mono: "JetBrains Mono", monospace;
+  --radius: 10px;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body { background:var(--bg); color:var(--fg); font-family:var(--f-body); font-size:14px; line-height:1.5; min-height:100vh; -webkit-font-smoothing:antialiased; }
+
+/* ── Shell ── */
+.shell { display:flex; min-height:100vh; }
+.sidebar { width:220px; background:var(--fg); color:#fff; padding:28px 0; flex-shrink:0; display:flex; flex-direction:column; }
+.sidebar-brand { padding:0 24px 28px; border-bottom:1px solid rgba(255,255,255,0.1); }
+.sidebar-brand h1 { font-family:var(--f-display); font-size:20px; font-weight:700; letter-spacing:-0.3px; }
+.sidebar-brand .ver { font-size:11px; color:rgba(255,255,255,0.4); font-family:var(--f-mono); margin-top:2px; }
+.sidebar-nav { flex:1; padding:16px 0; }
+.nav-item { display:flex; align-items:center; gap:10px; padding:10px 24px; font-size:13px; color:rgba(255,255,255,0.55); cursor:pointer; transition:all 0.15s; border-left:2px solid transparent; }
+.nav-item:hover { color:rgba(255,255,255,0.85); background:rgba(255,255,255,0.04); }
+.nav-item.active { color:#fff; border-left-color:#fff; background:rgba(255,255,255,0.06); }
+.nav-item .icon { font-size:15px; width:20px; text-align:center; }
+.nav-item .count { margin-left:auto; font-family:var(--f-mono); font-size:11px; background:rgba(255,255,255,0.1); padding:2px 7px; border-radius:10px; }
+.sidebar-footer { padding:16px 24px; border-top:1px solid rgba(255,255,255,0.1); font-size:11px; color:rgba(255,255,255,0.3); }
+.sidebar-footer a { color:rgba(255,255,255,0.5); text-decoration:none; }
+
+.main { flex:1; overflow-y:auto; }
+.topbar { padding:24px 32px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
+.topbar h2 { font-family:var(--f-display); font-size:22px; font-weight:700; color:var(--fg); }
+.topbar-actions { display:flex; gap:8px; align-items:center; }
+.topbar .refresh-btn { font-family:var(--f-body); font-size:12px; padding:6px 14px; border-radius:16px; border:1px solid var(--border); background:var(--bg-card); color:var(--fg-3); cursor:pointer; }
+.topbar .refresh-btn:hover { border-color:var(--border-light); color:var(--fg); }
+.topbar .updated { font-size:12px; color:var(--fg-dim); font-family:var(--f-mono); }
+
+.content { padding:28px 32px; }
+
+/* ── Stat banner ── */
+.stat-row { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:28px; }
+.stat-card { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); padding:20px 22px; }
+.stat-card .s-label { font-size:10px; font-weight:600; color:var(--fg-dim); text-transform:uppercase; letter-spacing:0.8px; margin-bottom:6px; }
+.stat-card .s-value { font-family:var(--f-display); font-size:38px; font-weight:700; color:var(--fg); line-height:1; }
+.stat-card .s-sub { font-size:11px; color:var(--fg-3); margin-top:4px; }
+
+/* ── Project table ── */
+.table-wrap { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; }
+.table-header { display:grid; grid-template-columns:1fr 100px 140px 120px 100px 40px; gap:0; padding:0 20px; border-bottom:1px solid var(--border); background:var(--bg-alt); font-size:10px; font-weight:600; color:var(--fg-dim); text-transform:uppercase; letter-spacing:0.6px; }
+.table-header span { padding:10px 0; }
+.table-row { display:grid; grid-template-columns:1fr 100px 140px 120px 100px 40px; gap:0; padding:0 20px; border-bottom:1px solid var(--border); align-items:center; cursor:pointer; transition:background 0.1s; }
+.table-row:last-child { border-bottom:none; }
+.table-row:hover { background:var(--bg-alt); }
+.table-row > div { padding:14px 0; overflow:hidden; }
+
+.proj-cell { display:flex; align-items:center; gap:12px; }
+.proj-avatar { width:34px; height:34px; border-radius:7px; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:13px; color:#fff; flex-shrink:0; }
+.proj-info .proj-name { font-weight:600; font-size:14px; color:var(--fg); }
+.proj-info .proj-url { font-size:11px; color:var(--fg-dim); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:240px; }
+
+.health-cell { display:flex; align-items:center; gap:8px; }
+.health-ring { width:32px; height:32px; border-radius:50%; border:3px solid var(--border); display:flex; align-items:center; justify-content:center; font-family:var(--f-mono); font-size:11px; font-weight:600; flex-shrink:0; }
+.health-ring.good { border-color:var(--green); color:var(--green); }
+.health-ring.warn { border-color:var(--yellow); color:var(--yellow); }
+.health-ring.bad { border-color:var(--red); color:var(--red); }
+
+.comp-dots { display:flex; gap:3px; }
+.comp-dot { width:7px; height:7px; border-radius:50%; }
+.comp-dot.ok { background:var(--green); }
+.comp-dot.warn { background:var(--yellow); }
+.comp-dot.missing { background:var(--border-light); }
+
+.run-cell { font-family:var(--f-mono); font-size:12px; }
+.run-cell .completed { color:var(--green); }
+.run-cell .failed { color:var(--red); }
+.run-cell .time { color:var(--fg-dim); font-size:11px; display:block; }
+
+.alert-cell { text-align:center; }
+.alert-badge { display:inline-block; font-family:var(--f-mono); font-size:11px; font-weight:600; padding:2px 8px; border-radius:10px; }
+.alert-badge.clear { background:var(--green-bg); color:var(--green); }
+.alert-badge.active { background:var(--red-bg); color:var(--red); }
+
+.expand-cell { color:var(--fg-dim); font-size:12px; text-align:center; }
+
+/* ── Expanded row ── */
+.expanded-detail { display:none; padding:20px 24px; border-bottom:1px solid var(--border); background:var(--bg-alt); }
+.expanded-detail.open { display:block; }
+.detail-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-top:14px; }
+.detail-cell { background:var(--bg-card); border:1px solid var(--border); border-radius:7px; padding:12px 14px; }
+.detail-cell .dc-num { font-family:var(--f-mono); font-size:10px; color:var(--fg-dim); }
+.detail-cell .dc-name { font-size:13px; font-weight:600; color:var(--fg); margin:4px 0; }
+.detail-cell .dc-score { font-family:var(--f-mono); font-size:11px; }
+.detail-cell .dc-detail { font-size:11px; color:var(--fg-3); margin-top:2px; line-height:1.4; }
+.detail-cell.is-missing { background:var(--red-bg); border-color:rgba(196,78,62,0.12); }
+.detail-cell.is-warn { background:var(--yellow-bg); border-color:rgba(199,144,43,0.15); }
+.detail-meta { display:flex; gap:24px; font-size:12px; color:var(--fg-3); margin-bottom:4px; }
+.detail-meta a { color:var(--accent-2); text-decoration:none; }
+
+/* ── Empty ── */
+.empty-state { text-align:center; padding:80px 20px; }
+.empty-state .icon { font-size:48px; margin-bottom:16px; opacity:0.6; }
+.empty-state h3 { font-family:var(--f-display); font-size:20px; color:var(--fg-2); margin-bottom:6px; }
+.empty-state p { font-size:13px; color:var(--fg-3); max-width:420px; margin:0 auto; line-height:1.6; }
+
+@media(max-width:960px) { .sidebar{width:180px} .stat-row{grid-template-columns:repeat(2,1fr)} .table-header,.table-row{grid-template-columns:1fr 80px 100px} .table-header span:nth-child(4),.table-header span:nth-child(5),.table-row>div:nth-child(4),.table-row>div:nth-child(5){display:none} }
+@media(max-width:640px) { .shell{flex-direction:column} .sidebar{width:100%;padding:16px} .sidebar-nav{display:flex;gap:4px;padding:8px 0} .nav-item{padding:8px 12px;border-left:none;border-bottom:2px solid transparent} .nav-item.active{border-left:none;border-bottom-color:#fff} }
+</style>
+</head>
+<body>
+
+<div class="shell">
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <h1>Loop Console</h1>
+      <div class="ver">循环工程 v1.0</div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-item active"><span class="icon">&#9670;</span>联邦总览<span class="count" id="navCount">--</span></div>
+      <div class="nav-item"><span class="icon">&#9633;</span>基件状态</div>
+      <div class="nav-item"><span class="icon">&#9654;</span>审计历史</div>
+    </nav>
+    <div class="sidebar-footer">
+      数据源: notebook/health.json<br>
+      <a href="/">← 工具架</a>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="topbar">
+      <h2>联邦总览</h2>
+      <div class="topbar-actions">
+        <span class="updated" id="updateTime">--</span>
+        <button class="refresh-btn" onclick="refresh()">刷新</button>
+      </div>
+    </div>
+    <div class="content">
+      <div class="stat-row" id="stats"></div>
+      <div class="table-wrap" id="projectTable"></div>
+    </div>
+  </main>
+</div>
+
+<script>
+<!--LOOP_CONSOLE_DATA-->
+if (!window.__loopData) { window.__loopData = { projects: [], updated: null }; }
+
+function buildFromScan(p) {
+  if (p.health) return p.health;
+  return {
+    project:p.name, url:"", avatar_bg:"#6b7280", avatar_text:(p.name||"??").substring(0,2).toUpperCase(),
+    updated:null,
+    health:{
+      alarm:{status:"missing",score:0,detail:"未配置"},
+      workstation:{status:"missing",score:0,detail:"未配置"},
+      knowledge:{status:p.hasClaude?"ok":"missing",score:p.hasClaude?2:0,detail:p.hasClaude?"CLAUDE.md 存在":"无 CLAUDE.md"},
+      connectors:{status:"missing",score:0,detail:"未配置"},
+      inspector:{status:"missing",score:0,detail:"未配置"},
+      notebook:{status:"missing",score:0,detail:"无 health.json"},
+      escalation:{status:"missing",score:0,detail:"未配置"},
+      goals:{status:"missing",score:0,detail:"未配置"}
+    },
+    today:{jobs_total:0,jobs_completed:0,jobs_failed:0,last_run:"--",last_output:null},
+    escalation:{active_alerts:0,last_escalated:null},
+    audit_score:0, audit_date:"--"
+  };
+}
+
+var SAMPLE = [{
+  project:"evopearl-data", url:"data.evopearl.com", avatar_bg:"#3b82f6", avatar_text:"ED",
+  health:{alarm:{status:"ok",score:2,detail:"3/3 jobs · 链式触发"},workstation:{status:"ok",score:2,detail:"串行模式"},knowledge:{status:"ok",score:2,detail:"CLAUDE.md 160行"},connectors:{status:"ok",score:2,detail:"GitHub·飞书·Vercel"},inspector:{status:"missing",score:0,detail:"无独立验证"},notebook:{status:"ok",score:3,detail:"state+events"},escalation:{status:"missing",score:0,detail:"失败静默"},goals:{status:"warn",score:1,detail:"无机器验证条件"}},
+  today:{jobs_total:3,jobs_completed:3,jobs_failed:0,last_run:"08:35",last_output:"https://data.evopearl.com/data/deep-read/2026-06-15.json"},
+  escalation:{active_alerts:0,last_escalated:null},
+  audit_score:1.75, audit_date:"2026-06-15"
+},{
+  project:"loop-engine", url:"localhost:3099/loop", avatar_bg:"#a855f7", avatar_text:"LE",
+  health:{alarm:{status:"missing",score:0,detail:"无定时自检"},workstation:{status:"ok",score:2,detail:"串行模式"},knowledge:{status:"ok",score:2,detail:"CLAUDE.md 170行"},connectors:{status:"ok",score:2,detail:"agentboard API"},inspector:{status:"missing",score:0,detail:"无交叉验证"},notebook:{status:"ok",score:2,detail:"health.json已自评"},escalation:{status:"missing",score:0,detail:"无主动推送"},goals:{status:"warn",score:1,detail:"无机器验证条件"}},
+  today:{jobs_total:0,jobs_completed:0,jobs_failed:0,last_run:"--",last_output:null},
+  escalation:{active_alerts:0,last_escalated:null},
+  audit_score:1.38, audit_date:"2026-06-15"
+}];
+
+var COMP_NAMES = {alarm:'闹钟',workstation:'工位',knowledge:'知识管理',connectors:'电话线',inspector:'质检员',notebook:'记事本',escalation:'提报',goals:'目标定义'};
+var COMP_ORDER = ['alarm','workstation','knowledge','connectors','inspector','notebook','escalation','goals'];
+var SCORE_ICON = {0:'○',1:'◑',2:'◐',3:'●'};
+
+function avg(h){var ks=Object.keys(h),s=0;ks.forEach(function(k){s+=h[k].score});return s/ks.length;}
+function cntByStatus(h,st){return Object.keys(h).filter(function(k){return h[k].status===st}).length;}
+
+var DATA = [];
+
+function refresh() {
+  fetch('/api/loop/health')
+    .then(function(r){return r.json();})
+    .then(function(d){
+      DATA = (d.projects||[]).map(buildFromScan).filter(Boolean);
+      document.getElementById('updateTime').textContent = new Date(d.updated).toLocaleString('zh-CN',{hour12:false});
+      render();
+    }).catch(function(){ DATA = SAMPLE; render(); });
+}
+
+function render() {
+  var data = DATA.length>0 ? DATA : SAMPLE;
+  document.getElementById('navCount').textContent = data.length;
+  if (!document.getElementById('updateTime').textContent || document.getElementById('updateTime').textContent==='--') {
+    document.getElementById('updateTime').textContent = new Date().toLocaleString('zh-CN',{hour12:false});
+  }
+
+  var totalP=data.length, totalJ=0, doneJ=0, failJ=0, missC=0, warnC=0, alertA=0;
+  data.forEach(function(p){
+    totalJ+=p.today.jobs_total; doneJ+=p.today.jobs_completed; failJ+=p.today.jobs_failed;
+    COMP_ORDER.forEach(function(k){ if(p.health[k].status==='missing') missC++; if(p.health[k].status==='warn') warnC++; });
+    alertA+=p.escalation.active_alerts;
+  });
+
+  document.getElementById('stats').innerHTML =
+    '<div class="stat-card"><div class="s-label">联邦项目</div><div class="s-value">'+totalP+'</div><div class="s-sub">个 loop 项目运行中</div></div>'+
+    '<div class="stat-card"><div class="s-label">今日任务</div><div class="s-value" style="color:'+(failJ>0?'var(--red)':doneJ===totalJ&&totalJ>0?'var(--green)':'var(--fg))+'">'+doneJ+'/'+totalJ+'</div><div class="s-sub">完成 / 总计 · '+failJ+' 失败</div></div>'+
+    '<div class="stat-card"><div class="s-label">组件缺口</div><div class="s-value" style="color:'+(missC>0?'var(--red)':warnC>0?'var(--yellow)':'var(--green))+'">'+missC+'</div><div class="s-sub">个缺失 · '+warnC+' 个需改进</div></div>'+
+    '<div class="stat-card"><div class="s-label">提报待确认</div><div class="s-value" style="color:'+(alertA>0?'var(--red)':'var(--green))+'">'+alertA+'</div><div class="s-sub">'+(alertA>0?'条待处理':'无')+'</div></div>';
+
+  var html = '<div class="table-header"><span>项目</span><span>健康分</span><span>8 组件</span><span>今日运行</span><span>提报</span><span></span></div>';
+  if (data.length===0) {
+    document.getElementById('projectTable').innerHTML = '<div class="empty-state"><div class="icon">&#9670;</div><h3>暂无 loop 项目</h3><p>运行 <code>loop-audit</code> 审计项目后自动加入此控台。</p></div>';
+    return;
+  }
+  data.forEach(function(p,pi){
+    var a = avg(p.health);
+    var overall = a>=2.5?'good':a>=1.5?'warn':'bad';
+
+    html += '<div class="table-row" onclick="toggleExpand('+pi+')">';
+    html += '<div class="proj-cell"><div class="proj-avatar" style="background:'+p.avatar_bg+'">'+p.avatar_text+'</div><div class="proj-info"><div class="proj-name">'+p.project+'</div><div class="proj-url">'+p.url+'</div></div></div>';
+
+    html += '<div class="health-cell"><div class="health-ring '+overall+'">'+(a*10).toFixed(0)+'</div></div>';
+
+    html += '<div class="comp-dots">';
+    COMP_ORDER.forEach(function(k){
+      var st = p.health[k].status;
+      html += '<span class="comp-dot '+(st==='ok'?'ok':st==='warn'?'warn':'missing')+'" title="'+COMP_NAMES[k]+': '+st+'"></span>';
+    });
+    html += '</div>';
+
+    html += '<div class="run-cell">';
+    html += '<span class="'+(p.today.jobs_failed>0?'failed':'completed')+'">'+p.today.jobs_completed+'/'+p.today.jobs_total+'</span>';
+    html += '<span class="time">'+p.today.last_run+'</span>';
+    html += '</div>';
+
+    html += '<div class="alert-cell">';
+    html += '<span class="alert-badge '+(p.escalation.active_alerts>0?'active':'clear')+'">'+(p.escalation.active_alerts>0?'!'+p.escalation.active_alerts:'-')+'</span>';
+    html += '</div>';
+
+    html += '<div class="expand-cell">&#9660;</div>';
+    html += '</div>';
+
+    // Expanded detail
+    html += '<div class="expanded-detail" id="detail-'+pi+'">';
+    html += '<div class="detail-meta">';
+    html += '<span>审计: '+p.audit_date+' · 均分 '+p.audit_score+'/3</span>';
+    if (p.today.last_output) html += '<a href="'+p.today.last_output+'" target="_blank">最新产出 →</a>';
+    html += '<span>提报: '+(p.escalation.last_escalated||'从未')+'</span>';
+    html += '</div>';
+    html += '<div class="detail-grid">';
+    COMP_ORDER.forEach(function(k,i){
+      var h = p.health[k];
+      var cls = h.status==='missing'?'is-missing':h.status==='warn'?'is-warn':'';
+      html += '<div class="detail-cell '+cls+'">';
+      html += '<div class="dc-num">#'+(i+1)+'</div><div class="dc-name">'+COMP_NAMES[k]+'</div>';
+      html += '<div class="dc-score" style="color:'+(h.score>=3?'var(--green)':h.score>=1?'var(--yellow)':'var(--red))+'">'+SCORE_ICON[h.score]+' '+(h.score===0?'缺失':h.score===1?'不足':h.score===2?'可用':'就绪')+'</div>';
+      html += '<div class="dc-detail">'+h.detail+'</div>';
+      html += '</div>';
+    });
+    html += '</div></div>';
+  });
+  document.getElementById('projectTable').innerHTML = html;
+}
+
+function toggleExpand(i) {
+  var el = document.getElementById('detail-'+i);
+  if (el) el.classList.toggle('open');
+}
+
+// Init
+if (window.__loopData && window.__loopData.projects && window.__loopData.projects.length>0) {
+  DATA = window.__loopData.projects.map(buildFromScan).filter(Boolean);
+}
+render();
+</script>
+</body>
+</html>

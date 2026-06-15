@@ -1,11 +1,13 @@
 {
   "name": "技能架构图",
   "id": "skill-diagrams",
-  "description": "技能 HTML 系统结构图自动汇集。扫描 ~/.claude/skills/**/references/*.html，Agent 生成后自动落盘。",
+  "description": "【用途】技能HTML结构图自动汇集。扫描~/.claude/skills/**/references/*.html，新图自动落盘。【何时用】查看所有skill的系统架构图。【何时不用】不需要看图→不访问。【返回】Web页面 :3099/diagrams",
   "icon": "📐",
   "version": "1.0.0",
   "category": "查阅",
   "order": 3,
   "url": "http://localhost:3099/diagrams",
-  "type": "service"
+  "type": "service",
+  "conflicts": [],
+  "agent_notes": "自动扫描不手动维护。Agent生成新架构图→放skill的references/目录→自动出现在这里。"
 }

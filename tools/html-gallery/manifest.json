@@ -1,7 +1,7 @@
 {
   "name": "版式画廊 HTML",
   "id": "html-gallery",
-  "description": "99个HTML幻灯片模板的可视化浏览器（7个来源）。本地起在 :3080，静态站部署在 gh-pages，自定义域名 gallery.evopearl.com",
+  "description": "【用途】99个HTML幻灯片模板的浏览器。7个来源汇集。【何时用】做PPT/网页演示需要挑模板时。【何时不用】不需要模板→不启动。已是HTML→不需要。【返回】Web UI :3080，公开站gallery.evopearl.com【端口】3080",
   "icon": "🎨",
   "version": "1.0.0",
   "category": "查阅",
@@ -13,5 +13,7 @@
   "repoUrl": "https://github.com/wampeeHuang/skill-html-showcase",
   "projectPath": "D:\\projects\\skill-html-showcase",
   "startCommand": "cd /d D:\\projects\\skill-html-showcase && npm start",
-  "stopCommand": "npx kill-port 3080"
+  "stopCommand": "npx kill-port 3080",
+  "conflicts": [],
+  "agent_notes": "模板来自7个skill来源，npm start启动。公开域名gallery.evopearl.com。每次新增模板后需刷新。"
 }

@@ -2,7 +2,7 @@
   "name": "OpenClaw 网关",
   "id": "openclaw",
   "owner": "外部",
-  "description": "Multi-model API gateway · openclaw models status 查模型 · openclaw gateway restart 重启",
+  "description": "【用途】多模型API网关，聚合管理所有模型provider。当前路由DeepSeek v4 Pro作为Claude Code的推理后端。【何时用】查模型列表/状态、重启网关、切换默认模型。【何时不用】直接调API→用aigoapi/agnes-ai的base_url。只是用模型→这个透明代理自动工作，无需手动干预。【返回】CLI输出【端口】18789",
   "icon": "🦞",
   "version": "1.0.0",
   "category": "推理",
@@ -10,5 +10,7 @@
   "port": 18789,
   "url": "http://localhost:18789",
   "startCommand": "openclaw gateway restart",
-  "stopCommand": "openclaw gateway stop 2>/dev/null; npx kill-port 18789"
+  "stopCommand": "openclaw gateway stop 2>/dev/null; npx kill-port 18789",
+  "conflicts": [],
+  "agent_notes": "这是Claude Code和DeepSeek之间的桥梁。openclaw models status查可用模型列表。重启后Claude Code可能短暂断连。"
 }

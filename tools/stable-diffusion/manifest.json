@@ -2,7 +2,7 @@
   "name": "Stable Diffusion WebUI",
   "id": "stable-diffusion",
   "owner": "外部",
-  "description": "Stable Diffusion WebUI (秋叶整合包 v4.10)。⚠ 启动吃4GB+显存，不能和ComfyUI同时跑",
+  "description": "【用途】SD WebUI(秋叶整合包v4.10)。比ComfyUI上手简单，适合快速文生图/图生图。【何时用】快速SD图像生成，不想搭ComfyUI工作流。【何时不用】ComfyUI在跑→不能同时开。简单需求→gpt-image-2更快无显存消耗。【返回】Web UI :7860【延迟】启动30s+，单图5-20s【显存】4GB+",
   "icon": "🖼",
   "version": "1.0.0",
   "category": "创作",
@@ -11,5 +11,11 @@
   "url": "http://localhost:7860",
   "projectPath": "D:\\0-Software\\AI\\sd-webui-aki\\sd-webui-aki-v4.10\\sd-webui-aki-v4.10",
   "startCommand": "cd /d D:\\0-Software\\AI\\sd-webui-aki\\sd-webui-aki-v4.10\\sd-webui-aki-v4.10 && python launch.py",
-  "stopCommand": "npx kill-port 7860"
+  "stopCommand": "npx kill-port 7860",
+  "conflicts": [
+    "comfyui",
+    "minicpm-v",
+    "ace-step"
+  ],
+  "agent_notes": "⚠️和ComfyUI是二选一。秋叶整合包中文界面，但对Agent来说和ComfyUI功能重叠——Agent默认选ComfyUI。"
 }

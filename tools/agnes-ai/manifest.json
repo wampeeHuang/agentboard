@@ -1,10 +1,12 @@
 {
   "name": "免费 API Agnes",
   "id": "agnes-ai",
-  "description": "全球Top 9 AI Lab · 全模态免费API · agnes-2.0-flash(文本) / agnes-image-2.0-flash(图片) / agnes-video-v2.0(视频) · 接口兼容OpenAI格式",
+  "description": "【用途】免费多模态API兜底。文本(agnes-2.0-flash)/图片(agnes-image-2.0-flash)/视频(agnes-video-v2.0)。OpenAI兼容格式。【何时用】aigoapi key耗尽/不可用时自动回退。免费是唯一优势。【何时不用】质量优先→aigoapi gpt-image-2(文件大80%+)。视频60s+不稳定→优先html-video方案。【返回】OpenAI兼容JSON【延迟】文本快，图片中等，视频10s-10min",
   "icon": "🆓",
   "version": "1.0.0",
   "category": "推理",
   "order": 18,
-  "url": "https://platform.agnes-ai.com"
+  "url": "https://platform.agnes-ai.com",
+  "conflicts": [],
+  "agent_notes": "视频异步轮询：POST提交→拿task_id→每10s轮询→下载。60s+不稳定，设15min超时。result_url可能是API端点而非直链，需判断URL类型后加Authorization header。图片质量低于gpt-image-2。"
 }

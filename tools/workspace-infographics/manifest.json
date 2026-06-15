@@ -1,7 +1,7 @@
 {
   "name": "图文管理 · 进化猫小绿书",
   "id": "workspace-infographics",
-  "description": "进化猫小绿书/图文内容生产目录。20+ 套认知图鉴和知识卡片项目。含 Musk、Feynman、Paul Graham、MrBeast、TIM 潘天鸿等人物认知图鉴，以及 RAG 入门、安全对齐、Caveman 等主题图文。",
+  "description": "【用途】进化猫小绿书/图文生产目录D:\\HHH\\自媒体\\进化猫-图文\\AI合集。20+套认知图鉴和知识卡片。【何时用】做小绿书图文时找历史模板和参考。【何时不用】写文字文章→workspace-articles。只是聊天→不需要。【类型】文件夹",
   "icon": "🖼",
   "version": "1.0.0",
   "category": "工作区",
@@ -9,5 +9,7 @@
   "order": 52,
   "projectPath": "D:\\HHH\\自媒体\\进化猫-图文\\AI合集",
   "startCommand": "start \"\" \"D:\\HHH\\自媒体\\进化猫-图文\\AI合集\"",
-  "stopCommand": "echo 文件夹无需停止"
+  "stopCommand": "echo 文件夹无需停止",
+  "conflicts": [],
+  "agent_notes": "小绿书=1080×1440 PNG卡片，走evolution-cat-infographic skill。和workspace-articles是互补——一个是文章一个是图文。"
 }

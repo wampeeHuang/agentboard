@@ -1,7 +1,7 @@
 {
   "name": "咕噜买",
   "id": "tmall-shopping",
-  "description": "咕噜一声，货就到家 — 语音驱动的家庭补给AI助手。不用打开App、不用比价选规格，嘟囔一句就完成。天猫超市已通，京东接入中。",
+  "description": "【用途】语音驱动天猫超市自动下单。\"咕噜一声，货就到家\"——语音→搜索→加购→下单全自动。【何时用】在天猫超市买日常补给。【何时不用】非天猫超市→走京东(接入中)。不是日常补给→手动买。【返回】Web UI :3460【端口】3460",
   "icon": "🐱",
   "version": "1.0.0",
   "category": "职能",
@@ -10,5 +10,7 @@
   "url": "http://localhost:3460",
   "projectPath": "D:\\Claude code_workspace\\2026-06-01-天猫超市自动化买菜",
   "startCommand": "cd /d \"D:\\Claude code_workspace\\2026-06-01-天猫超市自动化买菜\" && node server.js",
-  "stopCommand": "npx kill-port 3460"
+  "stopCommand": "npx kill-port 3460",
+  "conflicts": [],
+  "agent_notes": "天猫超市已通，京东接入中。语音输入→NLP→搜索比价→下单。node server.js启动。"
 }

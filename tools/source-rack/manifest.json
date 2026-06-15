@@ -1,7 +1,7 @@
 {
   "name": "信息源管理 · Source Rack",
   "id": "source-rack",
-  "description": "策展信息源管理面板。扫描 Obsidian wiki/entities/sources/*.md，档位/领域/类型三维过滤，Swiss 极简克制 UI",
+  "description": "【用途】信息源管理面板。扫描Obsidian wiki/entities/sources/*.md，三维过滤(档位/领域/类型)。【何时用】查/管理你的信息源列表，评估信息源质量。【何时不用】只是搜索→直接用WebSearch。【返回】Web UI :3098【端口】3098",
   "icon": "📡",
   "version": "1.0.0",
   "category": "获取",
@@ -10,5 +10,7 @@
   "url": "http://localhost:3098",
   "projectPath": "D:\\projects\\source-rack",
   "startCommand": "cd /d D:\\projects\\source-rack && node server.js",
-  "stopCommand": "npx kill-port 3098"
+  "stopCommand": "npx kill-port 3098",
+  "conflicts": [],
+  "agent_notes": "源文件在Obsidian wiki，Source Rack只读不写。Swiss极简UI。node server.js启动。"
 }

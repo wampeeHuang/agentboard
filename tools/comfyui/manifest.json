@@ -2,7 +2,7 @@
   "name": "ComfyUI",
   "id": "comfyui",
   "owner": "外部",
-  "description": "ComfyUI 节点式AI图像生成工作流。⚠ 启动吃4GB+显存，确认GPU空闲再开",
+  "description": "【用途】节点式AI图像生成工作流。支持Flux/ControlNet/IPAdapter等高级管线。【何时用】需要复杂图像管线（多ControlNet/区域重绘/自定义采样）。【何时不用】简单文生图→aigoapi gpt-image-2更快。图生图编辑→seededit-30。SD WebUI在跑→不能同时开。【返回】Web UI :8188，结果在output目录【延迟】启动30s+，单图5-30s【显存】4GB+",
   "icon": "🧩",
   "version": "1.0.0",
   "category": "创作",
@@ -11,5 +11,11 @@
   "url": "http://localhost:8188",
   "projectPath": "D:\\0-Software\\AI\\ComfyUI-master",
   "startCommand": "cd /d D:\\0-Software\\AI\\ComfyUI-master && python main.py --listen 0.0.0.0 --port 8188 --enable-cors-header",
-  "stopCommand": "npx kill-port 8188"
+  "stopCommand": "npx kill-port 8188",
+  "conflicts": [
+    "stable-diffusion",
+    "minicpm-v",
+    "ace-step"
+  ],
+  "agent_notes": "⚠️和SD WebUI互斥——两者都吃4GB+显存，同时开=显存溢出。Agent应默认选ComfyUI(更灵活)，SD作备选。"
 }

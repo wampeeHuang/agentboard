@@ -12,7 +12,10 @@
 ├── server.js                ← 主服务
 ├── index.html               ← Web Dashboard
 ├── api-page.js              ← API 文档页
+├── loop-dashboard.html      ← Loop 模式仪表盘
+├── loop-console.html        ← Loop 模式控制台
 ├── apps-registry.json       ← 公网应用注册表
+├── CLAUDE.md                ← Agentboard 宪法（工具调用协议）
 ├── design-spec.md           ← 设计规范
 ├── repo-spec.md             ← 本文件
 ├── GLOBAL.md                ← 全局宪法指针 → ~/.claude/CLAUDE.md
@@ -20,12 +23,13 @@
 ├── README.md                ← 项目说明
 ├── LICENSE                  ← MIT
 ├── logo.svg / logo.ico      ← 品牌资产
+├── screenshot.png           ← 截图
 ├── launch.bat / launch.vbs  ← 启动脚本
+├── package.json             ← 仅 express 一个依赖
 ├── tools/                   ← 工具注册表（多 Agent 共享）
 ├── tips/                    ← 操作日志（多 Agent 共享）
 ├── state/                   ← 运行时状态（crash 不丢）
 ├── cron/                    ← 定时任务配置
-├── package.json             ← 仅 express 一个依赖
 ├── node_modules/
 └── _runtime/                ← 临时文件（会话级，可丢弃）
 
@@ -48,13 +52,53 @@
 
 ## 二、落盘规则
 
-| 数据 | 落盘位置 | 理由 |
-|------|---------|------|
-| API 调用日志 | `~/.agentboard/state/call-log.jsonl` | crash 不丢 |
-| 健康检查历史 | `~/.agentboard/state/health-history.jsonl` | crash 不丢 |
-| Agentboard 配置 | `~/.agentboard/state/config.json` | 独立于 Claude settings.json |
-| 当前状态快照 | `~/.agentboard/state/status.md` | 不污染宪法文件 |
-| 临时文件 | `~/.agentboard/_runtime/` | 会话级，可丢弃 |
+### 全项目维度
+
+```
+C:\Users\Administrator\          ← 只放 dot-config 文件，禁止散落项目文件
+├── .claude/                     ← Claude Code 全局配置（宪法、skills、memory）
+├── .agentboard/                 ← 工具架全部领土
+├── .openclaw/                   ← OpenClaw Gateway 配置、cron jobs、日志
+├── .config/ / .cache/ / .local/ ← 各工具标准 XDG 目录
+└── _runtime/                    ← 跨项目临时文件和共享数据仓库（见下）
+```
+
+### 项目代码落盘规则
+
+| 项目类型 | 落盘位置 | 示例 |
+|---------|---------|------|
+| 长期开发项目 | `D:\Claude code_workspace\YYYY-MM-DD-项目名` | `D:\Claude code_workspace\2026-06-14-evopearl-admin` |
+| 临时实验 | `<项目>/_runtime/` | `D:\...\项目名\_runtime\experiment.py` |
+| 共享数据仓库 | `C:\Users\Administrator\_runtime\<repo-name>` | `_runtime\evopearl-data` |
+
+### 文件按类型落盘
+
+| 文件类型 | 落盘位置 | 生命周期 |
+|---------|---------|---------|
+| 项目源码 | `<项目目录>/src/` | 永久 |
+| 项目文档 | `<项目目录>/docs/` | 永久 |
+| 临时脚本 | `<项目目录>/_runtime/` | 任务结束删除 |
+| 截图/预览 | `<项目目录>/_runtime/screenshots/` | 任务结束删除 |
+| 数据转储 JSON | `<项目目录>/_runtime/data/` | 任务结束删除 |
+| 运维脚本（复用型） | `~/.agentboard/cron/` | 永久 |
+| 配置文件 | 工具自身的 config 目录 | 永久 |
+| 日志 | 工具自身的 logs 目录 | 按 retention 清理 |
+
+### 红线
+
+```
+禁止在以下位置放置项目文件：
+  ✗ C:\Users\Administrator\               （根目录，dot-config 除外）
+  ✗ C:\Users\Administrator\Desktop\        （桌面不是工作区）
+  ✗ C:\                                     （盘符根目录）
+  ✗ 任何临时文件夹没有子目录就直接平铺文件
+```
+
+### 临时文件生命周期
+
+1. `_runtime/` 内的文件是**会话级**的，Agent 任务结束后应自行删除
+2. 嵌套目录 OK（`_runtime/screenshots/`、`_runtime/data/`），平铺不行
+3. 如果文件需要在多次会话间复用 → 它不该在 `_runtime/`，应移到项目 docs/ 或 tools/ 配置目录
 
 ## 三、技术选型
 

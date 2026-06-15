@@ -1,7 +1,7 @@
 {
   "name": "文章管理 · 进化猫AI",
   "id": "workspace-articles",
-  "description": "进化猫公众号文章生产目录。40+ 篇已发布/待发布文章按日期+主题命名。涵盖 AI 工具测评、开源项目解读、技术趋势分析等内容线。",
+  "description": "【用途】进化猫公众号文章生产目录D:\\HHH\\自媒体\\进化猫\\AI。40+篇按YYYYMMDD_标题命名。【何时用】找历史文章、确认今天有没有建重目录。【何时不用】写新文章→按skill流程自动建目录。只是预览→Forma。【类型】文件夹",
   "icon": "📝",
   "version": "1.0.0",
   "category": "工作区",
@@ -9,5 +9,7 @@
   "order": 51,
   "projectPath": "D:\\HHH\\自媒体\\进化猫\\AI",
   "startCommand": "start \"\" \"D:\\HHH\\自媒体\\进化猫\\AI\"",
-  "stopCommand": "echo 文件夹无需停止"
+  "stopCommand": "echo 文件夹无需停止",
+  "conflicts": [],
+  "agent_notes": "文章按YYYYMMDD_主题命名。写新文章前扫这里查重——当天日期+同主题已有目录则复用。start只是explorer打开。"
 }

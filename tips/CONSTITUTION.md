@@ -106,6 +106,10 @@ source: 触发写入的事件/任务简述
 | `backup-strategy.md` | method | ⚠️ 基于旧版 .claude/ 布局，部分过时 |
 | `agentboard-architecture.md` | fact | ⚠️ 部分内容与 design-spec.md 重叠 |
 | `cron-run-ok-means-nothing.md` | diagnosis | ✅ |
+| `api-prefix-mismatch-silent-fail.md` | diagnosis | ✅ |
+| `phone-frame-safe-area-scrim.md` | diagnosis | ✅ |
+| `utf8-bom-breaks-http-headers.md` | diagnosis | ✅ |
+| `windows-dual-port-bind.md` | diagnosis | ✅ |
 
 ---
 

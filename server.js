@@ -4,6 +4,14 @@ const path = require('path');
 const { exec, execSync, spawn } = require('child_process');
 const os = require('os');
 var cronScheduler = require('./cron/scheduler');
+var cronExpr = require('./cron/cron-expr');
+var cronDash = require('./cron/dashboard');
+var cronRunner = require('./cron/runner');
+var cronDb = null;
+function getCronDb() {
+  if (!cronDb) cronDb = require('./cron/db').init(path.join(AGENTBOARD_HOME, 'cron', 'tasks.db'));
+  return cronDb;
+}
 
 const PROJECT_DIR = __dirname;
 const AGENTBOARD_HOME = process.env.AGENTBOARD_HOME || path.join(os.homedir(), '.agentboard');
@@ -331,7 +339,7 @@ function scanTools() {
       if (seen[name]) return;
       var mfPath = path.join(dir, name, 'manifest.json');
       var mf;
-      try { mf = JSON.parse(read(mfPath)); } catch(_) { return; }
+      try { mf = JSON.parse(read(mfPath)); } catch(e) { console.error('[scanTools] 跳过无效 manifest:', mfPath, e.message); return; }
       if (!mf || !mf.name) return;
       seen[name] = true;
       if (mf.projectPath) {
@@ -770,38 +778,7 @@ function startServer() {
     }
   }
 
-  // Cron overview — OpenClaw jobs
-  app.get('/cron', function(req, res) {
-    res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
-    var today = new Date().toISOString().slice(0, 10);
-    var jobs = cronScheduler.loadAllJobs();
-    cronScheduler.loadState();
-    var st = cronScheduler.getState();
-    var maxRetries = cronScheduler.MAX_RETRIES;
-
-    var cards = jobs.map(function(job) {
-      var ts = st.tasks[job.id] || {};
-      var scheduleText = job.schedule ? job.schedule.expr + ' ' + (job.schedule.tz || '') : '未知';
-      var enabledLabel = cronScheduler.isEnabled(job.id) ? '<span style="color:#27ae60">启用</span>' : '<span style="color:var(--text-muted)">禁用</span>';
-      var retryInfo = ts.retriesThisWindow > 0 ? ' · 重试' + ts.retriesThisWindow + '/' + maxRetries : '';
-      return '<div style="border:1px solid var(--border);padding:14px 18px;margin-bottom:10px">' +
-        '<div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">' +
-          '<span style="font-size:18px">&#x1F4E2;</span>' +
-          '<a href="/cron/' + encodeURIComponent(job.id) + '" style="font-size:15px;font-weight:500;color:var(--ink);text-decoration:none">' + esc(job.name) + '</a>' +
-          '<span style="font-size:10px;color:var(--text-muted);margin-left:auto">' + esc(scheduleText) + '</span>' +
-        '</div>' +
-        '<div style="font-size:11px;color:var(--text-muted)">' + enabledLabel + ' · 上次: ' + agoLabel(ts.lastRun) + ' · ' + cronStatusBadge(ts) + retryInfo + '</div>' +
-      '</div>';
-    }).join('');
-
-    var body = '<h2 style="font-weight:300;margin-bottom:6px">定时任务 · OpenClaw</h2>' +
-      '<p style="font-size:12px;color:var(--text-muted);margin-bottom:16px">' + today + ' · 调度器: agentboard cron/scheduler.js · 每分钟检查 · 402/401=当天停止(次日自动重置), 其他=最多' + maxRetries + '次重试</p>' +
-      cards +
-      '<p style="font-size:11px;color:var(--text-muted);margin-top:16px">只有 enabled=true 的任务会被自动触发。禁用任务由链式触发驱动（前一个任务完成后执行 openclaw cron run）。</p>';
-    res.send(pageShell('定时任务', 'Cron 调度器', body, 'cron', jobs.length));
-  });
-
-  // Cron job detail
+  // Cron job detail (openclaw-based legacy jobs)
   app.get('/cron/:id', function(req, res) {
     res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
     var jobs = cronScheduler.loadAllJobs();
@@ -813,33 +790,76 @@ function startServer() {
     var ts = st.tasks[job.id] || {};
     var maxRetries = cronScheduler.MAX_RETRIES;
 
+    // Status card
+    var statusLabel = '', statusCls = '';
+    if (ts.lastStatus === 'ok') { statusLabel = '成功'; statusCls = '#27ae60'; }
+    else if (ts.lastStatus === 'error' || ts.lastStatus === 'fail') { statusLabel = '失败'; statusCls = '#e67e22'; }
+    else if (ts.lastStatus === 'fatal_error') { statusLabel = '今日停止'; statusCls = '#c0392b'; }
+    else { statusLabel = 'idle'; statusCls = 'var(--text-muted)'; }
+
+    var enabled = cronScheduler.isEnabled(job.id);
+    var scheduleStr = job.schedule ? job.schedule.expr + ' ' + (job.schedule.tz || '') : '';
+    var lastRunStr = ts.lastRun ? ts.lastRun + ' (' + agoLabel(ts.lastRun) + ')' : '从未';
+    var errorStr = ts.lastError || '';
+    var retryInfo = ts.retriesThisWindow > 0 ? '重试' + ts.retriesThisWindow + '/' + maxRetries : '';
+
+    var errorBanner = '';
+    if (errorStr) {
+      errorBanner = '<div style="background:#fef3f2;border:1px solid #fecdc9;padding:10px 16px;margin-bottom:24px;font-size:12px;color:#c0392b;word-break:break-all">' + esc(errorStr.slice(0, 300)) + '</div>';
+    }
+
+    var summaryCard = '<div style="border:1px solid var(--border);padding:20px 24px;margin-bottom:16px;display:flex;flex-wrap:wrap;gap:16px;align-items:center">' +
+      '<div style="font-size:32px">&#x1F4E2;</div>' +
+      '<div style="flex:1;min-width:200px">' +
+        '<h2 style="font-weight:400;margin:0 0 4px;font-size:20px">' + esc(job.name) + '</h2>' +
+        '<div style="font-size:12px;color:var(--text-muted)">' + esc(scheduleStr) + ' · ' + (enabled ? '<span style="color:#27ae60">启用</span>' : '<span style="color:var(--text-muted)">禁用</span>') + ' · 超时' + ((job.payload && job.payload.timeoutSeconds) || '?') + 's</div>' +
+      '</div>' +
+      '<div style="text-align:right">' +
+        '<div style="font-size:22px;font-weight:500;color:' + statusCls + '">' + statusLabel + '</div>' +
+        '<div style="font-size:11px;color:var(--text-muted)">' + esc(lastRunStr) + (retryInfo ? ' · ' + retryInfo : '') + '</div>' +
+      '</div>' +
+    '</div>';
+
+    // Settings
     var settingsRows = '';
-    settingsRows += '<tr><td>ID</td><td><code>' + esc(job.id) + '</code></td></tr>';
-    settingsRows += '<tr><td>状态</td><td>' + (cronScheduler.isEnabled(job.id) ? '启用（自动调度）' : '禁用（链式触发）') + '</td></tr>';
+    settingsRows += '<tr><td>ID</td><td><code style="font-size:11px">' + esc(job.id) + '</code></td></tr>';
+    settingsRows += '<tr><td>引擎</td><td>' + (job.schedule ? 'OpenClaw Gateway' : 'cron-runner.js') + '</td></tr>';
+    settingsRows += '<tr><td>启用</td><td>' + (enabled ? '是（自动调度）' : '否（链式触发）') + '</td></tr>';
     if (job.schedule) {
       settingsRows += '<tr><td>Cron</td><td><code>' + esc(job.schedule.expr) + '</code> ' + esc(job.schedule.tz || '') + '</td></tr>';
     }
-    settingsRows += '<tr><td>超时</td><td>' + ((job.payload && job.payload.timeoutSeconds) || '?') + ' 秒</td></tr>';
     if (job.payload && job.payload.model) {
       settingsRows += '<tr><td>模型</td><td>' + esc(job.payload.model) + '</td></tr>';
     }
-    settingsRows += '<tr><td>上次执行</td><td>' + (ts.lastRun ? esc(ts.lastRun) + ' (' + agoLabel(ts.lastRun) + ')' : '从未') + '</td></tr>';
+    settingsRows += '<tr><td>超时</td><td>' + ((job.payload && job.payload.timeoutSeconds) || '?') + ' 秒</td></tr>';
+    settingsRows += '<tr><td>上次执行</td><td>' + esc(lastRunStr) + '</td></tr>';
     settingsRows += '<tr><td>上次状态</td><td>' + cronStatusBadge(ts) + '</td></tr>';
-    settingsRows += '<tr><td>连续错误</td><td>' + (ts.consecutiveErrors || 0) + '</td></tr>';
+    settingsRows += '<tr><td>连续错误</td><td>' + (ts.consecutiveErrors || 0) + ' 次</td></tr>';
     settingsRows += '<tr><td>窗口内重试</td><td>' + (ts.retriesThisWindow || 0) + ' / ' + maxRetries + '</td></tr>';
+    if (ts.lastDurationMs) {
+      var durStr = ts.lastDurationMs < 60000 ? (ts.lastDurationMs / 1000).toFixed(1) + 's' : Math.floor(ts.lastDurationMs / 60000) + 'm ' + Math.floor((ts.lastDurationMs % 60000) / 1000) + 's';
+      settingsRows += '<tr><td>上次耗时</td><td>' + durStr + '</td></tr>';
+    }
     if (ts.retriesThisWindow >= maxRetries) {
       settingsRows += '<tr><td>操作</td><td><a href="/api/cron/reset/' + encodeURIComponent(job.id) + '" style="color:#c0392b;font-weight:500">重置今日重试计数</a> · 明天也会自动重置</td></tr>';
     }
 
-    var promptText = (job.payload && job.payload.message) ? job.payload.message : '（无 prompt）';
-    var settingsHtml = '<h3 style="font-size:14px;font-weight:500;margin:20px 0 8px">任务设置</h3>' +
-      '<table style="font-size:12px;border-collapse:collapse;margin-bottom:20px"><colgroup><col style="width:120px"><col></colgroup>' +
+    var settingsHtml = '<h3 style="font-size:14px;font-weight:500;margin:20px 0 8px">设置</h3>' +
+      '<table style="font-size:12px;border-collapse:collapse;margin-bottom:20px"><colgroup><col style="width:100px"><col></colgroup>' +
         settingsRows +
-      '</table>' +
-      '<h3 style="font-size:14px;font-weight:500;margin-bottom:8px">Workflow Prompt（' + promptText.length + ' chars）</h3>' +
-      '<pre style="background:#f5f5f5;padding:16px;font-size:11px;font-family:monospace;line-height:1.6;overflow-x:auto;max-height:500px;overflow-y:auto;white-space:pre-wrap">' + esc(promptText) + '</pre>';
+      '</table>';
 
-    // Fetch run history from gateway (single source of truth)
+    // Collapsible prompt
+    var promptText = (job.payload && job.payload.message) ? job.payload.message : '';
+    var promptHtml = '';
+    if (promptText) {
+      promptHtml = '<details style="margin-bottom:20px">' +
+        '<summary style="cursor:pointer;font-size:14px;font-weight:500;padding:8px 0;user-select:none">Workflow Prompt（' + promptText.length + ' 字符）</summary>' +
+        '<pre style="background:#f5f5f5;padding:16px;font-size:11px;font-family:monospace;line-height:1.6;overflow-x:auto;max-height:450px;overflow-y:auto;white-space:pre-wrap;margin-top:8px">' + esc(promptText) + '</pre>' +
+      '</details>';
+    }
+
+    // Run history (server-side fetch)
     exec('openclaw cron runs --id ' + job.id + ' --limit 30', { timeout: 15000, shell: 'powershell' }, function(runErr, runStdout) {
       var runsHtml = '';
       if (!runErr && runStdout) {
@@ -847,7 +867,7 @@ function startServer() {
           var data = JSON.parse(runStdout);
           var entries = data.entries || [];
           if (entries.length > 0) {
-            runsHtml = '<h3 style="font-size:14px;font-weight:500;margin:20px 0 8px">执行历史（Gateway · 最近' + entries.length + '条）</h3>' +
+            runsHtml = '<h3 style="font-size:14px;font-weight:500;margin:20px 0 8px">执行历史（最近' + entries.length + '条）</h3>' +
               '<table style="font-size:12px;border-collapse:collapse;margin-bottom:20px"><tr><th>时间</th><th>状态</th><th>耗时</th><th>Tokens</th><th>摘要</th></tr>' +
               entries.map(function(r) {
                 var sc = r.status === 'ok' ? 'color:#27ae60' : 'color:#e67e22';
@@ -858,19 +878,24 @@ function startServer() {
                 return '<tr><td style="font-size:11px">' + esc(timeStr) + '</td><td style="' + sc + '">' + esc(r.status) + '</td><td>' + esc(durStr) + '</td><td>' + esc(String(tokStr)) + '</td><td style="font-size:11px;max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + (r.summary ? esc(r.summary.slice(0, 80)) : '') + errStr + '</td></tr>';
               }).join('') +
               '</table>';
+          } else {
+            runsHtml = '<h3 style="font-size:14px;font-weight:500;margin:20px 0 8px">执行历史</h3><p style="font-size:12px;color:var(--text-muted)">无执行记录</p>';
           }
-        } catch(_) { runsHtml = '<p style="color:var(--text-muted);font-size:12px">无法解析 Gateway 返回数据</p>'; }
+        } catch(_) { runsHtml = '<h3 style="font-size:14px;font-weight:500;margin:20px 0 8px">执行历史</h3><p style="font-size:12px;color:var(--text-muted)">无法解析 Gateway 数据</p>'; }
       } else {
-        runsHtml = '<p style="color:var(--text-muted);font-size:12px">Gateway 查询失败或无记录</p>';
+        runsHtml = '<h3 style="font-size:14px;font-weight:500;margin:20px 0 8px">执行历史</h3><p style="font-size:12px;color:var(--text-muted)">Gateway 查询失败或无记录</p>';
       }
 
-      var body = '<p style="font-size:12px;color:var(--text-muted);margin-bottom:4px"><a href="/cron">← 返回总览</a></p>' +
-        '<h2 style="font-weight:300;margin-bottom:4px">' + esc(job.name) + '</h2>' +
+      var body = '<p style="font-size:12px;color:var(--text-muted);margin-bottom:12px"><a href="/cron">← 返回总览</a></p>' +
+        summaryCard +
+        errorBanner +
         settingsHtml +
+        promptHtml +
         runsHtml;
       res.send(pageShell(job.name, '定时任务详情', body, 'cron', null));
     });
   });
+
 
   // API: get scheduler state
   app.get('/api/cron/state', function(req, res) {
@@ -891,6 +916,83 @@ function startServer() {
     st.tasks[req.params.id] = ts;
     cronScheduler.saveState();
     res.redirect('/cron/' + encodeURIComponent(req.params.id));
+  });
+
+  // === REST API for SQLite-backed cron tasks ===
+
+  // List all tasks
+  app.get('/api/cron/tasks', function(req, res) {
+    var db = getCronDb();
+    res.json(db.getTasks());
+  });
+
+  // Create task
+  app.post('/api/cron/tasks', express.json(), function(req, res) {
+    var body = req.body;
+    if (!body || !body.project_id || !body.project_dir || !body.name || !body.cron_expr || !body.prompt) {
+      return res.status(400).json({ error: 'Missing required fields: project_id, project_dir, name, cron_expr, prompt' });
+    }
+    if (!cronExpr.isValid(body.cron_expr)) {
+      return res.status(400).json({ error: 'Invalid cron expression: ' + body.cron_expr });
+    }
+    var db = getCronDb();
+    var id = db.createTask(body);
+    res.status(201).json({ id: id, project_id: body.project_id, project_dir: body.project_dir, name: body.name, cron_expr: body.cron_expr, prompt: body.prompt, timeout_sec: body.timeout_sec || 300, enabled: body.enabled !== 0 ? 1 : 0 });
+  });
+
+  // Get single task
+  app.get('/api/cron/tasks/:id', function(req, res) {
+    var db = getCronDb();
+    var task = db.getTask(+req.params.id);
+    if (!task) return res.status(404).json({ error: 'Not found' });
+    res.json(task);
+  });
+
+  // Update task
+  app.put('/api/cron/tasks/:id', express.json(), function(req, res) {
+    var body = req.body;
+    if (!body) return res.status(400).json({ error: 'Invalid body' });
+    if (body.cron_expr && !cronExpr.isValid(body.cron_expr)) {
+      return res.status(400).json({ error: 'Invalid cron expression: ' + body.cron_expr });
+    }
+    var db = getCronDb();
+    var ok = db.updateTask(+req.params.id, body);
+    if (!ok) return res.status(404).json({ error: 'Not found' });
+    res.json(db.getTask(+req.params.id));
+  });
+
+  // Delete task
+  app.delete('/api/cron/tasks/:id', function(req, res) {
+    var db = getCronDb();
+    var ok = db.deleteTask(+req.params.id);
+    if (!ok) return res.status(404).json({ error: 'Not found' });
+    res.json({ deleted: true });
+  });
+
+  // Trigger task run now
+  app.post('/api/cron/tasks/:id/run', function(req, res) {
+    var db = getCronDb();
+    var task = db.getTask(+req.params.id);
+    if (!task) return res.status(404).json({ error: 'Not found' });
+    cronRunner.runTask(task, db).then(function(result) {
+      res.json({ run_id: result.runId, status: result.status });
+    });
+  });
+
+  // Run history
+  app.get('/api/cron/history', function(req, res) {
+    var db = getCronDb();
+    var limit = parseInt(req.query.limit, 10) || 50;
+    var offset = parseInt(req.query.offset, 10) || 0;
+    var taskId = req.query.task_id ? +req.query.task_id : undefined;
+    res.json(db.getHistory({ limit: limit, offset: offset, task_id: taskId }));
+  });
+
+  // CRON dashboard — card-based UI
+  app.get('/cron', function(req, res) {
+    res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.type('html');
+    res.send(cronDash.render());
   });
 
   // Workspace sub-page — scan project directories
@@ -1463,11 +1565,47 @@ function startServer() {
     });
   }
 
-  // --- request logging (in-memory + file) ---
-  var LOG_FILE = path.join(AGENTBOARD_HOME, 'state', 'api-calls.jsonl');
+  // --- request logging (in-memory + file, date-partitioned) ---
+  var LOGS_DIR = path.join(AGENTBOARD_HOME, 'state', 'api-calls');
   var apiLog = []; // [{ts, method, path, ua, caller, action, target}]
-  var apiCounts = {}; // { '/api/tools': {count, first, last}, ... } — kept for backward compat
-  try { fs.mkdirSync(path.dirname(LOG_FILE), {recursive:true}); } catch(_) {}
+  var apiCounts = {}; // { '/api/tools': {count, first, last}, ... }
+  try { fs.mkdirSync(LOGS_DIR, {recursive:true}); } catch(_) {}
+
+  function todayLogPath() {
+    var d = new Date();
+    var yyyy = d.getFullYear();
+    var mm = String(d.getMonth() + 1).padStart(2, '0');
+    var dd = String(d.getDate()).padStart(2, '0');
+    var dir = path.join(LOGS_DIR, yyyy + '-' + mm);
+    try { fs.mkdirSync(dir, {recursive:true}); } catch(_) {}
+    return path.join(dir, dd + '.jsonl');
+  }
+
+  // migrate legacy flat file
+  var OLD_LOG = path.join(AGENTBOARD_HOME, 'state', 'api-calls.jsonl');
+  if (fs.existsSync(OLD_LOG)) {
+    try {
+      var oldContent = read(OLD_LOG);
+      if (oldContent && oldContent.trim()) {
+        var oldLines = oldContent.trim().split('\n');
+        for (var oi = 0; oi < oldLines.length; oi++) {
+          try {
+            var oe = JSON.parse(oldLines[oi]);
+            if (oe && oe.ts) {
+              var d = new Date(oe.ts);
+              var yyyy = d.getFullYear();
+              var mm = String(d.getMonth() + 1).padStart(2, '0');
+              var dd = String(d.getDate()).padStart(2, '0');
+              var mdir = path.join(LOGS_DIR, yyyy + '-' + mm);
+              try { fs.mkdirSync(mdir, {recursive:true}); } catch(_) {}
+              fs.appendFileSync(path.join(mdir, dd + '.jsonl'), JSON.stringify(oe) + '\n', 'utf8');
+            }
+          } catch(_) {}
+        }
+      }
+      fs.unlinkSync(OLD_LOG);
+    } catch(_) {}
+  }
 
   // classify: who called
   function classifyCaller(ua) {
@@ -1486,7 +1624,7 @@ function startServer() {
     if (path === '/api/tools/reorder' && method === 'POST') return 'control';
     if (path === '/api/stats' && method === 'GET') return 'admin';
     if (path === '/api/tips' || path.startsWith('/api/tips/')) return 'admin';
-    return 'admin'; // fallback
+    return 'admin';
   }
 
   // extract tool id from path: /api/tools/start/forma → forma
@@ -1498,23 +1636,28 @@ function startServer() {
     return null;
   }
 
-  // load existing log
+  // load all date-partitioned logs
   try {
-    var existing = read(LOG_FILE);
-    if (existing) {
-      var lines = existing.trim().split('\n');
-      for (var li = 0; li < lines.length; li++) {
-        try { var entry = JSON.parse(lines[li]); if (entry) apiLog.push(entry); } catch(_) {}
-      }
-    }
+    var months = listDirs(LOGS_DIR);
+    months.forEach(function(mo) {
+      var mdir = path.join(LOGS_DIR, mo);
+      var days = fs.readdirSync(mdir).filter(function(f) { return f.endsWith('.jsonl'); });
+      days.forEach(function(day) {
+        var content = read(path.join(mdir, day));
+        if (!content) return;
+        var lines = content.trim().split('\n');
+        for (var li = 0; li < lines.length; li++) {
+          try { var entry = JSON.parse(lines[li]); if (entry) apiLog.push(entry); } catch(_) {}
+        }
+      });
+    });
   } catch(_) {}
 
-  // rebuild counts from log (backward compat key)
+  // rebuild counts from log
   for (var ai = 0; ai < apiLog.length; ai++) {
     var e = apiLog[ai]; var k = (e.method||'GET') + ' ' + (e.path||'/');
     if (!apiCounts[k]) apiCounts[k] = { count: 0, first: e.ts, last: e.ts };
     apiCounts[k].count++; apiCounts[k].last = e.ts;
-    // backfill classification for old entries
     if (!e.caller) e.caller = classifyCaller(e.ua||'');
     if (!e.action) e.action = classifyAction(e.method||'GET', e.path||'/');
     if (!e.target) e.target = classifyTarget(e.path||'/');
@@ -1533,7 +1676,7 @@ function startServer() {
     var k = method + ' ' + p;
     if (!apiCounts[k]) apiCounts[k] = { count: 0, first: entry.ts, last: entry.ts };
     apiCounts[k].count++; apiCounts[k].last = entry.ts;
-    try { fs.appendFileSync(LOG_FILE, JSON.stringify(entry) + '\n', 'utf8'); } catch(_) {}
+    try { fs.appendFileSync(todayLogPath(), JSON.stringify(entry) + '\n', 'utf8'); } catch(_) {}
   }
   app.use(function(req, res, next) {
     if (req.path.startsWith('/api/')) logApiCall(req.method, req.path, req.get('user-agent')||'');
@@ -1773,7 +1916,7 @@ function startServer() {
   });
 
   function pageShell(title, heading, body, active, lines) {
-    return '<!DOCTYPE html>\n<html lang=\"zh-CN\">\n<head>\n<meta charset=\"UTF-8\">\n<meta name=\"viewport\" content=\"width=device-width,initial-scale=1.0\">\n<title>' + esc(title) + ' · Agentboard</title>\n<link rel=\"icon\" href=\"data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 32 32\'%3E%3Crect width=\'32\' height=\'32\' rx=\'4\' fill=\'%23002FA7\'/%3E%3Ctext x=\'16\' y=\'22\' text-anchor=\'middle\' font-family=\'Inter,sans-serif\' font-size=\'16\' font-weight=\'600\' fill=\'white\'%3E法%3C/text%3E%3C/svg%3E">\n<link href=\"https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600&family=Noto+Sans+SC:wght@200;300;400;500;700&family=JetBrains+Mono:wght@400;500&display=swap\" rel=\"stylesheet\">\n<style>\n:root{--ink:#002FA7;--ink-rgb:0,47,167;--paper:#FAFAF8;--paper-tint:#F2F2F0;--border:#E0E0DC;--text:#0A0A0A;--text-secondary:#555;--text-muted:#999;--shadow-border:0 0 0 1px rgba(0,0,0,0.08);--shadow-card:0 1px 3px rgba(0,0,0,0.06);--shadow-card-hover:0 2px 8px rgba(0,0,0,0.1);font-family:\'Inter\',\'Noto Sans SC\',sans-serif;color:var(--text);background:var(--paper);font-weight:300;font-size:16px}*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}body{min-height:100vh}.header{background:var(--ink);padding:14px 32px;display:flex;align-items:center;gap:24px}.header-brand{font-family:\'JetBrains Mono\',monospace;font-size:12px;font-weight:500;letter-spacing:.06em;color:var(--paper);text-decoration:none;white-space:nowrap;opacity:.9}.header-back{font-family:\'JetBrains Mono\',monospace;font-size:11px;font-weight:400;color:var(--paper);text-decoration:none;opacity:.7;margin-left:auto;transition:opacity .15s}.header-back:hover{opacity:1}.page{max-width:1080px;margin:0 auto;padding:40px 32px 80px}.page h1{font-size:28px;font-weight:200;letter-spacing:-0.02em;color:var(--ink);margin-bottom:24px}.page h2{font-size:18px;font-weight:500;color:var(--text);margin:36px 0 12px;padding-top:16px;border-top:1px solid var(--border)}.page h3{font-size:15px;font-weight:500;color:var(--text);margin:24px 0 8px}.page p,.page li{font-size:14px;line-height:1.8;color:var(--text-secondary);margin:6px 0}.page ul,.page ol{padding-left:20px;margin:8px 0}.page strong{font-weight:500;color:var(--text)}.page code{font-family:\'JetBrains Mono\',monospace;font-size:12px;background:var(--paper-tint);padding:1px 5px}.page pre{background:#f5f5f5;padding:16px;overflow-x:auto;font-size:12px;line-height:1.6;margin:12px 0}.page pre code{background:none;padding:0}.page table{width:100%;border-collapse:collapse;margin:12px 0;font-size:13px}.page th,.page td{padding:8px 12px;border:1px solid var(--border);text-align:left;font-size:13px}.page th{background:var(--paper-tint);font-weight:500;font-size:12px}.page blockquote{border-left:3px solid var(--ink);margin:12px 0;padding:4px 16px;color:var(--text-secondary);font-size:13px}.page hr{border:none;border-top:1px solid var(--border);margin:24px 0}.page em{color:var(--text-secondary)}.line-count{font-size:11px;color:var(--text-muted);margin-bottom:20px;font-family:\'JetBrains Mono\',monospace}.back-link{display:inline-block;margin-top:40px;font-size:13px;color:var(--ink);text-decoration:none;border:1px solid var(--border);padding:6px 16px}.back-link:hover{border-color:var(--ink)}\n</style>\n</head>\n<body>\n<div class=\"header\"><a class=\"header-brand\" href=\"/\">AGENTBOARD</a><a class=\"header-back\" href=\"/\">&#8592; 返回工具架</a> <a class=\"header-back\" href=\"/diagrams\">架构图</a></div>\n<div class=\"page\"><div class=\"line-count\">' + (lines || '') + ' 行</div>\n' + body + '\n</div>\n</body>\n</html>';
+    return '<!DOCTYPE html>\n<html lang=\"zh-CN\">\n<head>\n<meta charset=\"UTF-8\">\n<meta name=\"viewport\" content=\"width=device-width,initial-scale=1.0\">\n<title>' + esc(title) + ' · Agentboard</title>\n<link rel=\"icon\" href=\"data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 32 32\'%3E%3Crect width=\'32\' height=\'32\' rx=\'4\' fill=\'%23002FA7\'/%3E%3Ctext x=\'16\' y=\'22\' text-anchor=\'middle\' font-family=\'Inter,sans-serif\' font-size=\'16\' font-weight=\'600\' fill=\'white\'%3E法%3C/text%3E%3C/svg%3E">\n<link href=\"https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600&family=Noto+Sans+SC:wght@200;300;400;500;700&family=JetBrains+Mono:wght@400;500&display=swap\" rel=\"stylesheet\">\n<style>\n:root{--ink:#002FA7;--ink-rgb:0,47,167;--paper:#FAFAF8;--paper-tint:#F2F2F0;--border:#E0E0DC;--text:#0A0A0A;--text-secondary:#555;--text-muted:#999;--shadow-border:0 0 0 1px rgba(0,0,0,0.08);--shadow-card:0 1px 3px rgba(0,0,0,0.06);--shadow-card-hover:0 2px 8px rgba(0,0,0,0.1);font-family:\'Inter\',\'Noto Sans SC\',sans-serif;color:var(--text);background:var(--paper);font-weight:300;font-size:16px}*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}body{min-height:100vh}.header{background:var(--ink);padding:14px 32px;display:flex;align-items:center;gap:24px}.header-brand{font-family:\'JetBrains Mono\',monospace;font-size:12px;font-weight:500;letter-spacing:.06em;color:var(--paper);text-decoration:none;white-space:nowrap;opacity:.9}.header-back{font-family:\'JetBrains Mono\',monospace;font-size:11px;font-weight:400;color:var(--paper);text-decoration:none;opacity:.7;margin-left:auto;transition:opacity .15s}.header-back:hover{opacity:1}.page{max-width:1080px;margin:0 auto;padding:40px 32px 80px}.page h1{font-size:28px;font-weight:200;letter-spacing:-0.02em;color:var(--ink);margin-bottom:24px}.page h2{font-size:18px;font-weight:500;color:var(--text);margin:36px 0 12px;padding-top:16px;border-top:1px solid var(--border)}.page h3{font-size:15px;font-weight:500;color:var(--text);margin:24px 0 8px}.page p,.page li{font-size:14px;line-height:1.8;color:var(--text-secondary);margin:6px 0}.page ul,.page ol{padding-left:20px;margin:8px 0}.page strong{font-weight:500;color:var(--text)}.page code{font-family:\'JetBrains Mono\',monospace;font-size:12px;background:var(--paper-tint);padding:1px 5px}.page pre{background:#f5f5f5;padding:16px;overflow-x:auto;font-size:12px;line-height:1.6;margin:12px 0}.page pre code{background:none;padding:0}.page table{width:100%;border-collapse:collapse;margin:12px 0;font-size:13px}.page th,.page td{padding:8px 12px;border:1px solid var(--border);text-align:left;font-size:13px}.page th{background:var(--paper-tint);font-weight:500;font-size:12px}.page blockquote{border-left:3px solid var(--ink);margin:12px 0;padding:4px 16px;color:var(--text-secondary);font-size:13px}.page hr{border:none;border-top:1px solid var(--border);margin:24px 0}.page em{color:var(--text-secondary)}.line-count{font-size:11px;color:var(--text-muted);margin-bottom:20px;font-family:\'JetBrains Mono\',monospace}.back-link{display:inline-block;margin-top:40px;font-size:13px;color:var(--ink);text-decoration:none;border:1px solid var(--border);padding:6px 16px}.back-link:hover{border-color:var(--ink)}\n</style>\n</head>\n<body>\n<div class=\"header\"><a class=\"header-brand\" href=\"/\">AGENTBOARD</a><a class=\"header-back\" href=\"/\">&#8592; 返回工具架</a></div>\n<div class=\"page\"><div class=\"line-count\">' + (lines || '') + ' 行</div>\n' + body + '\n</div>\n</body>\n</html>';
   }
 
   function renderMarkdown(md) {
@@ -1939,6 +2082,53 @@ function startServer() {
       assets: { tools: assetToolCount, skills: assetSkillCount, commands: assetCommandCount, tips: assetTipCount, designSpec: designSpecLines, repoSpec: repoSpecLines, global: globalLines, api: apiEndpoints, cron: cronTasks, startup: startupCount, minds: loadPerspectives().length }
     });
     html = html.replace('<!--STATS_SNAPSHOT-->', '<script>window.__stats=' + snap + '</script>');
+    res.type('html').send(html);
+  });
+
+  // ── Loop Monitor ──
+  var LOOP_PROJECT_ROOTS = (process.env.LOOP_PROJECT_ROOTS || [path.join(os.homedir(), '_runtime'), path.join('D:', 'Claude code_workspace')].join(';')).split(';').filter(Boolean);
+
+  function scanLoopProjects() {
+    var projects = [];
+    LOOP_PROJECT_ROOTS.forEach(function(root) {
+      if (!fs.existsSync(root)) return;
+      var dirs = fs.readdirSync(root, {withFileTypes:true}).filter(function(e){ return e.isDirectory() && !e.name.startsWith('.'); });
+      dirs.forEach(function(d) {
+        var auditPath = path.join(root, d.name, 'LOOP_AUDIT.md');
+        if (!fs.existsSync(auditPath)) return; // 未被 loop-audit 审计 → 不是 loop 项目
+        var hp = path.join(root, d.name, 'notebook', 'health.json');
+        var health = null;
+        try { health = JSON.parse(fs.readFileSync(hp, 'utf8')); } catch(_) {}
+        var claudePath = path.join(root, d.name, 'CLAUDE.md');
+        projects.push({
+          name: d.name,
+          path: path.join(root, d.name),
+          hasClaude: fs.existsSync(claudePath),
+          hasAudit: true,
+          health: health
+        });
+      });
+    });
+    return projects;
+  }
+
+  app.get('/api/loop/health', function(req, res) {
+    res.json({ projects: scanLoopProjects(), updated: new Date().toISOString() });
+  });
+
+  app.get('/loop', function(req, res) {
+    var html = read(path.join(PROJECT_DIR, 'loop-dashboard.html'));
+    if (!html) return res.status(500).send('loop-dashboard.html missing');
+    var dataSnap = JSON.stringify({ projects: scanLoopProjects(), updated: new Date().toISOString() });
+    html = html.replace('<!--LOOP_DATA_INJECT-->', '<script>window.__loopData=' + dataSnap + ';</script>');
+    res.type('html').send(html);
+  });
+
+  app.get('/console', function(req, res) {
+    var html = read(path.join(PROJECT_DIR, 'loop-console.html'));
+    if (!html) return res.status(500).send('loop-console.html missing');
+    var dataSnap = JSON.stringify({ projects: scanLoopProjects(), updated: new Date().toISOString() });
+    html = html.replace('<!--LOOP_CONSOLE_DATA-->', '<script>window.__loopData=' + dataSnap + ';</script>');
     res.type('html').send(html);
   });
 

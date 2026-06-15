@@ -9,13 +9,13 @@
   tools/*/manifest.json  ← 工具注册（唯一真相源）
   tips/*.md           ← 操作日志（唯一真相源）
   apps-registry.json  ← 公网应用注册表
-  cron/tasks.json     ← cron 任务运行时状态
+  cron/tasks.db       ← cron 任务运行时状态（SQLite）
 ```
 
 工具卡片来源：
 - **manifest.json** — `~/.agentboard/tools/*/manifest.json`，一个目录一个工具
 - **动态注入** — `/api/tools` 从 `~/.claude/cron-config.json` 读取并注入独立 cron 卡片（已废弃）
-- **cron-scheduler** — manifest 注册，`type: "group"`，children 列出 7 个子任务，展开可见
+- **cron-scheduler** — manifest 注册，`type: "group"`，7 个任务分 3 组：日报(3)+提醒(1)+巡检(3)。展开可见，日报状态来自 `/api/cron/state`
 
 ## 工具调用协议
 

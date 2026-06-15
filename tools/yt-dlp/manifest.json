@@ -1,0 +1,14 @@
+{
+  "name": "视频下载 yt-dlp",
+  "id": "yt-dlp",
+  "description": "【用途】yt-dlp 视频/音频下载工具。支持 YouTube、B站、Twitter/X 等数千站点。下载视频、提取音频、列出格式。【何时用】需要从视频平台下载视频/音频文件时。【何时不用】只是看视频→不需要下载。网页内容抓取→PullMD/WebFetch。【返回】本地文件路径【延迟】取决于视频大小和网络，通常1-5min",
+  "icon": "📥",
+  "version": "2026.03.17",
+  "category": "获取",
+  "order": 10,
+  "startCommand": "echo yt-dlp CLI 无需后台运行，直接调用 yt-dlp <url>",
+  "stopCommand": "echo yt-dlp 是单次CLI，无需停止",
+  "projectPath": "C:\\Users\\Administrator\\AppData\\Local\\Microsoft\\WinGet\\Links",
+  "conflicts": [],
+  "agent_notes": "单次CLI工具，无需后台服务。下载大文件时用 run_in_background。默认输出到当前工作目录。下载YouTube需要代理(VORTEX_PROXY 127.0.0.1:7897)。"
+}

@@ -1,14 +1,21 @@
 {
   "name": "音乐生成 ACE Step",
   "id": "ace-step",
-  "description": "AI音乐生成工具。⚠ 启动吃掉6GB+显存，确认内存够再开",
+  "description": "【用途】AI音乐生成(旋律+编曲)，本地推理无外部依赖。【何时用】需要原创背景音乐/视频配乐/音频素材。【何时不用】语音合成→cosyvoice3。歌词演唱→不支持。【返回】音频文件路径【延迟】30s-2min【显存】6GB+",
   "icon": "🎵",
   "version": "1.0.0",
   "category": "创作",
   "order": 7,
+  "owner": "外部",
   "port": 5173,
   "url": "http://localhost:5173",
   "projectPath": "D:\\HHH\\tools\\ace-step-ui",
   "startCommand": "node D:\\HHH\\tools\\ace-step-ui\\launcher.cjs",
-  "stopCommand": "npx kill-port 5173"
+  "stopCommand": "npx kill-port 5173",
+  "conflicts": [
+    "comfyui",
+    "stable-diffusion",
+    "minicpm-v"
+  ],
+  "agent_notes": "⚠️6GB+显存，几乎不能和任何GPU工具共存。启动前先确认没有ComfyUI/SD/MiniCPM在运行。node launcher.cjs启动。"
 }

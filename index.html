@@ -97,6 +97,12 @@ body{min-height:100vh;display:flex;flex-direction:column}
 .group-child .gc-trigger{font-family:'JetBrains Mono','SF Mono','Consolas',monospace;font-size:10px;color:var(--ink);background:var(--paper-tint);padding:1px 6px;min-width:100px;white-space:nowrap}
 .group-child .gc-name{font-weight:400;font-size:12px;white-space:nowrap}
 .group-child .gc-desc{color:var(--text-muted);font-size:11px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.gc-section{font-size:10px;font-weight:500;color:var(--text-muted);padding:6px 0 2px;letter-spacing:.04em;border-bottom:1px solid var(--paper-tint);margin-bottom:2px;font-family:'JetBrains Mono','SF Mono','Consolas',monospace}
+.gc-status{font-size:10px;font-weight:400;flex-shrink:0;padding:1px 6px;white-space:nowrap}
+.gc-status.success{color:#27ae60}
+.gc-status.error{color:#e67e22}
+.gc-status.fatal_error{color:#c0392b}
+.gc-status.idle,.gc-status.unknown{color:var(--text-muted)}
 .group-count{font-size:11px;color:var(--text-muted);font-family:'JetBrains Mono','SF Mono','Consolas',monospace}
 .badge-命令组{color:var(--ink);background:rgba(var(--ink-rgb),.08)}
 
@@ -350,6 +356,7 @@ var stopping = {}; // id → true when waiting for stop
 var opened = {};   // id → true when user clicked "打开" this session
 try { opened = JSON.parse(sessionStorage.getItem('opened')||'{}'); } catch(_) {}
 var expandedGroups = {};
+var cronState = null;
 var filter = 'all';
 var domainFilter = 'all';
 var formFilter = 'all';
@@ -542,6 +549,14 @@ async function fetchStats() {
   }
 }
 
+async function fetchCronState() {
+  try {
+    var res = await fetch('/api/cron/state');
+    var data = await res.json();
+    if (data.ok) { cronState = data; }
+  } catch(_) {}
+}
+
 async function fetchTools() {
   var btn = document.getElementById('refreshBtn');
   btn.classList.add('spin');
@@ -571,6 +586,7 @@ async function fetchTools() {
   }
   btn.classList.remove('spin');
   fetchStats();
+  fetchCronState();
 }
 
 function getFilterDesc() {
@@ -699,13 +715,18 @@ function render() {
     if (cmdType === 'group') {
       var children = t.children || [];
       var childHtml = children.map(function(c){
+        if (c.type === 'section') return '<div class="gc-section">' + c.name + '</div>';
+        var st = getCronChildStatus(c.name);
+        var statusHtml = st ? '<span class="gc-status ' + st.cls + '">' + st.label + '</span>' : '';
         return '<div class="group-child">' +
           '<span class="gc-icon">' + (c.icon||'') + '</span>' +
           '<span class="gc-trigger">/' + c.trigger + '</span>' +
           '<span class="gc-name">' + c.name + '</span>' +
           '<span class="gc-desc">' + (c.desc||'') + '</span>' +
+          statusHtml +
         '</div>';
       }).join('');
+      var taskCount = children.filter(function(c){ return c.type !== 'section'; }).length;
       var expanded = expandedGroups[t.id];
       return '<div class="tool-card group-card' + (expanded?' expanded':'') + '" data-id="' + t.id + '" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)">'
         + '<span class="card-dot off"></span>'
@@ -715,13 +736,14 @@ function render() {
           + '<div class="card-info">'
             + '<div class="card-name">' + t.name + '</div>'
             + '<div class="card-id">' + t.id + '</div>'
-            + '<div class="card-meta"><span class="group-count">' + children.length + ' 个命令</span></div>'
+            + '<div class="card-meta"><span class="group-count">' + taskCount + ' 个任务</span></div>'
             + (t.description ? '<div class="card-desc">' + t.description + '</div>' : '')
           + '</div>'
         + '</div>'
         + '<div class="card-children">' + childHtml + '</div>'
         + '<div class="card-actions">'
-          + '<button class="group-toggle" onclick="event.stopPropagation();toggleGroup(\'' + t.id + '\')">' + (expanded ? '收起 ▴' : '展开 ▾ (' + children.length + '个)') + '</button>'
+          + '<button class="group-toggle" onclick="event.stopPropagation();toggleGroup(\'' + t.id + '\')">' + (expanded ? '收起 ▴' : '展开 ▾ (' + taskCount + '个)') + '</button>'
+          + (t.url ? '<a href="' + t.url + '" class="btn" onclick="event.stopPropagation()" style="font-size:11px">查看详情</a>' : '')
           + '<span class="card-badges"><span class="form-badge badge-命令组">命令组</span></span>'
         + '</div>'
       + '</div>';
@@ -776,6 +798,20 @@ function render() {
 function toggleGroup(id) {
   expandedGroups[id] = !expandedGroups[id];
   render();
+}
+
+function getCronChildStatus(childName) {
+  if (!cronState || !cronState.jobs) return null;
+  var job = cronState.jobs.find(function(j) { return j.name.indexOf(childName) !== -1; });
+  if (!job) return null;
+  var ts = cronState.state && cronState.state.tasks ? cronState.state.tasks[job.id] : null;
+  if (!ts || !ts.lastStatus) return { cls: 'idle', label: 'idle' };
+  switch (ts.lastStatus) {
+    case 'success': return { cls: 'success', label: '成功' };
+    case 'error': return { cls: 'error', label: '失败(' + (ts.consecutiveErrors || 0) + '次)' };
+    case 'fatal_error': return { cls: 'fatal_error', label: '今日已停止' };
+    default: return { cls: 'unknown', label: ts.lastStatus };
+  }
 }
 
 function markOpened(id) {
@@ -955,7 +991,9 @@ document.addEventListener('DOMContentLoaded', function() {
   markOpened('dashboard');
   fetchTools();
   fetchStats();
+  fetchCronState();
   setInterval(fetchStats, 30000);
+  setInterval(fetchCronState, 60000);
 });
 </script>
 </body>

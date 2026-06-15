@@ -1,7 +1,7 @@
 {
   "name": "深圳保障房导航",
   "id": "shenzhen-housing",
-  "description": "深圳保租房/公租房一站式导航：资格自检+申请进度+政策日历+配租动态+避坑指南",
+  "description": "【用途】深圳保租房/公租房导航：资格自检+申请进度+政策日历+配租动态。【何时用】查深圳保障房政策、申请资格。【何时不用】非深圳→不适用。商品房→不适用。【返回】Web UI :3458【端口】3458",
   "icon": "🏠",
   "version": "1.0.0",
   "category": "职能",
@@ -10,5 +10,7 @@
   "url": "http://localhost:3458",
   "projectPath": "D:\\Claude code_workspace\\2026-05-29-深圳住房申请",
   "startCommand": "cd /d \"D:\\Claude code_workspace\\2026-05-29-深圳住房申请\" && node server.js",
-  "stopCommand": "npx kill-port 3458"
+  "stopCommand": "npx kill-port 3458",
+  "conflicts": [],
+  "agent_notes": "功能类应用，不依赖AI。政策变化时需要更新数据源。"
 }

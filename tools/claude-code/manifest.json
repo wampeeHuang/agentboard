@@ -2,12 +2,14 @@
   "name": "Claude Code",
   "id": "claude-code",
   "owner": "外部",
-  "description": "Anthropic Claude Code CLI · claude --dangerously-skip-permissions 启动 · 项目级 AI 编程助手",
+  "description": "【用途】主力AI编程Agent，当前会话的运行环境。claude --dangerously-skip-permissions启动。通过OpenClaw路由到DeepSeek v4 Pro。【何时用】一直在用——这就是你现在跑的。【何时不用】不需要手动启动，已在终端运行。【延迟】即时",
   "icon": "◈",
   "version": "1.0.0",
   "category": "推理",
   "order": 16,
   "url": "http://localhost:3099",
   "startCommand": "wt powershell -NoExit -Command \"claude --dangerously-skip-permissions\"",
-  "stopCommand": "echo Claude Code 在终端运行，关闭窗口即可"
+  "stopCommand": "echo Claude Code 在终端运行，关闭窗口即可",
+  "conflicts": [],
+  "agent_notes": "这是你自己。当前后端=DeepSeek v4 Pro(通过OpenClaw)。宪法在CLAUDE.md，工具架在localhost:3099。skills在~/.claude/skills/。"
 }

@@ -1,10 +1,12 @@
 {
   "name": "图片转文字 Tesseract OCR",
   "id": "tesseract-ocr",
-  "description": "开源OCR引擎 — 图像文字识别。支持中文简体+英文，Python pytesseract 调用",
+  "description": "【用途】Tesseract OCR引擎——图片文字识别。支持中文简体+英文，Python pytesseract调用。【何时用】需要OCR但不想启动MiniCPM-V（省2.5GB显存）。简单清晰文字的识别。【何时不用】复杂场景文字→MiniCPM-V更准。图片理解(不只是文字)→MiniCPM-V/GLM-4.6V。【返回】纯文本【延迟】<1s(轻量)",
   "icon": "🔍",
   "version": "5.4.0",
   "category": "获取",
   "order": 30,
-  "projectPath": "C:\\Program Files\\Tesseract-OCR"
+  "projectPath": "C:\\Program Files\\Tesseract-OCR",
+  "conflicts": [],
+  "agent_notes": "轻量OCR，不占显存。对于清晰文档扫描效果好，手写/模糊/复杂背景不如MiniCPM-V。C:\\Program Files\\Tesseract-OCR已安装。"
 }

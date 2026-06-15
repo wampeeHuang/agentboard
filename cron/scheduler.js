@@ -1,4 +1,4 @@
-// Agentboard Cron Scheduler
+﻿// Agentboard Cron Scheduler
 // Reads job definitions from ~/.openclaw/cron/jobs.json
 // Evaluates cron expressions, triggers via openclaw cron run
 // Gateway jobs are all enabled=false to prevent double-scheduling.
@@ -8,6 +8,7 @@ var fs = require('fs');
 var path = require('path');
 var { exec } = require('child_process');
 var os = require('os');
+var logger = require('./runtime-logger.js');
 
 var JOBS_PATH = path.join(os.homedir(), '.openclaw', 'cron', 'jobs.json');
 var STATE_PATH = path.join(__dirname, 'scheduler-state.json');
@@ -99,6 +100,7 @@ function triggerJob(job) {
   if (ts.retriesThisWindow >= MAX_RETRIES) return;
 
   console.log('[cron-scheduler] Triggering:', job.name);
+  logger.jobTriggered(job);
   var triggerTime = Date.now();
   var jobTimeoutMs = ((job.payload && job.payload.timeoutSeconds) || 300) * 1000;
   var pollInterval = 15000;
@@ -106,16 +108,12 @@ function triggerJob(job) {
   var pollCount = 0;
 
   // Step 1: trigger (CLI returns immediately with {enqueued: true})
-  exec('openclaw cron run ' + job.id, { timeout: 30000, shell: 'powershell' }, function(triggerErr) {
+  exec('openclaw cron run ' + job.id, { timeout: 30000, shell: 'powershell' }, function(triggerErr, stdout) {
     ts.lastRun = new Date().toISOString();
 
     if (triggerErr) {
-      ts.lastStatus = 'trigger_error';
-      ts.lastError = 'CLI trigger failed';
-      ts.retriesThisWindow = (ts.retriesThisWindow || 0) + 1;
-      state.tasks[job.id] = ts;
-      saveState();
-      return;
+      console.warn('[cron-scheduler] Trigger warning:', triggerErr.message);
+      // triggerErr is non-fatal, poll will report real status
     }
 
     // Step 2: poll for result via cron runs
@@ -124,6 +122,7 @@ function triggerJob(job) {
       if (pollCount > maxPolls) {
         ts.lastStatus = 'error';
         ts.lastError = 'Job did not complete within timeout';
+        logger.jobFailed(job.id, job.name, ts.lastError, ts.lastStatus);
         ts.retriesThisWindow = (ts.retriesThisWindow || 0) + 1;
         state.tasks[job.id] = ts;
         saveState();
@@ -146,6 +145,7 @@ function triggerJob(job) {
     }
 
     setTimeout(poll, 8000);
+    logger.jobPolling(job.id, job.name);
   });
 
   function processResult(entry) {
@@ -157,13 +157,26 @@ function triggerJob(job) {
       ts.consecutiveErrors = 0;
       ts.retriesThisWindow = 0;
       ts.lastError = null;
+      logger.jobCompleted(job.id, job.name, ts.lastDurationMs, ts.lastTokens);
 
       // Chain: auto-trigger downstream job after success
+	      // Post-hook: deploy after last chain job completes
+	      if (job.id === 'a85e2d4c-dacd-4a80-b328-efbb0d5670fb') {
+	        console.log('[cron-scheduler] Post-hook: deploying evopearl-data');
+        logger.deployStarted();
+	        var homedir = os.homedir();
+        var deployCmd = 'cd /d ' + homedir + '\\_runtime\\evopearl-data && powershell -File deploy.ps1';
+	        exec(deployCmd, { timeout: 120000, shell: 'cmd' }, function(deployErr) {
+	          if (deployErr) { console.error('[cron-scheduler] Deploy failed:', deployErr.message);  logger.deployCompleted(false, deployErr.message); }
+	          else { console.log('[cron-scheduler] Deploy OK');  logger.deployCompleted(true); }
+	        });
+	      }
       var nextId = CHAINS[job.id];
       if (nextId && isEnabled(nextId)) {
         var nextJob = findJobById(nextId);
         if (nextJob) {
           console.log('[cron-scheduler] Chain: ' + job.name + ' → ' + nextJob.name);
+          logger.chainTriggered(job.id, job.name, nextJob.id, nextJob.name);
           setTimeout(function() { triggerJob(nextJob); }, 30000);
         }
       }
@@ -175,10 +188,12 @@ function triggerJob(job) {
         ts.retriesThisWindow = MAX_RETRIES;
         ts.lastStatus = 'fatal_error';
         ts.lastError = 'Billing/Auth error — 今日已停止，明天自动重置';
+        logger.jobFailed(job.id, job.name, ts.lastError, ts.lastStatus);
       } else {
         ts.retriesThisWindow = (ts.retriesThisWindow || 0) + 1;
         ts.lastStatus = 'error';
         ts.lastError = errorText.slice(0, 200);
+        logger.jobFailed(job.id, job.name, ts.lastError, ts.lastStatus);
       }
     }
 
@@ -192,11 +207,17 @@ function findJobById(id) {
   return all.find(function(j) { return j.id === id; });
 }
 
+var lastTickDate = '';
+
 function tick() {
   loadState();
   var jobs = loadEnabledJobs();
   var now = new Date();
   var today = now.toISOString().slice(0, 10);
+  if (lastTickDate && lastTickDate !== today) {
+    logger.dailyReset(today);
+  }
+  lastTickDate = today;
 
   jobs.forEach(function(job) {
     if (!job.schedule || job.schedule.kind !== 'cron') return;
@@ -226,6 +247,7 @@ function start() {
   saveState();
   var n = loadEnabledJobs().length;
   console.log('[cron-scheduler] Started, watching ' + n + ' enabled job' + (n !== 1 ? 's' : ''));
+  logger.schedulerStarted(n);
   tick();
   timer = setInterval(tick, TICK_MS);
 }

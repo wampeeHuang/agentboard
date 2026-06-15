@@ -2,7 +2,7 @@
   "name": "LangGraph RAG 问答",
   "id": "langgraph-rag",
   "owner": "外部",
-  "description": "检索增强生成问答系统 — DeepSeek LLM + 本地 Embedding + ChromaDB",
+  "description": "【用途】固定流程RAG问答：用户问→检索ChromaDB→DeepSeek回答。不自主决策，不选工具。【何时用】简单的文档问答，知识库内容固定。【何时不用】需要Agent自主决策→用langgraph-agent(8767)。【返回】JSON {answer, sources}【延迟】2-10s【端口】8766",
   "icon": "🧠",
   "version": "1.0.0",
   "category": "推理",
@@ -11,5 +11,9 @@
   "url": "http://localhost:8766/ask",
   "projectPath": "%USERPROFILE%\\Projects\\langgraph-rag",
   "startCommand": "start /b %USERPROFILE%\\AppData\\Local\\Python\\bin\\python.exe rag_app.py serve",
-  "stopCommand": "npx kill-port 8766"
+  "stopCommand": "npx kill-port 8766",
+  "conflicts": [
+    "langgraph-agent"
+  ],
+  "agent_notes": "纯问答型，无Agent循环。和langgraph-agent共用项目目录，不能同时启动。当前使用DeepSeek LLM+ChromaDB，检索质量取决于文档切分策略。"
 }

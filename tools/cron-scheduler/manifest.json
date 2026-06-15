@@ -1,9 +1,9 @@
 {
   "name": "定时任务调度",
   "id": "cron-scheduler",
-  "description": "【用途】OpenClaw Gateway定时任务调度。4个链式任务：认知深读(7:30)→AI信号(8:00)→每日选题(8:30)→个体户申报(8:57)。【何时用】查定时任务状态、手动触发、修改调度时间。【何时不用】任务自动运行→无需干预。只是看日报内容→看飞书推送即可。【返回】JSON【位置】~/.agentboard/cron/scheduler.js",
+  "description": "【用途】双引擎定时任务：日报3个(OpenClaw Gateway)+提醒1个+巡检3个(cron-runner.js)。【何时用】查定时任务状态、手动触发、修改调度时间。【何时不用】任务自动运行→无需干预。只是看日报内容→看飞书推送即可。【返回】JSON【位置】~/.agentboard/cron/scheduler.js",
   "icon": "⏰",
-  "version": "3.0.0",
+  "version": "3.2.0",
   "category": "职能",
   "order": 38,
   "type": "group",
@@ -11,6 +11,7 @@
   "url": "http://localhost:3099/cron",
   "projectPath": "%USERPROFILE%\\.agentboard\\cron\\scheduler.js",
   "children": [
+    { "type": "section", "name": "日报 · Gateway" },
     {
       "icon": "📖",
       "name": "认知深读日报",
@@ -29,13 +30,33 @@
       "desc": "每天 8:30 · 选题策展+飞书推送 · 链路末端",
       "trigger": "cron-每日选题"
     },
+    { "type": "section", "name": "提醒" },
     {
       "icon": "🏪",
       "name": "个体户申报提醒",
-      "desc": "每天 8:57 · 社保/税务待办扫描+飞书通知",
+      "desc": "每天 8:57 · 扫描7日内待办 · 有待办飞书私聊通知",
       "trigger": "cron-个体户申报"
+    },
+    { "type": "section", "name": "巡检 · cron-runner" },
+    {
+      "icon": "🏪",
+      "name": "个体户巡检",
+      "desc": "每年1/7月第1天 9:07 · 个体户台账项目巡检",
+      "trigger": "cron-runner · 个体户巡检"
+    },
+    {
+      "icon": "🏠",
+      "name": "保障房巡检",
+      "desc": "每周一 9:07 · 深圳保租房/公租房新配租通告 · 12固定源",
+      "trigger": "cron-runner · HousePatrol"
+    },
+    {
+      "icon": "💰",
+      "name": "税无忧巡检",
+      "desc": "每周一 9:07 · 10源交叉验证 · 电商税收/平台规则变化",
+      "trigger": "cron-runner · TaxPatrol"
     }
   ],
   "conflicts": [],
-  "agent_notes": "type:group, children列出4个子任务。链式串联=前一个完成后触发下一个。trigger字段是OpenClaw cron job id。"
+  "agent_notes": "type:group, children列出7个任务分3组：日报(3,OpenClaw Gateway)→提醒(1)→巡检(3,cron-runner.js)。section类型=分组标题。日报状态来自/api/cron/state，巡检状态暂不展示。"
 }

@@ -1,10 +1,12 @@
 {
   "name": "微信文章提取 Coze",
   "id": "coze-wx-extract",
-  "description": "python3 D:/claude_workspace/tools/coze_wx_extract.py \"<微信文章URL>\" --direct 2>&1 | head -300。--direct 模式免费、快、不消耗 Coze 额度。微信有验证墙时去掉 --direct 切 Coze API 模式。提取微信公众号文章正文，返回纯文本。",
+  "description": "【用途】微信公众号文章提取。--direct模式免费快不消耗Coze额度，微信验证墙时切Coze API模式。【何时用】需要提取微信公众号文章全文。【何时不用】非微信文章→WebFetch/PullMD。只是看文章→不需要提取。【返回】纯文本【延迟】--direct 2-5s，API模式5-15s",
   "icon": "📄",
   "version": "1.0.0",
   "category": "获取",
   "order": 99,
-  "url": "https://www.coze.cn/space/7563883761365254184/bot/7634402982662602794"
+  "url": "https://www.coze.cn/space/7563883761365254184/bot/7634402982662602794",
+  "conflicts": [],
+  "agent_notes": "优先--direct模式(免费+快)。遇到验证墙才切Coze API。python3 D:/claude_workspace/tools/coze_wx_extract.py \"URL\" --direct。"
 }

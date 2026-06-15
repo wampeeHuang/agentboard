@@ -1,14 +1,17 @@
 {
   "name": "HTML 视频工坊",
   "id": "html-video",
-  "description": "HTML→MP4 视频生成器 · 21套模板 · 链接转视频(支持公众号) · 本地 Studio 可视化编辑 · Claude Code 驱动",
+  "description": "【用途】HTML→MP4视频生成器。21套模板，支持公众号链接转视频。本地Studio可视化编辑。【何时用】需要把HTML内容/公众号文章转成视频。【何时不用】从零生成视频→agnes-video-v2.0。只是录屏→不需要。【返回】MP4文件【延迟】取决于视频长度，1-5min【端口】3071",
   "icon": "🎬",
   "version": "1.0.0",
   "category": "创作",
   "order": 19,
+  "owner": "外部",
   "port": 3071,
   "url": "http://localhost:3071",
   "projectPath": "D:\\Claude code_workspace\\html-video",
   "startCommand": "set NPM_CONFIG_REGISTRY=https://registry.npmjs.org/ && set HTTP_PROXY=http://127.0.0.1:7897 && set HTTPS_PROXY=http://127.0.0.1:7897 && cd /d D:\\Claude code_workspace\\html-video && node packages/cli/dist/bin.js studio",
-  "stopCommand": "npx kill-port 3071"
+  "stopCommand": "npx kill-port 3071",
+  "conflicts": [],
+  "agent_notes": "需要代理(VORTEX_PROXY 127.0.0.1:7897)访问npm registry。claude code驱动=agent可以操控studio生成视频。"
 }

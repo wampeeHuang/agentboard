@@ -1,0 +1,15 @@
+{
+  "name": "Phone Frame · 手机预览",
+  "id": "phone-frame",
+  "description": "【用途】iPhone 15 Pro 手机框架预览工具，iframe 加载任意 App。393×852 响应式缩放，含 notch、URL 输入栏、全屏模式。【何时用】手机 App MVP 预览、PWA 调试、截图演示。【何时不用】桌面端页面预览、需要真实设备测试。【返回】预览页面。【端口】依赖画廊(3082)静态服务，不自启端口。",
+  "icon": "📱",
+  "version": "1.0.0",
+  "category": "创作",
+  "order": 40,
+  "url": "http://localhost:3082/tools/phone-frame/phone-frame.html",
+  "projectPath": "D:\\projects\\skill-html-showcase\\tools\\phone-frame",
+  "port": 3082,
+  "owner": "自建",
+  "conflicts": [],
+  "agent_notes": "静态页面，依赖画廊 Express 静态服务(端口3082)。如果画廊没启动，先启动画廊(skill-html-showcase)。使用方式：phone-frame.html?url=<目标App地址>。iframe 跨域限制下 localStorage/IndexedDB 按 App 自身 origin 正常工作。"
+}
