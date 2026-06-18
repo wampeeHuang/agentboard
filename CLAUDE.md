@@ -4,7 +4,7 @@
 
 ```
 ~/.agentboard/
-  server.js          ← 运行中的服务器，扫描 tools/ 和 cron-config.json
+  server.js          ← 运行中的服务器，扫描 tools/*/manifest.json
   index.html          ← 工具架前端
   tools/*/manifest.json  ← 工具注册（唯一真相源）
   tips/*.md           ← 操作日志（唯一真相源）
@@ -14,8 +14,7 @@
 
 工具卡片来源：
 - **manifest.json** — `~/.agentboard/tools/*/manifest.json`，一个目录一个工具
-- **动态注入** — `/api/tools` 从 `~/.claude/cron-config.json` 读取并注入独立 cron 卡片（已废弃）
-- **cron-scheduler** — manifest 注册，`type: "group"`，7 个任务分 3 组：日报(3)+提醒(1)+巡检(3)。展开可见，日报状态来自 `/api/cron/state`
+- **cron-scheduler** — manifest 注册，`type: "group"`。日报状态来自 `/api/cron/state`
 
 ## 工具调用协议
 
@@ -47,6 +46,19 @@
 ```
 
 缺失字段 ≠ 失败——`conflicts: []` 和 `agent_notes: ""` 表示暂无已知冲突/盲区。
+
+### 新工具注册（不可跳过）
+
+**安装或配置任何本地工具后，第一件事是写 manifest：**
+
+```
+1. 确认工具已安装、配置完成、可正常工作
+2. 在 ~/.agentboard/tools/{id}/ 下建 manifest.json
+3. curl localhost:3099/api/tools 确认可见
+4. 之后才考虑是否在 memory 留指针（不是工具定义本身）
+```
+
+工具定义不进 memory。架子是唯一真相源。
 
 ## 红线
 

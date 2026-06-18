@@ -10,6 +10,7 @@ var SCHEMA = [
 '  name TEXT NOT NULL,',
 '  cron_expr TEXT NOT NULL,',
 '  prompt TEXT NOT NULL,',
+'  description TEXT DEFAULT \'\',',
 '  timeout_sec INTEGER DEFAULT 300,',
 '  enabled INTEGER DEFAULT 1,',
 '  created_at TEXT DEFAULT (datetime(\'now\'))',
@@ -38,14 +39,17 @@ function init(dbPath) {
   db.exec('PRAGMA foreign_keys=ON');
   db.exec(SCHEMA);
 
+  // Migration: add description column (2026-06-15)
+  try { db.exec('ALTER TABLE tasks ADD COLUMN description TEXT DEFAULT \'\''); } catch(e) { /* already exists */ }
+
   return {
     createTask: function(task) {
       var stmt = db.prepare(
-        'INSERT INTO tasks (project_id, project_dir, name, cron_expr, prompt, timeout_sec, enabled) VALUES (?, ?, ?, ?, ?, ?, ?)'
+        'INSERT INTO tasks (project_id, project_dir, name, cron_expr, prompt, description, timeout_sec, enabled) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
       );
       return stmt.run(
         task.project_id, task.project_dir, task.name, task.cron_expr, task.prompt,
-        task.timeout_sec || 300, task.enabled !== undefined ? (task.enabled ? 1 : 0) : 1
+        task.description || '', task.timeout_sec || 300, task.enabled !== undefined ? (task.enabled ? 1 : 0) : 1
       ).lastInsertRowid;
     },
 
@@ -64,8 +68,8 @@ function init(dbPath) {
       for (var k in existing) m[k] = existing[k];
       for (var k in fields) m[k] = fields[k];
       db.prepare(
-        'UPDATE tasks SET project_id=?, project_dir=?, name=?, cron_expr=?, prompt=?, timeout_sec=?, enabled=? WHERE id=?'
-      ).run(m.project_id, m.project_dir, m.name, m.cron_expr, m.prompt, m.timeout_sec, m.enabled ? 1 : 0, id);
+        'UPDATE tasks SET project_id=?, project_dir=?, name=?, cron_expr=?, prompt=?, description=?, timeout_sec=?, enabled=? WHERE id=?'
+      ).run(m.project_id, m.project_dir, m.name, m.cron_expr, m.prompt, m.description || '', m.timeout_sec, m.enabled ? 1 : 0, id);
       return true;
     },
 
