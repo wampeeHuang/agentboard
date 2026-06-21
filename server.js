@@ -13,6 +13,7 @@ function getCronDb() {
   if (!cronDb) cronDb = require(path.join(os.homedir(), '.scheduler', 'db')).init(path.join(os.homedir(), '.scheduler', 'tasks.db'));
   return cronDb;
 }
+var registry = require('./lib/tool-registry');
 
 const PROJECT_DIR = __dirname;
 const AGENTBOARD_HOME = process.env.AGENTBOARD_HOME || path.join(os.homedir(), '.agentboard');
@@ -319,132 +320,12 @@ function classifySkill(name, desc) {
   return '其他';
 }
 
-function extractMeta(projectPath) {
-  const html = read(path.join(winPath(projectPath), 'index.html'));
-  if (!html) return {};
-  const title = html.match(/<title>([\s\S]*?)<\/title>/i);
-  const desc = html.match(/<meta\s+name\s*=\s*["']description["']\s+content\s*=\s*["']([^"']*)["']/i);
-  return {
-    _name: title ? title[1].trim() : null,
-    _desc: desc ? desc[1].trim() : null
-  };
-}
-
-function scanTools() {
-  var seen = {};
-  var tools = [];
-  TOOLS_DIRS.concat([LOCAL_TOOLS_DIR]).forEach(function(dir) {
-    if (!fs.existsSync(dir)) return;
-    var names = listDirs(dir);
-    names.forEach(function(name) {
-      if (seen[name]) return;
-      var mfPath = path.join(dir, name, 'manifest.json');
-      var mf;
-      try { mf = JSON.parse(read(mfPath)); } catch(e) { console.error('[scanTools] 跳过无效 manifest:', mfPath, e.message); return; }
-      if (!mf || !mf.name) return;
-      seen[name] = true;
-      if (mf.projectPath) {
-        var meta = extractMeta(mf.projectPath);
-        if (!mf.name && meta._name) mf.name = meta._name;
-        if (!mf.description && meta._desc) mf.description = meta._desc;
-      }
-      var ports = mf.ports || (mf.port ? [mf.port] : []);
-      var running = ports.length > 0 ? ports.every(function(p) { return isPortActive(p); }) : null;
-      tools.push({ name: mf.name, id: name, description: mf.description || '', icon: mf.icon || '', version: mf.version || '', category: mf.category, order: mf.order, port: mf.port, ports: mf.ports, url: mf.url, running: running, startCommand: mf.startCommand, stopCommand: mf.stopCommand, projectPath: mf.projectPath, publicUrl: mf.publicUrl, owner: mf.owner || '', apiBase: mf.apiBase, type: mf.type || 'service', trigger: mf.trigger || '', children: mf.children || [], conflicts: mf.conflicts || [], agent_notes: mf.agent_notes || '' });
-    });
-  });
-
-  // Detect port conflicts between registered tools
-  tools.forEach(function(t) {
-    var myPorts = t.ports || (t.port ? [t.port] : []);
-    tools.forEach(function(other) {
-      if (other.id === t.id) return;
-      var otherPorts = other.ports || (other.port ? [other.port] : []);
-      myPorts.forEach(function(p) {
-        if (otherPorts.indexOf(p) !== -1) {
-          t.conflicts.push({ toolId: other.id, toolName: other.name, port: p });
-        }
-      });
-    });
-  });
-
-  tools.sort(function(a, b) { return (a.order != null ? a.order : 99) - (b.order != null ? b.order : 99) || a.name.localeCompare(b.name, 'zh-CN'); });
-  return tools;
-}
-
-function isPortActive(port) {
-  try {
-    let cmd;
-    let out;
-    if (PLATFORM === 'win32') {
-      out = execSync('netstat -ano', { timeout: 3000, encoding: 'utf8', shell: true, windowsHide: true });
-      var tcpRe = new RegExp('\\s+TCP\\s+\\S+:' + port + '\\s+.*LISTENING', 'i');
-      var udpRe = new RegExp('\\s+UDP\\s+\\S+:' + port + '\\s+', 'i');
-      return tcpRe.test(out) || udpRe.test(out);
-    } else if (PLATFORM === 'darwin') {
-      out = execSync('lsof -i :' + port + ' -sTCP:LISTEN -t 2>/dev/null', { timeout: 2000, encoding: 'utf8', shell: true });
-      return out.trim().length > 0;
-    } else {
-      out = execSync('ss -tlnp 2>/dev/null | grep -q ":' + port + ' "', { timeout: 2000, encoding: 'utf8', shell: true });
-      return out.trim().length > 0;
-    }
-  } catch(_) { return false; }
-}
-
-function findManifest(id) {
-  for (var i = 0; i < TOOLS_DIRS.length; i++) {
-    var p = safeResolve(TOOLS_DIRS[i], id, 'manifest.json');
-    if (p && fs.existsSync(p)) return p;
-  }
-  return safeResolve(TOOLS_DIR, id, 'manifest.json'); // fallback for new tools
-}
-
-function startTool(id) {
-  const mfPath = findManifest(id);
-  if (!mfPath) return { ok: false, error: 'forbidden' };
-  let mf;
-  try { mf = JSON.parse(read(mfPath)); } catch(_) { return { ok: false, error: 'manifest not found' }; }
-  if (!mf.startCommand) return { ok: false, error: 'no startCommand' };
-
-  // Check port conflicts: are any of this tool's ports already in use by another RUNNING tool?
-  const myPorts = mf.ports || (mf.port ? [mf.port] : []);
-  if (myPorts.length > 0) {
-    const allTools = scanTools();
-    const conflicts = [];
-    allTools.forEach(function(t) {
-      if (t.id === id) return;
-      if (!t.running) return;
-      var tp = t.ports || (t.port ? [t.port] : []);
-      myPorts.forEach(function(p) {
-        if (tp.indexOf(p) !== -1) conflicts.push(t.name + '(:' + p + ')');
-      });
-    });
-    if (conflicts.length > 0) return { ok: false, error: 'Port conflict: ' + conflicts.join(', ') + ' already using these ports' };
-  }
-  try {
-    const cwd = mf.projectPath ? winPath(mf.projectPath) : PROJECT_DIR;
-    let child;
-    if (PLATFORM === 'win32') {
-      child = spawn('cmd', ['/c', mf.startCommand], { cwd, detached: true, stdio: 'ignore', shell: true });
-    } else {
-      child = spawn(mf.startCommand, { cwd, detached: true, stdio: 'ignore', shell: true });
-    }
-    child.unref();
-    return { ok: true };
-  } catch(e) { return { ok: false, error: e.message }; }
-}
-
-function stopTool(id, callback) {
-  const mfPath = findManifest(id);
-  if (!mfPath) return callback(null, { ok: false, error: 'forbidden' });
-  let mf;
-  try { mf = JSON.parse(read(mfPath)); } catch(_) { return callback(null, { ok: false, error: 'manifest not found' }); }
-  if (!mf.stopCommand) return callback(null, { ok: false, error: 'no stopCommand' });
-  exec(mf.stopCommand, { timeout: 10000, encoding: 'utf8' }, function(err) {
-    if (err) return callback(null, { ok: false, error: err.message });
-    callback(null, { ok: true });
-  });
-}
+function scanTools() { return registry.scanTools(TOOLS_DIRS.concat([LOCAL_TOOLS_DIR])); }
+function findManifest(id) { return registry.findManifest(id, TOOLS_DIRS); }
+function startTool(id) { return registry.startTool(id, TOOLS_DIRS.concat([LOCAL_TOOLS_DIR])); }
+function stopTool(id) { return registry.stopTool(id, TOOLS_DIRS); }
+function createTool(body) { return registry.createTool(body, TOOLS_DIRS); }
+function updateTool(id, body) { return registry.updateTool(id, body, TOOLS_DIRS); }
 
 function skillIndexHTML(skills) {
   var catNames = ['视觉与设计','写作与文档','文件与格式','开发与工具','思维与方法'];
@@ -862,10 +743,9 @@ function startServer() {
   });
 
   app.post('/api/tools/stop/:id', function(req, res) {
-    stopTool(req.params.id, function(err, result) {
-      if (err) return res.status(500).json({ ok: false, error: err.message });
-      res.json(result);
-    });
+    var result = stopTool(req.params.id);
+    if (!result.ok) return res.status(500).json(result);
+    res.json(result);
   });
 
   app.post('/api/tools/reorder', function(req, res) {
@@ -892,87 +772,22 @@ function startServer() {
 
   // Create a new tool manifest
   app.post('/api/tools', express.json(), function(req, res) {
-    var body = req.body;
-    if (!body || !body.id || !body.name) {
-      return res.status(400).json({ ok: false, error: 'id and name are required' });
+    var result = createTool(req.body);
+    if (!result.ok) {
+      var status = result.error && result.error.indexOf('already exists') !== -1 ? 409 : 400;
+      return res.status(status).json(result);
     }
-    // Validate id: alphanumeric + hyphens + underscores only, no path traversal
-    if (!/^[a-z][a-z0-9_-]*$/.test(body.id)) {
-      return res.status(400).json({ ok: false, error: 'id must start with a letter, contain only a-z 0-9 - _' });
-    }
-    // Check for existing tool with same id
-    var existing = findManifest(body.id);
-    if (existing && fs.existsSync(existing)) {
-      return res.status(409).json({ ok: false, error: 'tool already exists: ' + body.id });
-    }
-
-    var toolDir = path.join(TOOLS_DIR, body.id);
-    var mfPath = path.join(toolDir, 'manifest.json');
-
-    // Build manifest from body — only allow known fields
-    var mf = { name: body.name };
-    var knownFields = ['description','icon','version','category','order','port','ports','projectPath','url','startCommand','stopCommand','publicUrl','owner','apiBase','type','trigger','agent_notes'];
-    knownFields.forEach(function(f) {
-      if (body[f] !== undefined) mf[f] = body[f];
-    });
-
-    try {
-      fs.mkdirSync(toolDir, { recursive: true });
-      fs.writeFileSync(mfPath, JSON.stringify(mf, null, 2) + '\n', 'utf8');
-      // Return the new tool as it would appear in /api/tools
-      var tools = scanTools();
-      var created = null;
-      for (var i = 0; i < tools.length; i++) {
-        if (tools[i].id === body.id) { created = tools[i]; break; }
-      }
-      res.status(201).json({ ok: true, tool: created });
-    } catch(e) {
-      res.status(500).json({ ok: false, error: e.message });
-    }
+    res.status(201).json(result);
   });
 
   // Update an existing tool manifest (partial update)
   app.put('/api/tools/:id', express.json(), function(req, res) {
-    var mfPath = findManifest(req.params.id);
-    if (!mfPath || !fs.existsSync(mfPath)) {
-      return res.status(404).json({ ok: false, error: 'tool not found: ' + req.params.id });
+    var result = updateTool(req.params.id, req.body);
+    if (!result.ok) {
+      var status = result.error && result.error.indexOf('not found') !== -1 ? 404 : 400;
+      return res.status(status).json(result);
     }
-
-    var mf;
-    try { mf = JSON.parse(read(mfPath)); } catch(e) {
-      return res.status(500).json({ ok: false, error: 'failed to parse manifest' });
-    }
-
-    var body = req.body;
-    if (!body || Object.keys(body).length === 0) {
-      return res.status(400).json({ ok: false, error: 'no fields to update' });
-    }
-
-    // Known writable fields — id cannot be changed
-    var knownFields = ['name','description','icon','version','category','order','port','ports','projectPath','url','startCommand','stopCommand','publicUrl','owner','apiBase','type','trigger','agent_notes','conflicts','children'];
-    var updated = {};
-    knownFields.forEach(function(f) {
-      if (body[f] !== undefined) updated[f] = body[f];
-    });
-    if (Object.keys(updated).length === 0) {
-      return res.status(400).json({ ok: false, error: 'no known fields to update. Known fields: ' + knownFields.join(', ') });
-    }
-
-    // Merge
-    for (var k in updated) { mf[k] = updated[k]; }
-
-    try {
-      fs.writeFileSync(mfPath, JSON.stringify(mf, null, 2) + '\n', 'utf8');
-      // Return updated tool
-      var tools = scanTools();
-      var tool = null;
-      for (var i = 0; i < tools.length; i++) {
-        if (tools[i].id === req.params.id) { tool = tools[i]; break; }
-      }
-      res.json({ ok: true, tool: tool });
-    } catch(e) {
-      res.status(500).json({ ok: false, error: e.message });
-    }
+    res.json(result);
   });
 
   // Delete a tool manifest (requires explicit confirmation)
