@@ -55,7 +55,7 @@ body{min-height:100vh;display:flex;flex-direction:column}
 /* Tool grid */
 .content{flex:1;max-width:1080px;width:100%;margin:0 auto;padding:8px 32px 32px}
 .tool-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;margin-top:4px}
-.tool-card{background:var(--paper);padding:28px 14px 20px;display:flex;flex-direction:column;gap:8px;transition:transform .15s,box-shadow .15s;position:relative;box-shadow:var(--shadow-border),var(--shadow-card);height:230px}
+.tool-card{background:var(--paper);padding:28px 14px 20px;display:flex;flex-direction:column;gap:8px;transition:transform .15s,box-shadow .15s;position:relative;box-shadow:var(--shadow-border),var(--shadow-card);height:230px;overflow:hidden}
 .tool-card:hover{transform:translateY(-1px);box-shadow:var(--shadow-border),var(--shadow-card-hover)}
 .tool-card.self{border-left:3px solid var(--ink)}
 
@@ -80,8 +80,8 @@ body{min-height:100vh;display:flex;flex-direction:column}
 .owner-badge{font-size:9px;font-weight:400;color:var(--text-muted);padding:0 5px;border:1px solid var(--border);font-family:'JetBrains Mono','SF Mono','Consolas',monospace;letter-spacing:.04em;line-height:1.6;display:inline-flex;align-items:center}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
 
-.cmd-card{height:200px;border-left:2px solid #8B5CF6}
-.folder-card{height:200px;border-left:2px solid #D97706}
+.cmd-card{border-left:2px solid #8B5CF6}
+.folder-card{border-left:2px solid #D97706}
 .card-dot.cmd{background:#8B5CF6}
 .card-dot.folder{background:#D97706}
 .card-trigger{font-family:'JetBrains Mono','SF Mono','Consolas',monospace;font-size:11px;color:var(--ink);background:var(--paper-tint);padding:1px 6px;white-space:nowrap}
@@ -106,9 +106,9 @@ body{min-height:100vh;display:flex;flex-direction:column}
 .group-count{font-size:11px;color:var(--text-muted);font-family:'JetBrains Mono','SF Mono','Consolas',monospace}
 .badge-命令组{color:var(--ink);background:rgba(var(--ink-rgb),.08)}
 
-.card-body{display:flex;align-items:flex-start;gap:14px;flex:1;padding:0 14px}
+.card-body{display:flex;align-items:flex-start;gap:14px;flex:1;padding:0 14px;min-height:0}
 .card-mono{flex-shrink:0;width:44px;height:44px;background:var(--ink);color:var(--paper);display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono','SF Mono','Consolas',monospace;font-size:14px;font-weight:500}
-.card-info{flex:1;min-width:0}
+.card-info{flex:1;min-width:0;min-height:0;overflow:hidden}
 .card-name{font-size:16px;font-weight:300;letter-spacing:-0.01em;line-height:1.4;margin-bottom:2px}
 .card-id{font-size:11px;font-family:'JetBrains Mono','SF Mono','Consolas',monospace;color:var(--text-muted);font-weight:400;display:block;margin-top:1px}
 .card-meta{font-size:11px;color:var(--text-muted);font-weight:300;margin-top:6px;display:flex;align-items:center;gap:8px}
@@ -222,10 +222,11 @@ OCR:  Tesseract OCR (pytesseract)
 	      <a href="/commands" title="Claude Code 内置命令参考" id="assetCommands">命令</a>
       <a href="/tips" title="操作日志" id="assetTips">操作日志</a>
       <a href="/api" title="API 文档" id="assetApi">API</a>
+      <a href="#" onclick="return false" title="MCP JSON-RPC over stdio · 6 个 AI 工具：list/get/start/stop/create/update · 注册于 ~/.claude/settings.json" style="color:rgba(255,255,255,.75)">MCP</a>
       <a href="/startup" title="开机自启动" id="assetStartup">开机自启动</a>
     </div>
   </div>
-  <div class="header-philo">文件即注册，状态即界面</div>
+  <div class="header-philo">文件即注册，状态即界面 · MCP (AI) + REST (人) 双平面</div>
 </div>
 
 <div class="toolbar">
@@ -303,8 +304,8 @@ OCR:  Tesseract OCR (pytesseract)
     </div>
     <div class="principle">
       <div class="principle-num">02</div>
-      <div class="principle-head">想控制？点按钮就行</div>
-      <div class="principle-body">启动、停止一键操作。Agent 也能 curl API 自己来，不用人动手。</div>
+      <div class="principle-head">想控制？点按钮或走 MCP</div>
+      <div class="principle-body">人点按钮，Agent 走 MCP JSON-RPC 协议。同一套工具，两个平面，共享 manifest 真相源。</div>
     </div>
     <div class="principle">
       <div class="principle-num">03</div>

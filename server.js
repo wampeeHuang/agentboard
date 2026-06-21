@@ -553,7 +553,7 @@ function startServer() {
           category: '工具管理',
           curl: 'curl -X POST http://localhost:3099/api/tools/start/ace-step',
           body: 'Path param: :id = 工具目录名 / tool directory name',
-          response: '{ ok: true, pid: <number> } 或 { ok: false, error: "..." }'
+          response: '{ ok: true } 或 { ok: false, error: "..." }'
         },
         'POST /api/tools/stop/:id': {
           description: 'Stop a tool by id (executes stopCommand from manifest)',
@@ -691,7 +691,7 @@ function startServer() {
         description: 'string — 用途/何时用/何时不用/返回/延迟/端口 等',
         icon: 'string — emoji or single character',
         version: 'string — semver',
-        category: 'string — 获取|查阅|推理|创作|职能|工作区',
+        category: 'string — 模型|Agent|设施|获取|查阅|创作|职能',
         order: 'number — sort order in dashboard grid',
         port: 'number — single port the tool listens on',
         ports: 'number[] — multiple ports',
