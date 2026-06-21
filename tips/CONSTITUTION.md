@@ -110,6 +110,17 @@ source: 触发写入的事件/任务简述
 | `phone-frame-safe-area-scrim.md` | diagnosis | ✅ |
 | `utf8-bom-breaks-http-headers.md` | diagnosis | ✅ |
 | `windows-dual-port-bind.md` | diagnosis | ✅ |
+| `cron-unpinned-model-output-shrink.md` | diagnosis | ✅ |
+| `session-server-side-expiry.md` | diagnosis | ✅ |
+| `python-thread-flag-race.md` | diagnosis | ✅ |
+| `mcp-no-auto-retry.md` | diagnosis | ✅ |
+| `windows-gbk-python-io.md` | diagnosis | ✅ |
+| `node-spawn-cmd-powershell-path.md` | diagnosis | ✅ |
+| `tool-relocation.md` | method | ✅ |
+| `git-init-default-branch-main.md` | diagnosis | ✅ |
+| `gitmodules-chinese-encoding-corruption.md` | diagnosis | ✅ |
+| `git-first-commit-project-dating.md` | method | ✅ |
+| `script-tag-injection-js-exposed.md` | diagnosis | ✅ |
 
 ---
 

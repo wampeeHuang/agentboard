@@ -9,8 +9,8 @@
   "order": 11,
   "port": 7860,
   "url": "http://localhost:7860",
-  "projectPath": "D:\\0-Software\\AI\\sd-webui-aki\\sd-webui-aki-v4.10\\sd-webui-aki-v4.10",
-  "startCommand": "cd /d D:\\0-Software\\AI\\sd-webui-aki\\sd-webui-aki-v4.10\\sd-webui-aki-v4.10 && python launch.py",
+  "projectPath": "D:\\tools\\Stable-Diffusion\\sd-webui-aki-v4.10\\sd-webui-aki-v4.10",
+  "startCommand": "cd /d D:\\tools\\Stable-Diffusion\\sd-webui-aki-v4.10\\sd-webui-aki-v4.10 && python launch.py",
   "stopCommand": "npx kill-port 7860",
   "conflicts": [
     "comfyui",

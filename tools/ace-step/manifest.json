@@ -9,8 +9,8 @@
   "owner": "外部",
   "port": 5173,
   "url": "http://localhost:5173",
-  "projectPath": "D:\\HHH\\tools\\ace-step-ui",
-  "startCommand": "node D:\\HHH\\tools\\ace-step-ui\\launcher.cjs",
+  "projectPath": "D:\\tools\\ace-step",
+  "startCommand": "cd /d D:\\tools\\ace-step\\server && npm run dev",
   "stopCommand": "npx kill-port 5173",
   "conflicts": [
     "comfyui",

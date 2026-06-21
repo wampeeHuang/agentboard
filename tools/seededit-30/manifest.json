@@ -4,7 +4,7 @@
   "description": "【用途】字节SeedEdit 3.0图像编辑API。异步两阶段：POST提交任务→轮询结果。【何时用】编辑已有图片（换背景/去水印/风格迁移），不是从零生成。【何时不用】从零生成→aigoapi gpt-image-2/ComfyUI。简单编辑→GLM-4.6V也能做基础。【返回】编辑后图片URL【延迟】异步10s-2min",
   "icon": "🖌",
   "version": "1.0.0",
-  "category": "推理",
+  "category": "创作",
   "order": 33,
   "apiBase": "https://visual.volcengineapi.com",
   "apiKeyName": "VOLCENGINE_AK_SK",

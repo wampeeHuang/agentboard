@@ -8,8 +8,8 @@
   "order": 3,
   "port": 3098,
   "url": "http://localhost:3098",
-  "projectPath": "D:\\projects\\source-rack",
-  "startCommand": "cd /d D:\\projects\\source-rack && node server.js",
+  "projectPath": "D:\\workspace\\source-rack",
+  "startCommand": "cd /d D:\\workspace\\source-rack && node server.js",
   "stopCommand": "npx kill-port 3098",
   "conflicts": [],
   "agent_notes": "源文件在Obsidian wiki，Source Rack只读不写。Swiss极简UI。node server.js启动。"

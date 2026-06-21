@@ -5,7 +5,7 @@
   "description": "【用途】多模型API网关，聚合管理所有模型provider。当前路由DeepSeek v4 Pro作为Claude Code的推理后端。【何时用】查模型列表/状态、重启网关、切换默认模型。【何时不用】直接调API→用aigoapi/agnes-ai的base_url。只是用模型→这个透明代理自动工作，无需手动干预。【返回】CLI输出【端口】18789",
   "icon": "🦞",
   "version": "1.0.0",
-  "category": "推理",
+  "category": "设施",
   "order": 12,
   "port": 18789,
   "url": "http://localhost:18789",

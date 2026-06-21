@@ -3,13 +3,14 @@ const fs = require('fs');
 const path = require('path');
 const { exec, execSync, spawn } = require('child_process');
 const os = require('os');
-var cronScheduler = require('./cron/scheduler');
-var cronExpr = require('./cron/cron-expr');
-var cronDash = require('./cron/dashboard');
-var cronRunner = require('./cron/runner');
+var cronScheduler = require(path.join(os.homedir(), '.scheduler', 'scheduler'));
+var cronExpr = require(path.join(os.homedir(), '.scheduler', 'cron-expr'));
+var cronDashPath = path.join(os.homedir(), '.scheduler', 'dashboard');
+function getCronDash() { delete require.cache[require.resolve(cronDashPath)]; return require(cronDashPath); }
+var cronRunner = require(path.join(os.homedir(), '.scheduler', 'runner'));
 var cronDb = null;
 function getCronDb() {
-  if (!cronDb) cronDb = require('./cron/db').init(path.join(AGENTBOARD_HOME, 'cron', 'tasks.db'));
+  if (!cronDb) cronDb = require(path.join(os.homedir(), '.scheduler', 'db')).init(path.join(os.homedir(), '.scheduler', 'tasks.db'));
   return cronDb;
 }
 
@@ -645,26 +646,186 @@ function startServer() {
       version: '1.0.0',
       description: 'Filesystem-as-registry toolchain control plane for AI agents',
       endpoints: {
-        'GET /api': 'This discovery document',
-        'GET /api/tools': 'List all registered tools with running status',
-        'POST /api/tools/start/:id': 'Start a tool by id',
-        'POST /api/tools/stop/:id': 'Stop a tool by id',
-        'POST /api/tools/reorder': 'Reorder tools (body: {items: [{id, order}]})'
+        // ── 服务发现 Discovery ──
+        'GET /api': {
+          description: 'API discovery document — all endpoints with metadata, manifest schema, full tools list',
+          category: '服务发现',
+          curl: 'curl http://localhost:3099/api',
+          response: '{ name, version, description, endpoints, manifestSchema, tools, toolsDir, skillsDir }'
+        },
+        // ── 工具管理 Tool Mgmt ──
+        'GET /api/tools': {
+          description: 'List all registered tools with running status, conflicts, and agent_notes',
+          category: '工具管理',
+          curl: 'curl http://localhost:3099/api/tools',
+          response: '{ ok: true, tools: [...] }',
+          note: '每次操作工具前必调——读取 conflicts 和 agent_notes 字段'
+        },
+        'GET /api/tools/:id': {
+          description: 'Get a single tool by id',
+          category: '工具管理',
+          curl: 'curl http://localhost:3099/api/tools/minicpm-v',
+          response: '{ ok: true, tool: {...} }'
+        },
+        'POST /api/tools/start/:id': {
+          description: 'Start a tool by id (executes startCommand from manifest)',
+          category: '工具管理',
+          curl: 'curl -X POST http://localhost:3099/api/tools/start/ace-step',
+          body: 'Path param: :id = 工具目录名 / tool directory name',
+          response: '{ ok: true, pid: <number> } 或 { ok: false, error: "..." }'
+        },
+        'POST /api/tools/stop/:id': {
+          description: 'Stop a tool by id (executes stopCommand from manifest)',
+          category: '工具管理',
+          curl: 'curl -X POST http://localhost:3099/api/tools/stop/ace-step',
+          body: 'Path param: :id = 工具目录名 / tool directory name',
+          response: '{ ok: true } 或 { ok: false, error: "..." }'
+        },
+        'POST /api/tools/reorder': {
+          description: 'Reorder tools — writes new order values to manifest files',
+          category: '工具管理',
+          curl: 'curl -X POST http://localhost:3099/api/tools/reorder -H "Content-Type: application/json" -d \'{"items":[{"id":"ace-step","order":1}]}\'',
+          body: 'JSON: { items: [{ id: "tool-id", order: <number> }, ...] }',
+          response: '[{ id, ok: true|false, error? }]'
+        },
+        'POST /api/tools': {
+          description: 'Create a new tool — makes ~/.agentboard/tools/{id}/manifest.json',
+          category: '工具管理',
+          curl: 'curl -X POST http://localhost:3099/api/tools -H "Content-Type: application/json" -d \'{"id":"my-tool","name":"My Tool","category":"创作","startCommand":"node server.js","stopCommand":"npx kill-port 3000","port":3000}\'',
+          body: 'JSON: { id (lowercase a-z, 0-9, -, _), name, description?, icon?, version?, category?, order?, port?, ports?, projectPath?, url?, startCommand?, stopCommand?, publicUrl?, owner?, apiBase?, type?, trigger?, agent_notes? }',
+          response: '201 { ok: true, tool: {...} }'
+        },
+        'PUT /api/tools/:id': {
+          description: 'Update a tool manifest — partial update, only send fields to change',
+          category: '工具管理',
+          curl: 'curl -X PUT http://localhost:3099/api/tools/my-tool -H "Content-Type: application/json" -d \'{"category":"推理","description":"Updated description"}\'',
+          body: 'JSON: any subset of writable fields (id cannot be changed). Fields: name, description, icon, version, category, order, port, ports, projectPath, url, startCommand, stopCommand, publicUrl, owner, apiBase, type, trigger, agent_notes, conflicts, children',
+          response: '{ ok: true, tool: {...updated...} }'
+        },
+        'DELETE /api/tools/:id': {
+          description: 'Delete a tool manifest and its directory. REQUIRES ?confirm=true',
+          category: '工具管理',
+          curl: 'curl -X DELETE "http://localhost:3099/api/tools/my-tool?confirm=true"',
+          body: 'Query: confirm=true (required). Deletes entire ~/.agentboard/tools/{id}/ directory.',
+          response: '{ ok: true, deleted: "my-tool" }',
+          note: '红线操作——删除整个工具目录，不可逆。无 confirm=true 返回 400'
+        },
+        // ── 定时任务 Cron ──
+        'GET /api/cron/health': {
+          description: 'Health check for the cron scheduler subsystem',
+          category: '定时任务',
+          curl: 'curl http://localhost:3099/api/cron/health',
+          response: '{ ok: true, allPass: true|false, checks: [...], ts: "ISO8601" }'
+        },
+        'GET /api/cron/state': {
+          description: 'Get scheduler state and all configured cron jobs',
+          category: '定时任务',
+          curl: 'curl http://localhost:3099/api/cron/state',
+          response: '{ ok: true, state: {...}, jobs: [{ id, name, enabled, schedule }] }'
+        },
+        'GET /api/cron/reset/:id': {
+          description: 'Reset retry counter and error state for a cron job — redirects to /cron/:id',
+          category: '定时任务',
+          curl: 'curl -L http://localhost:3099/api/cron/reset/<job-id>',
+          body: 'Path param: :id = cron job id. 清零 retriesThisWindow + consecutiveErrors + lastError'
+        },
+        'GET /api/cron/tasks': {
+          description: 'List all SQLite-backed cron tasks (optional ?category=&project= filters)',
+          category: '定时任务',
+          curl: 'curl "http://localhost:3099/api/cron/tasks?category=巡检"',
+          response: '[{ id, project_id, name, cron_expr, prompt, enabled, ... }]',
+          note: 'Enriched with executor/model from ~/.openclaw/cron/jobs.json'
+        },
+        'POST /api/cron/tasks': {
+          description: 'Create a new cron task in SQLite',
+          category: '定时任务',
+          curl: 'curl -X POST http://localhost:3099/api/cron/tasks -H "Content-Type: application/json" -d \'{"project_id":"loop-engine","project_dir":"D:/workspace/lab/proj","name":"my-task","cron_expr":"0 9 * * *","prompt":"check health"}\'',
+          body: 'JSON: { project_id, project_dir, name, cron_expr, prompt, description?, category?, timeout_sec? (default 300), enabled? (default 1) }',
+          response: '201 { id, project_id, name, cron_expr, prompt, ... }'
+        },
+        'GET /api/cron/tasks/:id': {
+          description: 'Get a single cron task by id',
+          category: '定时任务',
+          curl: 'curl http://localhost:3099/api/cron/tasks/1',
+          response: '{ id, project_id, name, cron_expr, ... }'
+        },
+        'PUT /api/cron/tasks/:id': {
+          description: 'Update a cron task — partial update, only send fields to change',
+          category: '定时任务',
+          curl: 'curl -X PUT http://localhost:3099/api/cron/tasks/1 -H "Content-Type: application/json" -d \'{"enabled":0}\'',
+          body: 'JSON: any subset of { project_id, project_dir, name, cron_expr, prompt, description, category, timeout_sec, enabled }',
+          response: '{ id, ...updated fields... }'
+        },
+        'DELETE /api/cron/tasks/:id': {
+          description: 'Delete a cron task permanently',
+          category: '定时任务',
+          curl: 'curl -X DELETE http://localhost:3099/api/cron/tasks/1',
+          response: '{ deleted: true }'
+        },
+        'POST /api/cron/tasks/:id/run': {
+          description: 'Trigger a cron task run immediately (async, returns run_id)',
+          category: '定时任务',
+          curl: 'curl -X POST http://localhost:3099/api/cron/tasks/1/run',
+          response: '{ run_id: <number>, status: "running" }'
+        },
+        'GET /api/cron/history': {
+          description: 'List cron task run history (?task_id=&limit=50&offset=0)',
+          category: '定时任务',
+          curl: 'curl "http://localhost:3099/api/cron/history?limit=10"',
+          response: '[{ id, task_id, status, started_at, finished_at, ... }]'
+        },
+        // ── 统计 Stats ──
+        'GET /api/stats': {
+          description: 'API call statistics — total calls, by caller (agent/browser), by action, top tools',
+          category: '统计',
+          curl: 'curl http://localhost:3099/api/stats',
+          response: '{ ok: true, totalCalls, todayCalls, byCaller: {all, today}, byAction: {all, today}, byTool: [...] }'
+        },
+        // ── 联邦巡检 Loop Monitor ──
+        'GET /api/loop/health': {
+          description: 'Scan all loop projects for health.json status',
+          category: '联邦巡检',
+          curl: 'curl http://localhost:3099/api/loop/health',
+          response: '{ projects: [...], updated: "ISO8601" }'
+        },
+        // ── 文件操作 ──
+        'GET /api/open-folder': {
+          description: 'Open a folder in Windows Explorer (?path= absolute path)',
+          category: '文件操作',
+          curl: 'curl "http://localhost:3099/api/open-folder?path=D:/workspace"',
+          body: 'Query: path=<absolute path>. Only works within declared workspace roots.',
+          response: '{ ok: true, path: "..." }'
+        },
+        'GET /open-dir/:name': {
+          description: 'Open a skill directory in Explorer by name (e.g. /open-dir/perspective-router)',
+          category: '文件操作',
+          curl: 'curl http://localhost:3099/open-dir/perspective-router',
+          body: 'Path param: :name = skill directory name under ~/.claude/skills/',
+          response: '{ ok: true, path: "..." }'
+        }
       },
       manifestSchema: {
-        id: 'string — directory name under TOOLS_DIR',
+        id: 'string — directory name under TOOLS_DIR (lowercase a-z 0-9 - _)',
         name: 'string — display name',
-        description: 'string',
+        description: 'string — 用途/何时用/何时不用/返回/延迟/端口 等',
         icon: 'string — emoji or single character',
-        version: 'string',
-        category: 'string',
-        order: 'number — sort order',
-        port: 'number — single port',
+        version: 'string — semver',
+        category: 'string — 获取|查阅|推理|创作|职能|工作区',
+        order: 'number — sort order in dashboard grid',
+        port: 'number — single port the tool listens on',
         ports: 'number[] — multiple ports',
-        projectPath: 'string — working directory',
+        projectPath: 'string — working directory on disk',
         url: 'string — browser URL when running',
-        startCommand: 'string — shell command to start',
-        stopCommand: 'string — shell command to stop'
+        startCommand: 'string — shell command to start the tool',
+        stopCommand: 'string — shell command to stop the tool',
+        publicUrl: 'string — public domain (e.g. https://gallery.evopearl.com/)',
+        owner: 'string — 外部|自建|内部|AI托管|空=未标注',
+        apiBase: 'string — API base URL for external services',
+        type: 'string — service|cli|folder|group',
+        trigger: 'string — CLI trigger string (shown on card)',
+        agent_notes: 'string — AI 踩坑笔记 (DeepSeek 盲区/前置条件)',
+        conflicts: 'string[] — conflicting tool IDs (GPU互斥/端口冲突)',
+        children: 'array — sub-items for group-type tools'
       },
       tools: (function() { try { return scanTools(); } catch(e) { return []; } })(),
       toolsDir: TOOLS_DIR,
@@ -727,6 +888,118 @@ function startServer() {
     res.json({ ok: true, results: results });
   });
 
+  // ── Manifest CRUD ──
+
+  // Create a new tool manifest
+  app.post('/api/tools', express.json(), function(req, res) {
+    var body = req.body;
+    if (!body || !body.id || !body.name) {
+      return res.status(400).json({ ok: false, error: 'id and name are required' });
+    }
+    // Validate id: alphanumeric + hyphens + underscores only, no path traversal
+    if (!/^[a-z][a-z0-9_-]*$/.test(body.id)) {
+      return res.status(400).json({ ok: false, error: 'id must start with a letter, contain only a-z 0-9 - _' });
+    }
+    // Check for existing tool with same id
+    var existing = findManifest(body.id);
+    if (existing && fs.existsSync(existing)) {
+      return res.status(409).json({ ok: false, error: 'tool already exists: ' + body.id });
+    }
+
+    var toolDir = path.join(TOOLS_DIR, body.id);
+    var mfPath = path.join(toolDir, 'manifest.json');
+
+    // Build manifest from body — only allow known fields
+    var mf = { name: body.name };
+    var knownFields = ['description','icon','version','category','order','port','ports','projectPath','url','startCommand','stopCommand','publicUrl','owner','apiBase','type','trigger','agent_notes'];
+    knownFields.forEach(function(f) {
+      if (body[f] !== undefined) mf[f] = body[f];
+    });
+
+    try {
+      fs.mkdirSync(toolDir, { recursive: true });
+      fs.writeFileSync(mfPath, JSON.stringify(mf, null, 2) + '\n', 'utf8');
+      // Return the new tool as it would appear in /api/tools
+      var tools = scanTools();
+      var created = null;
+      for (var i = 0; i < tools.length; i++) {
+        if (tools[i].id === body.id) { created = tools[i]; break; }
+      }
+      res.status(201).json({ ok: true, tool: created });
+    } catch(e) {
+      res.status(500).json({ ok: false, error: e.message });
+    }
+  });
+
+  // Update an existing tool manifest (partial update)
+  app.put('/api/tools/:id', express.json(), function(req, res) {
+    var mfPath = findManifest(req.params.id);
+    if (!mfPath || !fs.existsSync(mfPath)) {
+      return res.status(404).json({ ok: false, error: 'tool not found: ' + req.params.id });
+    }
+
+    var mf;
+    try { mf = JSON.parse(read(mfPath)); } catch(e) {
+      return res.status(500).json({ ok: false, error: 'failed to parse manifest' });
+    }
+
+    var body = req.body;
+    if (!body || Object.keys(body).length === 0) {
+      return res.status(400).json({ ok: false, error: 'no fields to update' });
+    }
+
+    // Known writable fields — id cannot be changed
+    var knownFields = ['name','description','icon','version','category','order','port','ports','projectPath','url','startCommand','stopCommand','publicUrl','owner','apiBase','type','trigger','agent_notes','conflicts','children'];
+    var updated = {};
+    knownFields.forEach(function(f) {
+      if (body[f] !== undefined) updated[f] = body[f];
+    });
+    if (Object.keys(updated).length === 0) {
+      return res.status(400).json({ ok: false, error: 'no known fields to update. Known fields: ' + knownFields.join(', ') });
+    }
+
+    // Merge
+    for (var k in updated) { mf[k] = updated[k]; }
+
+    try {
+      fs.writeFileSync(mfPath, JSON.stringify(mf, null, 2) + '\n', 'utf8');
+      // Return updated tool
+      var tools = scanTools();
+      var tool = null;
+      for (var i = 0; i < tools.length; i++) {
+        if (tools[i].id === req.params.id) { tool = tools[i]; break; }
+      }
+      res.json({ ok: true, tool: tool });
+    } catch(e) {
+      res.status(500).json({ ok: false, error: e.message });
+    }
+  });
+
+  // Delete a tool manifest (requires explicit confirmation)
+  app.delete('/api/tools/:id', function(req, res) {
+    if (req.query.confirm !== 'true') {
+      return res.status(400).json({ ok: false, error: 'Pass ?confirm=true to delete. This action removes the entire tool directory.' });
+    }
+
+    var mfPath = findManifest(req.params.id);
+    if (!mfPath || !fs.existsSync(mfPath)) {
+      return res.status(404).json({ ok: false, error: 'tool not found: ' + req.params.id });
+    }
+
+    var toolDir = path.dirname(mfPath);
+    // Safety: only delete directories under TOOLS_DIR
+    if (!toolDir.startsWith(path.resolve(TOOLS_DIR) + path.sep)) {
+      return res.status(403).json({ ok: false, error: 'refusing to delete directory outside TOOLS_DIR' });
+    }
+
+    try {
+      fs.rmSync(toolDir, { recursive: true, force: true });
+      res.json({ ok: true, deleted: req.params.id });
+    } catch(e) {
+      res.status(500).json({ ok: false, error: e.message });
+    }
+  });
+
   // Open skill folder in file explorer
   app.get('/open-dir/:name', function(req, res) {
     var name = req.params.name;
@@ -777,6 +1050,11 @@ function startServer() {
       default: return '<span style="color:var(--text-muted)">' + esc(ts.lastStatus) + '</span>';
     }
   }
+
+  // CRON health — redirect to /loop (联邦巡检面板)
+  app.get('/cron/health', function(req, res) {
+    res.redirect(301, '/loop');
+  });
 
   // Cron job detail (openclaw-based legacy jobs)
   app.get('/cron/:id', function(req, res) {
@@ -897,6 +1175,64 @@ function startServer() {
   });
 
 
+  function buildHealthChecks() {
+    var checks = [];
+
+    // 1. Scheduler running
+    var schedulerOk = cronScheduler.getState() && true;
+    checks.push({ id: 'scheduler', label: '调度器运行中', pass: schedulerOk, detail: schedulerOk ? '正常' : '未启动' });
+
+    // 2. jobs.json exists
+    var j = null;
+    var jobsOk = false;
+    try { j = JSON.parse(fs.readFileSync(path.join(os.homedir(), '.openclaw', 'cron', 'jobs.json'), 'utf-8')); jobsOk = Array.isArray(j.jobs) && j.jobs.length > 0; }
+    catch(_) {}
+    checks.push({ id: 'jobs', label: 'jobs.json 有效', pass: jobsOk, detail: jobsOk ? j.jobs.length + ' 个任务' : '文件缺失或无效' });
+
+    // 3. Workspace dirs exist
+    var enabledJobs = jobsOk ? j.jobs.filter(function(jb) { return jb.enabled !== false; }) : [];
+    var workspaces = {};
+    enabledJobs.forEach(function(jb) {
+      var agentId = jb.agentId || 'main';
+      var ws = { 'evolution-cat': 'D:\\HHH\\自媒体\\进化猫', 'main': 'D:\\Openclaw', 'evolution-cat-writer': 'D:\\Openclaw\\agents\\evolution-cat-writer', 'jinhua-cat': 'D:\\Openclaw\\agents\\jinhua-cat' }[agentId] || 'D:\\Openclaw';
+      workspaces[ws] = true;
+    });
+    var missingDirs = [];
+    Object.keys(workspaces).forEach(function(ws) { if (!fs.existsSync(ws)) missingDirs.push(ws); });
+    var dirsOk = missingDirs.length === 0;
+    checks.push({ id: 'workspaces', label: '工作目录存在', pass: dirsOk, detail: dirsOk ? Object.keys(workspaces).length + ' 个目录' : '缺失: ' + missingDirs.join(', ') });
+
+    // 4. Node.js available
+    checks.push({ id: 'node', label: 'Node.js 可用', pass: true, detail: process.version });
+
+    // 5. claude CLI check (deferred)
+    checks.push({ id: 'claude', label: 'Claude CLI', pass: null, detail: '需手动验证: claude --version' });
+
+    // 6. Internet connectivity
+    checks.push({ id: 'network', label: '网络连通', pass: null, detail: '需手动验证: curl https://httpbin.org/status/200' });
+
+    // 7. Computer must not sleep
+    checks.push({ id: 'nosleep', label: '电脑不睡眠', pass: null, detail: '电源设置 → 永不睡眠。这是定时触发的硬件前提' });
+
+    // 8. DeepSeek API
+    checks.push({ id: 'deepseek', label: 'DeepSeek API 余额', pass: null, detail: '需手动验证: https://platform.deepseek.com' });
+
+    // 9. scheduler-state.json writable
+    var stateWritable = false;
+    try { var schedStatePath = path.join(os.homedir(), '.scheduler', 'scheduler-state.json'); fs.writeFileSync(schedStatePath, fs.readFileSync(schedStatePath, 'utf-8'), 'utf-8'); stateWritable = true; }
+    catch(_) {}
+    checks.push({ id: 'state_rw', label: '状态文件可写', pass: stateWritable, detail: stateWritable ? '正常' : 'scheduler-state.json 不可写' });
+
+    return checks;
+  }
+
+  // API: cron system health (JSON)
+  app.get('/api/cron/health', function(req, res) {
+    var checks = buildHealthChecks();
+    var allPass = checks.every(function(c) { return c.pass !== false; });
+    res.json({ ok: true, allPass: allPass, checks: checks, ts: new Date().toISOString() });
+  });
+
   // API: get scheduler state
   app.get('/api/cron/state', function(req, res) {
     cronScheduler.loadState();
@@ -920,10 +1256,42 @@ function startServer() {
 
   // === REST API for SQLite-backed cron tasks ===
 
-  // List all tasks
+  // List all tasks (optional ?category=&project= filter)
+  // Enrich with executor/model from jobs.json (single source of truth)
   app.get('/api/cron/tasks', function(req, res) {
     var db = getCronDb();
-    res.json(db.getTasks());
+    var tasks = db.getTasks();
+
+    // Cross-reference jobs.json for executor and model
+    try {
+      var jobsJson = JSON.parse(fs.readFileSync(path.join(os.homedir(), '.openclaw', 'cron', 'jobs.json'), 'utf-8'));
+      var jobs = jobsJson.jobs || [];
+      var jobByName = {};
+      jobs.forEach(function(j) { if (j.name) jobByName[j.name] = j; });
+      tasks = tasks.map(function(t) {
+        var job = jobByName[t.name];
+        if (!job && t.project_id && t.name) {
+          // Try prefix match: "loop-engine" project → job name starts with "loop-engine-"
+          var prefix = t.project_id + '-';
+          for (var jn in jobByName) {
+            if (jn.indexOf(prefix) === 0 && t.name.indexOf(jn) !== -1) { job = jobByName[jn]; break; }
+          }
+        }
+        if (job && job.payload) {
+          t.executor = job.payload.kind || '';
+          t.model = job.payload.model || '';
+        }
+        return t;
+      });
+    } catch(_) {}
+
+    if (req.query.category) {
+      tasks = tasks.filter(function(t) { return t.category === req.query.category; });
+    }
+    if (req.query.project) {
+      tasks = tasks.filter(function(t) { return t.project_id === req.query.project; });
+    }
+    res.json(tasks);
   });
 
   // Create task
@@ -932,12 +1300,12 @@ function startServer() {
     if (!body || !body.project_id || !body.project_dir || !body.name || !body.cron_expr || !body.prompt) {
       return res.status(400).json({ error: 'Missing required fields: project_id, project_dir, name, cron_expr, prompt' });
     }
-    if (!cronExpr.isValid(body.cron_expr)) {
+    if (body.cron_expr.indexOf('once:') !== 0 && !cronExpr.isValid(body.cron_expr)) {
       return res.status(400).json({ error: 'Invalid cron expression: ' + body.cron_expr });
     }
     var db = getCronDb();
     var id = db.createTask(body);
-    res.status(201).json({ id: id, project_id: body.project_id, project_dir: body.project_dir, name: body.name, cron_expr: body.cron_expr, prompt: body.prompt, timeout_sec: body.timeout_sec || 300, enabled: body.enabled !== 0 ? 1 : 0 });
+    res.status(201).json({ id: id, project_id: body.project_id, project_dir: body.project_dir, name: body.name, cron_expr: body.cron_expr, prompt: body.prompt, description: body.description || '', category: body.category || '', timeout_sec: body.timeout_sec || 300, enabled: body.enabled !== 0 ? 1 : 0 });
   });
 
   // Get single task
@@ -952,7 +1320,7 @@ function startServer() {
   app.put('/api/cron/tasks/:id', express.json(), function(req, res) {
     var body = req.body;
     if (!body) return res.status(400).json({ error: 'Invalid body' });
-    if (body.cron_expr && !cronExpr.isValid(body.cron_expr)) {
+    if (body.cron_expr && body.cron_expr.indexOf('once:') !== 0 && !cronExpr.isValid(body.cron_expr)) {
       return res.status(400).json({ error: 'Invalid cron expression: ' + body.cron_expr });
     }
     var db = getCronDb();
@@ -992,7 +1360,7 @@ function startServer() {
   app.get('/cron', function(req, res) {
     res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
     res.type('html');
-    res.send(cronDash.render());
+    res.send(getCronDash().render());
   });
 
   // Workspace sub-page — scan project directories
@@ -2086,25 +2454,37 @@ function startServer() {
   });
 
   // ── Loop Monitor ──
-  var LOOP_PROJECT_ROOTS = (process.env.LOOP_PROJECT_ROOTS || [path.join(os.homedir(), '_runtime'), path.join('D:', 'Claude code_workspace')].join(';')).split(';').filter(Boolean);
+  var LOOP_PROJECT_ROOTS = (process.env.LOOP_PROJECT_ROOTS || [path.join(os.homedir(), '_runtime'), path.join('D:', 'workspace')].join(';')).split(';').filter(Boolean);
 
   function scanLoopProjects() {
     var projects = [];
-    LOOP_PROJECT_ROOTS.forEach(function(root) {
+
+    // Scan root directories + lab/ + _archive for health.json
+    var roots = LOOP_PROJECT_ROOTS.slice();
+    var labPath = path.join('D:', 'workspace', 'lab');
+    var archivePath = path.join('D:', 'workspace', '_archive');
+    if (fs.existsSync(labPath)) roots.push(labPath);
+    if (fs.existsSync(archivePath)) roots.push(archivePath);
+
+    roots.forEach(function(root) {
       if (!fs.existsSync(root)) return;
-      var dirs = fs.readdirSync(root, {withFileTypes:true}).filter(function(e){ return e.isDirectory() && !e.name.startsWith('.'); });
+      var dirs = fs.readdirSync(root, {withFileTypes:true}).filter(function(e){ return e.isDirectory() && !e.name.startsWith('.') && e.name !== '_runtime'; });
       dirs.forEach(function(d) {
-        var auditPath = path.join(root, d.name, 'LOOP_AUDIT.md');
-        if (!fs.existsSync(auditPath)) return; // 未被 loop-audit 审计 → 不是 loop 项目
         var hp = path.join(root, d.name, 'notebook', 'health.json');
         var health = null;
         try { health = JSON.parse(fs.readFileSync(hp, 'utf8')); } catch(_) {}
+        // health.json is the sole discovery criterion (architecture 4.2)
+        if (!health) return;
         var claudePath = path.join(root, d.name, 'CLAUDE.md');
+        var auditPath = path.join(root, d.name, 'LOOP_AUDIT.md');
+        var lifecycle = root === labPath ? 'incubating' : (root === archivePath ? 'archived' : 'stable');
         projects.push({
           name: d.name,
           path: path.join(root, d.name),
+          lifecycle: lifecycle,
           hasClaude: fs.existsSync(claudePath),
-          hasAudit: true,
+          hasHealth: true,
+          hasAudit: fs.existsSync(auditPath),
           health: health
         });
       });
@@ -2116,11 +2496,27 @@ function startServer() {
     res.json({ projects: scanLoopProjects(), updated: new Date().toISOString() });
   });
 
+  app.get('/api/open-folder', function(req, res) {
+    var p = req.query.path;
+    if (!p) return res.status(400).json({ error: 'missing path' });
+    var abs = path.resolve(p);
+    // only allow opening folders within declared workspace roots
+    var allowed = LOOP_PROJECT_ROOTS.map(function(r) { return path.resolve(r); });
+    allowed.push(path.resolve(path.join('D:', 'workspace')));
+    allowed.push(path.resolve(path.join(os.homedir(), '_runtime')));
+    allowed.push(path.resolve(path.join(os.homedir(), '.agentboard')));
+    allowed.push(path.resolve(path.join(os.homedir(), '.claude')));
+    var ok = allowed.some(function(r) { return abs.startsWith(r); });
+    if (!ok) return res.status(403).json({ error: 'path not allowed: ' + abs });
+    try { openFolder(abs); res.json({ ok: true, path: abs }); }
+    catch(e) { res.status(500).json({ error: e.message }); }
+  });
+
   app.get('/loop', function(req, res) {
     var html = read(path.join(PROJECT_DIR, 'loop-dashboard.html'));
     if (!html) return res.status(500).send('loop-dashboard.html missing');
     var dataSnap = JSON.stringify({ projects: scanLoopProjects(), updated: new Date().toISOString() });
-    html = html.replace('<!--LOOP_DATA_INJECT-->', '<script>window.__loopData=' + dataSnap + ';</script>');
+    html = html.replace('<!--LOOP_DATA_INJECT-->', 'window.__loopData=' + dataSnap + ';');
     res.type('html').send(html);
   });
 
@@ -2128,7 +2524,7 @@ function startServer() {
     var html = read(path.join(PROJECT_DIR, 'loop-console.html'));
     if (!html) return res.status(500).send('loop-console.html missing');
     var dataSnap = JSON.stringify({ projects: scanLoopProjects(), updated: new Date().toISOString() });
-    html = html.replace('<!--LOOP_CONSOLE_DATA-->', '<script>window.__loopData=' + dataSnap + ';</script>');
+    html = html.replace('<!--LOOP_CONSOLE_DATA-->', 'window.__loopData=' + dataSnap + ';');
     res.type('html').send(html);
   });
 
@@ -2137,7 +2533,6 @@ function startServer() {
   var PORT = process.env.PORT || 3099;
   app.listen(PORT, function() {
     console.log('Agentboard http://localhost:' + PORT);
-    cronScheduler.start();
   });
 }
 

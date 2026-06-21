@@ -9,8 +9,8 @@
   "order": 6,
   "port": 8188,
   "url": "http://localhost:8188",
-  "projectPath": "D:\\0-Software\\AI\\ComfyUI-master",
-  "startCommand": "cd /d D:\\0-Software\\AI\\ComfyUI-master && python main.py --listen 0.0.0.0 --port 8188 --enable-cors-header",
+  "projectPath": "D:\\tools\\ComfyUI",
+  "startCommand": "cd /d D:\\tools\\ComfyUI && python main.py --listen 0.0.0.0 --port 8188 --enable-cors-header",
   "stopCommand": "npx kill-port 8188",
   "conflicts": [
     "stable-diffusion",

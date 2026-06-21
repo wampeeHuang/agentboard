@@ -8,8 +8,8 @@
   "order": 20,
   "port": 3460,
   "url": "http://localhost:3460",
-  "projectPath": "D:\\Claude code_workspace\\2026-06-01-天猫超市自动化买菜",
-  "startCommand": "cd /d \"D:\\Claude code_workspace\\2026-06-01-天猫超市自动化买菜\" && node server.js",
+  "projectPath": "D:\\workspace\\gulubuy",
+  "startCommand": "cd /d \"D:\\workspace\\gulubuy\" && node server.js",
   "stopCommand": "npx kill-port 3460",
   "conflicts": [],
   "agent_notes": "天猫超市已通，京东接入中。语音输入→NLP→搜索比价→下单。node server.js启动。"

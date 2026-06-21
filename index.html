@@ -190,7 +190,7 @@ AI AGENT REFERENCE — 工具架 Agentboard
 API:     GET /api/tools     → 全部工具清单 JSON {ok, tools:[{id,name,description,category,port,ports,url,running,startCommand,stopCommand,apiBase,projectPath,icon,version,order}]}
 ACTION:  POST /api/tools/start/:id   POST /api/tools/stop/:id
 FILTER:  URL search 传 ?q= → 服务端过滤。客户端三层筛选 domain(form=本地|API|CLI|Web) owner(自建|外部) 见 data-* 属性。
-CATS:    获取=数据入口 查阅=浏览发现 推理=智能判断 创作=内容生产 职能=开发运维
+CATS:    模型=AI能力  Agent=自主执行  设施=运维管道  获取=数据入口  查阅=浏览发现  创作=内容生产  职能=生活工具  工作区=文件夹入口
 DOM:     .tool-card[data-id] > .card-head(.card-dot+card-cat-label+card-badges) .card-body(.card-mono+.card-info>.card-name+.card-id+.card-meta+.card-desc) .card-actions(.btn+.btn.go+.btn.stop)
 RULES:   localhost 用 Bash curl 不用 WebFetch。能力不够先查本地工具。启动/停止后等 500ms poll /api/tools。
 ━═ 你可以访问以下本地能力 ═━
@@ -262,11 +262,13 @@ OCR:  Tesseract OCR (pytesseract)
 <div class="filter-bar">
   <div class="filter-row">
     <span class="filter-dim">领域</span>
-    <button class="filter-pill" data-domain="获取" onclick="setDomainFilter('获取')" title="数据接入、网页抓取、API调用 — 从外部获取信息的工具">获取<span class="pill-cnt">0</span></button>
-    <button class="filter-pill" data-domain="查阅" onclick="setDomainFilter('查阅')" title="内容浏览、知识检索、可视化面板 — 浏览和发现，不跑模型">查阅<span class="pill-cnt">0</span></button>
-    <button class="filter-pill" data-domain="推理" onclick="setDomainFilter('推理')" title="AI模型推理、RAG问答、Agent决策 — 让机器思考和判断">推理<span class="pill-cnt">0</span></button>
-    <button class="filter-pill" data-domain="创作" onclick="setDomainFilter('创作')" title="AIGC内容生成、图像/文本/音乐创作 — AI驱动的数字内容生产">创作<span class="pill-cnt">0</span></button>
-    <button class="filter-pill" data-domain="职能" onclick="setDomainFilter('职能')" title="开发辅助、效率增强、系统运维 — 让开发更顺畅的工具">职能<span class="pill-cnt">0</span></button>
+    <button class="filter-pill" data-domain="模型" onclick="setDomainFilter('模型')" title="本地+云端 AI 模型能力：视觉/语音/LLM API — 模型的调用入口">模型<span class="pill-cnt">0</span></button>
+    <button class="filter-pill" data-domain="Agent" onclick="setDomainFilter('Agent')" title="自主 AI Agent：Claude Code/Hermes/Codex CLI/RAG — 能独立执行任务的智能体">Agent<span class="pill-cnt">0</span></button>
+    <button class="filter-pill" data-domain="设施" onclick="setDomainFilter('设施')" title="透明基础设施：网关/代理/定时任务/巡检 — 管道自己跑，日常不碰">设施<span class="pill-cnt">0</span></button>
+    <button class="filter-pill" data-domain="获取" onclick="setDomainFilter('获取')" title="数据采集：网页抓取/社媒下载/OCR/云盘 — 从外部获取信息">获取<span class="pill-cnt">0</span></button>
+    <button class="filter-pill" data-domain="查阅" onclick="setDomainFilter('查阅')" title="浏览发现：画廊/技能目录/架构图/人物名录 — 浏览和发现，不跑模型">查阅<span class="pill-cnt">0</span></button>
+    <button class="filter-pill" data-domain="创作" onclick="setDomainFilter('创作')" title="AIGC内容生产：图像/音乐/语音/视频/排版 — AI 驱动的数字内容创作">创作<span class="pill-cnt">0</span></button>
+    <button class="filter-pill" data-domain="职能" onclick="setDomainFilter('职能')" title="生活+效率：税务/社保/保障房/购物/截图 — 个人事务工具">职能<span class="pill-cnt">0</span></button>
   </div>
   <div class="filter-row">
     <span class="filter-dim">形态</span>
@@ -363,37 +365,28 @@ var formFilter = 'all';
 var ownerFilter = 'all';
 var publicFilter = false;
 
-// 领域映射：category → 领域
+// 领域映射：category → 领域（用于筛选栏分组）
 var domainMap = {
-  '基础设施': '获取',
-  '内容': '查阅',
-  'AI 模型': '推理',
-  'AIGC': '创作',
-  '开发': '职能',
-  '其他': '职能',
+  '模型': '模型',
+  'Agent': 'Agent',
+  '设施': '设施',
   '获取': '获取',
   '查阅': '查阅',
-  '推理': '推理',
   '创作': '创作',
   '职能': '职能',
-  '工具': '职能',
   '工作区': '职能'
 };
 
 // 分类显示名 + 悬停解释。key 匹配 manifest.json 里的 category 字段
 var catMeta = {
-  '基础设施':  {label:'基础设施', tip:'Agent 控制平面 · 自指工具 — 工具链的骨架，管其他工具的启动/发现/可视化'},
-  '内容':     {label:'内容浏览', tip:'版式画廊 · Skill 目录 · 可视化面板 — 浏览和发现，不跑模型'},
-  '开发':     {label:'效率工具', tip:'浏览器自动化 · 原型搭建 — 开发辅助，轻量级'},
-  'AIGC':     {label:'AIGC',     tip:'图像生成 · 音乐生成 · 创意画布 — AI 驱动的数字内容创作'},
-  'AI 模型':  {label:'模型服务', tip:'本地大模型推理 · RAG 问答 · Agent 自主决策 — CPU/GPU 推理服务'},
-  '其他':     {label:'其他',     tip:'未分类工具'},
-  '获取':     {label:'获取',     tip:'数据接入、网页抓取、API调用 — 从外部获取信息的工具'},
-  '查阅':     {label:'查阅',     tip:'内容浏览、知识检索、可视化面板 — 浏览和发现，不跑模型'},
-  '推理':     {label:'推理',     tip:'AI模型推理、RAG问答、Agent决策 — 让机器思考和判断'},
-  '创作':     {label:'创作',     tip:'AIGC内容生成、图像/文本/音乐创作 — AI驱动的数字内容生产'},
-  '职能':     {label:'职能',     tip:'开发辅助、效率增强、系统运维 — 让开发更顺畅的工具'},
-  '工具':     {label:'工具',     tip:'通用工具'}
+  '模型':     {label:'模型',     tip:'本地+云端 AI 模型能力：视觉理解/语音合成/LLM API — 模型的调用入口'},
+  'Agent':    {label:'Agent',    tip:'自主 AI Agent：Claude Code/Hermes/Codex CLI/RAG — 能独立执行任务的智能体'},
+  '设施':     {label:'设施',     tip:'透明基础设施：API网关/协议代理/定时调度/联邦巡检 — 管道自己跑，日常不碰'},
+  '获取':     {label:'获取',     tip:'数据采集：网页抓取/社媒下载/OCR/云盘 — 从外部获取信息的工具'},
+  '查阅':     {label:'查阅',     tip:'浏览发现：版式画廊/Skill目录/架构图/人物名录 — 浏览和发现'},
+  '创作':     {label:'创作',     tip:'AIGC内容生产：图像/音乐/语音/视频/排版 — AI 驱动的数字内容创作'},
+  '职能':     {label:'职能',     tip:'生活+效率：税务/社保/保障房/购物/截图 — 个人事务工具'},
+  '工作区':   {label:'工作区',   tip:'文件夹入口：项目目录/产出目录 — 打开即用，无需启动'}
 };
 
 function setFilter(f) {
@@ -617,7 +610,7 @@ function updatePillCounts() {
     var f = getToolForm(t); formCounts[f] = (formCounts[f] || 0) + 1;
     var o = getToolOwner(t); ownerCounts[o] = (ownerCounts[o] || 0) + 1;
   });
-  ['获取','查阅','推理','创作','职能'].forEach(function(c) {
+  ['模型','Agent','设施','获取','查阅','创作','职能'].forEach(function(c) {
     var pill = document.querySelector('.filter-pill[data-domain="' + c + '"] .pill-cnt');
     if (pill) pill.textContent = domainCounts[c] || 0;
   });
@@ -659,7 +652,7 @@ function render() {
   }
 
   // Sort: category group, then running first, then order
-  var catOrder = {'基础设施':0, '内容':1, '开发':2, 'AIGC':3, 'AI 模型':4};
+  var catOrder = {'模型':0, 'Agent':1, '设施':2, '获取':3, '查阅':4, '创作':5, '职能':6};
   var cardOrder = [];
   try { cardOrder = JSON.parse(localStorage.getItem('agentboard-card-order') || '[]'); } catch(_) {}
   if (!Array.isArray(cardOrder)) cardOrder = [];
@@ -718,7 +711,7 @@ function render() {
         if (c.type === 'section') return '<div class="gc-section">' + c.name + '</div>';
         var st = getCronChildStatus(c.name);
         var statusHtml = st ? '<span class="gc-status ' + st.cls + '">' + st.label + '</span>' : '';
-        return '<div class="group-child">' +
+        return '<div class="group-child" onclick="event.stopPropagation()">' +
           '<span class="gc-icon">' + (c.icon||'') + '</span>' +
           '<span class="gc-trigger">/' + c.trigger + '</span>' +
           '<span class="gc-name">' + c.name + '</span>' +
@@ -728,7 +721,7 @@ function render() {
       }).join('');
       var taskCount = children.filter(function(c){ return c.type !== 'section'; }).length;
       var expanded = expandedGroups[t.id];
-      return '<div class="tool-card group-card' + (expanded?' expanded':'') + '" data-id="' + t.id + '" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)">'
+      return '<div class="tool-card group-card' + (expanded?' expanded':'') + '" data-id="' + t.id + '" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)"' + (t.url ? ' onclick="window.open(\'' + t.url + '\', \'_blank\')" style="cursor:pointer"' : '') + '>'
         + '<span class="card-dot off"></span>'
         + '<div class="card-drag-handle" title="拖拽排序" draggable="true" ondragstart="handleDragStart(event)" ondragend="handleDragEnd(event)"></div>'
         + '<div class="card-body">'
@@ -743,7 +736,7 @@ function render() {
         + '<div class="card-children">' + childHtml + '</div>'
         + '<div class="card-actions">'
           + '<button class="group-toggle" onclick="event.stopPropagation();toggleGroup(\'' + t.id + '\')">' + (expanded ? '收起 ▴' : '展开 ▾ (' + taskCount + '个)') + '</button>'
-          + (t.url ? '<a href="' + t.url + '" class="btn" onclick="event.stopPropagation()" style="font-size:11px">查看详情</a>' : '')
+          + (t.url ? '<a href="' + t.url + '" target="_blank" class="btn" onclick="event.stopPropagation()" style="font-size:11px">查看详情</a>' : '')
           + '<span class="card-badges"><span class="form-badge badge-命令组">命令组</span></span>'
         + '</div>'
       + '</div>';

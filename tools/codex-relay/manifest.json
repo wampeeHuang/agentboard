@@ -1,0 +1,14 @@
+{
+  "name": "Codex Relay",
+  "id": "codex-relay",
+  "owner": "内部",
+  "description": "【用途】Responses API → Chat Completions 翻译桥，让 Codex CLI 通过聚合平台 API 运行。启动后 Codex 指向 http://127.0.0.1:4446/v1，relay 翻译请求到上游 Chat Completions API。【何时用】Codex CLI 需要非 OpenAI 后端时自动工作，无需手动操作。【何时不用】Codex 连 OpenAI 官方→不需要。只是用 Claude Code→不需要。【端口】4446",
+  "icon": "↔",
+  "version": "1.0.0",
+  "category": "设施",
+  "order": 18,
+  "startCommand": "start /B codex-relay --port 4446 --upstream https://aigoapi.com/v1 --api-key %AIGOAPI_API_KEY%",
+  "stopCommand": "taskkill /F /IM codex-relay.exe",
+  "conflicts": [],
+  "agent_notes": "这个工具是透明代理，Codex 正常使用即可。上游模型列表变化后需要重启 relay 刷新。relay 已配置开机自启（codex-relay.vbs 在启动文件夹）。Codex 配置文件在 ~/.codex/config.toml，当前默认模型 gpt-5.5，provider=aigoapi-relay。"
+}

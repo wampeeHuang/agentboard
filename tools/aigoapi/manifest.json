@@ -4,7 +4,7 @@
   "description": "【用途】付费API聚合平台。文本(gpt-5.4/claude-opus-4-7/deepseek-3.2/gemini-3.1)+图片(gpt-image-2/gemini-3.1-flash-image)。OpenAI兼容base_url=https://aigoapi.com/v1。【何时用】需要最强云端模型时。gpt-image-2=当前最佳图片生成。【何时不用】免费→agnes-ai兜底。本地→ollama/minicpm-v。【返回】OpenAI兼容格式【延迟】文本1-5s，图片5-30s",
   "icon": "🔀",
   "version": "1.0.0",
-  "category": "推理",
+  "category": "模型",
   "order": 34,
   "apiBase": "https://aigoapi.com/v1",
   "apiKeyName": "AIGOAPI_KEY",

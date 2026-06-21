@@ -8,8 +8,8 @@
   "order": 31,
   "port": 3458,
   "url": "http://localhost:3458",
-  "projectPath": "D:\\Claude code_workspace\\2026-05-29-深圳住房申请",
-  "startCommand": "cd /d \"D:\\Claude code_workspace\\2026-05-29-深圳住房申请\" && node server.js",
+  "projectPath": "D:\\workspace\\2026-05-29-深圳保障房导航",
+  "startCommand": "cd /d \"D:\\workspace\\2026-05-29-深圳保障房导航\" && node server.js",
   "stopCommand": "npx kill-port 3458",
   "conflicts": [],
   "agent_notes": "功能类应用，不依赖AI。政策变化时需要更新数据源。"

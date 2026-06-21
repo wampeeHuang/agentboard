@@ -1,5 +1,5 @@
 {
-  "name": "文章管理 · 进化猫AI",
+  "name": "文章管理 · 进化猫AI (旧存档)",
   "id": "workspace-articles",
   "description": "【用途】进化猫公众号文章生产目录D:\\HHH\\自媒体\\进化猫\\AI。40+篇按YYYYMMDD_标题命名。【何时用】找历史文章、确认今天有没有建重目录。【何时不用】写新文章→按skill流程自动建目录。只是预览→Forma。【类型】文件夹",
   "icon": "📝",
@@ -7,9 +7,9 @@
   "category": "工作区",
   "type": "folder",
   "order": 51,
-  "projectPath": "D:\\HHH\\自媒体\\进化猫\\AI",
-  "startCommand": "start \"\" \"D:\\HHH\\自媒体\\进化猫\\AI\"",
+  "projectPath": "D:\\workspace\\_output\\evolution-cat\\文章",
+  "startCommand": "start \"\" \"D:\\workspace\\_output\\evolution-cat\\文章\"",
   "stopCommand": "echo 文件夹无需停止",
   "conflicts": [],
-  "agent_notes": "文章按YYYYMMDD_主题命名。写新文章前扫这里查重——当天日期+同主题已有目录则复用。start只是explorer打开。"
+  "agent_notes": "2026-06-19 冻结——旧文章存档，不再新增。新文章写入 workspace-articles-v2 (D:\\workspace\\_output\\evolution-cat\\文章)。查重需扫两个目录。"
 }

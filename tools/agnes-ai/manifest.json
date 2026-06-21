@@ -4,7 +4,7 @@
   "description": "【用途】免费多模态API兜底。文本(agnes-2.0-flash)/图片(agnes-image-2.0-flash)/视频(agnes-video-v2.0)。OpenAI兼容格式。【何时用】aigoapi key耗尽/不可用时自动回退。免费是唯一优势。【何时不用】质量优先→aigoapi gpt-image-2(文件大80%+)。视频60s+不稳定→优先html-video方案。【返回】OpenAI兼容JSON【延迟】文本快，图片中等，视频10s-10min",
   "icon": "🆓",
   "version": "1.0.0",
-  "category": "推理",
+  "category": "模型",
   "order": 18,
   "url": "https://platform.agnes-ai.com",
   "conflicts": [],

@@ -5,11 +5,11 @@
   "description": "【用途】固定流程RAG问答：用户问→检索ChromaDB→DeepSeek回答。不自主决策，不选工具。【何时用】简单的文档问答，知识库内容固定。【何时不用】需要Agent自主决策→用langgraph-agent(8767)。【返回】JSON {answer, sources}【延迟】2-10s【端口】8766",
   "icon": "🧠",
   "version": "1.0.0",
-  "category": "推理",
+  "category": "Agent",
   "order": 8,
   "port": 8766,
   "url": "http://localhost:8766/ask",
-  "projectPath": "%USERPROFILE%\\Projects\\langgraph-rag",
+  "projectPath": "D:\\workspace\\langgraph-rag",
   "startCommand": "start /b %USERPROFILE%\\AppData\\Local\\Python\\bin\\python.exe rag_app.py serve",
   "stopCommand": "npx kill-port 8766",
   "conflicts": [

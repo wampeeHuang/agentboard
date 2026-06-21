@@ -4,7 +4,8 @@
 
 ```
 ~/.agentboard/
-  server.js          ← 运行中的服务器，扫描 tools/*/manifest.json
+  server.js          ← REST API + Dashboard (人对 AI 的观察窗口)
+  mcp-server.js      ← MCP JSON-RPC/stdio (AI 调工具的标准协议)
   index.html          ← 工具架前端
   tools/*/manifest.json  ← 工具注册（唯一真相源）
   tips/*.md           ← 操作日志（唯一真相源）
@@ -12,13 +13,25 @@
   cron/tasks.db       ← cron 任务运行时状态（SQLite）
 ```
 
+**双平面架构**: MCP (AI plane) + REST (human plane)，共享同一真相源 `tools/*/manifest.json`。
+
+| 平面 | 协议 | 传输 | 消费者 |
+|------|------|------|--------|
+| 工具面 (MCP) | JSON-RPC 2.0 over stdio | `mcp-server.js` | AI agent (Claude Code, Cursor 等) |
+| 管理面 (REST) | HTTP | `server.js:3099` | 人 (dashboard), 脚本, 外部系统 |
+
+MCP 工具: `agentboard_list_tools`, `agentboard_get_tool`, `agentboard_start_tool`, `agentboard_stop_tool`, `agentboard_create_tool`, `agentboard_update_tool`。注册在 `~/.claude/settings.json` → `mcpServers.agentboard`。
+
 工具卡片来源：
 - **manifest.json** — `~/.agentboard/tools/*/manifest.json`，一个目录一个工具
 - **cron-scheduler** — manifest 注册，`type: "group"`。日报状态来自 `/api/cron/state`
 
 ## 工具调用协议
 
-**每次操作工具前必须查 `/api/tools`**，不只是看 `running` 状态，还要读两个字段：
+AI agent 通过 **MCP** 调工具（`mcp-server.js`，stdio），标准 JSON-RPC 协议。
+人通过 **Dashboard**（`http://localhost:3099/`）观察和控制，保持可见性。
+
+**每次操作工具前必须查 `/api/tools`**（或 MCP `agentboard_get_tool`），不只是看 `running` 状态，还要读两个字段：
 
 ### conflicts（互斥冲突）
 

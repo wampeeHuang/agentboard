@@ -8,8 +8,8 @@
   "order": 5,
   "port": 3091,
   "url": "http://localhost:3091",
-  "projectPath": "D:\\Claude code_workspace\\2026-05-29-logo-generator",
-  "startCommand": "cd /d D:\\Claude code_workspace\\2026-05-29-logo-generator && python3 generate.py",
+  "projectPath": "D:\\workspace\\lab\\2026-05-29-Logo生成器",
+  "startCommand": "cd /d D:\\workspace\\lab\\2026-05-29-Logo生成器 && python3 generate.py",
   "stopCommand": "npx kill-port 3091",
   "conflicts": [],
   "agent_notes": "python3 generate.py启动。生成结果可拖入Pixso/即时设计/MasterGo编辑。curl POST传{brandName,category}。"
