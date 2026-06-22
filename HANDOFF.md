@@ -8,8 +8,8 @@
 - `auditAll` 和 `auditRuntime` 只做 lib 函数，不做 MCP tool。独立巡检脚本直接 require 调用。
 
 **MCP server 精简**
-- 删除 `agentboard_audit_tools` MCP tool（从 10 减到 9）。
-- 5 个可砍待确认: search_tools, create_tool, update_tool, create_cron_task, update_cron_task。砍后 9→4。
+- 9→4 工具: 砍掉 search_tools, create_tool, update_tool, create_cron_task, update_cron_task。保留核心四件: list_tools, get_tool, start_tool, stop_tool。
+- 删 cp/fs/os/path/schema/taskSchema 依赖，433→177 行。
 
 **历史 (本日较早)**
 - scanTools netstat 23次→1次+Set, 725ms→~50ms + 500ms TTL
@@ -22,7 +22,6 @@
 
 ## 待定
 
-- [ ] MCP tool 瘦身: search_tools / create_tool / update_tool / create_cron_task / update_cron_task 是否砍
 - [ ] 独立巡检脚本（auditRuntime 已在 lib 里可用）
 - [ ] phone-frame 源文件丢失，待找回
 
