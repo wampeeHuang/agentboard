@@ -131,15 +131,6 @@ var TOOL_DEFS = [
     }
   },
   {
-    name: 'agentboard_audit_tools',
-    description: '双层巡检：① schema 合规（必填字段/类型检查）② 运行时漂移检测（projectPath是否存在、startCommand可执行文件是否在PATH、孤儿目录无manifest、声明端口是否实际监听）。【何时用】定期巡检工具架健康度、新增工具后验证、排查注册表与实际情况不一致。【返回】双层结果合并，error=需要修复，warning=建议关注。ok=true 表示全部通过。',
-    inputSchema: {
-      type: 'object',
-      properties: {},
-      required: []
-    }
-  },
-  {
     name: 'agentboard_create_cron_task',
     description: '【用途】创建新的定时任务，写入 scheduler 的 SQLite 数据库。\n【何时用】需要新建定时任务（日报/巡检/运维），指定执行器、模型、cron 表达式和提示词。\n【何时不用】修改已有任务用 agentboard_update_cron_task。仅查看任务用浏览器打开 http://localhost:3100/cron。\n【返回】创建的任务 JSON，含 id。\n【端口】3100（scheduler HTTP）',
     inputSchema: buildMCPInputSchema(true)
@@ -351,50 +342,6 @@ function handleUpdateCronTask(args) {
   return handleCronResult(result);
 }
 
-function getListeningPorts() {
-  var ports = new Set();
-  try {
-    if (os.platform() === 'win32') {
-      var out = cp.execSync('netstat -ano', { timeout: 3000, encoding: 'utf8', shell: true, windowsHide: true });
-      var re = /\s+TCP\s+\S+:(\d+)\s+.*LISTENING/gi;
-      var m;
-      while ((m = re.exec(out)) !== null) { ports.add(parseInt(m[1], 10)); }
-    }
-  } catch (_) {}
-  return ports;
-}
-
-function handleAuditTools() {
-  var schemaResult = schema.auditAll();
-  var listeningPorts = getListeningPorts();
-  var driftResult = schema.auditRuntime(null, listeningPorts);
-
-  // 合并：schema 合规 + 运行时漂移
-  var totalErrors = schemaResult.errors + driftResult.errors;
-  var totalWarnings = schemaResult.warnings + driftResult.warnings;
-  var allIssues = [].concat(
-    schemaResult.issues.map(function (i) { i.source = 'schema'; return i; }),
-    driftResult.issues.map(function (i) { i.source = 'drift'; return i; })
-  );
-  allIssues.sort(function (a, b) {
-    return b.errors.length - a.errors.length || b.warnings.length - a.warnings.length;
-  });
-
-  var summary;
-  if (totalErrors === 0 && totalWarnings === 0) {
-    summary = 'PASS: ' + schemaResult.total + ' 个工具全部合规，无漂移';
-  } else {
-    var parts = [];
-    if (schemaResult.errors > 0) parts.push('schema 错误 ' + schemaResult.errors);
-    if (driftResult.errors > 0) parts.push('漂移错误 ' + driftResult.errors);
-    if (schemaResult.warnings > 0) parts.push('schema 警告 ' + schemaResult.warnings);
-    if (driftResult.warnings > 0) parts.push('漂移警告 ' + driftResult.warnings);
-    summary = 'FAIL: ' + parts.join(', ') + ' (共 ' + schemaResult.total + ' 个工具)';
-  }
-
-  return textResult(summary + '\n\n' + JSON.stringify(allIssues, null, 2));
-}
-
 function handleCronResult(result) {
   if (!result.ok) return textResult('Scheduler API unreachable: ' + result.error + '. Is scheduler running on port 3100?', true);
   try {
@@ -412,7 +359,6 @@ var TOOL_HANDLERS = {
   'agentboard_stop_tool': handleStopTool,
   'agentboard_create_tool': handleCreateTool,
   'agentboard_update_tool': handleUpdateTool,
-  'agentboard_audit_tools': handleAuditTools,
   'agentboard_create_cron_task': handleCreateCronTask,
   'agentboard_update_cron_task': handleUpdateCronTask
 };
