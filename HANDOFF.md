@@ -1,23 +1,41 @@
 # HANDOFF — 2026-06-22
 
-## 本次修复
+## 本次完成 (续)
 
-**定时任务卡片状态不更新**
+**代码审查修复 (simplify skill 三Agent审查)**
+- P0: scanTools netstat 23次→1次+Set查找, 725ms→~50ms
+- P1: scanTools 结果缓存 500ms TTL
+- P2: server.js proxy res.headersSent 守卫 + statusCode检查
+- P2: fetchCronState 指数退避替代固定60s轮询
+- P3: index.html 删 expandedGroups/toggleGroup/group-child 死代码 ~30行
+- P3: index.html getCronChildStatus 补 output_missing 分支
+- P3: mcp-server.js 魔法数字→SEARCH_WEIGHTS等常量
+- P3: tool-registry.js knownFields→BASE_FIELDS DRY
 
-- 根因：agentboard/scheduler 分离时删了 `/api/cron/state` 路由，前端 fetch 404，`catch(_){}` 静默吞掉
-- 修复：agentboard server.js 加 `/api/cron/state` 代理 → scheduler :3100
-- 验证：`curl localhost:3099/api/cron/state` 返回正常
+**Manifest 标准体系**
+- 新建 lib/manifest-schema.js — 标准唯一真相源
+- 写入校验: createTool/updateTool 拒绝不合规写入
+- MCP: agentboard_audit_tools — AI agent随时自检
+- 批量补齐: 24个owner + 2个内部→自建 + 2个service启停命令
+- 42工具全部 schema audit PASS
 
-## 当前运行的异常（未处理）
+**清理**
+- 4个 projectPath 修正: html-gallery, tax-wuyou, shenzhen-housing, cron-scheduler
+- 2个孤儿 manifest 删除: langgraph-agent, phone-frame
 
-| 任务 | 连续失败 | 错误 |
-|------|---------|------|
-| 进化猫-认知深读日报 | 3 | output_missing |
-| 进化猫·AI信号 | 3 | output_missing |
-| 进化猫-每日选题日报 | 3 | output_missing |
-| 会话备份 | 6 | PowerShell 路径编码乱码 |
+**Git**: 8 commits 已推 wampeeHuang/agentboard master
+
+## 架构决策 (2026-06-22)
+- **六骨件 → 三骨件**：
+  - ① `~/.claude/` — 宪法+技能+记忆
+  - ② `~/.agentboard/` — 工具架+面板+manifest标准
+  - ③ `~/.scheduler/` — 定时任务+巡检
+  - eval/guardrails/bootstrap 全部删除。操作日志+cron状态+漂移检测已覆盖当前巡检需求，等真实痛点出现后再补
+
+## 未完成
+- phone-frame 源文件已丢失，待找回补注册
+- 巡检 cron job 尚未创建 (schema就绪，加个cron task即可)
 
 ## 运行状态
-
-- agentboard PID 34052 → 已重启，port 3099
-- scheduler PID 36448, port 3100
+- agentboard PID 7268 → 已重启, port :3099
+- scheduler :3100 独立运行
