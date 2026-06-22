@@ -12,5 +12,7 @@
   "projectPath": "%USERPROFILE%\\.cache\\chrome-devtools-mcp\\chrome-profile",
   "conflicts": [],
   "agent_notes": "Profile在~/.cache/chrome-devtools-mcp/chrome-profile。Claude Code自动管理启动，不需要手动干预。mcp__ChromeDevTools__开头的工具都是它的。",
-  "capability": "Chrome浏览器自动化操控"
+  "capability": "Chrome浏览器自动化操控",
+  "startCommand": "npx chrome-devtools-mcp@latest",
+  "stopCommand": "npx kill-port 9222"
 }

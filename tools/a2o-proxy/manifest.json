@@ -1,7 +1,7 @@
 {
   "name": "A2O Proxy",
   "id": "a2o-proxy",
-  "owner": "内部",
+  "owner": "自建",
   "description": "【用途】Anthropic Messages API → OpenAI Chat Completions 翻译代理。让 Claude Code 通过 Chat Completions 后端使用 Claude 模型。【何时用】需要用 aigoapi 的 Claude Opus 等模型替代 DeepSeek 时。【何时不用】直接用 Anthropic 官方 API → 不需要。【端口】8787",
   "icon": "🔀",
   "version": "1.0.0",

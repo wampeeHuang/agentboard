@@ -1,7 +1,7 @@
 {
   "name": "Codex Relay",
   "id": "codex-relay",
-  "owner": "内部",
+  "owner": "自建",
   "description": "【用途】Responses API → Chat Completions 翻译桥，让 Codex CLI 通过聚合平台 API 运行。启动后 Codex 指向 http://127.0.0.1:4446/v1，relay 翻译请求到上游 Chat Completions API。【何时用】Codex CLI 需要非 OpenAI 后端时自动工作，无需手动操作。【何时不用】Codex 连 OpenAI 官方→不需要。只是用 Claude Code→不需要。【端口】4446",
   "icon": "↔",
   "version": "1.0.0",

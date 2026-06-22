@@ -10,6 +10,7 @@ var fs = require('fs');
 var os = require('os');
 var path = require('path');
 var registry = require('./lib/tool-registry');
+var schema = require('./lib/manifest-schema');
 
 // ── MCP Tool definitions ──
 
@@ -126,6 +127,15 @@ var TOOL_DEFS = [
         dashboard: { type: 'object', description: 'Dashboard 注册: { route, title, render, source, api, subRoutes, stats }' }
       },
       required: ['id']
+    }
+  },
+  {
+    name: 'agentboard_audit_tools',
+    description: '【用途】巡检所有工具 manifest 是否合规。检查必填字段（name/description/capability/owner）、service类型是否有 startCommand/stopCommand、字段类型是否正确。【何时用】定期巡检工具架健康度、新增工具后验证合规、排查 manifest 损坏或字段缺失。【返回】不合规工具清单，含具体错误和建议。ok=true 表示全部合规。',
+    inputSchema: {
+      type: 'object',
+      properties: {},
+      required: []
     }
   },
   {
@@ -332,6 +342,13 @@ function handleUpdateCronTask(args) {
   return handleCronResult(result);
 }
 
+function handleAuditTools() {
+  var result = schema.auditAll();
+  var summary = result.ok ? 'PASS: ' + result.total + ' 个工具全部合规'
+    : 'FAIL: ' + result.errors + ' 个错误, ' + result.warnings + ' 个警告 (共 ' + result.total + ' 个工具)';
+  return textResult(summary + '\n\n' + JSON.stringify(result.issues, null, 2));
+}
+
 function handleCronResult(result) {
   if (!result.ok) return textResult('Scheduler API unreachable: ' + result.error + '. Is scheduler running on port 3100?', true);
   try {
@@ -349,6 +366,7 @@ var TOOL_HANDLERS = {
   'agentboard_stop_tool': handleStopTool,
   'agentboard_create_tool': handleCreateTool,
   'agentboard_update_tool': handleUpdateTool,
+  'agentboard_audit_tools': handleAuditTools,
   'agentboard_create_cron_task': handleCreateCronTask,
   'agentboard_update_cron_task': handleUpdateCronTask
 };

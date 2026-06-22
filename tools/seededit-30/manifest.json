@@ -18,5 +18,6 @@
   "url": "https://visual.volcengineapi.com",
   "conflicts": [],
   "agent_notes": "异步不等于一次请求——先POST拿task_id，再GET轮询直到status=done。DeepSeek可能不理解\"两阶段\"，会以为一次请求就能拿到结果。",
-  "capability": "AI图像编辑（换背景/去水印）"
+  "capability": "AI图像编辑（换背景/去水印）",
+  "owner": "自建"
 }

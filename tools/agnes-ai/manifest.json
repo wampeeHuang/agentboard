@@ -9,5 +9,6 @@
   "url": "https://platform.agnes-ai.com",
   "conflicts": [],
   "agent_notes": "视频异步轮询：POST提交→拿task_id→每10s轮询→下载。60s+不稳定，设15min超时。result_url可能是API端点而非直链，需判断URL类型后加Authorization header。图片质量低于gpt-image-2。",
-  "capability": "免费多模态API（文本/图片/视频）"
+  "capability": "免费多模态API（文本/图片/视频）",
+  "owner": "自建"
 }

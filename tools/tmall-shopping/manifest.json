@@ -13,5 +13,6 @@
   "stopCommand": "npx kill-port 3460",
   "conflicts": [],
   "agent_notes": "天猫超市已通，京东接入中。语音输入→NLP→搜索比价→下单。node server.js启动。",
-  "capability": "语音驱动天猫超市自动下单"
+  "capability": "语音驱动天猫超市自动下单",
+  "owner": "自建"
 }

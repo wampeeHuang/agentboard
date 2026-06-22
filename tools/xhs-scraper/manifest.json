@@ -14,5 +14,6 @@
   "type": "service",
   "conflicts": [],
   "capability": "小红书搜索和笔记内容提取",
-  "agent_notes": "小红书需要Cookie（a1+web_session），Chrome扩展Cookie Copy Tool获取。微信需要Cookie+Token（mp.weixin.qq.com后台F12→Network→appmsg请求提取）。小红书cookie持久化到auth/xhs.json，微信凭证仅内存。端口从3094迁移到3095。⚠️ 后端路由全部有/api/前缀，前端const API必须包含/api，否则所有请求静默404（UI无报错）。"
+  "agent_notes": "小红书需要Cookie（a1+web_session），Chrome扩展Cookie Copy Tool获取。微信需要Cookie+Token（mp.weixin.qq.com后台F12→Network→appmsg请求提取）。小红书cookie持久化到auth/xhs.json，微信凭证仅内存。端口从3094迁移到3095。⚠️ 后端路由全部有/api/前缀，前端const API必须包含/api，否则所有请求静默404（UI无报错）。",
+  "owner": "自建"
 }

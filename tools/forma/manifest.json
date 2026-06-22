@@ -14,5 +14,6 @@
   "stopCommand": "npx kill-port 3100",
   "conflicts": [],
   "agent_notes": "文章落盘后自动推送Markdown到Forma→打开预览。图片用相对路径![alt](images/xxx.png)。config.json在~/.claude/tools/forma/，sourceDirs配置文章扫描目录。evolution-cat主题=蓝底苹方。",
-  "capability": "Markdown转微信公众号HTML排版"
+  "capability": "Markdown转微信公众号HTML排版",
+  "owner": "自建"
 }

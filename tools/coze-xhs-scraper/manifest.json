@@ -9,5 +9,6 @@
   "url": "https://www.coze.cn/store/project/7567399406526545970",
   "conflicts": [],
   "agent_notes": "这是coze上已验证可通的小红书抓取工作流，作为本地scraper的备用方案。本地scraper (social-scraper :3095) 优先使用。仅在本地scraper因cookie/captcha/IP封禁等问题不可用时才建议切到Coze通道。Coze调用方式参考 ~/.claude/projects/.../memory/reference_coze.md。",
-  "capability": "小红书Coze备用抓取通道"
+  "capability": "小红书Coze备用抓取通道",
+  "owner": "自建"
 }

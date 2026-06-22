@@ -13,5 +13,6 @@
   "stopCommand": "npx kill-port 3099",
   "conflicts": [],
   "agent_notes": "每次操作工具前必须GET /api/tools确认running:true——不能因为看到port号就假设服务在跑。manifest改完无需重启，每次请求自动扫描。",
-  "capability": "工具架控制平面和Web面板"
+  "capability": "工具架控制平面和Web面板",
+  "owner": "自建"
 }

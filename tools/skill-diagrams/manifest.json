@@ -10,5 +10,6 @@
   "type": "service",
   "conflicts": [],
   "agent_notes": "自动扫描不手动维护。Agent生成新架构图→先读 _template.html 了解标准格式→填内容→写入目标 skill 的 references/system-diagram.html→自动出现在 /diagrams。模板含完整 CSS 设计系统+所有组件(流水线/门禁/侧栏/表格/流程图/目录树/信念网格/统计条)的 HTML 骨架和注释。",
-  "capability": "技能HTML结构图自动汇集"
+  "capability": "技能HTML结构图自动汇集",
+  "owner": "自建"
 }

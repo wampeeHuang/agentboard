@@ -14,5 +14,6 @@
   "stopCommand": "npx kill-port 3090",
   "conflicts": [],
   "agent_notes": "单HTML纯静态，npx serve启动。公开域名minds.evopearl.com。perspective-router skill从这个人名录里选角色。",
-  "capability": "39位人物思维顾问目录站"
+  "capability": "39位人物思维顾问目录站",
+  "owner": "自建"
 }

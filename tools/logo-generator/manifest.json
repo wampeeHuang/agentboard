@@ -13,5 +13,6 @@
   "stopCommand": "npx kill-port 3091",
   "conflicts": [],
   "agent_notes": "python3 generate.py启动。生成结果可拖入Pixso/即时设计/MasterGo编辑。curl POST传{brandName,category}。",
-  "capability": "AI品牌LOGO全案设计"
+  "capability": "AI品牌LOGO全案设计",
+  "owner": "自建"
 }
