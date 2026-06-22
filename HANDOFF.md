@@ -31,12 +31,22 @@
   - ② `~/.agentboard/` — 工具架+面板+manifest标准
   - ③ `~/.scheduler/` — 定时任务+巡检
   - eval/guardrails/bootstrap 全部删除。操作日志+cron状态+漂移检测已覆盖当前巡检需求，等真实痛点出现后再补
-- **Loop Monitor 解耦**: 从 agentboard :3099/loop 迁至 scheduler :3100/loop
-  - loop-dashboard.html + loop-console.html 迁至 ~/.scheduler/
-  - agentboard server.js 删 scanLoopProjects + 4条 loop 路由
-  - scheduler server.js 新增 /loop + /api/loop/health + /api/open-folder
-  - Loop Monitor 属于 scheduler 骨，不再寄生 agentboard
-  - 旧 /cron/health 301 → /loop（scheduler 内部重定向）
+- **Loop Monitor → Inspector 重构**:
+  - 旧 Loop Monitor (loop-dashboard.html, :3100/loop) 已迁至 scheduler
+  - 新建 **Inspector** — 质检员独立上岗
+  - `~/.inspector/` — 独立目录，独立 port :3101，独立 git
+  - checks.js: 6项纯确定性巡检，shell executor，不调LLM
+  - server.js: 最小Express，GET / /api/state POST /api/run
+  - panel.html: 巡检面板（检查→历史→呈报→触发按钮）
+  - golden-checks.json: 检查项定义，人手改
+  - 已注册工具架: `~/.agentboard/tools/inspector/manifest.json`
+  - Loop Monitor (/loop) 后续 301 → Inspector :3101
+  - Git: https://github.com/wampeeHuang/inspector
+
+## 未完成
+- phone-frame 源文件已丢失，待找回补注册
+- 巡检 cron job 尚未创建 (checks.js 已就绪，加到 crontab 即可)
+- Inspector git remote push (需先在 GitHub 建 repo)
 
 ## 未完成
 - phone-frame 源文件已丢失，待找回补注册
