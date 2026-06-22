@@ -6,6 +6,7 @@
   "version": "1.0.0",
   "category": "Agent",
   "order": 15,
+  "owner": "外部",
   "url": "http://localhost:3099",
   "startCommand": "wt powershell -NoExit -Command hermes",
   "stopCommand": "taskkill /FI \"WINDOWTITLE eq hermes*\" 2>nul",

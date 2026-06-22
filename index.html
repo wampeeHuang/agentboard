@@ -87,16 +87,7 @@ body{min-height:100vh;display:flex;flex-direction:column}
 .card-trigger{font-family:'JetBrains Mono','SF Mono','Consolas',monospace;font-size:11px;color:var(--ink);background:var(--paper-tint);padding:1px 6px;white-space:nowrap}
 .cmd-hint{font-size:10px;color:var(--text-muted);font-family:'JetBrains Mono','SF Mono','Consolas',monospace;padding:3px 8px;border:1px solid var(--border);white-space:nowrap}
 .group-card{min-height:auto;height:auto;border-left:2px solid var(--ink)}
-.group-toggle{font-size:11px;color:var(--ink);cursor:pointer;padding:4px 12px;border:1px solid var(--border);background:var(--paper);font-family:inherit;display:inline-flex;align-items:center;gap:4px;white-space:nowrap}
-.group-toggle:hover{background:var(--paper-tint);border-color:var(--ink)}
-.card-children{display:none;padding:8px 14px 12px;border-top:1px solid var(--border);margin:0 14px}
-.group-card.expanded .card-children{display:block}
-.group-child{display:flex;align-items:center;gap:8px;padding:5px 0;font-size:12px;border-bottom:1px solid var(--paper-tint)}
-.group-child:last-child{border-bottom:none}
-.group-child .gc-icon{font-size:13px;flex-shrink:0;width:22px;text-align:center}
-.group-child .gc-trigger{font-family:'JetBrains Mono','SF Mono','Consolas',monospace;font-size:10px;color:var(--ink);background:var(--paper-tint);padding:1px 6px;min-width:100px;white-space:nowrap}
-.group-child .gc-name{font-weight:400;font-size:12px;white-space:nowrap}
-.group-child .gc-desc{color:var(--text-muted);font-size:11px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
 .gc-section{font-size:10px;font-weight:500;color:var(--text-muted);padding:6px 0 2px;letter-spacing:.04em;border-bottom:1px solid var(--paper-tint);margin-bottom:2px;font-family:'JetBrains Mono','SF Mono','Consolas',monospace}
 .gc-status{font-size:10px;font-weight:400;flex-shrink:0;padding:1px 6px;white-space:nowrap}
 .gc-status.success{color:#27ae60}
@@ -364,7 +355,6 @@ var starting = {}; // id → true when waiting for start
 var stopping = {}; // id → true when waiting for stop
 var opened = {};   // id → true when user clicked "打开" this session
 try { opened = JSON.parse(sessionStorage.getItem('opened')||'{}'); } catch(_) {}
-var expandedGroups = {};
 var cronState = null;
 var filter = 'all';
 var domainFilter = 'all';
@@ -549,12 +539,24 @@ async function fetchStats() {
   }
 }
 
+var _cronBackoff = 0;
+var _cronTimer = null;
+
 async function fetchCronState() {
   try {
     var res = await fetch('/api/cron/state');
     var data = await res.json();
-    if (data.ok) { cronState = data; }
-  } catch(_) {}
+    if (data.ok) {
+      cronState = data;
+      _cronBackoff = 0;
+    } else {
+      _cronBackoff = Math.min((_cronBackoff || 60) * 2, 600);
+    }
+  } catch (_) {
+    _cronBackoff = Math.min((_cronBackoff || 60) * 2, 600);
+  }
+  if (_cronTimer) clearTimeout(_cronTimer);
+  _cronTimer = setTimeout(fetchCronState, (_cronBackoff || 60) * 1000);
 }
 
 async function fetchTools() {
@@ -784,11 +786,6 @@ function render() {
   }).join('');
 }
 
-function toggleGroup(id) {
-  expandedGroups[id] = !expandedGroups[id];
-  render();
-}
-
 function getCronChildStatus(childName) {
   if (!cronState || !cronState.jobs) return null;
   var job = cronState.jobs.find(function(j) { return j.name.indexOf(childName) !== -1; });
@@ -799,6 +796,7 @@ function getCronChildStatus(childName) {
     case 'success': return { cls: 'success', label: '成功' };
     case 'error': return { cls: 'error', label: '失败(' + (ts.consecutiveErrors || 0) + '次)' };
     case 'fatal_error': return { cls: 'fatal_error', label: '今日已停止' };
+    case 'output_missing': return { cls: 'output_missing', label: '产出缺失' };
     default: return { cls: 'unknown', label: ts.lastStatus };
   }
 }
@@ -982,7 +980,6 @@ document.addEventListener('DOMContentLoaded', function() {
   fetchStats();
   fetchCronState();
   setInterval(fetchStats, 30000);
-  setInterval(fetchCronState, 60000);
 });
 </script>
 </body>

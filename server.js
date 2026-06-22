@@ -1,6 +1,7 @@
 ﻿const express = require('express');
 const fs = require('fs');
 const path = require('path');
+const http = require('http');
 const { exec, execSync, spawn } = require('child_process');
 const os = require('os');
 var registry = require('./lib/tool-registry');
@@ -648,18 +649,20 @@ function startServer() {
 
   // --- Cron state proxy → scheduler :3100 ---
   app.get('/api/cron/state', function(req, res) {
-    var http = require('http');
     var opts = { hostname: '127.0.0.1', port: 3100, path: '/api/cron/state', method: 'GET', timeout: 5000 };
     var proxy = http.request(opts, function(upstream) {
+      if (upstream.statusCode !== 200) {
+        if (!res.headersSent) res.status(502).json({ ok: false, error: 'scheduler returned ' + upstream.statusCode });
+        return;
+      }
       var body = '';
       upstream.on('data', function(c) { body += c; });
       upstream.on('end', function() {
-        res.type('json');
-        res.send(body);
+        if (!res.headersSent) { res.type('json'); res.send(body); }
       });
     });
-    proxy.on('error', function() { res.json({ ok: false, error: 'scheduler unreachable' }); });
-    proxy.on('timeout', function() { proxy.destroy(); res.json({ ok: false, error: 'scheduler timeout' }); });
+    proxy.on('error', function() { if (!res.headersSent) res.json({ ok: false, error: 'scheduler unreachable' }); });
+    proxy.on('timeout', function() { proxy.destroy(); if (!res.headersSent) res.json({ ok: false, error: 'scheduler timeout' }); });
     proxy.end();
   });
 

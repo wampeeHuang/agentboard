@@ -173,6 +173,12 @@ var TOOL_DEFS = [
   }
 ];
 
+// ── Search scoring constants ──
+
+var SEARCH_WEIGHTS = { CAPABILITY: 10, NAME: 5, DESC: 2, TOKEN_CAP: 2, TOKEN_NAME: 1, TOKEN_DESC: 0.5 };
+var SEARCH_TOP_N = 5;
+var SEARCH_DESC_MAX = 120;
+
 // ── Tool call handlers (thin — delegate to registry) ──
 
 function textResult(text, isError) {
@@ -205,30 +211,26 @@ function handleSearchTools(args) {
     var name = (t.name || '').toLowerCase();
     var desc = (t.description || '').toLowerCase();
     var score = 0;
-    // capability match = weight 10
-    if (cap.indexOf(query) !== -1) score += 10;
-    // name match = weight 5
-    if (name.indexOf(query) !== -1) score += 5;
-    // description match = weight 2
-    if (desc.indexOf(query) !== -1) score += 2;
-    // partial token match (query split by 2-char)
+    if (cap.indexOf(query) !== -1) score += SEARCH_WEIGHTS.CAPABILITY;
+    if (name.indexOf(query) !== -1) score += SEARCH_WEIGHTS.NAME;
+    if (desc.indexOf(query) !== -1) score += SEARCH_WEIGHTS.DESC;
     if (query.length >= 2) {
       for (var i = 0; i < query.length - 1; i++) {
         var token = query.substring(i, i + 2);
-        if (cap.indexOf(token) !== -1) score += 2;
-        else if (name.indexOf(token) !== -1) score += 1;
-        else if (desc.indexOf(token) !== -1) score += 0.5;
+        if (cap.indexOf(token) !== -1) score += SEARCH_WEIGHTS.TOKEN_CAP;
+        else if (name.indexOf(token) !== -1) score += SEARCH_WEIGHTS.TOKEN_NAME;
+        else if (desc.indexOf(token) !== -1) score += SEARCH_WEIGHTS.TOKEN_DESC;
       }
     }
     return { tool: t, score: score };
   });
   scored = scored.filter(function (s) { return s.score > 0; });
   scored.sort(function (a, b) { return b.score - a.score; });
-  var top = scored.slice(0, 5).map(function (s) {
+  var top = scored.slice(0, SEARCH_TOP_N).map(function (s) {
     return {
       id: s.tool.id, name: s.tool.name, capability: s.tool.capability || '',
       running: s.tool.running, port: s.tool.port, score: s.score,
-      description: (s.tool.description || '').substring(0, 120)
+      description: (s.tool.description || '').substring(0, SEARCH_DESC_MAX)
     };
   });
   if (!top.length) return textResult('No tools matched intent: ' + args.intent + '. Try broader terms like 搜索/生成/下载/识别.');
