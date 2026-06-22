@@ -5,6 +5,10 @@
 // Core logic: lib/tool-registry.js (唯一真相源)
 
 var readline = require('readline');
+var cp = require('child_process');
+var fs = require('fs');
+var os = require('os');
+var path = require('path');
 var registry = require('./lib/tool-registry');
 
 // ── MCP Tool definitions ──
@@ -112,6 +116,49 @@ var TOOL_DEFS = [
       },
       required: ['id']
     }
+  },
+  {
+    name: 'agentboard_create_cron_task',
+    description: '【用途】创建新的定时任务，写入 scheduler 的 SQLite 数据库。\n【何时用】需要新建定时任务（日报/巡检/运维），指定执行器、模型、cron 表达式和提示词。\n【何时不用】修改已有任务用 agentboard_update_cron_task。仅查看任务用浏览器打开 http://localhost:3100/cron。\n【返回】创建的任务 JSON，含 id。\n【端口】3100（scheduler HTTP）',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        name: { type: 'string', description: '任务名称，显示在卡片上' },
+        description: { type: 'string', description: '一句话描述任务用途' },
+        category: { type: 'string', enum: ['日报', '巡检', '运维'], description: '功能分类' },
+        project_id: { type: 'string', description: '归属项目: data.evopearl.com, 税无忧, 保障房, 个体户, 深圳求职, loop-engine, system, _' },
+        cron_expr: { type: 'string', description: '5字段cron表达式（分 时 日 月 周）或 once:YYYYMMDDTHHMMSS 一次性任务' },
+        executor: { type: 'string', enum: ['agent', 'shell'], description: '执行器类型。agent=AI模型执行prompt，shell=执行command' },
+        model: { type: 'string', enum: ['deepseek-v4-pro', 'claude-haiku-4-5', 'claude-sonnet-4-6', 'claude-opus-4-7'], description: 'AI模型。仅executor=agent时需要' },
+        prompt: { type: 'string', description: '发给AI的完整指令。executor=agent时必填' },
+        command: { type: 'string', description: 'Shell命令。executor=shell时必填' },
+        timeout_sec: { type: 'number', description: '超时秒数，默认300' },
+        enabled: { type: 'boolean', description: '是否启用，默认true' }
+      },
+      required: ['name', 'category', 'project_id', 'cron_expr', 'executor']
+    }
+  },
+  {
+    name: 'agentboard_update_cron_task',
+    description: '【用途】更新已有定时任务（部分更新），只传要改的字段。\n【何时用】修改任务的执行频率、模型、提示词、启用状态等。\n【何时不用】创建新任务用 agentboard_create_cron_task。\n【返回】更新后的任务 JSON。\n【端口】3100（scheduler HTTP）',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        id: { type: 'number', description: '任务 ID（数字）' },
+        name: { type: 'string', description: '任务名称' },
+        description: { type: 'string', description: '任务描述' },
+        category: { type: 'string', enum: ['日报', '巡检', '运维'] },
+        project_id: { type: 'string' },
+        cron_expr: { type: 'string', description: '5字段cron或once:时间戳' },
+        executor: { type: 'string', enum: ['agent', 'shell'] },
+        model: { type: 'string', enum: ['deepseek-v4-pro', 'claude-haiku-4-5', 'claude-sonnet-4-6', 'claude-opus-4-7'] },
+        prompt: { type: 'string' },
+        command: { type: 'string' },
+        timeout_sec: { type: 'number' },
+        enabled: { type: 'boolean' }
+      },
+      required: ['id']
+    }
   }
 ];
 
@@ -175,13 +222,83 @@ function handleUpdateTool(args) {
   return textResult('Error: ' + result.error, true);
 }
 
+// ── Cron task helpers (call scheduler REST API via temp-file PowerShell) ──
+
+var TMP = path.join(os.tmpdir(), 'agentboard-mcp-cron');
+
+function cronApi(method, path_, body) {
+  if (body) {
+    try { fs.mkdirSync(path.dirname(TMP), { recursive: true }); } catch (_) {}
+    fs.writeFileSync(TMP, JSON.stringify(body), 'utf-8');
+  }
+  var ps = '[System.Net.ServicePointManager]::Expect100Continue = $false; ' +
+    '$r = Invoke-RestMethod -Uri "http://127.0.0.1:3100' + path_ + '" -Method ' + method + ' -ContentType "application/json"' +
+    (body ? ' -Body ([System.IO.File]::ReadAllText("' + TMP.replace(/\\/g, '\\\\') + '"))' : '') +
+    '; ConvertTo-Json -Compress -Depth 10 -InputObject $r';
+  try {
+    var out = cp.execSync('powershell -NoProfile -NonInteractive -Command "' + ps.replace(/"/g, '\\"') + '"', { encoding: 'utf-8', timeout: 8000 });
+    if (out.trim()) return { ok: true, data: out.trim() };
+    return { ok: false, error: 'empty response' };
+  } catch (e) {
+    var errMsg = (e.stderr || e.message || '').toString().substring(0, 500);
+    if (errMsg.indexOf('{"') !== -1 || errMsg.indexOf('"id":') !== -1) return { ok: true, data: errMsg };
+    return { ok: false, error: errMsg };
+  }
+}
+
+function handleCreateCronTask(args) {
+  if (!args || !args.name || !args.category || !args.project_id || !args.cron_expr || !args.executor) {
+    return textResult('Error: name, category, project_id, cron_expr, executor are required', true);
+  }
+  if (args.executor === 'agent' && !args.prompt) return textResult('Error: prompt is required when executor=agent', true);
+  if (args.executor === 'shell' && !args.command) return textResult('Error: command is required when executor=shell', true);
+  var body = {
+    name: args.name, description: args.description || '', category: args.category,
+    project_id: args.project_id, project_dir: '_', cron_expr: args.cron_expr,
+    executor: args.executor, model: args.executor === 'agent' ? (args.model || '') : '',
+    prompt: args.executor === 'shell' ? (args.command || '') : (args.prompt || ''),
+    timeout_sec: args.timeout_sec || 300,
+    enabled: args.enabled !== false ? 1 : 0
+  };
+  var result = cronApi('POST', '/api/cron/tasks', body);
+  return handleCronResult(result);
+}
+
+function handleUpdateCronTask(args) {
+  if (!args || !args.id) return textResult('Error: id is required', true);
+  var body = {};
+  var fields = ['name','description','category','project_id','cron_expr','executor','model','prompt','command','timeout_sec','enabled'];
+  for (var i = 0; i < fields.length; i++) {
+    var f = fields[i];
+    if (args[f] !== undefined) {
+      if (f === 'enabled') body[f] = args[f] ? 1 : 0;
+      else if (f === 'command') body.prompt = args[f];
+      else body[f] = args[f];
+    }
+  }
+  if (args.executor === 'shell' && !body.prompt && !args.prompt) body.prompt = args.command;
+  var result = cronApi('PUT', '/api/cron/tasks/' + args.id, body);
+  return handleCronResult(result);
+}
+
+function handleCronResult(result) {
+  if (!result.ok) return textResult('Scheduler API unreachable: ' + result.error + '. Is scheduler running on port 3100?', true);
+  try {
+    var d = JSON.parse(result.data);
+    if (d.error) return textResult('Error: ' + d.error, true);
+  } catch (_) {}
+  return textResult(result.data);
+}
+
 var TOOL_HANDLERS = {
   'agentboard_list_tools': handleListTools,
   'agentboard_get_tool': handleGetTool,
   'agentboard_start_tool': handleStartTool,
   'agentboard_stop_tool': handleStopTool,
   'agentboard_create_tool': handleCreateTool,
-  'agentboard_update_tool': handleUpdateTool
+  'agentboard_update_tool': handleUpdateTool,
+  'agentboard_create_cron_task': handleCreateCronTask,
+  'agentboard_update_cron_task': handleUpdateCronTask
 };
 
 // ── JSON-RPC handlers ──
