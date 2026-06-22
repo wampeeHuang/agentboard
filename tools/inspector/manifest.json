@@ -1,0 +1,14 @@
+{
+  "name": "Inspector",
+  "description": "【用途】质检员 — 巡检所有项目的 schema/cron/备份/磁盘健康，纯确定性脚本不调LLM。Karpathy: The eval function is sacred.",
+  "capability": "联邦巡检+呈报队列+触发面板",
+  "owner": "自建",
+  "type": "service",
+  "port": 3101,
+  "startCommand": "cd /d %USERPROFILE%\\.inspector && node server.js",
+  "stopCommand": "npx kill-port 3101",
+  "projectPath": "%USERPROFILE%\\.inspector",
+  "url": "http://localhost:3101",
+  "agent_notes": "巡检脚本用 shell executor (node checks.js)，不调 agentTurn。agent 通过 GET /api/state 读巡检结果，POST /api/run 触发巡检。不要自己改 golden-checks.json，那是人手维护的检查项定义。",
+  "category": "巡检"
+}
