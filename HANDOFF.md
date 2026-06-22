@@ -31,6 +31,12 @@
   - ② `~/.agentboard/` — 工具架+面板+manifest标准
   - ③ `~/.scheduler/` — 定时任务+巡检
   - eval/guardrails/bootstrap 全部删除。操作日志+cron状态+漂移检测已覆盖当前巡检需求，等真实痛点出现后再补
+- **Loop Monitor 解耦**: 从 agentboard :3099/loop 迁至 scheduler :3100/loop
+  - loop-dashboard.html + loop-console.html 迁至 ~/.scheduler/
+  - agentboard server.js 删 scanLoopProjects + 4条 loop 路由
+  - scheduler server.js 新增 /loop + /api/loop/health + /api/open-folder
+  - Loop Monitor 属于 scheduler 骨，不再寄生 agentboard
+  - 旧 /cron/health 301 → /loop（scheduler 内部重定向）
 
 ## 未完成
 - phone-frame 源文件已丢失，待找回补注册
