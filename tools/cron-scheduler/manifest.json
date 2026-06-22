@@ -9,7 +9,7 @@
   "type": "group",
   "owner": "自建",
   "url": "http://localhost:3100/cron",
-  "projectPath": "%USERPROFILE%\\.agentboard\\cron\\scheduler.js",
+  "projectPath": "C:\\Users\\Administrator\\.scheduler",
   "children": [
     {
       "type": "section",
@@ -68,5 +68,6 @@
   ],
   "conflicts": [],
   "agent_notes": "type:group, children列出7个任务分3组：日报(3,OpenClaw Gateway)→提醒(1)→巡检(3,cron-runner.js)。section类型=分组标题。日报状态来自/api/cron/state，巡检状态暂不展示。",
-  "capability": "定时任务调度（日报/巡检/备份）"
+  "capability": "定时任务调度（日报/巡检/备份）",
+  "startCommand": "cd /d %USERPROFILE%\\.scheduler && node start.js"
 }

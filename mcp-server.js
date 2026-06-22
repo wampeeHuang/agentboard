@@ -11,6 +11,7 @@ var os = require('os');
 var path = require('path');
 var registry = require('./lib/tool-registry');
 var schema = require('./lib/manifest-schema');
+var taskSchema = require(path.join(os.homedir(), '.scheduler', 'task-schema.json'));
 
 // ── MCP Tool definitions ──
 
@@ -131,7 +132,7 @@ var TOOL_DEFS = [
   },
   {
     name: 'agentboard_audit_tools',
-    description: '【用途】巡检所有工具 manifest 是否合规。检查必填字段（name/description/capability/owner）、service类型是否有 startCommand/stopCommand、字段类型是否正确。【何时用】定期巡检工具架健康度、新增工具后验证合规、排查 manifest 损坏或字段缺失。【返回】不合规工具清单，含具体错误和建议。ok=true 表示全部合规。',
+    description: '双层巡检：① schema 合规（必填字段/类型检查）② 运行时漂移检测（projectPath是否存在、startCommand可执行文件是否在PATH、孤儿目录无manifest、声明端口是否实际监听）。【何时用】定期巡检工具架健康度、新增工具后验证、排查注册表与实际情况不一致。【返回】双层结果合并，error=需要修复，warning=建议关注。ok=true 表示全部通过。',
     inputSchema: {
       type: 'object',
       properties: {},
@@ -141,45 +142,12 @@ var TOOL_DEFS = [
   {
     name: 'agentboard_create_cron_task',
     description: '【用途】创建新的定时任务，写入 scheduler 的 SQLite 数据库。\n【何时用】需要新建定时任务（日报/巡检/运维），指定执行器、模型、cron 表达式和提示词。\n【何时不用】修改已有任务用 agentboard_update_cron_task。仅查看任务用浏览器打开 http://localhost:3100/cron。\n【返回】创建的任务 JSON，含 id。\n【端口】3100（scheduler HTTP）',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        name: { type: 'string', description: '任务名称，显示在卡片上' },
-        description: { type: 'string', description: '一句话描述任务用途' },
-        category: { type: 'string', enum: ['日报', '巡检', '运维'], description: '功能分类' },
-        project_id: { type: 'string', description: '归属项目: data.evopearl.com, 税无忧, 保障房, 个体户, 深圳求职, loop-engine, system, _' },
-        cron_expr: { type: 'string', description: '5字段cron表达式（分 时 日 月 周）或 once:YYYYMMDDTHHMMSS 一次性任务' },
-        executor: { type: 'string', enum: ['agent', 'shell'], description: '执行器类型。agent=AI模型执行prompt，shell=执行command' },
-        model: { type: 'string', enum: ['deepseek-v4-pro', 'claude-haiku-4-5', 'claude-sonnet-4-6', 'claude-opus-4-7'], description: 'AI模型。仅executor=agent时需要' },
-        prompt: { type: 'string', description: '发给AI的完整指令。executor=agent时必填' },
-        command: { type: 'string', description: 'Shell命令。executor=shell时必填' },
-        timeout_sec: { type: 'number', description: '超时秒数，默认300' },
-        enabled: { type: 'boolean', description: '是否启用，默认true' }
-      },
-      required: ['name', 'category', 'project_id', 'cron_expr', 'executor']
-    }
+    inputSchema: buildMCPInputSchema(true)
   },
   {
     name: 'agentboard_update_cron_task',
     description: '【用途】更新已有定时任务（部分更新），只传要改的字段。\n【何时用】修改任务的执行频率、模型、提示词、启用状态等。\n【何时不用】创建新任务用 agentboard_create_cron_task。\n【返回】更新后的任务 JSON。\n【端口】3100（scheduler HTTP）',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        id: { type: 'number', description: '任务 ID（数字）' },
-        name: { type: 'string', description: '任务名称' },
-        description: { type: 'string', description: '任务描述' },
-        category: { type: 'string', enum: ['日报', '巡检', '运维'] },
-        project_id: { type: 'string' },
-        cron_expr: { type: 'string', description: '5字段cron或once:时间戳' },
-        executor: { type: 'string', enum: ['agent', 'shell'] },
-        model: { type: 'string', enum: ['deepseek-v4-pro', 'claude-haiku-4-5', 'claude-sonnet-4-6', 'claude-opus-4-7'] },
-        prompt: { type: 'string' },
-        command: { type: 'string' },
-        timeout_sec: { type: 'number' },
-        enabled: { type: 'boolean' }
-      },
-      required: ['id']
-    }
+    inputSchema: buildMCPInputSchema(false)
   }
 ];
 
@@ -188,6 +156,39 @@ var TOOL_DEFS = [
 var SEARCH_WEIGHTS = { CAPABILITY: 10, NAME: 5, DESC: 2, TOKEN_CAP: 2, TOKEN_NAME: 1, TOKEN_DESC: 0.5 };
 var SEARCH_TOP_N = 5;
 var SEARCH_DESC_MAX = 120;
+
+// ── Schema-driven MCP inputSchema builder ──
+
+function buildMCPInputSchema(forCreate) {
+  var props = {};
+  var required = [];
+
+  if (!forCreate) {
+    props.id = { type: 'number', description: '任务 ID（数字）' };
+    required.push('id');
+  }
+
+  for (var i = 0; i < taskSchema.fields.length; i++) {
+    var f = taskSchema.fields[i];
+    if (f.name === 'id' || f.name === 'created_at' || f.hidden) continue;
+
+    var prop = { type: f.type === 'integer' ? 'number' : f.type === 'boolean' ? 'boolean' : 'string' };
+    if (f.mcp && f.mcp.description) prop.description = f.mcp.description;
+
+    if (f.mcp && f.mcp.enumFrom && taskSchema.options && taskSchema.options[f.mcp.enumFrom]) {
+      var opts = taskSchema.options[f.mcp.enumFrom];
+      prop.enum = opts.map(function(o) { return typeof o === 'string' ? o : o.value; });
+    }
+
+    props[f.name] = prop;
+
+    if (f.required && taskSchema.mcpRequired.indexOf(f.name) >= 0) {
+      required.push(f.name);
+    }
+  }
+
+  return { type: 'object', properties: props, required: required };
+}
 
 // ── Tool call handlers (thin — delegate to registry) ──
 
@@ -308,11 +309,18 @@ function cronApi(method, path_, body) {
 }
 
 function handleCreateCronTask(args) {
-  if (!args || !args.name || !args.category || !args.project_id || !args.cron_expr || !args.executor) {
-    return textResult('Error: name, category, project_id, cron_expr, executor are required', true);
+  // Schema-driven validation
+  var required = taskSchema.mcpRequired || [];
+  for (var i = 0; i < required.length; i++) {
+    if (!args || !args[required[i]]) return textResult('Error: ' + required[i] + ' is required', true);
   }
-  if (args.executor === 'agent' && !args.prompt) return textResult('Error: prompt is required when executor=agent', true);
-  if (args.executor === 'shell' && !args.command) return textResult('Error: command is required when executor=shell', true);
+  var condRequired = taskSchema.mcpConditionalRequired || [];
+  for (var i = 0; i < condRequired.length; i++) {
+    var cr = condRequired[i];
+    if (args && args[cr.when.field] === cr.when.value && !args[cr.field]) {
+      return textResult('Error: ' + cr.field + ' is required when ' + cr.when.field + '=' + cr.when.value, true);
+    }
+  }
   var body = {
     name: args.name, description: args.description || '', category: args.category,
     project_id: args.project_id, project_dir: '_', cron_expr: args.cron_expr,
@@ -328,13 +336,14 @@ function handleCreateCronTask(args) {
 function handleUpdateCronTask(args) {
   if (!args || !args.id) return textResult('Error: id is required', true);
   var body = {};
-  var fields = ['name','description','category','project_id','cron_expr','executor','model','prompt','command','timeout_sec','enabled'];
-  for (var i = 0; i < fields.length; i++) {
-    var f = fields[i];
-    if (args[f] !== undefined) {
-      if (f === 'enabled') body[f] = args[f] ? 1 : 0;
-      else if (f === 'command') body.prompt = args[f];
-      else body[f] = args[f];
+  // Derive writable field names from schema
+  for (var i = 0; i < taskSchema.fields.length; i++) {
+    var f = taskSchema.fields[i];
+    if (f.auto || f.hidden || f.name === 'id' || f.name === 'created_at') continue;
+    if (args[f.name] !== undefined) {
+      if (f.name === 'enabled') body[f.name] = args[f.name] ? 1 : 0;
+      else if (f.name === 'command') body.prompt = args[f.name];
+      else body[f.name] = args[f.name];
     }
   }
   if (args.executor === 'shell' && !body.prompt && !args.prompt) body.prompt = args.command;
@@ -342,11 +351,48 @@ function handleUpdateCronTask(args) {
   return handleCronResult(result);
 }
 
+function getListeningPorts() {
+  var ports = new Set();
+  try {
+    if (os.platform() === 'win32') {
+      var out = cp.execSync('netstat -ano', { timeout: 3000, encoding: 'utf8', shell: true, windowsHide: true });
+      var re = /\s+TCP\s+\S+:(\d+)\s+.*LISTENING/gi;
+      var m;
+      while ((m = re.exec(out)) !== null) { ports.add(parseInt(m[1], 10)); }
+    }
+  } catch (_) {}
+  return ports;
+}
+
 function handleAuditTools() {
-  var result = schema.auditAll();
-  var summary = result.ok ? 'PASS: ' + result.total + ' 个工具全部合规'
-    : 'FAIL: ' + result.errors + ' 个错误, ' + result.warnings + ' 个警告 (共 ' + result.total + ' 个工具)';
-  return textResult(summary + '\n\n' + JSON.stringify(result.issues, null, 2));
+  var schemaResult = schema.auditAll();
+  var listeningPorts = getListeningPorts();
+  var driftResult = schema.auditRuntime(null, listeningPorts);
+
+  // 合并：schema 合规 + 运行时漂移
+  var totalErrors = schemaResult.errors + driftResult.errors;
+  var totalWarnings = schemaResult.warnings + driftResult.warnings;
+  var allIssues = [].concat(
+    schemaResult.issues.map(function (i) { i.source = 'schema'; return i; }),
+    driftResult.issues.map(function (i) { i.source = 'drift'; return i; })
+  );
+  allIssues.sort(function (a, b) {
+    return b.errors.length - a.errors.length || b.warnings.length - a.warnings.length;
+  });
+
+  var summary;
+  if (totalErrors === 0 && totalWarnings === 0) {
+    summary = 'PASS: ' + schemaResult.total + ' 个工具全部合规，无漂移';
+  } else {
+    var parts = [];
+    if (schemaResult.errors > 0) parts.push('schema 错误 ' + schemaResult.errors);
+    if (driftResult.errors > 0) parts.push('漂移错误 ' + driftResult.errors);
+    if (schemaResult.warnings > 0) parts.push('schema 警告 ' + schemaResult.warnings);
+    if (driftResult.warnings > 0) parts.push('漂移警告 ' + driftResult.warnings);
+    summary = 'FAIL: ' + parts.join(', ') + ' (共 ' + schemaResult.total + ' 个工具)';
+  }
+
+  return textResult(summary + '\n\n' + JSON.stringify(allIssues, null, 2));
 }
 
 function handleCronResult(result) {
