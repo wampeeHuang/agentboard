@@ -12,5 +12,6 @@
   "startCommand": "cd /d D:\\workspace\\lab\\2026-05-31-个体户台账 && node server.js",
   "stopCommand": "npx kill-port 3456",
   "conflicts": [],
-  "agent_notes": "和税无忧互补：驾驶舱=日程+入口，税无忧=电商订单税务计算。两个端口不同可同时开。"
+  "agent_notes": "和税无忧互补：驾驶舱=日程+入口，税无忧=电商订单税务计算。两个端口不同可同时开。",
+  "capability": "个体户工商/社保/税务一站式管理"
 }

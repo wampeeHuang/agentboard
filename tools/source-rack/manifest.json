@@ -12,5 +12,6 @@
   "startCommand": "cd /d D:\\workspace\\source-rack && node server.js",
   "stopCommand": "npx kill-port 3098",
   "conflicts": [],
-  "agent_notes": "源文件在Obsidian wiki，Source Rack只读不写。Swiss极简UI。node server.js启动。"
+  "agent_notes": "源文件在Obsidian wiki，Source Rack只读不写。Swiss极简UI。node server.js启动。",
+  "capability": "信息源管理面板（Obsidian扫描）"
 }

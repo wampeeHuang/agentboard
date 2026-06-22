@@ -12,5 +12,6 @@
   "startCommand": "cd /d \"D:\\workspace\\2026-05-29-深圳保障房导航\" && node server.js",
   "stopCommand": "npx kill-port 3458",
   "conflicts": [],
-  "agent_notes": "功能类应用，不依赖AI。政策变化时需要更新数据源。"
+  "agent_notes": "功能类应用，不依赖AI。政策变化时需要更新数据源。",
+  "capability": "深圳保障房政策查询和资格自检"
 }

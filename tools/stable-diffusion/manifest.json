@@ -17,5 +17,6 @@
     "minicpm-v",
     "ace-step"
   ],
-  "agent_notes": "⚠️和ComfyUI是二选一。秋叶整合包中文界面，但对Agent来说和ComfyUI功能重叠——Agent默认选ComfyUI。"
+  "agent_notes": "⚠️和ComfyUI是二选一。秋叶整合包中文界面，但对Agent来说和ComfyUI功能重叠——Agent默认选ComfyUI。",
+  "capability": "SD WebUI快速文生图"
 }

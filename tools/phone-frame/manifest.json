@@ -11,5 +11,6 @@
   "port": 3082,
   "owner": "自建",
   "conflicts": [],
-  "agent_notes": "静态页面，依赖画廊 Express 静态服务(端口3082)。如果画廊没启动，先启动画廊(skill-html-showcase)。使用方式：phone-frame.html?url=<目标App地址>。iframe 跨域限制下 localStorage/IndexedDB 按 App 自身 origin 正常工作。"
+  "agent_notes": "静态页面，依赖画廊 Express 静态服务(端口3082)。如果画廊没启动，先启动画廊(skill-html-showcase)。使用方式：phone-frame.html?url=<目标App地址>。iframe 跨域限制下 localStorage/IndexedDB 按 App 自身 origin 正常工作。",
+  "capability": "iPhone手机框预览Web应用"
 }

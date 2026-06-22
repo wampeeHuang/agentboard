@@ -16,13 +16,24 @@ var registry = require('./lib/tool-registry');
 var TOOL_DEFS = [
   {
     name: 'agentboard_list_tools',
-    description: '列出 agentboard 上所有已注册工具，含运行状态、分类、端口、描述。用此工具发现有哪些工具可用，然后再启动或调用。可按分类或 ID 筛选。',
+    description: '列出 agentboard 上所有已注册工具，含运行状态、分类、端口、描述、capability。用此工具发现有哪些工具可用，然后再启动或调用。可按分类或 ID 筛选。',
     inputSchema: {
       type: 'object',
       properties: {
         category: { type: 'string', description: '按分类筛选: 模型, Agent, 设施, 获取, 查阅, 创作, 职能' },
         id: { type: 'string', description: '按工具 ID 筛选' }
       }
+    }
+  },
+  {
+    name: 'agentboard_search_tools',
+    description: '按意图搜索工具。输入你想完成的任务描述（如"搜小红书""生成图片""语音合成"），返回匹配的工具列表，按相关度排序。capability 字段权重最高。',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        intent: { type: 'string', description: '任务意图描述，如 搜小红书、生成图片、下载视频、OCR识别' }
+      },
+      required: ['intent']
     }
   },
   {
@@ -177,13 +188,51 @@ function handleListTools(args) {
   var summary = tools.map(function (t) {
     return {
       id: t.id, name: t.name, category: t.category || '', running: t.running,
-      port: t.port, ports: t.ports, description: (t.description || '').substring(0, 300),
+      port: t.port, ports: t.ports, capability: t.capability || '',
       hasStartCommand: !!t.startCommand, hasStopCommand: !!t.stopCommand,
-      conflicts: t.conflicts, agent_notes: t.agent_notes ? t.agent_notes.substring(0, 200) : '',
-      dashboard: t.dashboard
+      conflicts: t.conflicts
     };
   });
   return textResult(JSON.stringify(summary, null, 2));
+}
+
+function handleSearchTools(args) {
+  if (!args || !args.intent) return textResult('Error: intent is required', true);
+  var tools = registry.scanTools();
+  var query = args.intent.toLowerCase();
+  var scored = tools.map(function (t) {
+    var cap = (t.capability || '').toLowerCase();
+    var name = (t.name || '').toLowerCase();
+    var desc = (t.description || '').toLowerCase();
+    var score = 0;
+    // capability match = weight 10
+    if (cap.indexOf(query) !== -1) score += 10;
+    // name match = weight 5
+    if (name.indexOf(query) !== -1) score += 5;
+    // description match = weight 2
+    if (desc.indexOf(query) !== -1) score += 2;
+    // partial token match (query split by 2-char)
+    if (query.length >= 2) {
+      for (var i = 0; i < query.length - 1; i++) {
+        var token = query.substring(i, i + 2);
+        if (cap.indexOf(token) !== -1) score += 2;
+        else if (name.indexOf(token) !== -1) score += 1;
+        else if (desc.indexOf(token) !== -1) score += 0.5;
+      }
+    }
+    return { tool: t, score: score };
+  });
+  scored = scored.filter(function (s) { return s.score > 0; });
+  scored.sort(function (a, b) { return b.score - a.score; });
+  var top = scored.slice(0, 5).map(function (s) {
+    return {
+      id: s.tool.id, name: s.tool.name, capability: s.tool.capability || '',
+      running: s.tool.running, port: s.tool.port, score: s.score,
+      description: (s.tool.description || '').substring(0, 120)
+    };
+  });
+  if (!top.length) return textResult('No tools matched intent: ' + args.intent + '. Try broader terms like 搜索/生成/下载/识别.');
+  return textResult(JSON.stringify(top, null, 2));
 }
 
 function handleGetTool(args) {
@@ -292,6 +341,7 @@ function handleCronResult(result) {
 
 var TOOL_HANDLERS = {
   'agentboard_list_tools': handleListTools,
+  'agentboard_search_tools': handleSearchTools,
   'agentboard_get_tool': handleGetTool,
   'agentboard_start_tool': handleStartTool,
   'agentboard_stop_tool': handleStopTool,

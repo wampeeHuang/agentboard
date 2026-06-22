@@ -44,5 +44,6 @@
   ],
   "url": "https://aigoapi.com",
   "conflicts": [],
-  "agent_notes": "gpt-image-2质量比agnes-image高80%+(文件大)，key耗尽后用agnes兜底。claude-opus-4-7和deepseek-3.2都可用作文本主力。key名=AIGOAPI_KEY。"
+  "agent_notes": "gpt-image-2质量比agnes-image高80%+(文件大)，key耗尽后用agnes兜底。claude-opus-4-7和deepseek-3.2都可用作文本主力。key名=AIGOAPI_KEY。",
+  "capability": "付费API聚合（文本+图片+视频）"
 }

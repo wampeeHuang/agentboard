@@ -11,7 +11,10 @@
   "url": "http://localhost:3100/cron",
   "projectPath": "%USERPROFILE%\\.agentboard\\cron\\scheduler.js",
   "children": [
-    { "type": "section", "name": "日报 · Gateway" },
+    {
+      "type": "section",
+      "name": "日报 · Gateway"
+    },
     {
       "icon": "📖",
       "name": "认知深读日报",
@@ -30,14 +33,20 @@
       "desc": "每天 8:30 · 选题策展+飞书推送 · 链路末端",
       "trigger": "cron-每日选题"
     },
-    { "type": "section", "name": "提醒" },
+    {
+      "type": "section",
+      "name": "提醒"
+    },
     {
       "icon": "🏪",
       "name": "个体户申报提醒",
       "desc": "每天 8:57 · 扫描7日内待办 · 有待办飞书私聊通知",
       "trigger": "cron-个体户申报"
     },
-    { "type": "section", "name": "巡检 · cron-runner" },
+    {
+      "type": "section",
+      "name": "巡检 · cron-runner"
+    },
     {
       "icon": "🏪",
       "name": "个体户巡检",
@@ -58,5 +67,6 @@
     }
   ],
   "conflicts": [],
-  "agent_notes": "type:group, children列出7个任务分3组：日报(3,OpenClaw Gateway)→提醒(1)→巡检(3,cron-runner.js)。section类型=分组标题。日报状态来自/api/cron/state，巡检状态暂不展示。"
+  "agent_notes": "type:group, children列出7个任务分3组：日报(3,OpenClaw Gateway)→提醒(1)→巡检(3,cron-runner.js)。section类型=分组标题。日报状态来自/api/cron/state，巡检状态暂不展示。",
+  "capability": "定时任务调度（日报/巡检/备份）"
 }

@@ -10,5 +10,6 @@
   "apiKeyName": "BAIDU_CLOUD_CREDENTIALS",
   "url": "https://pan.baidu.com",
   "conflicts": [],
-  "agent_notes": "OAuth token管理复杂——先确认token是否有效再操作。apiBase=https://aip.baidubce.com。key名=BAIDU_CLOUD_CREDENTIALS。"
+  "agent_notes": "OAuth token管理复杂——先确认token是否有效再操作。apiBase=https://aip.baidubce.com。key名=BAIDU_CLOUD_CREDENTIALS。",
+  "capability": "百度网盘文件上传下载"
 }

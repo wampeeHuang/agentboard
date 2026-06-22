@@ -17,5 +17,6 @@
     "stable-diffusion",
     "ace-step"
   ],
-  "agent_notes": "DeepSeek有时混淆\"理解图片\"和\"生成图片\"——用户说\"处理这张图\"先判断方向。理解=minicpm-v/glm-46v，生成=comfyui/sd/aigoapi。多个GPU工具不能同时开。"
+  "agent_notes": "DeepSeek有时混淆\"理解图片\"和\"生成图片\"——用户说\"处理这张图\"先判断方向。理解=minicpm-v/glm-46v，生成=comfyui/sd/aigoapi。多个GPU工具不能同时开。",
+  "capability": "本地图片OCR和视觉问答"
 }

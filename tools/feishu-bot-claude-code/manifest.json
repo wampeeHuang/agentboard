@@ -10,5 +10,6 @@
   "startCommand": "cscript //nologo \"%USERPROFILE%\\.lark-channel\\launch-claude-code-bot.vbs\"",
   "stopCommand": "lark-channel-bridge kill 1",
   "conflicts": [],
-  "agent_notes": "机器人名cli_aa992600d0215cb2，映射到Claude Code。Startup VBS开机自启。改名后需同步更新卡片。lark-channel-bridge是转运层。"
+  "agent_notes": "机器人名cli_aa992600d0215cb2，映射到Claude Code。Startup VBS开机自启。改名后需同步更新卡片。lark-channel-bridge是转运层。",
+  "capability": "飞书机器人→Claude Code消息桥"
 }

@@ -17,5 +17,6 @@
   ],
   "url": "https://open.bigmodel.cn",
   "conflicts": [],
-  "agent_notes": "和MiniCPM-V互补：MiniCPM免费吃显存，GLM云端不占显存但限速。默认用GLM(省显存)，大量图片用MiniCPM。"
+  "agent_notes": "和MiniCPM-V互补：MiniCPM免费吃显存，GLM云端不占显存但限速。默认用GLM(省显存)，大量图片用MiniCPM。",
+  "capability": "云端图片理解和视觉问答"
 }

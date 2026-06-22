@@ -13,5 +13,6 @@
   "startCommand": "cd /d D:\\tools\\cosyvoice3 && %USERPROFILE%\\AppData\\Local\\Programs\\Python\\Python311\\python.exe webui.py --port 8000 --model_dir pretrained_models/Fun-CosyVoice3-0.5B",
   "stopCommand": "npx kill-port 8000",
   "conflicts": [],
-  "agent_notes": "中文专精——英文TTS用浏览器内置更简单。3s极速复刻=给3秒音频样本克隆音色。0.5B参数轻量。"
+  "agent_notes": "中文专精——英文TTS用浏览器内置更简单。3s极速复刻=给3秒音频样本克隆音色。0.5B参数轻量。",
+  "capability": "中文语音合成TTS"
 }

@@ -17,5 +17,6 @@
     "minicpm-v",
     "ace-step"
   ],
-  "agent_notes": "⚠️和SD WebUI互斥——两者都吃4GB+显存，同时开=显存溢出。Agent应默认选ComfyUI(更灵活)，SD作备选。"
+  "agent_notes": "⚠️和SD WebUI互斥——两者都吃4GB+显存，同时开=显存溢出。Agent应默认选ComfyUI(更灵活)，SD作备选。",
+  "capability": "节点式AI图像生成工作流"
 }

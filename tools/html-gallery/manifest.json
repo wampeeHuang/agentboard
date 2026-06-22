@@ -15,5 +15,6 @@
   "startCommand": "cd /d D:\\projects\\skill-html-showcase && npm start",
   "stopCommand": "npx kill-port 3080",
   "conflicts": [],
-  "agent_notes": "模板来自7个skill来源，npm start启动。公开域名gallery.evopearl.com。每次新增模板后需刷新。"
+  "agent_notes": "模板来自7个skill来源，npm start启动。公开域名gallery.evopearl.com。每次新增模板后需刷新。",
+  "capability": "99个HTML幻灯片模板浏览器"
 }

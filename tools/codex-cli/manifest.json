@@ -10,5 +10,6 @@
   "startCommand": "wt powershell -NoExit -Command codex",
   "stopCommand": "echo Codex CLI 在终端运行，关闭窗口即可",
   "conflicts": [],
-  "agent_notes": "Codex是OpenAI的CLI Agent，通过codex-relay(:4446)使用aigoapi的Responses API翻译桥。默认模型gpt-5.5，provider=aigoapi-relay。配置~/.codex/config.toml。和Claude Code互补——Codex原生Responses API，Claude Code更强。"
+  "agent_notes": "Codex是OpenAI的CLI Agent，通过codex-relay(:4446)使用aigoapi的Responses API翻译桥。默认模型gpt-5.5，provider=aigoapi-relay。配置~/.codex/config.toml。和Claude Code互补——Codex原生Responses API，Claude Code更强。",
+  "capability": "OpenAI Codex CLI终端"
 }

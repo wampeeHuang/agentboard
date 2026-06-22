@@ -12,5 +12,6 @@
   "startCommand": "openclaw gateway restart",
   "stopCommand": "openclaw gateway stop 2>/dev/null; npx kill-port 18789",
   "conflicts": [],
-  "agent_notes": "这是Claude Code和DeepSeek之间的桥梁。openclaw models status查可用模型列表。重启后Claude Code可能短暂断连。"
+  "agent_notes": "这是Claude Code和DeepSeek之间的桥梁。openclaw models status查可用模型列表。重启后Claude Code可能短暂断连。",
+  "capability": "多模型API网关和Agent调度"
 }

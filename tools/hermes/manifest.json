@@ -10,5 +10,6 @@
   "startCommand": "wt powershell -NoExit -Command hermes",
   "stopCommand": "taskkill /FI \"WINDOWTITLE eq hermes*\" 2>nul",
   "conflicts": [],
-  "agent_notes": "和Claude Code是两个独立Agent。Hermes自有skills体系在~/.openclaw/下。当前主要用于备选和对比，主力还是Claude Code。"
+  "agent_notes": "和Claude Code是两个独立Agent。Hermes自有skills体系在~/.openclaw/下。当前主要用于备选和对比，主力还是Claude Code。",
+  "capability": "独立CLI Agent（备选）"
 }

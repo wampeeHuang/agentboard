@@ -11,5 +11,6 @@
   "startCommand": "wt powershell -NoExit -Command \"claude --dangerously-skip-permissions\"",
   "stopCommand": "echo Claude Code 在终端运行，关闭窗口即可",
   "conflicts": [],
-  "agent_notes": "这是你自己。当前后端=DeepSeek v4 Pro(通过OpenClaw)。宪法在CLAUDE.md，工具架在localhost:3099。skills在~/.claude/skills/。"
+  "agent_notes": "这是你自己。当前后端=DeepSeek v4 Pro(通过OpenClaw)。宪法在CLAUDE.md，工具架在localhost:3099。skills在~/.claude/skills/。",
+  "capability": "主力AI编程Agent（当前会话）"
 }

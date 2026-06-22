@@ -11,5 +11,6 @@
   "startCommand": "set A2O_UPSTREAM=https://aigoapi.com/v1 && set A2O_API_KEY=%AIGOAPI_API_KEY% && node %USERPROFILE%\\.agentboard\\tools\\a2o-proxy\\server.js",
   "stopCommand": "npx kill-port 8787",
   "conflicts": [],
-  "agent_notes": "翻译代理，无状态。上游模型变化后会自动反映。Claude Code 设置 ANTHROPIC_BASE_URL=http://127.0.0.1:8787/v1 即可使用。默认模型用 ANTHROPIC_MODEL 环境变量指定。"
+  "agent_notes": "翻译代理，无状态。上游模型变化后会自动反映。Claude Code 设置 ANTHROPIC_BASE_URL=http://127.0.0.1:8787/v1 即可使用。默认模型用 ANTHROPIC_MODEL 环境变量指定。",
+  "capability": "Anthropic API转OpenAI格式翻译代理"
 }

@@ -15,5 +15,6 @@
   "conflicts": [
     "langgraph-rag"
   ],
-  "agent_notes": "和langgraph-rag共用同一个项目目录(D:\\workspace\\langgraph-rag)，同时启动可能冲突。Agent型用8767，纯RAG用8766。"
+  "agent_notes": "和langgraph-rag共用同一个项目目录(D:\\workspace\\langgraph-rag)，同时启动可能冲突。Agent型用8767，纯RAG用8766。",
+  "capability": "本地知识库RAG Agent"
 }

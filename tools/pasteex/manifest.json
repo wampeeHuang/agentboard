@@ -20,5 +20,6 @@
     "桌面\\截图中转站.lnk"
   ],
   "conflicts": [],
-  "agent_notes": "⚠️ 这是AI全权管理的工具，用户不碰GUI。管理要点：(1) 监听模式只捕获启动后的剪贴板变化，已存在的不触发。(2) 不能同时开两个PasteEx实例——taskkill杀干净再启动。(3) 微信截图窗口不是Weixin.exe，不能用应用白名单过滤。(4) 配置文件是XML，关键设置：monitorAutoSaveEnabled=True, monitorAutoSavePath=D:\\Pictures\\截图中转站, DefaultStartupMonitorModeEnabled=True, pasteHotkey=Ctrl+Alt+V。(5) 排查剪贴板用 PowerShell: [Windows.Forms.Clipboard]::ContainsImage()。(6) 命名格式: 截图_$yyyyMMdd_HHmmss$。开源MIT协议: https://github.com/huiyadanli/PasteEx。"
+  "agent_notes": "⚠️ 这是AI全权管理的工具，用户不碰GUI。管理要点：(1) 监听模式只捕获启动后的剪贴板变化，已存在的不触发。(2) 不能同时开两个PasteEx实例——taskkill杀干净再启动。(3) 微信截图窗口不是Weixin.exe，不能用应用白名单过滤。(4) 配置文件是XML，关键设置：monitorAutoSaveEnabled=True, monitorAutoSavePath=D:\\Pictures\\截图中转站, DefaultStartupMonitorModeEnabled=True, pasteHotkey=Ctrl+Alt+V。(5) 排查剪贴板用 PowerShell: [Windows.Forms.Clipboard]::ContainsImage()。(6) 命名格式: 截图_$yyyyMMdd_HHmmss$。开源MIT协议: https://github.com/huiyadanli/PasteEx。",
+  "capability": "微信截图自动落盘中转站"
 }

@@ -8,5 +8,6 @@
   "order": 99,
   "url": "https://www.coze.cn/space/7563883761365254184/bot/7634402982662602794",
   "conflicts": [],
-  "agent_notes": "优先--direct模式(免费+快)。遇到验证墙才切Coze API。python3 D:/claude_workspace/tools/coze_wx_extract.py \"URL\" --direct。"
+  "agent_notes": "优先--direct模式(免费+快)。遇到验证墙才切Coze API。python3 D:/claude_workspace/tools/coze_wx_extract.py \"URL\" --direct。",
+  "capability": "微信公众号文章全文提取"
 }

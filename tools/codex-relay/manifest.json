@@ -10,5 +10,6 @@
   "startCommand": "start /B codex-relay --port 4446 --upstream https://aigoapi.com/v1 --api-key %AIGOAPI_API_KEY%",
   "stopCommand": "taskkill /F /IM codex-relay.exe",
   "conflicts": [],
-  "agent_notes": "这个工具是透明代理，Codex 正常使用即可。上游模型列表变化后需要重启 relay 刷新。relay 已配置开机自启（codex-relay.vbs 在启动文件夹）。Codex 配置文件在 ~/.codex/config.toml，当前默认模型 gpt-5.5，provider=aigoapi-relay。"
+  "agent_notes": "这个工具是透明代理，Codex 正常使用即可。上游模型列表变化后需要重启 relay 刷新。relay 已配置开机自启（codex-relay.vbs 在启动文件夹）。Codex 配置文件在 ~/.codex/config.toml，当前默认模型 gpt-5.5，provider=aigoapi-relay。",
+  "capability": "Responses API翻译桥（Codex用）"
 }
