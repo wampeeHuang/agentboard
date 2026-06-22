@@ -3,16 +3,6 @@ const fs = require('fs');
 const path = require('path');
 const { exec, execSync, spawn } = require('child_process');
 const os = require('os');
-var cronScheduler = require(path.join(os.homedir(), '.scheduler', 'scheduler'));
-var cronExpr = require(path.join(os.homedir(), '.scheduler', 'cron-expr'));
-var cronDashPath = path.join(os.homedir(), '.scheduler', 'dashboard');
-function getCronDash() { delete require.cache[require.resolve(cronDashPath)]; return require(cronDashPath); }
-var cronRunner = require(path.join(os.homedir(), '.scheduler', 'runner'));
-var cronDb = null;
-function getCronDb() {
-  if (!cronDb) cronDb = require(path.join(os.homedir(), '.scheduler', 'db')).init(path.join(os.homedir(), '.scheduler', 'tasks.db'));
-  return cronDb;
-}
 var registry = require('./lib/tool-registry');
 
 const PROJECT_DIR = __dirname;
@@ -591,70 +581,6 @@ function startServer() {
           response: '{ ok: true, deleted: "my-tool" }',
           note: '红线操作——删除整个工具目录，不可逆。无 confirm=true 返回 400'
         },
-        // ── 定时任务 Cron ──
-        'GET /api/cron/health': {
-          description: 'Health check for the cron scheduler subsystem',
-          category: '定时任务',
-          curl: 'curl http://localhost:3099/api/cron/health',
-          response: '{ ok: true, allPass: true|false, checks: [...], ts: "ISO8601" }'
-        },
-        'GET /api/cron/state': {
-          description: 'Get scheduler state and all configured cron jobs',
-          category: '定时任务',
-          curl: 'curl http://localhost:3099/api/cron/state',
-          response: '{ ok: true, state: {...}, jobs: [{ id, name, enabled, schedule }] }'
-        },
-        'GET /api/cron/reset/:id': {
-          description: 'Reset retry counter and error state for a cron job — redirects to /cron/:id',
-          category: '定时任务',
-          curl: 'curl -L http://localhost:3099/api/cron/reset/<job-id>',
-          body: 'Path param: :id = cron job id. 清零 retriesThisWindow + consecutiveErrors + lastError'
-        },
-        'GET /api/cron/tasks': {
-          description: 'List all SQLite-backed cron tasks (optional ?category=&project= filters)',
-          category: '定时任务',
-          curl: 'curl "http://localhost:3099/api/cron/tasks?category=巡检"',
-          response: '[{ id, project_id, name, cron_expr, prompt, enabled, ... }]',
-          note: 'Enriched with executor/model from ~/.openclaw/cron/jobs.json'
-        },
-        'POST /api/cron/tasks': {
-          description: 'Create a new cron task in SQLite',
-          category: '定时任务',
-          curl: 'curl -X POST http://localhost:3099/api/cron/tasks -H "Content-Type: application/json" -d \'{"project_id":"loop-engine","project_dir":"D:/workspace/lab/proj","name":"my-task","cron_expr":"0 9 * * *","prompt":"check health"}\'',
-          body: 'JSON: { project_id, project_dir, name, cron_expr, prompt, description?, category?, timeout_sec? (default 300), enabled? (default 1) }',
-          response: '201 { id, project_id, name, cron_expr, prompt, ... }'
-        },
-        'GET /api/cron/tasks/:id': {
-          description: 'Get a single cron task by id',
-          category: '定时任务',
-          curl: 'curl http://localhost:3099/api/cron/tasks/1',
-          response: '{ id, project_id, name, cron_expr, ... }'
-        },
-        'PUT /api/cron/tasks/:id': {
-          description: 'Update a cron task — partial update, only send fields to change',
-          category: '定时任务',
-          curl: 'curl -X PUT http://localhost:3099/api/cron/tasks/1 -H "Content-Type: application/json" -d \'{"enabled":0}\'',
-          body: 'JSON: any subset of { project_id, project_dir, name, cron_expr, prompt, description, category, timeout_sec, enabled }',
-          response: '{ id, ...updated fields... }'
-        },
-        'DELETE /api/cron/tasks/:id': {
-          description: 'Delete a cron task permanently',
-          category: '定时任务',
-          curl: 'curl -X DELETE http://localhost:3099/api/cron/tasks/1',
-          response: '{ deleted: true }'
-        },
-        'POST /api/cron/tasks/:id/run': {
-          description: 'Trigger a cron task run immediately (async, returns run_id)',
-          category: '定时任务',
-          curl: 'curl -X POST http://localhost:3099/api/cron/tasks/1/run',
-          response: '{ run_id: <number>, status: "running" }'
-        },
-        'GET /api/cron/history': {
-          description: 'List cron task run history (?task_id=&limit=50&offset=0)',
-          category: '定时任务',
-          curl: 'curl "http://localhost:3099/api/cron/history?limit=10"',
-          response: '[{ id, task_id, status, started_at, finished_at, ... }]'
-        },
         // ── 统计 Stats ──
         'GET /api/stats': {
           description: 'API call statistics — total calls, by caller (agent/browser), by action, top tools',
@@ -718,6 +644,23 @@ function startServer() {
     } else {
       res.json(data);
     }
+  });
+
+  // --- Cron state proxy → scheduler :3100 ---
+  app.get('/api/cron/state', function(req, res) {
+    var http = require('http');
+    var opts = { hostname: '127.0.0.1', port: 3100, path: '/api/cron/state', method: 'GET', timeout: 5000 };
+    var proxy = http.request(opts, function(upstream) {
+      var body = '';
+      upstream.on('data', function(c) { body += c; });
+      upstream.on('end', function() {
+        res.type('json');
+        res.send(body);
+      });
+    });
+    proxy.on('error', function() { res.json({ ok: false, error: 'scheduler unreachable' }); });
+    proxy.on('timeout', function() { proxy.destroy(); res.json({ ok: false, error: 'scheduler timeout' }); });
+    proxy.end();
   });
 
   // --- Tools API ---
@@ -840,342 +783,6 @@ function startServer() {
     res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
     var body = commandsIndexHTML();
     res.send(pageShell('命令', 'Claude Code 内置命令参考', body, 'commands', BUILTIN_COMMANDS.length));
-  });
-
-  // ── Cron scheduler (OpenClaw jobs managed by agentboard) ──
-
-  function agoLabel(iso) {
-    if (!iso) return '从未';
-    var diff = Date.now() - new Date(iso).getTime();
-    var mins = Math.floor(diff / 60000);
-    if (mins < 1) return '刚刚';
-    if (mins < 60) return mins + ' 分钟前';
-    var hours = Math.floor(mins / 60);
-    if (hours < 24) return hours + ' 小时前';
-    var days = Math.floor(hours / 24);
-    return days + ' 天前';
-  }
-
-  function cronStatusBadge(ts) {
-    if (!ts || !ts.lastStatus) return '<span style="color:var(--text-muted)">idle</span>';
-    switch (ts.lastStatus) {
-      case 'success': return '<span style="color:#27ae60">成功</span>';
-      case 'error': return '<span style="color:#e67e22">失败(' + (ts.consecutiveErrors || 0) + '次)</span>';
-      case 'fatal_error': return '<span style="color:#c0392b">今日已停止(账单/认证)</span>';
-      default: return '<span style="color:var(--text-muted)">' + esc(ts.lastStatus) + '</span>';
-    }
-  }
-
-  // CRON health — redirect to /loop (联邦巡检面板)
-  app.get('/cron/health', function(req, res) {
-    res.redirect(301, '/loop');
-  });
-
-  // Cron job detail (openclaw-based legacy jobs)
-  app.get('/cron/:id', function(req, res) {
-    res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
-    var jobs = cronScheduler.loadAllJobs();
-    var job = jobs.find(function(j) { return j.id === req.params.id; });
-    if (!job) return res.status(404).send(pageShell('未找到', '任务不存在', '<p>任务 <code>' + esc(req.params.id) + '</code> 未找到。</p><p><a href="/cron">← 返回总览</a></p>', 'cron', null));
-
-    cronScheduler.loadState();
-    var st = cronScheduler.getState();
-    var ts = st.tasks[job.id] || {};
-    var maxRetries = cronScheduler.MAX_RETRIES;
-
-    // Status card
-    var statusLabel = '', statusCls = '';
-    if (ts.lastStatus === 'ok') { statusLabel = '成功'; statusCls = '#27ae60'; }
-    else if (ts.lastStatus === 'error' || ts.lastStatus === 'fail') { statusLabel = '失败'; statusCls = '#e67e22'; }
-    else if (ts.lastStatus === 'fatal_error') { statusLabel = '今日停止'; statusCls = '#c0392b'; }
-    else { statusLabel = 'idle'; statusCls = 'var(--text-muted)'; }
-
-    var enabled = cronScheduler.isEnabled(job.id);
-    var scheduleStr = job.schedule ? job.schedule.expr + ' ' + (job.schedule.tz || '') : '';
-    var lastRunStr = ts.lastRun ? ts.lastRun + ' (' + agoLabel(ts.lastRun) + ')' : '从未';
-    var errorStr = ts.lastError || '';
-    var retryInfo = ts.retriesThisWindow > 0 ? '重试' + ts.retriesThisWindow + '/' + maxRetries : '';
-
-    var errorBanner = '';
-    if (errorStr) {
-      errorBanner = '<div style="background:#fef3f2;border:1px solid #fecdc9;padding:10px 16px;margin-bottom:24px;font-size:12px;color:#c0392b;word-break:break-all">' + esc(errorStr.slice(0, 300)) + '</div>';
-    }
-
-    var summaryCard = '<div style="border:1px solid var(--border);padding:20px 24px;margin-bottom:16px;display:flex;flex-wrap:wrap;gap:16px;align-items:center">' +
-      '<div style="font-size:32px">&#x1F4E2;</div>' +
-      '<div style="flex:1;min-width:200px">' +
-        '<h2 style="font-weight:400;margin:0 0 4px;font-size:20px">' + esc(job.name) + '</h2>' +
-        '<div style="font-size:12px;color:var(--text-muted)">' + esc(scheduleStr) + ' · ' + (enabled ? '<span style="color:#27ae60">启用</span>' : '<span style="color:var(--text-muted)">禁用</span>') + ' · 超时' + ((job.payload && job.payload.timeoutSeconds) || '?') + 's</div>' +
-      '</div>' +
-      '<div style="text-align:right">' +
-        '<div style="font-size:22px;font-weight:500;color:' + statusCls + '">' + statusLabel + '</div>' +
-        '<div style="font-size:11px;color:var(--text-muted)">' + esc(lastRunStr) + (retryInfo ? ' · ' + retryInfo : '') + '</div>' +
-      '</div>' +
-    '</div>';
-
-    // Settings
-    var settingsRows = '';
-    settingsRows += '<tr><td>ID</td><td><code style="font-size:11px">' + esc(job.id) + '</code></td></tr>';
-    settingsRows += '<tr><td>引擎</td><td>' + (job.schedule ? 'OpenClaw Gateway' : 'cron-runner.js') + '</td></tr>';
-    settingsRows += '<tr><td>启用</td><td>' + (enabled ? '是（自动调度）' : '否（链式触发）') + '</td></tr>';
-    if (job.schedule) {
-      settingsRows += '<tr><td>Cron</td><td><code>' + esc(job.schedule.expr) + '</code> ' + esc(job.schedule.tz || '') + '</td></tr>';
-    }
-    if (job.payload && job.payload.model) {
-      settingsRows += '<tr><td>模型</td><td>' + esc(job.payload.model) + '</td></tr>';
-    }
-    settingsRows += '<tr><td>超时</td><td>' + ((job.payload && job.payload.timeoutSeconds) || '?') + ' 秒</td></tr>';
-    settingsRows += '<tr><td>上次执行</td><td>' + esc(lastRunStr) + '</td></tr>';
-    settingsRows += '<tr><td>上次状态</td><td>' + cronStatusBadge(ts) + '</td></tr>';
-    settingsRows += '<tr><td>连续错误</td><td>' + (ts.consecutiveErrors || 0) + ' 次</td></tr>';
-    settingsRows += '<tr><td>窗口内重试</td><td>' + (ts.retriesThisWindow || 0) + ' / ' + maxRetries + '</td></tr>';
-    if (ts.lastDurationMs) {
-      var durStr = ts.lastDurationMs < 60000 ? (ts.lastDurationMs / 1000).toFixed(1) + 's' : Math.floor(ts.lastDurationMs / 60000) + 'm ' + Math.floor((ts.lastDurationMs % 60000) / 1000) + 's';
-      settingsRows += '<tr><td>上次耗时</td><td>' + durStr + '</td></tr>';
-    }
-    if (ts.retriesThisWindow >= maxRetries) {
-      settingsRows += '<tr><td>操作</td><td><a href="/api/cron/reset/' + encodeURIComponent(job.id) + '" style="color:#c0392b;font-weight:500">重置今日重试计数</a> · 明天也会自动重置</td></tr>';
-    }
-
-    var settingsHtml = '<h3 style="font-size:14px;font-weight:500;margin:20px 0 8px">设置</h3>' +
-      '<table style="font-size:12px;border-collapse:collapse;margin-bottom:20px"><colgroup><col style="width:100px"><col></colgroup>' +
-        settingsRows +
-      '</table>';
-
-    // Collapsible prompt
-    var promptText = (job.payload && job.payload.message) ? job.payload.message : '';
-    var promptHtml = '';
-    if (promptText) {
-      promptHtml = '<details style="margin-bottom:20px">' +
-        '<summary style="cursor:pointer;font-size:14px;font-weight:500;padding:8px 0;user-select:none">Workflow Prompt（' + promptText.length + ' 字符）</summary>' +
-        '<pre style="background:#f5f5f5;padding:16px;font-size:11px;font-family:monospace;line-height:1.6;overflow-x:auto;max-height:450px;overflow-y:auto;white-space:pre-wrap;margin-top:8px">' + esc(promptText) + '</pre>' +
-      '</details>';
-    }
-
-    // Run history (server-side fetch)
-    exec('openclaw cron runs --id ' + job.id + ' --limit 30', { timeout: 15000, shell: 'powershell' }, function(runErr, runStdout) {
-      var runsHtml = '';
-      if (!runErr && runStdout) {
-        try {
-          var data = JSON.parse(runStdout);
-          var entries = data.entries || [];
-          if (entries.length > 0) {
-            runsHtml = '<h3 style="font-size:14px;font-weight:500;margin:20px 0 8px">执行历史（最近' + entries.length + '条）</h3>' +
-              '<table style="font-size:12px;border-collapse:collapse;margin-bottom:20px"><tr><th>时间</th><th>状态</th><th>耗时</th><th>Tokens</th><th>摘要</th></tr>' +
-              entries.map(function(r) {
-                var sc = r.status === 'ok' ? 'color:#27ae60' : 'color:#e67e22';
-                var timeStr = r.runAtMs ? new Date(r.runAtMs).toISOString().replace('T', ' ').slice(0, 19) : '';
-                var durStr = r.durationMs ? (r.durationMs < 60000 ? (r.durationMs / 1000).toFixed(1) + 's' : Math.floor(r.durationMs / 60000) + 'm') : '';
-                var tokStr = r.usage ? r.usage.total_tokens : '';
-                var errStr = r.error ? ' <span style="color:#c0392b;font-size:11px">' + esc(r.error.slice(0, 100)) + '</span>' : '';
-                return '<tr><td style="font-size:11px">' + esc(timeStr) + '</td><td style="' + sc + '">' + esc(r.status) + '</td><td>' + esc(durStr) + '</td><td>' + esc(String(tokStr)) + '</td><td style="font-size:11px;max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + (r.summary ? esc(r.summary.slice(0, 80)) : '') + errStr + '</td></tr>';
-              }).join('') +
-              '</table>';
-          } else {
-            runsHtml = '<h3 style="font-size:14px;font-weight:500;margin:20px 0 8px">执行历史</h3><p style="font-size:12px;color:var(--text-muted)">无执行记录</p>';
-          }
-        } catch(_) { runsHtml = '<h3 style="font-size:14px;font-weight:500;margin:20px 0 8px">执行历史</h3><p style="font-size:12px;color:var(--text-muted)">无法解析 Gateway 数据</p>'; }
-      } else {
-        runsHtml = '<h3 style="font-size:14px;font-weight:500;margin:20px 0 8px">执行历史</h3><p style="font-size:12px;color:var(--text-muted)">Gateway 查询失败或无记录</p>';
-      }
-
-      var body = '<p style="font-size:12px;color:var(--text-muted);margin-bottom:12px"><a href="/cron">← 返回总览</a></p>' +
-        summaryCard +
-        errorBanner +
-        settingsHtml +
-        promptHtml +
-        runsHtml;
-      res.send(pageShell(job.name, '定时任务详情', body, 'cron', null));
-    });
-  });
-
-
-  function buildHealthChecks() {
-    var checks = [];
-
-    // 1. Scheduler running
-    var schedulerOk = cronScheduler.getState() && true;
-    checks.push({ id: 'scheduler', label: '调度器运行中', pass: schedulerOk, detail: schedulerOk ? '正常' : '未启动' });
-
-    // 2. jobs.json exists
-    var j = null;
-    var jobsOk = false;
-    try { j = JSON.parse(fs.readFileSync(path.join(os.homedir(), '.openclaw', 'cron', 'jobs.json'), 'utf-8')); jobsOk = Array.isArray(j.jobs) && j.jobs.length > 0; }
-    catch(_) {}
-    checks.push({ id: 'jobs', label: 'jobs.json 有效', pass: jobsOk, detail: jobsOk ? j.jobs.length + ' 个任务' : '文件缺失或无效' });
-
-    // 3. Workspace dirs exist
-    var enabledJobs = jobsOk ? j.jobs.filter(function(jb) { return jb.enabled !== false; }) : [];
-    var workspaces = {};
-    enabledJobs.forEach(function(jb) {
-      var agentId = jb.agentId || 'main';
-      var ws = { 'evolution-cat': 'D:\\HHH\\自媒体\\进化猫', 'main': 'D:\\Openclaw', 'evolution-cat-writer': 'D:\\Openclaw\\agents\\evolution-cat-writer', 'jinhua-cat': 'D:\\Openclaw\\agents\\jinhua-cat' }[agentId] || 'D:\\Openclaw';
-      workspaces[ws] = true;
-    });
-    var missingDirs = [];
-    Object.keys(workspaces).forEach(function(ws) { if (!fs.existsSync(ws)) missingDirs.push(ws); });
-    var dirsOk = missingDirs.length === 0;
-    checks.push({ id: 'workspaces', label: '工作目录存在', pass: dirsOk, detail: dirsOk ? Object.keys(workspaces).length + ' 个目录' : '缺失: ' + missingDirs.join(', ') });
-
-    // 4. Node.js available
-    checks.push({ id: 'node', label: 'Node.js 可用', pass: true, detail: process.version });
-
-    // 5. claude CLI check (deferred)
-    checks.push({ id: 'claude', label: 'Claude CLI', pass: null, detail: '需手动验证: claude --version' });
-
-    // 6. Internet connectivity
-    checks.push({ id: 'network', label: '网络连通', pass: null, detail: '需手动验证: curl https://httpbin.org/status/200' });
-
-    // 7. Computer must not sleep
-    checks.push({ id: 'nosleep', label: '电脑不睡眠', pass: null, detail: '电源设置 → 永不睡眠。这是定时触发的硬件前提' });
-
-    // 8. DeepSeek API
-    checks.push({ id: 'deepseek', label: 'DeepSeek API 余额', pass: null, detail: '需手动验证: https://platform.deepseek.com' });
-
-    // 9. scheduler-state.json writable
-    var stateWritable = false;
-    try { var schedStatePath = path.join(os.homedir(), '.scheduler', 'scheduler-state.json'); fs.writeFileSync(schedStatePath, fs.readFileSync(schedStatePath, 'utf-8'), 'utf-8'); stateWritable = true; }
-    catch(_) {}
-    checks.push({ id: 'state_rw', label: '状态文件可写', pass: stateWritable, detail: stateWritable ? '正常' : 'scheduler-state.json 不可写' });
-
-    return checks;
-  }
-
-  // API: cron system health (JSON)
-  app.get('/api/cron/health', function(req, res) {
-    var checks = buildHealthChecks();
-    var allPass = checks.every(function(c) { return c.pass !== false; });
-    res.json({ ok: true, allPass: allPass, checks: checks, ts: new Date().toISOString() });
-  });
-
-  // API: get scheduler state
-  app.get('/api/cron/state', function(req, res) {
-    cronScheduler.loadState();
-    var st = cronScheduler.getState();
-    var jobs = cronScheduler.loadAllJobs();
-    res.json({ ok: true, state: st, jobs: jobs.map(function(j) { return { id: j.id, name: j.name, enabled: j.enabled, schedule: j.schedule }; }) });
-  });
-
-  // API: reset today's retry counter (also works for fatal_error)
-  app.get('/api/cron/reset/:id', function(req, res) {
-    cronScheduler.loadState();
-    var st = cronScheduler.getState();
-    var ts = st.tasks[req.params.id] || { id: req.params.id };
-    ts.retriesThisWindow = 0;
-    ts.consecutiveErrors = 0;
-    ts.lastError = null;
-    st.tasks[req.params.id] = ts;
-    cronScheduler.saveState();
-    res.redirect('/cron/' + encodeURIComponent(req.params.id));
-  });
-
-  // === REST API for SQLite-backed cron tasks ===
-
-  // List all tasks (optional ?category=&project= filter)
-  // Enrich with executor/model from jobs.json (single source of truth)
-  app.get('/api/cron/tasks', function(req, res) {
-    var db = getCronDb();
-    var tasks = db.getTasks();
-
-    // Cross-reference jobs.json for executor and model
-    try {
-      var jobsJson = JSON.parse(fs.readFileSync(path.join(os.homedir(), '.openclaw', 'cron', 'jobs.json'), 'utf-8'));
-      var jobs = jobsJson.jobs || [];
-      var jobByName = {};
-      jobs.forEach(function(j) { if (j.name) jobByName[j.name] = j; });
-      tasks = tasks.map(function(t) {
-        var job = jobByName[t.name];
-        if (!job && t.project_id && t.name) {
-          // Try prefix match: "loop-engine" project → job name starts with "loop-engine-"
-          var prefix = t.project_id + '-';
-          for (var jn in jobByName) {
-            if (jn.indexOf(prefix) === 0 && t.name.indexOf(jn) !== -1) { job = jobByName[jn]; break; }
-          }
-        }
-        if (job && job.payload) {
-          t.executor = job.payload.kind || '';
-          t.model = job.payload.model || '';
-        }
-        return t;
-      });
-    } catch(_) {}
-
-    if (req.query.category) {
-      tasks = tasks.filter(function(t) { return t.category === req.query.category; });
-    }
-    if (req.query.project) {
-      tasks = tasks.filter(function(t) { return t.project_id === req.query.project; });
-    }
-    res.json(tasks);
-  });
-
-  // Create task
-  app.post('/api/cron/tasks', express.json(), function(req, res) {
-    var body = req.body;
-    if (!body || !body.project_id || !body.project_dir || !body.name || !body.cron_expr || !body.prompt) {
-      return res.status(400).json({ error: 'Missing required fields: project_id, project_dir, name, cron_expr, prompt' });
-    }
-    if (body.cron_expr.indexOf('once:') !== 0 && !cronExpr.isValid(body.cron_expr)) {
-      return res.status(400).json({ error: 'Invalid cron expression: ' + body.cron_expr });
-    }
-    var db = getCronDb();
-    var id = db.createTask(body);
-    res.status(201).json({ id: id, project_id: body.project_id, project_dir: body.project_dir, name: body.name, cron_expr: body.cron_expr, prompt: body.prompt, description: body.description || '', category: body.category || '', timeout_sec: body.timeout_sec || 300, enabled: body.enabled !== 0 ? 1 : 0 });
-  });
-
-  // Get single task
-  app.get('/api/cron/tasks/:id', function(req, res) {
-    var db = getCronDb();
-    var task = db.getTask(+req.params.id);
-    if (!task) return res.status(404).json({ error: 'Not found' });
-    res.json(task);
-  });
-
-  // Update task
-  app.put('/api/cron/tasks/:id', express.json(), function(req, res) {
-    var body = req.body;
-    if (!body) return res.status(400).json({ error: 'Invalid body' });
-    if (body.cron_expr && body.cron_expr.indexOf('once:') !== 0 && !cronExpr.isValid(body.cron_expr)) {
-      return res.status(400).json({ error: 'Invalid cron expression: ' + body.cron_expr });
-    }
-    var db = getCronDb();
-    var ok = db.updateTask(+req.params.id, body);
-    if (!ok) return res.status(404).json({ error: 'Not found' });
-    res.json(db.getTask(+req.params.id));
-  });
-
-  // Delete task
-  app.delete('/api/cron/tasks/:id', function(req, res) {
-    var db = getCronDb();
-    var ok = db.deleteTask(+req.params.id);
-    if (!ok) return res.status(404).json({ error: 'Not found' });
-    res.json({ deleted: true });
-  });
-
-  // Trigger task run now
-  app.post('/api/cron/tasks/:id/run', function(req, res) {
-    var db = getCronDb();
-    var task = db.getTask(+req.params.id);
-    if (!task) return res.status(404).json({ error: 'Not found' });
-    cronRunner.runTask(task, db).then(function(result) {
-      res.json({ run_id: result.runId, status: result.status });
-    });
-  });
-
-  // Run history
-  app.get('/api/cron/history', function(req, res) {
-    var db = getCronDb();
-    var limit = parseInt(req.query.limit, 10) || 50;
-    var offset = parseInt(req.query.offset, 10) || 0;
-    var taskId = req.query.task_id ? +req.query.task_id : undefined;
-    res.json(db.getHistory({ limit: limit, offset: offset, task_id: taskId }));
-  });
-
-  // CRON dashboard — card-based UI
-  app.get('/cron', function(req, res) {
-    res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
-    res.type('html');
-    res.send(getCronDash().render());
   });
 
   // Workspace sub-page — scan project directories
@@ -2244,7 +1851,7 @@ function startServer() {
     var apiEndpoints = 0;
     try { app._router.stack.forEach(function(r){ if (r.route && r.route.path && r.route.path.indexOf('/api/') === 0) apiEndpoints++; }); } catch(_) {}
     var cronTasks = (function(){
-      try { return cronScheduler.loadAllJobs().length; } catch(_) { return 0; }
+      try { var schedSt = JSON.parse(fs.readFileSync(path.join(os.homedir(), '.scheduler', 'scheduler-state.json'), 'utf8')); return Object.keys(schedSt.tasks || {}).length; } catch(_) { return 0; }
     })();
     var startupCount = (function(){
       var n = 0;

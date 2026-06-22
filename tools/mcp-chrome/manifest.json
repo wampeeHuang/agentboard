@@ -10,8 +10,6 @@
   "port": 9222,
   "url": "http://localhost:9222",
   "projectPath": "%USERPROFILE%\\.cache\\chrome-devtools-mcp\\chrome-profile",
-  "startCommand": "echo MCP-Chrome 由 Claude Code 自动管理，无需手动启动",
-  "stopCommand": "npx kill-port 9222",
   "conflicts": [],
   "agent_notes": "Profile在~/.cache/chrome-devtools-mcp/chrome-profile。Claude Code自动管理启动，不需要手动干预。mcp__ChromeDevTools__开头的工具都是它的。"
 }

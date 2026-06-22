@@ -9,7 +9,6 @@
   "type": "service",
   "owner": "自建",
   "url": "http://localhost:3099/loop",
-  "port": 3099,
   "conflicts": [],
   "agent_notes": "纯读层——面板挂了不影响各项目运行。数据源是各项目 notebook/health.json。交叉验证脚本在 loop-engine/inspector/verify.js。不要和 /cron（闹钟面板）混淆——这是 #5 质检员，/cron 是 #1 闹钟。"
 }

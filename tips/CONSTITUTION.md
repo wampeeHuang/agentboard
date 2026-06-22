@@ -121,6 +121,7 @@ source: 触发写入的事件/任务简述
 | `gitmodules-chinese-encoding-corruption.md` | diagnosis | ✅ |
 | `git-first-commit-project-dating.md` | method | ✅ |
 | `script-tag-injection-js-exposed.md` | diagnosis | ✅ |
+| `tun-fallback-dead-proxy-nodes.md` | diagnosis | ✅ |
 
 ---
 

@@ -8,7 +8,7 @@
   "order": 38,
   "type": "group",
   "owner": "自建",
-  "url": "http://localhost:3099/cron",
+  "url": "http://localhost:3100/cron",
   "projectPath": "%USERPROFILE%\\.agentboard\\cron\\scheduler.js",
   "children": [
     { "type": "section", "name": "日报 · Gateway" },

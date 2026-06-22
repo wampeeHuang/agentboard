@@ -103,6 +103,12 @@ body{min-height:100vh;display:flex;flex-direction:column}
 .gc-status.error{color:#e67e22}
 .gc-status.fatal_error{color:#c0392b}
 .gc-status.idle,.gc-status.unknown{color:var(--text-muted)}
+.gc-dot{font-size:9px;margin-right:1px}
+.gc-dot.success{color:#27ae60}
+.gc-dot.error{color:#e67e22}
+.gc-dot.fatal_error{color:#c0392b}
+.gc-dot.output_missing{color:#e67e22}
+.gc-dot.idle{color:var(--border)}
 .group-count{font-size:11px;color:var(--text-muted);font-family:'JetBrains Mono','SF Mono','Consolas',monospace}
 .badge-命令组{color:var(--ink);background:rgba(var(--ink-rgb),.08)}
 
@@ -708,21 +714,13 @@ function render() {
     // Group card rendering
     if (cmdType === 'group') {
       var children = t.children || [];
-      var childHtml = children.map(function(c){
-        if (c.type === 'section') return '<div class="gc-section">' + c.name + '</div>';
+      var tasks = children.filter(function(c){ return c.type !== 'section'; });
+      var statusDots = tasks.map(function(c){
         var st = getCronChildStatus(c.name);
-        var statusHtml = st ? '<span class="gc-status ' + st.cls + '">' + st.label + '</span>' : '';
-        return '<div class="group-child" onclick="event.stopPropagation()">' +
-          '<span class="gc-icon">' + (c.icon||'') + '</span>' +
-          '<span class="gc-trigger">/' + c.trigger + '</span>' +
-          '<span class="gc-name">' + c.name + '</span>' +
-          '<span class="gc-desc">' + (c.desc||'') + '</span>' +
-          statusHtml +
-        '</div>';
+        var cls = st ? st.cls : 'idle';
+        return '<span class="gc-dot ' + cls + '" title="' + c.name + ': ' + (st ? st.label : 'idle') + '">●</span>';
       }).join('');
-      var taskCount = children.filter(function(c){ return c.type !== 'section'; }).length;
-      var expanded = expandedGroups[t.id];
-      return '<div class="tool-card group-card' + (expanded?' expanded':'') + '" data-id="' + t.id + '" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)"' + (t.url ? ' onclick="window.open(\'' + t.url + '\', \'_blank\')" style="cursor:pointer"' : '') + '>'
+      return '<div class="tool-card group-card" data-id="' + t.id + '" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)"' + (t.url ? ' onclick="window.open(\'' + t.url + '\', \'_blank\')" style="cursor:pointer"' : '') + '>'
         + '<span class="card-dot off"></span>'
         + '<div class="card-drag-handle" title="拖拽排序" draggable="true" ondragstart="handleDragStart(event)" ondragend="handleDragEnd(event)"></div>'
         + '<div class="card-body">'
@@ -730,15 +728,12 @@ function render() {
           + '<div class="card-info">'
             + '<div class="card-name">' + t.name + '</div>'
             + '<div class="card-id">' + t.id + '</div>'
-            + '<div class="card-meta"><span class="group-count">' + taskCount + ' 个任务</span></div>'
+            + '<div class="card-meta">' + statusDots + '</div>'
             + (t.description ? '<div class="card-desc">' + t.description + '</div>' : '')
           + '</div>'
         + '</div>'
-        + '<div class="card-children">' + childHtml + '</div>'
         + '<div class="card-actions">'
-          + '<button class="group-toggle" onclick="event.stopPropagation();toggleGroup(\'' + t.id + '\')">' + (expanded ? '收起 ▴' : '展开 ▾ (' + taskCount + '个)') + '</button>'
-          + (t.url ? '<a href="' + t.url + '" target="_blank" class="btn" onclick="event.stopPropagation()" style="font-size:11px">查看详情</a>' : '')
-          + '<span class="card-badges"><span class="form-badge badge-命令组">命令组</span></span>'
+          + (t.url ? '<a href="' + t.url + '" target="_blank" class="btn" onclick="event.stopPropagation()" style="font-size:11px">打开面板</a>' : '')
         + '</div>'
       + '</div>';
     }
