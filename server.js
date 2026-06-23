@@ -5,6 +5,7 @@ const http = require('http');
 const { exec, execSync, spawn } = require('child_process');
 const os = require('os');
 var registry = require('./lib/tool-registry');
+var opslog = require('./lib/ops-log');
 
 const PROJECT_DIR = __dirname;
 const AGENTBOARD_HOME = process.env.AGENTBOARD_HOME || path.join(os.homedir(), '.agentboard');
@@ -1880,8 +1881,26 @@ function startServer() {
 
   app.use(express.static(PROJECT_DIR));
 
+  process.on('uncaughtException', function(err) {
+    opslog.error('uncaughtException', (err && err.message) || String(err), { stack: err && err.stack });
+    console.error('[agentboard] uncaughtException:', err && err.stack || err);
+  });
+  process.on('unhandledRejection', function(reason) {
+    var msg = (reason && reason.message) || String(reason);
+    opslog.error('unhandledRejection', msg, { stack: reason && reason.stack });
+    console.error('[agentboard] unhandledRejection:', reason && reason.stack || reason);
+  });
+
+  // Health endpoint for patrol agents
+  app.get('/health', function(req, res) {
+    var h = opslog.health();
+    res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.json(h);
+  });
+
   var PORT = process.env.PORT || 3099;
   app.listen(PORT, function() {
+    opslog.info('start', 'server started', { port: PORT });
     console.log('Agentboard http://localhost:' + PORT);
   });
 }

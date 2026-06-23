@@ -1,13 +1,14 @@
 {
   "name": "定时任务调度",
   "id": "cron-scheduler",
-  "description": "【用途】双引擎定时任务：日报3个(OpenClaw Gateway)+提醒1个+巡检3个(cron-runner.js)。【何时用】查定时任务状态、手动触发、修改调度时间。【何时不用】任务自动运行→无需干预。只是看日报内容→看飞书推送即可。【返回】JSON【位置】~/.agentboard/cron/scheduler.js",
+  "description": "【用途】双引擎定时任务：日报3个(OpenClaw Gateway)+提醒1个+巡检3个(cron-runner.js)。【何时用】查定时任务状态、手动触发、修改调度时间。【何时不用】任务自动运行→无需干预。只是看日报内容→看飞书推送即可。【返回】JSON【位置】~/.scheduler/",
   "icon": "⏰",
   "version": "3.2.0",
   "category": "职能",
   "order": 38,
-  "type": "group",
+  "type": "service",
   "owner": "自建",
+  "port": 3100,
   "url": "http://localhost:3100/cron",
   "projectPath": "C:\\Users\\Administrator\\.scheduler",
   "children": [
@@ -67,7 +68,8 @@
     }
   ],
   "conflicts": [],
-  "agent_notes": "type:group, children列出7个任务分3组：日报(3,OpenClaw Gateway)→提醒(1)→巡检(3,cron-runner.js)。section类型=分组标题。日报状态来自/api/cron/state，巡检状态暂不展示。",
+  "agent_notes": "children列出7个任务分3组：日报(3,OpenClaw Gateway)→提醒(1)→巡检(3,cron-runner.js)。日报状态来自/api/cron/state，巡检状态暂不展示。",
   "capability": "定时任务调度（日报/巡检/备份）",
-  "startCommand": "cd /d %USERPROFILE%\\.scheduler && node start.js"
+  "startCommand": "cd /d %USERPROFILE%\\.scheduler && node start.js",
+  "stopCommand": "npx kill-port 3100"
 }

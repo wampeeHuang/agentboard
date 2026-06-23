@@ -2,6 +2,16 @@
 
 ## 本次完成
 
+**自启脚本修复 — start /b → start /min**
+- 根因: 系统 21:33 重启后，启动文件夹的 `start /b node` 脚本因共享控制台导致 agentboard 子进程被杀。inspector 依赖 agentboard 管理 → 没人拉 → 卡"启动中"。
+- 修复 4 个文件:
+  - `start-agentboard.bat` — `start /b node` → `start "" /min "C:\Program Files\nodejs\node.exe"`
+  - `~/.agentboard/launch.bat` — 同上
+  - `lark-channel-bridge.vbs` — `start /b` → `start "" /min 绝对路径`
+  - `~/.scheduler/MAINTENANCE.md` — 文档推荐写法修正
+- 规则: Windows 自启常驻服务一律用 `start "" /min 绝对路径`，不用 `start /b`
+- Tips 已写入: `windows-start-b-kills-children.md`
+
 **运行时漂移检测**
 - `lib/manifest-schema.js` 新增 `auditRuntime()` — 对照文件系统/netstat/PATH，检查 projectPath 存在性、startCommand exe 可达性、孤儿目录、端口监听。`auditAll()` 不变（schema 合规校验）。
 - 修复误报: `%USERPROFILE%` 展开、PowerShell cmdlet (Start-Process 等) 识别为 builtin。

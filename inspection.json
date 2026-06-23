@@ -1,0 +1,38 @@
+{
+  "$schema": "urn:inspector:inspection:v1",
+  "project": "agentboard",
+  "bone": true,
+  "updated": "2026-06-22",
+  "checks": [
+    {
+      "id": "manifest_schema",
+      "label": "Manifest Schema 合规",
+      "what": "tools/*/manifest.json 全部通过 schema 校验",
+      "category": "B",
+      "schedule": "daily",
+      "severity": "error",
+      "declarative": "node_module",
+      "spec": { "module": "lib/manifest-schema.js", "function": "auditAll", "passWhen": "errors === 0" }
+    },
+    {
+      "id": "runtime_drift",
+      "label": "运行时漂移",
+      "what": "声明端口在监听、projectPath 存在、命令可执行",
+      "category": "B",
+      "schedule": "daily",
+      "severity": "error",
+      "declarative": "node_module",
+      "spec": { "module": "lib/manifest-schema.js", "function": "auditRuntime", "passWhen": "errors === 0" }
+    },
+    {
+      "id": "port_3099",
+      "label": "端口 3099 监听",
+      "what": "agentboard 主端口在 LISTENING 状态",
+      "category": "B",
+      "schedule": "daily",
+      "severity": "error",
+      "declarative": "port_listening",
+      "spec": { "port": 3099 }
+    }
+  ]
+}

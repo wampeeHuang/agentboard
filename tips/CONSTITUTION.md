@@ -122,6 +122,7 @@ source: 触发写入的事件/任务简述
 | `git-first-commit-project-dating.md` | method | ✅ |
 | `script-tag-injection-js-exposed.md` | diagnosis | ✅ |
 | `tun-fallback-dead-proxy-nodes.md` | diagnosis | ✅ |
+| `windows-start-b-kills-children.md` | diagnosis | ✅ |
 
 ---
 
