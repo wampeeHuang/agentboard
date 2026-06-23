@@ -5,7 +5,7 @@ const http = require('http');
 const { exec, execSync, spawn } = require('child_process');
 const os = require('os');
 var registry = require('./lib/tool-registry');
-var opslog = require('./lib/ops-log');
+var opslog = require(path.join(os.homedir(), '.ops-log', 'ops-log.js'));
 
 const PROJECT_DIR = __dirname;
 const AGENTBOARD_HOME = process.env.AGENTBOARD_HOME || path.join(os.homedir(), '.agentboard');
@@ -431,6 +431,7 @@ var BUILTIN_COMMANDS = [
   {cat:'代码分析',trigger:'ultrareview',name:'云端审查',desc:'使用云端多 Agent 对当前分支进行深度代码审查'},
   {cat:'代码分析',trigger:'code-review',name:'五条判准门禁',desc:'AI 代码五条工程判断力门禁——可解释性/diff克制/抽象时机/可推理/判断所有权'},
   {cat:'代码分析',trigger:'security-review',name:'安全审查',desc:'对代码变更进行安全漏洞审查——数据流向/静默失败/最小权限'},
+  {cat:'代码分析',trigger:'cr',name:'CR 深度审查',desc:'阿里巴巴CR CLI——内置安全规则库+LLM深度推理，行级精度代码审查'},
   {cat:'记忆系统',trigger:'memory',name:'持久记忆',desc:'查看、编辑和管理 Claude Code 的持久化记忆'},
   {cat:'记忆系统',trigger:'remember',name:'记住内容',desc:'让 Claude 记住当前讨论的关键信息供后续使用'},
   {cat:'IDE 集成',trigger:'ide',name:'IDE 连接',desc:'自动连接可用的 IDE 编辑器（VS Code / JetBrains）'},
@@ -1960,7 +1961,7 @@ function startServer() {
 
   var PORT = process.env.PORT || 3099;
   app.listen(PORT, function() {
-    opslog.info('start', 'server started', { port: PORT });
+    opslog.info('server-start', 'server started', { port: PORT, pid: process.pid });
     console.log('Agentboard http://localhost:' + PORT);
   });
 }
