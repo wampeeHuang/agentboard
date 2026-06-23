@@ -1,0 +1,18 @@
+﻿{
+    "capability":  "AI代码审查CLI（阿里开源，内置规则库+LLM深度推理）",
+    "id":  "ocr",
+    "owner":  "外部",
+    "conflicts":  [
+
+                  ],
+    "startCommand":  "echo OCR 是 CLI 工具，命令行直接调用 ocr review",
+    "stopCommand":  "echo OCR 无后台进程，无需停止",
+    "agent_notes":  "CLI 审查工具，不是常驻服务。调用方式：ocr review（审查当前改动）、ocr review --from main --to feature（分支对比）、ocr review --commit abc123（审查某次提交）。配置在 ~/.opencodereview/config.json。已配置DeepSeek v4 Pro后端（Anthropic协议）。",
+    "name":  "OCR 代码审查",
+    "category":  "获取",
+    "description":  "【用途】阿里巴巴开源AI代码审查CLI。ocr review 审查git改动，ocr viewer 打开WebUI查看结果。支持Anthropic/OpenAI/DeepSeek等LLM。内置空指针/SQL注入/XSS/线程安全规则库。【何时用】每次commit前、自循环门禁中、代码审查时。输出结构化审查意见（行级精度）。【何时不用】不需要代码审查时。【返回】终端文本/JSON/WebUI",
+    "version":  "1.4.1",
+    "order":  4,
+    "url":  "http://localhost:3099",
+    "icon":  "🔍"
+}
