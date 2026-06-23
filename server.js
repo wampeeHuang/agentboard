@@ -515,6 +515,130 @@ function startServer() {
   const app = express();
   app.use(express.json());
 
+  // --- request logging (in-memory + file, date-partitioned) ---
+  var LOGS_DIR = path.join(AGENTBOARD_HOME, 'state', 'api-calls');
+  var apiLog = []; // [{ts, method, path, ua, caller, action, target}]
+  var apiCounts = {}; // { '/api/tools': {count, first, last}, ... }
+  try { fs.mkdirSync(LOGS_DIR, {recursive:true}); } catch(_) {}
+
+  function todayLogPath() {
+    var d = new Date();
+    var yyyy = d.getFullYear();
+    var mm = String(d.getMonth() + 1).padStart(2, '0');
+    var dd = String(d.getDate()).padStart(2, '0');
+    var dir = path.join(LOGS_DIR, yyyy + '-' + mm);
+    try { fs.mkdirSync(dir, {recursive:true}); } catch(_) {}
+    return path.join(dir, dd + '.jsonl');
+  }
+
+  // migrate legacy flat file
+  var OLD_LOG = path.join(AGENTBOARD_HOME, 'state', 'api-calls.jsonl');
+  if (fs.existsSync(OLD_LOG)) {
+    try {
+      var oldContent = read(OLD_LOG);
+      if (oldContent && oldContent.trim()) {
+        var oldLines = oldContent.trim().split('\n');
+        for (var oi = 0; oi < oldLines.length; oi++) {
+          try {
+            var oe = JSON.parse(oldLines[oi]);
+            if (oe && oe.ts) {
+              var d = new Date(oe.ts);
+              var yyyy = d.getFullYear();
+              var mm = String(d.getMonth() + 1).padStart(2, '0');
+              var dd = String(d.getDate()).padStart(2, '0');
+              var mdir = path.join(LOGS_DIR, yyyy + '-' + mm);
+              try { fs.mkdirSync(mdir, {recursive:true}); } catch(_) {}
+              fs.appendFileSync(path.join(mdir, dd + '.jsonl'), JSON.stringify(oe) + '\n', 'utf8');
+            }
+          } catch(_) {}
+        }
+      }
+      fs.unlinkSync(OLD_LOG);
+    } catch(_) {}
+  }
+
+  // classify: who called
+  function classifyCaller(ua) {
+    if (!ua) return 'unknown';
+    if (/curl|axios|node-fetch|python-requests|httpie/i.test(ua)) return 'agent';
+    if (/Mozilla.*(Chrome|Firefox|Safari|Edge)/i.test(ua)) return 'browser';
+    if (/Java|Go-http|Ruby/i.test(ua)) return 'agent';
+    return 'unknown';
+  }
+
+  // classify: what kind of operation
+  function classifyAction(method, path) {
+    if (path === '/api/tools' && method === 'GET') return 'list';
+    if (/^\/api\/tools\/[^/]+$/.test(path) && method === 'GET') return 'detail';
+    if (/^\/api\/tools\/(start|stop)\//.test(path) && method === 'POST') return 'control';
+    if (path === '/api/tools/reorder' && method === 'POST') return 'control';
+    if (path === '/api/stats' && method === 'GET') return 'admin';
+    if (path === '/api/tips' || path.startsWith('/api/tips/')) return 'admin';
+    return 'admin';
+  }
+
+  // extract tool id from path: /api/tools/start/forma → forma
+  function classifyTarget(path) {
+    var m = path.match(/^\/api\/tools\/(?:start|stop)\/([a-zA-Z0-9_-]+)/);
+    if (m) return m[1];
+    m = path.match(/^\/api\/tools\/([a-zA-Z0-9_-]+)$/);
+    if (m && m[1] !== 'reorder') return m[1];
+    return null;
+  }
+
+  // load all date-partitioned logs
+  try {
+    var months = listDirs(LOGS_DIR);
+    months.forEach(function(mo) {
+      var mdir = path.join(LOGS_DIR, mo);
+      var days = fs.readdirSync(mdir).filter(function(f) { return f.endsWith('.jsonl'); });
+      days.forEach(function(day) {
+        var content = read(path.join(mdir, day));
+        if (!content) return;
+        var lines = content.trim().split('\n');
+        for (var li = 0; li < lines.length; li++) {
+          try { var entry = JSON.parse(lines[li]); if (entry) apiLog.push(entry); } catch(_) {}
+        }
+      });
+    });
+  } catch(_) {}
+
+  // rebuild counts from log
+  for (var ai = 0; ai < apiLog.length; ai++) {
+    var e = apiLog[ai]; var k = (e.method||'GET') + ' ' + (e.path||'/');
+    if (!apiCounts[k]) apiCounts[k] = { count: 0, first: e.ts, last: e.ts };
+    apiCounts[k].count++; apiCounts[k].last = e.ts;
+    if (!e.caller) e.caller = classifyCaller(e.ua||'');
+    if (!e.action) e.action = classifyAction(e.method||'GET', e.path||'/');
+    if (!e.target) e.target = classifyTarget(e.path||'/');
+  }
+
+  function logApiCall(method, p, ua, statusCode) {
+    var entry = {
+      ts: new Date().toISOString(),
+      method: method, path: p,
+      status: statusCode || 0,
+      ua: (ua||'').slice(0, 120),
+      caller: classifyCaller(ua||''),
+      action: classifyAction(method, p),
+      target: classifyTarget(p)
+    };
+    apiLog.push(entry);
+    var k = method + ' ' + p;
+    if (!apiCounts[k]) apiCounts[k] = { count: 0, first: entry.ts, last: entry.ts };
+    apiCounts[k].count++; apiCounts[k].last = entry.ts;
+    try { fs.appendFileSync(todayLogPath(), JSON.stringify(entry) + '\n', 'utf8'); } catch(_) {}
+  }
+  app.use(function(req, res, next) {
+    if (req.path.startsWith('/api/')) {
+      res.on('finish', function() {
+        logApiCall(req.method, req.path, req.get('user-agent')||'', res.statusCode);
+      });
+    }
+    next();
+  });
+
+
   app.get('/api', function(req, res) {
     var data = {
       name: 'Agentboard',
@@ -1361,123 +1485,6 @@ function startServer() {
     });
   }
 
-  // --- request logging (in-memory + file, date-partitioned) ---
-  var LOGS_DIR = path.join(AGENTBOARD_HOME, 'state', 'api-calls');
-  var apiLog = []; // [{ts, method, path, ua, caller, action, target}]
-  var apiCounts = {}; // { '/api/tools': {count, first, last}, ... }
-  try { fs.mkdirSync(LOGS_DIR, {recursive:true}); } catch(_) {}
-
-  function todayLogPath() {
-    var d = new Date();
-    var yyyy = d.getFullYear();
-    var mm = String(d.getMonth() + 1).padStart(2, '0');
-    var dd = String(d.getDate()).padStart(2, '0');
-    var dir = path.join(LOGS_DIR, yyyy + '-' + mm);
-    try { fs.mkdirSync(dir, {recursive:true}); } catch(_) {}
-    return path.join(dir, dd + '.jsonl');
-  }
-
-  // migrate legacy flat file
-  var OLD_LOG = path.join(AGENTBOARD_HOME, 'state', 'api-calls.jsonl');
-  if (fs.existsSync(OLD_LOG)) {
-    try {
-      var oldContent = read(OLD_LOG);
-      if (oldContent && oldContent.trim()) {
-        var oldLines = oldContent.trim().split('\n');
-        for (var oi = 0; oi < oldLines.length; oi++) {
-          try {
-            var oe = JSON.parse(oldLines[oi]);
-            if (oe && oe.ts) {
-              var d = new Date(oe.ts);
-              var yyyy = d.getFullYear();
-              var mm = String(d.getMonth() + 1).padStart(2, '0');
-              var dd = String(d.getDate()).padStart(2, '0');
-              var mdir = path.join(LOGS_DIR, yyyy + '-' + mm);
-              try { fs.mkdirSync(mdir, {recursive:true}); } catch(_) {}
-              fs.appendFileSync(path.join(mdir, dd + '.jsonl'), JSON.stringify(oe) + '\n', 'utf8');
-            }
-          } catch(_) {}
-        }
-      }
-      fs.unlinkSync(OLD_LOG);
-    } catch(_) {}
-  }
-
-  // classify: who called
-  function classifyCaller(ua) {
-    if (!ua) return 'unknown';
-    if (/curl|axios|node-fetch|python-requests|httpie/i.test(ua)) return 'agent';
-    if (/Mozilla.*(Chrome|Firefox|Safari|Edge)/i.test(ua)) return 'browser';
-    if (/Java|Go-http|Ruby/i.test(ua)) return 'agent';
-    return 'unknown';
-  }
-
-  // classify: what kind of operation
-  function classifyAction(method, path) {
-    if (path === '/api/tools' && method === 'GET') return 'list';
-    if (/^\/api\/tools\/[^/]+$/.test(path) && method === 'GET') return 'detail';
-    if (/^\/api\/tools\/(start|stop)\//.test(path) && method === 'POST') return 'control';
-    if (path === '/api/tools/reorder' && method === 'POST') return 'control';
-    if (path === '/api/stats' && method === 'GET') return 'admin';
-    if (path === '/api/tips' || path.startsWith('/api/tips/')) return 'admin';
-    return 'admin';
-  }
-
-  // extract tool id from path: /api/tools/start/forma → forma
-  function classifyTarget(path) {
-    var m = path.match(/^\/api\/tools\/(?:start|stop)\/([a-zA-Z0-9_-]+)/);
-    if (m) return m[1];
-    m = path.match(/^\/api\/tools\/([a-zA-Z0-9_-]+)$/);
-    if (m && m[1] !== 'reorder') return m[1];
-    return null;
-  }
-
-  // load all date-partitioned logs
-  try {
-    var months = listDirs(LOGS_DIR);
-    months.forEach(function(mo) {
-      var mdir = path.join(LOGS_DIR, mo);
-      var days = fs.readdirSync(mdir).filter(function(f) { return f.endsWith('.jsonl'); });
-      days.forEach(function(day) {
-        var content = read(path.join(mdir, day));
-        if (!content) return;
-        var lines = content.trim().split('\n');
-        for (var li = 0; li < lines.length; li++) {
-          try { var entry = JSON.parse(lines[li]); if (entry) apiLog.push(entry); } catch(_) {}
-        }
-      });
-    });
-  } catch(_) {}
-
-  // rebuild counts from log
-  for (var ai = 0; ai < apiLog.length; ai++) {
-    var e = apiLog[ai]; var k = (e.method||'GET') + ' ' + (e.path||'/');
-    if (!apiCounts[k]) apiCounts[k] = { count: 0, first: e.ts, last: e.ts };
-    apiCounts[k].count++; apiCounts[k].last = e.ts;
-    if (!e.caller) e.caller = classifyCaller(e.ua||'');
-    if (!e.action) e.action = classifyAction(e.method||'GET', e.path||'/');
-    if (!e.target) e.target = classifyTarget(e.path||'/');
-  }
-
-  function logApiCall(method, p, ua) {
-    var entry = {
-      ts: new Date().toISOString(),
-      method: method, path: p,
-      ua: (ua||'').slice(0, 120),
-      caller: classifyCaller(ua||''),
-      action: classifyAction(method, p),
-      target: classifyTarget(p)
-    };
-    apiLog.push(entry);
-    var k = method + ' ' + p;
-    if (!apiCounts[k]) apiCounts[k] = { count: 0, first: entry.ts, last: entry.ts };
-    apiCounts[k].count++; apiCounts[k].last = entry.ts;
-    try { fs.appendFileSync(todayLogPath(), JSON.stringify(entry) + '\n', 'utf8'); } catch(_) {}
-  }
-  app.use(function(req, res, next) {
-    if (req.path.startsWith('/api/')) logApiCall(req.method, req.path, req.get('user-agent')||'');
-    next();
-  });
 
   app.get('/api/stats', function(req, res) {
     var now = new Date();
@@ -1898,6 +1905,57 @@ function startServer() {
     var h = opslog.health();
     res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
     res.json(h);
+  });
+
+  // Loop联邦巡检 — aggregate health from inspector projects + scheduler + agentboard
+  app.get('/api/loop/health', function(req, res) {
+    var projectsDir = path.join(os.homedir(), '.inspector', '_runtime', 'projects');
+    var schedulerStatePath = path.join(os.homedir(), '.scheduler', 'scheduler-state.json');
+    var projects = [];
+
+    // Inspector project results
+    try {
+      var files = fs.readdirSync(projectsDir).filter(function(f) { return f.endsWith('.json'); });
+      files.forEach(function(f) {
+        try {
+          var d = JSON.parse(fs.readFileSync(path.join(projectsDir, f), 'utf8'));
+          projects.push({ id: d.project || f.replace('.json', ''), bone: d.bone || false, ok: d.ok,
+            score: d.score || '', ts: d.ts, checks: (d.checks || []).map(function(c) {
+              return { id: c.id, label: c.label, pass: c.pass };
+            }) });
+        } catch(_) {}
+      });
+    } catch(_) {}
+
+    // Agentboard self-health (live — overwrite inspector's stale snapshot if exists)
+    var abHealth = opslog.health();
+    var abIdx = -1;
+    for (var pi = 0; pi < projects.length; pi++) {
+      if (projects[pi].id === 'agentboard') { abIdx = pi; break; }
+    }
+    var abEntry = { id: 'agentboard', bone: true, ok: abHealth.status === 'ok',
+      uptime: abHealth.uptime, crashes24h: abHealth.crashes24h };
+    if (abIdx >= 0) projects[abIdx] = abEntry;
+    else projects.push(abEntry);
+
+    // Scheduler job health summary
+    try {
+      var ss = JSON.parse(fs.readFileSync(schedulerStatePath, 'utf8'));
+      var tasks = ss.tasks || {};
+      var jobSummary = { id: 'scheduler-jobs', bone: true, jobs: {} };
+      var ok = true;
+      Object.keys(tasks).forEach(function(jid) {
+        var t = tasks[jid];
+        var status = t.lastStatus || 'pending';
+        if (status === 'error' || status === 'fatal_error') ok = false;
+        jobSummary.jobs[jid] = { status: status, lastRun: t.lastRun || null, consecutiveErrors: t.consecutiveErrors || 0 };
+      });
+      jobSummary.ok = ok;
+      projects.push(jobSummary);
+    } catch(_) {}
+
+    res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.json({ projects: projects, updated: new Date().toISOString() });
   });
 
   var PORT = process.env.PORT || 3099;
