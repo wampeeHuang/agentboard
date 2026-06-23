@@ -5,7 +5,67 @@ const http = require('http');
 const { exec, execSync, spawn } = require('child_process');
 const os = require('os');
 var registry = require('./lib/tool-registry');
-var opslog = require(path.join(os.homedir(), '.ops-log', 'ops-log.js'));
+var opslog = require('./lib/ops-log');
+
+var serverStartTime = Date.now();
+var EVENTS_LOG = path.join(__dirname, '_runtime', 'events.jsonl');
+
+function getHealth() {
+  var now = Date.now();
+  var lines = [];
+  try {
+    var raw = fs.readFileSync(EVENTS_LOG, 'utf8');
+    if (raw.trim()) lines = raw.trim().split('\n').map(function(l) {
+      try { return JSON.parse(l); } catch (_) { return null; }
+    }).filter(Boolean);
+  } catch (_) {}
+
+  var crashes24h = lines.filter(function(e) {
+    return (now - new Date(e.ts).getTime()) < 86400000 &&
+      (e.event === 'tool-crash' || e.event === 'tool-rejection' || e.event === 'tool-spawn-error');
+  }).length;
+
+  var seenPids = {};
+  var abnormalDeaths = [];
+  for (var i = 0; i < lines.length; i++) {
+    var entry = lines[i];
+    if (entry.event === 'server-start' && entry.pid && !seenPids[entry.pid]) {
+      seenPids[entry.pid] = true;
+      if (entry.pid === process.pid) continue;
+      var hadActivity = false, hadCrash = false;
+      for (var j = i + 1; j < lines.length; j++) {
+        if (lines[j].event === 'server-start') break;
+        if (lines[j].pid === entry.pid) hadActivity = true;
+        if (lines[j].event === 'tool-crash' || lines[j].event === 'tool-rejection') hadCrash = true;
+      }
+      if (!hadActivity && !hadCrash) continue;
+      if (!hadCrash) {
+        var deathTs = '';
+        for (var k = i + 1; k < lines.length; k++) {
+          if (lines[k].event === 'server-start' && lines[k].pid !== entry.pid) { deathTs = lines[k].ts; break; }
+        }
+        abnormalDeaths.push({ pid: entry.pid, startedAt: entry.ts, presumedDeadAt: deathTs || 'unknown' });
+      }
+    }
+  }
+
+  var lastEvent = lines.length > 0 ? lines[lines.length - 1] : null;
+  return {
+    status: crashes24h > 0 ? 'degraded' : 'ok',
+    pid: process.pid,
+    uptime: Math.round((now - serverStartTime) / 1000),
+    totalLines: lines.length,
+    crashes24h: crashes24h,
+    abnormalDeaths: abnormalDeaths,
+    snapshot: {
+      totalEvents: lines.length,
+      events24h: lines.filter(function(e) { return (now - new Date(e.ts).getTime()) < 86400000; }).length,
+      crashes24h: crashes24h,
+      lastEvent: lastEvent ? lastEvent.event : null,
+      lastEventTs: lastEvent ? lastEvent.ts : null
+    }
+  };
+}
 
 const PROJECT_DIR = __dirname;
 const AGENTBOARD_HOME = process.env.AGENTBOARD_HOME || path.join(os.homedir(), '.agentboard');
@@ -1903,7 +1963,7 @@ function startServer() {
 
   // Health endpoint for patrol agents
   app.get('/health', function(req, res) {
-    var h = opslog.health();
+    var h = getHealth();
     res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
     res.json(h);
   });
@@ -1929,7 +1989,7 @@ function startServer() {
     } catch(_) {}
 
     // Agentboard self-health (live — overwrite inspector's stale snapshot if exists)
-    var abHealth = opslog.health();
+    var abHealth = getHealth();
     var abIdx = -1;
     for (var pi = 0; pi < projects.length; pi++) {
       if (projects[pi].id === 'agentboard') { abIdx = pi; break; }

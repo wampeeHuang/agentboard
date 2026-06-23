@@ -11,7 +11,36 @@
   "apiKeyName": "DOUBAO_SPEECH_API_KEY",
   "url": "https://console.volcengine.com/speech",
   "conflicts": [],
-  "agent_notes": "异步两阶段：POST /submit 拿 task_id → POST /query 轮询直到 task_status=2 → GET audio_url 下载。不要以为请求一次就能拿到音频。音色列表见：zh_female_shuangkuaisisi_uranus_bigtts / zh_male_xuanyijieshuo_uranus_bigtts / zh_female_xinlingbolan_uranus_bigtts 等。DOUBAO_SPEECH_VOICE_TYPE 存默认音色。",
+  "agent_notes": "异步两阶段：POST /submit 拿 task_id → POST /query 轮询直到 task_status=2 → GET audio_url 下载。不要以为请求一次就能拿到音频。音色选择：完整 102 音色见 voices.json，配音推荐子集见下方 voice_dubbing_picks。DOUBAO_SPEECH_VOICE_TYPE 存默认音色。",
+  "voice_browse_url": "https://qkunio.github.io/doubao-tts-examples/",
+  "voice_full_list": "voices.json",
+  "voice_dubbing_picks": {
+    "_note": "Curated subset for video dubbing. Full catalog (102 voices) in voices.json.",
+    "english_narration": [
+      {"id": "zh_female_liuchangnv_uranus_bigtts", "name": "流畅女声 2.0", "tone": "Clear, neutral female — English/Chinese bilingual"},
+      {"id": "zh_female_vv_uranus_bigtts", "name": "Vivi 2.0", "tone": "Light, friendly general female"},
+      {"id": "zh_female_sophie_uranus_bigtts", "name": "魅力苏菲 2.0", "tone": "Charming conversational female"},
+      {"id": "zh_male_jieshuoxiaoming_uranus_bigtts", "name": "解说小明 2.0", "tone": "Documentary male narrator"},
+      {"id": "zh_male_cixingjieshuonan_uranus_bigtts", "name": "磁性解说男声 Morgan 2.0", "tone": "Magnetic deep male narration"},
+      {"id": "zh_male_yizhipiannan_uranus_bigtts", "name": "译制片男 2.0", "tone": "Dubbed-film male voice"}
+    ],
+    "chinese_narration": [
+      {"id": "zh_female_cancan_uranus_bigtts", "name": "知性灿灿 2.0", "tone": "Sophisticated female narration"},
+      {"id": "zh_female_zhixingnv_uranus_bigtts", "name": "知性女声 2.0", "tone": "Professional knowledgeable female"},
+      {"id": "zh_male_jieshuoxiaoming_uranus_bigtts", "name": "解说小明 2.0", "tone": "Documentary male narrator"},
+      {"id": "zh_male_xuanyijieshuo_uranus_bigtts", "name": "悬疑解说 2.0", "tone": "Suspense/crime male narrator"},
+      {"id": "zh_male_guanggaojieshuo_uranus_bigtts", "name": "广告解说 2.0", "tone": "Commercial-grade male narration"},
+      {"id": "zh_male_shenyeboke_uranus_bigtts", "name": "深夜播客 2.0", "tone": "Late-night podcast intimate male"},
+      {"id": "zh_female_xinlingjitang_uranus_bigtts", "name": "心灵鸡汤 2.0", "tone": "Warm inspirational female"}
+    ],
+    "chinese_creative": [
+      {"id": "zh_female_gaolengyujie_uranus_bigtts", "name": "高冷御姐 2.0", "tone": "Cool, authoritative mature female"},
+      {"id": "zh_male_aojiaobazong_uranus_bigtts", "name": "傲娇霸总 2.0", "tone": "Tsundere CEO male"},
+      {"id": "zh_male_wennuanahu_uranus_bigtts", "name": "温暖阿虎 Alvin 2.0", "tone": "Warm storytelling male"},
+      {"id": "zh_male_dongfanghaoran_uranus_bigtts", "name": "东方浩然 2.0", "tone": "Heroic epic male"},
+      {"id": "zh_male_baqiqingshu_uranus_bigtts", "name": "霸气青叔 2.0", "tone": "Domineering mature male"}
+    ]
+  },
   "capability": "中文语音合成 TTS 时间戳对齐",
   "models": [
     {
