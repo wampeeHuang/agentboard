@@ -90,3 +90,7 @@ AI agent 通过 **MCP** 调工具（`mcp-server.js`，stdio），标准 JSON-RPC
 - 端口 3099，进程 `node server.js`
 - 修改 server.js 后必须重启：`Stop-Process -Id <PID> -Force; Start-Process node -ArgumentList "server.js"`
 - manifest 改动无需重启，每次请求都会重新扫描
+
+## 巡检
+
+巡检标准: `~/.inspector/projects-registry.json` — 本项目受 Inspector 巡检，检查项定义在 `inspection.json`
