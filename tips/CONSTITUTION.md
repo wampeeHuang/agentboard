@@ -123,6 +123,7 @@ source: 触发写入的事件/任务简述
 | `script-tag-injection-js-exposed.md` | diagnosis | ✅ |
 | `tun-fallback-dead-proxy-nodes.md` | diagnosis | ✅ |
 | `windows-start-b-kills-children.md` | diagnosis | ✅ |
+| `dual-writer-state-overwrite.md` | diagnosis | ✅ |
 
 ---
 

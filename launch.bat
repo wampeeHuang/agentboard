@@ -1,3 +1,3 @@
 @echo off
-start "" /min "C:\Program Files\nodejs\node.exe" "C:\Users\Administrator\.agentboard\server.js"
+start "" /min node "%~dp0server.js"
 start http://localhost:3099

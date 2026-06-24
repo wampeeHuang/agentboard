@@ -1,262 +1,267 @@
 # Agentboard · 工具架
 
-> **This is not a product. It's a reference implementation.** Paths are hardcoded to my `~/.claude/` directory structure. The server is a 750-line monolith. Cloning directly will probably not work for you. What you should steal: four patterns — filesystem-as-registry, manifest.json auto-discovery, OS-level port detection, agents consume via curl. Understand these four, rebuild in two hours. Fork the ideas, not the code.
->
-> **这不是产品，是参考实现。** 路径硬编码了我的 `~/.claude/` 目录，server.js 一个 750 行单体文件。直接 clone 大概率跑不通。偷这四个模式：文件系统即注册表、manifest.json 自发现、OS 级端口检测、Agent 用 curl 消费 API。看懂，两小时重写。fork 想法，别 fork 代码。
+> 放一个 manifest.json，多一个可控工具。给人看状态，给 AI 调 API。
 
-**放一个 manifest.json，多一个可控工具。给人看状态，给 Agent 调 API。**
-
-Not another homelab dashboard. No YAML config file. Tools register by dropping a `manifest.json` into a directory. The dashboard auto-discovers them, checks port status at OS level, and provides one-click start/stop — for both humans and AI agents.
+Agentboard 是一个本地工具控制面板。把工具注册为 `manifest.json` 放进目录，仪表盘自动发现、检测端口状态、一键启停。同一套注册信息同时服务人和 AI agent（Claude Code 等）。
 
 ![screenshot](screenshot.png)
 
+## 双平面架构
+
+| 平面 | 协议 | 入口 | 消费者 |
+|------|------|------|--------|
+| 管理面 | REST HTTP | `http://localhost:3099` | 人（Web 仪表盘） |
+| 工具面 | MCP JSON-RPC stdio | `mcp-server.js` | AI agent（Claude Code, Cursor 等） |
+
+两平面共享同一真相源：`tools/{id}/manifest.json`。改一处，两面自动生效。
+
+## 一指令部署
+
+```bash
+# 1. 克隆
+git clone https://github.com/wampeeHuang/agentboard.git ~/.agentboard
+cd ~/.agentboard
+
+# 2. 安装依赖（只依赖 express）
+npm install
+
+# 3. 启动
+npm start
+# → 浏览器打开 http://localhost:3099
 ```
-~/.claude/tools/
-├── langgraph-rag/
-│   └── manifest.json    →  appears in dashboard automatically
-├── comfyui/
-│   └── manifest.json
-└── your-tool/
+
+**前提**：Node.js 18+，操作系统自带的 `netstat`（Windows）/ `lsof`（macOS）/ `ss`（Linux）可用。
+
+Windows 用户把 `~/.agentboard` 换成 `%USERPROFILE%\.agentboard`，或在 PowerShell 中 `git clone` 到 `$env:USERPROFILE\.agentboard`。
+
+## 注册工具
+
+在 `tools/` 下建目录，放一个 `manifest.json`：
+
+```
+~/.agentboard/tools/
+└── my-server/
     └── manifest.json
 ```
 
-## Quick start
-
-```bash
-git clone <repo-url> agentboard
-cd agentboard
-npm install
-npm start
-# → http://localhost:3099
-```
-
-**Requirements**: Node.js 18+, `netstat` (Windows) / `lsof` (macOS) / `ss` (Linux) available in PATH.
-
-## Register a tool
-
-Create a directory and manifest:
-
-```bash
-mkdir -p ~/.claude/tools/my-tool
-```
-
 ```json
 {
-  "name": "My Tool",
-  "description": "What it does",
-  "icon": "🔧",
+  "name": "我的服务",
+  "description": "【用途】一个示例 HTTP 服务。【何时用】需要测试时。【返回】{ok: true}",
+  "capability": "示例HTTP服务",
+  "owner": "自建",
+  "icon": "🚀",
   "version": "1.0.0",
-  "category": "AI 模型",
+  "category": "设施",
   "order": 10,
-  "port": 8080,
-  "projectPath": "/path/to/project",
-  "url": "http://localhost:8080",
-  "startCommand": "cd /path/to/project && python app.py",
-  "stopCommand": "npx kill-port 8080"
+  "port": 3456,
+  "url": "http://localhost:3456",
+  "projectPath": "/home/me/my-project",
+  "startCommand": "cd /home/me/my-project && python server.py",
+  "stopCommand": "npx kill-port 3456"
 }
 ```
 
-Refresh the dashboard — the tool appears with live port status.
+刷新仪表盘，卡片出现。端口状态来自 OS 级 `netstat`/`lsof`/`ss`，不靠 HTTP ping，不会误判。
 
-### Manifest schema
+### 必填字段
 
-| Field | Type | Required | Description |
-|---|---|---|---|
-| `name` | string | Yes | Display name. `id` is auto-derived from the directory name. |
-| `description` | string | No | One-line description |
-| `icon` | string | No | Emoji or single character |
-| `version` | string | No | Semver |
-| `category` | string | No | `基础设施` / `内容` / `开发` / `AIGC` / `AI 模型` / `其他` (default) |
-| `order` | number | No | Sort order (default 99, lower = first) |
-| `port` | number | No | Single port for status check |
-| `ports` | number[] | No | Multiple ports (use instead of `port`) |
-| `projectPath` | string | No | Working directory for `startCommand` |
-| `url` | string | No | Browser URL when running |
-| `startCommand` | string | No | Shell command to start |
-| `stopCommand` | string | No | Shell command to stop |
+| 字段 | 说明 |
+|------|------|
+| `name` | 显示名称 |
+| `description` | 描述，建议含【用途】【何时用】【何时不用】【返回】四段 |
+| `capability` | 一句话任务描述（≤30字），AI 用来判断该调哪个工具 |
+| `owner` | 所有者：`自建` / `外部` / `AI托管` |
 
-**Virtual tools**: Omit `port`/`startCommand`/`stopCommand`, provide only `url`. No status check — always shows "open" button.
+### 完整字段
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| `name` | string | 显示名称。id 自动取目录名 |
+| `description` | string | 工具描述 |
+| `capability` | string | 一句话任务描述（≤30字） |
+| `owner` | string | 自建 / 外部 / AI托管 |
+| `icon` | string | emoji 图标 |
+| `version` | string | 版本号 |
+| `category` | string | 分类（模型/Agent/设施/获取/查阅/创作/职能） |
+| `order` | number | 排序权重（越小越靠前） |
+| `port` | number | 主端口 |
+| `ports` | number[] | 多端口（和 port 二选一） |
+| `url` | string | 运行时 URL |
+| `projectPath` | string | 项目工作目录（startCommand 在此执行） |
+| `startCommand` | string | 启动命令 |
+| `stopCommand` | string | 停止命令 |
+| `type` | string | service / group / link / script |
+| `conflicts` | string[] | 互斥工具 ID（如 GPU 显存冲突） |
+| `agent_notes` | string | 给 AI 看的踩坑笔记 |
+| `trigger` | string | 触发命令（script 类型） |
+| `children` | string[] | 子工具 ID（group 类型） |
+| `publicUrl` | string | 公网地址 |
+| `dashboard` | object | 内嵌仪表盘配置 |
+
+### 虚拟工具
+
+只填 `name`、`url`、`owner`、`capability`、`description`，不填 `port` 和 `startCommand` → 纯链接卡片，点开即跳转。
+
+### Manifest 改完需要重启吗？
+
+不需要。每次请求自动扫描 `tools/` 目录。
+
+## 接入 Claude Code（MCP）
+
+在 Claude Code 设置中加入 MCP 配置，AI 就能通过标准协议发现和操控工具。
+
+**Claude Code**（`~/.claude/settings.json`）：
+
+```json
+{
+  "mcpServers": {
+    "agentboard": {
+      "command": "node",
+      "args": ["~/.agentboard/mcp-server.js"]
+    }
+  }
+}
+```
+
+**Claude Desktop**（`%APPDATA%\Claude\claude_desktop_config.json`）：
+
+```json
+{
+  "mcpServers": {
+    "agentboard": {
+      "command": "node",
+      "args": ["C:\\Users\\你的用户名\\.agentboard\\mcp-server.js"]
+    }
+  }
+}
+```
+
+重启后可用四个 MCP 工具：
+
+| MCP 工具 | 功能 |
+|------|------|
+| `agentboard_list_tools` | 列出所有工具及运行状态 |
+| `agentboard_get_tool` | 获取单个工具详情（含 conflicts、agent_notes） |
+| `agentboard_start_tool` | 启动工具（自动检测端口冲突） |
+| `agentboard_stop_tool` | 停止工具 |
+
+AI 调工具前会先查 `conflicts`（互斥检测）和 `agent_notes`（踩坑笔记），避免已知错误。
 
 ## API
 
+所有操作都是 HTTP 调用，AI 和脚本都能直接消费。
+
 Base: `http://localhost:3099`
 
-### GET /api
+### 工具管理
 
-Agent discovery endpoint. Returns available endpoints, manifest schema, and configured directories.
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| GET | `/api` | API 发现文档（返回所有端点和 manifest schema） |
+| GET | `/api/tools` | 列出所有工具 + 实时运行状态 |
+| GET | `/api/tools/:id` | 单个工具详情 |
+| POST | `/api/tools/start/:id` | 启动工具 |
+| POST | `/api/tools/stop/:id` | 停止工具 |
+| POST | `/api/tools` | 创建工具 `{id, name, port, ...}` |
+| PUT | `/api/tools/:id` | 更新工具 |
+| POST | `/api/tools/reorder` | 排序 `{items: [{id, order}]}` |
 
-```json
-{
-  "name": "Agentboard",
-  "version": "1.0.0",
-  "description": "Filesystem-as-registry toolchain control plane for AI agents",
-  "endpoints": {
-    "GET /api": "This discovery document",
-    "GET /api/tools": "List all registered tools with running status",
-    "POST /api/tools/start/:id": "Start a tool by id",
-    "POST /api/tools/stop/:id": "Stop a tool by id",
-    "POST /api/tools/reorder": "Reorder tools"
-  },
-  "manifestSchema": { ... },
-  "toolsDir": "/home/user/.claude/tools"
-}
+### 巡检与状态
+
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| GET | `/api/health` | 健康报告（崩溃数、异常退出、uptime） |
+| GET | `/api/audit` | Schema 合规巡检（缺失字段、格式错误） |
+| GET | `/api/audit/runtime` | 运行时漂移检测（路径不存在、端口未监听） |
+
+### 技能图表
+
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| GET | `/skills` | 技能系统图表画廊 |
+| GET | `/skills/:name` | 单个图表 HTML |
+
+### Agent 调用示例
+
+```bash
+# 发现所有 API
+curl http://localhost:3099/api
+
+# 列出所有工具
+curl http://localhost:3099/api/tools
+
+# 启动
+curl -X POST http://localhost:3099/api/tools/start/my-server
+
+# 停止
+curl -X POST http://localhost:3099/api/tools/stop/my-server
+
+# 验证启动成功（等端口上线）
+curl http://localhost:3099/api/tools | grep '"running":true'
 ```
 
-AI agents should call `GET /api` first to discover the API surface and schema.
+## 环境变量
 
-### GET /api/tools
+| 变量 | 默认值 | 说明 |
+|------|--------|------|
+| `PORT` | `3099` | 仪表盘端口（被占用则失败，不 fallback） |
+| `AGENTBOARD_HOME` | `~/.agentboard` | 数据根目录 |
+| `AGENTBOARD_TOOLS_DIR` | `~/.agentboard/tools` | 工具 manifest 扫描目录 |
+| `AGENTBOARD_SKILLS_DIR` | `~/.claude/skills` | 技能图表扫描目录 |
+| `AGENTBOARD_TIPS_DIR` | `~/.agentboard/tips` | 操作日志目录 |
 
-Returns all registered tools with live running status.
+Windows 上 `~` 展开为 `C:\Users\<用户名>`，或显式设 `%USERPROFILE%\.agentboard`。
 
-```json
-{
-  "ok": true,
-  "tools": [
-    {
-      "id": "langgraph-rag",
-      "name": "LangGraph RAG 问答",
-      "description": "RAG QA system — DeepSeek + ChromaDB",
-      "icon": "🧠",
-      "version": "1.0.0",
-      "category": "AI 模型",
-      "order": 6,
-      "port": 8766,
-      "url": "http://localhost:8766/ask",
-      "running": true,
-      "ports": [8766]
-    }
-  ]
-}
-```
-
-### POST /api/tools/start/:id
-
-Starts a tool. Returns `{ ok: true }` or `{ ok: false, error: "..." }`.
-
-The server spawns the `startCommand` as a detached child process. It does not wait for the process to be ready — poll `GET /api/tools` to confirm the port is listening.
-
-### POST /api/tools/stop/:id
-
-Stops a tool by running its `stopCommand`. Returns `{ ok: true }` or `{ ok: false, error: "..." }`.
-
-### POST /api/tools/reorder
-
-Persists tool sort order.
-
-```json
-{
-  "items": [
-    { "id": "agentboard", "order": 0 },
-    { "id": "comfyui", "order": 1 }
-  ]
-}
-```
-
-## How AI agents use it
-
-Agentboard is designed so an AI agent can manage the entire toolchain without human intervention:
-
-1. **Register a tool**: `Write ~/.claude/tools/{id}/manifest.json`
-2. **Discover tools**: `curl http://localhost:3099/api/tools`
-3. **Check if running**: read `running` field from `/api/tools`
-4. **Start**: `curl -X POST http://localhost:3099/api/tools/start/{id}`
-5. **Verify**: poll `/api/tools` until `running: true`
-6. **Stop**: `curl -X POST http://localhost:3099/api/tools/stop/{id}`
-
-No database migration. No config file merge conflicts. The filesystem is the source of truth.
-
-## Environment variables
-
-| Variable | Default | Description |
-|---|---|---|
-| `PORT` | `3099` | Dashboard port (fixed, fails if occupied) |
-| `AGENTBOARD_TOOLS_DIR` | `~/.claude/tools` | Tool manifest directory |
-| `AGENTBOARD_SKILLS_DIR` | `~/.claude/skills` | Skill diagram directory (optional) |
-
-## Cross-platform
-
-| Platform | Port check | Process spawn |
-|---|---|---|
-| Windows | `netstat -ano` | `cmd /c <command>` |
-| macOS | `lsof -i` | `sh -c <command>` |
-| Linux | `ss -tlnp` | `sh -c <command>` |
-
-## Skill diagrams
-
-Agentboard auto-discovers `system-diagram.html` files from skill directories. Every skill with a `references/system-diagram.html` appears on the `/skills` gallery — no config, no registration.
+## 目录结构
 
 ```
-~/.claude/skills/
-├── evolution-cat-article/
-│   └── references/
-│       └── system-diagram.html    →  appears on /skills automatically
-├── my-custom-skill/
-│   └── references/
-│       └── system-diagram.html
-└── ...
+~/.agentboard/
+├── server.js              ← REST API + Web 仪表盘（人看）
+├── mcp-server.js          ← MCP JSON-RPC stdio（AI 调）
+├── index.html             ← 仪表盘前端（纯 HTML/CSS/JS，零框架）
+├── api-page.js            ← /api 发现页面生成
+├── launch.bat             ← Windows 一键启动（静默后台 + 打开浏览器）
+├── launch.vbs             ← Windows VBS 启动器
+├── lib/
+│   ├── tool-registry.js   ← 核心逻辑（server.js 和 mcp-server.js 共享）
+│   ├── manifest-schema.js ← manifest 校验 + 巡检
+│   ├── ops-log.js         ← 操作事件日志
+│   └── crash-guard.js     ← 进程防猝死（node 工具崩溃自动记录）
+├── tools/                 ← 工具注册目录（唯一真相源）
+│   ├── dashboard/         ← agentboard 自注册
+│   └── your-tool/         ← 放你的工具
+│       └── manifest.json
+├── tips/                  ← 操作踩坑日志（可选）
+├── skills/                ← 技能系统图表模板（可选）
+└── _runtime/              ← 运行时数据（事件日志、排序状态）
 ```
 
-### How diagrams are generated
+### 自带示例工具
 
-Each diagram is an HTML file filled from a shared template. The workflow:
+`tools/dashboard/manifest.json` 是 agentboard 自注册——它把自己也作为一个可管理工具。所有其他工具都是你注册的。
 
-1. **Human** sends `http://localhost:3099/skills` to their agent
-2. **Agent** reads the page, finds the embedded instructions, loads `template.html` + `schema.md`
-3. **Agent** reads the skill's `SKILL.md` and fills every `{{PLACEHOLDER}}` in the template
-4. **Output** lands at `<skill-dir>/references/system-diagram.html` — appears on `/skills` on next refresh
+## 跨平台
 
-```
-~/.claude/skills/system-diagram/
-├── template.html    →  144-line shared CSS framework with {{PLACEHOLDER}} markers
-└── schema.md        →  fill rules + CSS version tag (v1)
-```
+| 平台 | 端口检测 | 进程启动 |
+|------|----------|----------|
+| Windows | `netstat -ano` | `cmd /c` |
+| macOS | `lsof -i` | `sh -c` |
+| Linux | `ss -tlnp` | `sh -c` |
 
-Update a skill's SKILL.md → tell agent to sync the diagram. Change template CSS → bump version in schema.md → agent regenerates all diagrams.
+同一份代码，三平台跑通，不装额外依赖。
 
-Template and schema ship in `skills/system-diagram/` in this repo.
+## 设计原则
 
-### Endpoints
+- **文件系统即注册表** — 无数据库、无配置文件、无 schema migration。放文件 = 注册，删文件 = 注销
+- **OS 级真相** — 端口状态来自操作系统网络栈，不靠 HTTP ping（ping 通 ≠ 服务正常，ping 不通 ≠ 端口没监听）
+- **双平面共享逻辑** — `lib/tool-registry.js` 是唯一真相源，server.js（REST）和 mcp-server.js（MCP）只是协议适配层。改核心逻辑两面自动生效
+- **Agent 优先** — 所有操作都是 HTTP 调用，AI 不需要学新工具、不需要装 SDK
+- **固定端口** — 仪表盘始终 `:3099`。端口冲突直接报错，不静默换端口（可发现性 > 容错性）
 
-| Method | Path | Description |
-|---|---|---|
-| GET | `/skills` | Gallery of all discovered skill diagrams |
-| GET | `/skills/:name` | Raw HTML of a specific diagram |
+## 安全
 
-The gallery scans `SKILLS_DIR` (default `~/.claude/skills`) on every request. New diagram dropped in → appears on next refresh.
-
-## Design principles
-
-- **Filesystem as registry** — no database, no config file, no schema migration
-- **OS-level truth** — port status from `netstat`/`lsof`/`ss`, not HTTP ping
-- **Agent-native** — every operation accessible via REST API with schema discovery at `/api`
-- **Fixed port** — dashboard always at `:3099`, fails fast if occupied (discoverability > convenience)
-
-## Why this approach
-
-The filesystem is the registry. If an agent can write a file, it can register a tool. The manifest IS the configuration — no separate "add to dashboard" step.
-
-**For humans**: see what's running, what's stopped, what needs attention. Click to start or stop. No terminal, no `docker ps`, no remembering ports.
-
-**For AI agents**: `GET /api` → discover. `GET /api/tools` → read status. `POST /api/tools/start/:id` → launch. `POST /api/tools/stop/:id` → stop. Every operation is a single HTTP call.
-
-**Self-referencing**: agentboard registers itself as a tool. It can manage its own start/stop through its own API.
-
-## Deployment verification
-
-After cloning and `npm install`, verify these work:
-
-- [ ] `node server.js` starts on `:3099` without crashing (even if `~/.claude/tools/` doesn't exist)
-- [ ] `curl http://localhost:3099/api` returns API discovery doc
-- [ ] `curl http://localhost:3099/api/tools` lists demo tools
-- [ ] `curl -X POST http://localhost:3099/api/tools/start/agentboard` returns `{ ok: true }`
-- [ ] `curl http://localhost:3099/skills` returns skill gallery (even if empty)
-- [ ] Opening `http://localhost:3099/skills` shows the gallery page
-- [ ] Opening `http://localhost:3099` shows the dashboard with tools rendered
-- [ ] Port check works on your OS: `netstat -ano` (Windows) / `lsof -i` (macOS) / `ss -tlnp` (Linux)
-
-## Security
-
-Agentboard is designed for **localhost use**. It has no authentication, no TLS, and executes shell commands from manifest files. Keep it on `127.0.0.1` — do not expose it to the network. Tools are registered via filesystem access, which is the implicit trust boundary: if an agent can write to `~/.claude/tools/`, it can already run arbitrary commands.
+Agentboard 设计用于 **localhost**。无认证、无 TLS、无用户隔离。信任边界是文件系统——能写 `~/.agentboard/tools/` 的人已经能执行任意 shell 命令。**不要暴露到公网。** 不要绑 `0.0.0.0`。
 
 ## License
 
