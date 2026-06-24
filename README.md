@@ -239,7 +239,9 @@ Windows 上 `~` 展开为 `C:\Users\<用户名>`，或显式设 `%USERPROFILE%\.
 
 ### 自带示例工具
 
-`tools/dashboard/manifest.json` 是 agentboard 自注册——它把自己也作为一个可管理工具。所有其他工具都是你注册的。
+仓库 `tools/` 目录下包含 40+ 个 manifest 示例（来自作者本人的工具架）。它们是你写 manifest 的参考模板——不同 `type`、不同 `category`、不同 `conflicts` 写法都能找到实例。
+
+大部分示例工具在你电脑上端口不在线，仪表盘会显示灰色离线状态。**不影响使用，放心保留。** 不需要的删掉对应目录即可，刷新即消失。
 
 ## 跨平台
 
