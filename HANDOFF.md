@@ -1,17 +1,26 @@
-# HANDOFF — 2026-06-24
+# HANDOFF 2026-06-26 (会话2)
 
 ## 本次完成
+- 智谱 Coding Plan 接入完成，双轨道可用：
+  - OpenClaw provider `bigmodel`（glm-5.2 / glm-5v-turbo）
+  - agentboard 工具卡片 `bigmodel-coding-plan`（编号 #35）
+- agentboard CLAUDE.md 新增 §模型路由——代码/Agent/截图→前端任务自动查工具架匹配模型
 
-- **README 重写**：面向朋友独立部署的中文文档，覆盖部署/注册工具/MCP接入/API/架构
-- **launch.bat 修复**：硬编码 `C:\Users\Administrator` → `%~dp0`，可移植
-- **推送到 GitHub**：https://github.com/wampeeHuang/agentboard（2 commits: 7b871a3, 19aad09）
+## 国产模型选型结论
+- DeepSeek V4 Pro → 主力不动（cron巡检、结构化Agent）
+- GLM-5.2 → Coding/长程Agent任务专用
+- GLM-5V-Turbo → 截图→前端代码（Design2Code 94.8）
+- Qwen3.7-Max → Agent长程自治备选（35h连续），暂未接入
 
-## 当前状态
-
-- agentboard 运行正常，`:3099`
-- 仓库 40+ 个人工具 manifest 保留作为示例（README 已说明）
+## 关键文件
+| 文件 | 改动 |
+|------|------|
+| `~/.agentboard/tools/bigmodel-coding-plan/manifest.json` | 新增 |
+| `~/.agentboard/CLAUDE.md` | 追加§模型路由 |
+| `~/.openclaw/openclaw.json` | 追加 bigmodel provider + GLM-5.2/GLM-5V aliases |
+| `~/.claude/.../memory/reference_zhipu_coding_plan.md` | 新增（API key & 调用方式） |
 
 ## 未做
-
-- 未清理个人工具 manifest（用户要求保留）
-- 未新增示例工具
+- CCwitch 模型切换面板（方案讨论过，OpenClaw 够用，没动手）
+- Qwen3.7-Max 接入（用户只买了智谱 Coding Plan）
+- GLM-5.2 按量 ¥8/28 百万token，套餐散户买不到

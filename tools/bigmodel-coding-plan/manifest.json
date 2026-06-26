@@ -1,0 +1,28 @@
+{
+  "name": "智谱 Coding Plan",
+  "id": "bigmodel-coding-plan",
+  "description": "【用途】智谱Coding Plan API，GLM全系模型可用。GLM-5.2=Coding+长程Agent旗舰，GLM-5V-Turbo=截图→代码多模态。OpenAI兼容base_url=https://open.bigmodel.cn/api/coding/paas/v4。【何时用】代码生成/重构→GLM-5.2；截图/设计稿→前端代码→GLM-5V-Turbo。长程Agent任务(1h+)→GLM-5.2。Coding Plan套餐内调用不计次。【何时不用】简单问答/巡检cron→DeepSeek V4 Pro(更便宜)。非代码类文本→DeepSeek。数学推理→DeepSeek/Claude。【返回】OpenAI兼容chat completion【延迟】文本3-15s，图片5-25s",
+  "icon": "🧠",
+  "version": "1.0.0",
+  "category": "模型",
+  "order": 35,
+  "apiBase": "https://open.bigmodel.cn/api/coding/paas/v4",
+  "apiKeyName": "ZHIPU_CODING_PLAN_KEY",
+  "models": [
+    {
+      "id": "glm-5.2",
+      "type": "文本",
+      "features": "Coding+长程Agent，1M上下文，Code Arena全球可⽤模型第一"
+    },
+    {
+      "id": "glm-5v-turbo",
+      "type": "图片",
+      "features": "截图→代码，手绘草图→代码，录屏→动效还原，Design2Code 94.8"
+    }
+  ],
+  "url": "https://open.bigmodel.cn",
+  "conflicts": [],
+  "agent_notes": "API Key=1e45ff7ed61343b78d3ca408a345e080.5lE9RJE8PTwvETMu。OpenAI兼容格式：Authorization: Bearer {key}。GLM-5.2纯文本无视觉，GLM-5V-Turbo才是截图→代码。和aigoapi中的glm-5不冲突——本工具是Coding Plan专属，价格更低。Coding Plan套餐内调用免费(不计次)，套餐买不到时走按量付费(¥8/¥28百万token)。",
+  "capability": "GLM旗舰代码+截图转代码模型（Coding Plan）",
+  "owner": "自建"
+}

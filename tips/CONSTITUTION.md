@@ -124,6 +124,7 @@ source: 触发写入的事件/任务简述
 | `tun-fallback-dead-proxy-nodes.md` | diagnosis | ✅ |
 | `windows-start-b-kills-children.md` | diagnosis | ✅ |
 | `dual-writer-state-overwrite.md` | diagnosis | ✅ |
+| `claude-p-prompt-describe-vs-execute.md` | diagnosis | ✅ |
 
 ---
 

@@ -2,7 +2,7 @@
 
 type: anti-pattern
 date: 2026-06-25
-source: 保障房导航 + 个体户台账从 D:\Claude code_workspace\ 迁移到 D:\workspace\lab\
+source: 保障房导航 + 个体户台账从 D:\Claude code_workspace\ 迁移到 D:\workspace\_lab\
 
 ## 现象
 
@@ -10,7 +10,7 @@ source: 保障房导航 + 个体户台账从 D:\Claude code_workspace\ 迁移到
 
 ## 根因
 
-项目从 `D:\Claude code_workspace\2026-05-29-深圳保障房导航` 搬到 `D:\workspace\lab\2026-05-29-深圳保障房导航`，但搬家后没有全局 grep 旧路径。三种引用各自漂移：
+项目从 `D:\Claude code_workspace\2026-05-29-深圳保障房导航` 搬到 `D:\workspace\_lab\2026-05-29-深圳保障房导航`，但搬家后没有全局 grep 旧路径。三种引用各自漂移：
 
 | 文件 | 旧引用 | 后果 |
 |------|--------|------|

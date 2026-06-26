@@ -60,6 +60,24 @@ AI agent 通过 **MCP** 调工具（`mcp-server.js`，stdio），标准 JSON-RPC
 
 缺失字段 ≠ 失败——`conflicts: []` 和 `agent_notes: ""` 表示暂无已知冲突/盲区。
 
+### 模型路由
+
+代码/编程/Agent/截图→前端等任务，**先查工具架再选模型，不许直接走默认模型**。
+
+**路由规则**：
+1. `agentboard_list_tools` → 筛选 `category="模型"`
+2. 按当前任务意图匹配 `capability` + `models[].type` + `models[].features`
+3. 命中 → 读该工具的 `apiBase` + `apiKeyName` + `agent_notes`（含 key） → 调 API
+4. 未命中 → 走 Claude Code 默认模型
+
+**路由信息来源**（都在 manifest 里，不改第二处）：
+- `category` — 筛出模型类工具
+- `capability` — 一句话判断工具能干什么
+- `models[].type` — 文本/图片/视频，匹配任务模态
+- `models[].features` — 具体场景关键词（"Coding""截图→代码""长程Agent"）
+
+工具架 manifest 是唯一真相源。新增模型只改 manifest，路由自动生效。
+
 ### 新工具注册（不可跳过）
 
 **安装或配置任何本地工具后，第一件事是写 manifest：**
