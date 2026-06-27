@@ -125,6 +125,7 @@ source: 触发写入的事件/任务简述
 | `windows-start-b-kills-children.md` | diagnosis | ✅ |
 | `dual-writer-state-overwrite.md` | diagnosis | ✅ |
 | `claude-p-prompt-describe-vs-execute.md` | diagnosis | ✅ |
+| `windows-user-env-not-visible-new-process.md` | diagnosis | ✅ |
 
 ---
 
