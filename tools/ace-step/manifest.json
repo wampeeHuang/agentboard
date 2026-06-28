@@ -12,11 +12,7 @@
   "projectPath": "D:\\tools\\ace-step",
   "startCommand": "cd /d D:\\tools\\ace-step\\server && npm run dev",
   "stopCommand": "npx kill-port 5173",
-  "conflicts": [
-    "comfyui",
-    "stable-diffusion",
-    "minicpm-v"
-  ],
+  "conflicts": [],
   "agent_notes": "⚠️6GB+显存，几乎不能和任何GPU工具共存。启动前先确认没有ComfyUI/SD/MiniCPM在运行。node launcher.cjs启动。",
   "capability": "AI音乐旋律生成"
 }
