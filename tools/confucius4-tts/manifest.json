@@ -2,15 +2,15 @@
   "name": "语音克隆 Confucius4-TTS",
   "id": "confucius4-tts",
   "owner": "外部",
-  "description": "【用途】有道开源多语种零样本语音克隆TTS。1.3B参数，14种语言，无需参考文本的音色复刻。CLI一次推理模式，不占端口。【何时用】跨语种语音克隆（中文→英文/日/韩等14语种）。需要高质量音色复刻+情感保留。离线本地TTS免API费。【何时不用】仅需中文TTS→CosyVoice3更轻量。需要时间戳对齐→豆包TTS。【返回】WAV音频文件【延迟】加载模型15s + 推理5-15s/句【GPU】推理时占用≈5.6GB显存",
+  "description": "【用途】有道开源多语种零样本语音克隆TTS。1.3B参数，14种语言，无需参考文本的音色复刻。通过官方 Gradio API 推理，不走本地 GPU。【何时用】跨语种语音克隆（中文→英/日/韩等14语种），音色+情感保留。【何时不用】仅需中文TTS→CosyVoice3更轻量。需要时间戳对齐→豆包TTS。【返回】WAV音频文件 22050Hz mono【延迟】单句3-12s（含网络）",
   "icon": "🗣",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "category": "创作",
   "order": 19,
-  "projectPath": "D:\\tools\\Confucius4-TTS",
+  "projectPath": "D:\\workspace\\_output\\confucius4-tts",
   "startCommand": null,
   "stopCommand": null,
   "conflicts": [],
-"agent_notes": "CLI一次推理，非服务。加载模型15s（含下载），推理5-15s/句。5.6GB GPU推理。Windows需关闭代理直连HF下载。torchcodec/FFmpeg不可用→已patch用soundfile。音色克隆需要3秒以上干净参考音频WAV。示例：python -c \"from confuciustts.cli.inference import ConfuciusTTS; import torch; import torchaudio; import soundfile as sf; m=ConfuciusTTS('config/inference_config.yaml','cuda'); audio=m.generate('文本','zh','ref.wav'); sf.write('out.wav',audio.cpu().squeeze(0).numpy(),m.sample_rate)\"",
-  "capability": "多语种零样本语音克隆TTS 14语言"
+  "agent_notes": "本地GPU（RTX 5060 Ti Blackwell sm_120）推理不可用——PyTorch 2.11/CUDA 12.8数值偏差，产出极短安静。必须走官方Gradio API（confucius4-tts.youdao.com/gradio），不走本地GPU。项目宪法和用法见 workspace CLAUDE.md。",
+  "capability": "多语种零样本语音克隆TTS 14语言 官方API"
 }

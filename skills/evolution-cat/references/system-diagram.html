@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>进化猫写作引擎 · 系统结构图 v8.0</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#FAFAF8; --paper-rgb:250,250,248;
+    --ink:#0A0A0A; --ink-rgb:10,10,10;
+    --grey-0:#F2F2F0; --grey-1:#E8E8E4; --grey-2:#CFCFCB; --grey-3:#737373;
+    --accent:#002FA7; --accent-rgb:0,47,167; --accent-on:#FFFFFF;
+    --accent-light:rgba(0,47,167,.06); --accent-mid:rgba(0,47,167,.12);
+    --accent-strong:rgba(0,47,167,.18);
+    --kill:#CC3333; --kill-rgb:204,51,51; --kill-light:rgba(204,51,51,.06);
+    --warn:#B8860B; --warn-light:rgba(184,134,11,.07);
+    --flesh:#2E7D32; --flesh-light:rgba(46,125,50,.06);
+    --analysis:#7B2D8B; --analysis-light:rgba(123,45,139,.06);
+    --sans:"Inter","Helvetica Neue","Helvetica","Arial","Segoe UI",system-ui,-apple-system,sans-serif;
+    --sans-zh:"Noto Sans SC","PingFang SC","Microsoft YaHei UI","Microsoft YaHei","微软雅黑",sans-serif;
+    --mono:"JetBrains Mono","IBM Plex Mono","SF Mono","Cascadia Code","Consolas",monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{background:var(--paper);color:var(--ink);font-family:var(--sans),var(--sans-zh);-webkit-font-smoothing:antialiased}
+  body{max-width:1800px;margin:0 auto;padding:40px 48px 60px}
+
+  .hero{background:var(--accent);color:var(--accent-on);padding:52px 56px;margin-bottom:36px;display:grid;grid-template-columns:1fr auto;gap:40px;align-items:end}
+  .hero .kicker{font-family:var(--mono);font-size:14px;font-weight:500;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.55);margin-bottom:8px}
+  .hero h1{font-size:clamp(48px,5.5vw,76px);font-weight:200;letter-spacing:-.02em;line-height:1.02;color:var(--accent-on)}
+  .hero .deck{font-size:17px;font-weight:400;color:rgba(255,255,255,.65);margin-top:12px;max-width:650px;line-height:1.6}
+  .hero .kpi-strip{display:flex;gap:48px;align-self:end}
+  .hero .kpi-strip .kv{font-family:var(--mono);font-size:60px;font-weight:300;color:var(--accent-on);line-height:1;letter-spacing:-.03em}
+  .hero .kpi-strip .kl{font-size:13px;color:rgba(255,255,255,.5);margin-top:4px;text-transform:uppercase;letter-spacing:.08em}
+
+  .main-grid{display:grid;grid-template-columns:1fr 360px;gap:36px;margin-bottom:36px}
+
+  .panel{background:var(--grey-0);padding:24px;border-left:1px solid var(--accent)}
+  .panel.clean{background:var(--paper);border-left:none}
+  .panel-head{font-family:var(--mono);font-size:13px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);margin-bottom:18px;padding-bottom:8px;border-bottom:1px solid var(--accent)}
+
+  .pipeline{position:relative}
+  .phase{margin-bottom:0;position:relative}
+  .phase-inner{display:grid;grid-template-columns:80px 1fr 140px;gap:18px;align-items:start;padding:14px 0}
+  .phase:last-child .phase-inner{padding-bottom:0}
+
+  .phase-num{width:80px;height:80px;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:28px;font-weight:500;color:var(--accent);border:1px solid var(--accent);background:var(--accent-light);flex-shrink:0}
+  .phase-num.kill{color:var(--kill);border-color:var(--kill);background:var(--kill-light)}
+  .phase-num.flesh{color:var(--flesh);border-color:var(--flesh);background:var(--flesh-light)}
+
+  .phase-body h3{font-size:17px;font-weight:700;color:var(--ink);margin-bottom:2px}
+  .phase-body .loads{font-family:var(--mono);font-size:11px;color:var(--accent);font-weight:600;margin-bottom:4px}
+  .phase-body .desc{font-size:14px;color:var(--grey-3);line-height:1.5;font-weight:400}
+  .phase-body .out{font-family:var(--mono);font-size:11px;color:var(--grey-2);margin-top:4px;font-weight:500}
+
+  .gate-break{background:var(--kill-light);border-left:1px solid var(--kill);padding:14px 18px;margin:6px 0 6px 100px}
+  .gate-break .gtag{display:inline-block;font-family:var(--mono);font-size:12px;font-weight:700;color:var(--kill);background:rgba(204,51,51,.1);padding:3px 10px;margin-bottom:6px;letter-spacing:.06em}
+  .gate-break .gtitle{font-size:14px;font-weight:700;color:var(--ink)}
+  .gate-break .gdetail{font-size:13px;color:var(--grey-3);margin-top:3px;line-height:1.5}
+  .gate-break .gitems{display:flex;gap:12px;flex-wrap:wrap;margin-top:6px}
+  .gate-break .gi{font-family:var(--mono);font-size:12px;color:var(--kill);font-weight:600}
+
+  .gate-break.eng{background:var(--accent-light);border-left-color:var(--accent)}
+  .gate-break.eng .gtag{color:var(--accent);background:var(--accent-mid)}
+  .gate-break.eng .gi{color:var(--accent)}
+
+  .side-stack{display:flex;flex-direction:column;gap:20px}
+
+  .tt{width:100%;border-collapse:collapse;font-size:12px}
+  .tt th{font-family:var(--mono);font-size:11px;font-weight:600;color:var(--accent);text-align:left;padding:6px 8px;border-bottom:1px solid var(--accent);letter-spacing:.06em;text-transform:uppercase}
+  .tt td{padding:6px 8px;border-bottom:1px solid var(--grey-1);vertical-align:top;line-height:1.45}
+  .tt .rname{font-weight:700;color:var(--ink);white-space:nowrap}
+  .tt .rstep{font-family:var(--mono);font-size:11px;color:var(--accent)}
+  .tt .rrole{font-size:11px;color:var(--grey-3)}
+
+  .folder-tree{font-family:var(--mono);font-size:13px;line-height:2.1;color:var(--ink)}
+  .folder-tree .dir{color:var(--accent);font-weight:600}
+  .folder-tree .file{color:var(--grey-3)}
+  .folder-tree .comment{color:var(--grey-2);font-size:11px}
+  .folder-tree .row{display:flex;align-items:baseline;position:relative;padding-left:0}
+  .folder-tree .row .pre{color:var(--grey-2);white-space:pre;flex-shrink:0;user-select:none;margin-right:2px}
+  .folder-tree .lv1{padding-left:4px}
+  .folder-tree .lv2{padding-left:22px}
+  .folder-tree .lv3{padding-left:40px}
+  .folder-tree .lv4{padding-left:58px}
+
+  .fc-wrap{background:var(--grey-0);padding:28px 0;margin-top:0}
+  .fc-row{display:flex;align-items:stretch;gap:0;position:relative}
+  .fc-node{flex:1;min-width:0;position:relative;padding:0 8px;display:flex;flex-direction:column}
+  .fc-node .fc-box{background:var(--accent-light);border:1px solid var(--accent-mid);padding:14px 10px;font-family:var(--mono);font-size:12px;font-weight:600;color:var(--accent);line-height:1.35;text-align:center;flex:1}
+  .fc-node .fc-box.phase-box{background:var(--accent);color:var(--accent-on);border-color:var(--accent)}
+  .fc-node .fc-box.kill{background:var(--kill);color:var(--accent-on);border-color:var(--kill)}
+  .fc-node .fc-sub{font-size:11px;color:var(--grey-3);margin-top:5px;line-height:1.45;text-align:center}
+  .fc-arrow-h{display:flex;align-items:center;justify-content:center;width:28px;flex-shrink:0;font-family:var(--mono);font-size:16px;color:var(--accent);font-weight:400;user-select:none}
+  .fc-wrap-arrow{display:flex;align-items:center;justify-content:flex-end;padding:0 10px;height:32px;font-family:var(--mono);font-size:18px;color:var(--accent);font-weight:400;user-select:none}
+  .fc-spacer{flex:1;min-width:0}
+
+  .cg{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;font-size:13px}
+  .cg .cr{background:var(--kill-light);border-left:1px solid var(--kill);padding:8px 12px}
+  .cg .cr .cn{font-family:var(--mono);font-weight:700;color:var(--kill);font-size:12px}
+  .cg .cr .ct{font-size:12px;color:var(--grey-3);margin-top:2px}
+  .cg .cr.normal{background:var(--accent-light);border-left-color:var(--accent)}
+  .cg .cr.normal .cn{color:var(--accent)}
+
+  .stat-bar{display:grid;grid-template-columns:repeat(5,1fr);gap:0;border-top:1px solid var(--accent);border-bottom:1px solid var(--grey-1);margin-top:40px}
+  .stat-bar .sc{padding:20px 22px;border-right:1px solid var(--grey-1);background:var(--grey-0)}
+  .stat-bar .sc:last-child{border-right:none}
+  .stat-bar .sc .sn{font-family:var(--mono);font-size:clamp(36px,3.5vw,52px);font-weight:300;color:var(--accent);line-height:1}
+  .stat-bar .sc .sl{font-size:13px;color:var(--grey-3);margin-top:4px;text-transform:uppercase;letter-spacing:.06em}
+  .stat-bar .sc .sdetail{font-size:12px;color:var(--grey-2);margin-top:2px}
+
+  .tag{display:inline-block;font-family:var(--mono);font-size:10px;font-weight:700;padding:2px 8px;letter-spacing:.06em}
+  .tag-skeleton{background:var(--accent-light);color:var(--accent)}
+  .tag-flesh{background:var(--flesh-light);color:var(--flesh)}
+  .tag-analysis{background:var(--analysis-light);color:var(--analysis)}
+
+  .gh-link{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:12px;color:rgba(255,255,255,.75);text-decoration:none;margin-top:10px;transition:color .15s}
+  .gh-link:hover{color:rgba(255,255,255,.95)}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div>
+    <div class="kicker">D:\workspace\evolution-cat · v8.0</div>
+    <h1>进化猫写作引擎</h1>
+    <p class="deck">6 阶段管线（判→搜→构→写→审→发）。单人设：进化猫。血肉优先，骨架兜底。从文风蒸馏到写作执行的完整系统工程。一个 git 仓库，开箱即用。</p>
+    <a class="gh-link" href="https://github.com/wampeeHuang/evolution-cat" target="_blank">github.com/wampeeHuang/evolution-cat</a>
+  </div>
+  <div class="kpi-strip">
+    <div><div class="kv">6</div><div class="kl">阶段</div></div>
+    <div><div class="kv">53</div><div class="kl">文件</div></div>
+    <div><div class="kv">3</div><div class="kl">杀稿门禁</div></div>
+    <div><div class="kv">8</div><div class="kl">红线</div></div>
+    <div><div class="kv">2</div><div class="kl">层级生长</div></div>
+  </div>
+</header>
+
+<div class="main-grid">
+
+  <div class="panel clean">
+    <div class="panel-head">6 阶段管线 · 判→搜→构→写→审→发 · 3 道杀稿点</div>
+    <div class="pipeline">
+
+      <div class="phase"><div class="phase-inner">
+        <div class="phase-num kill">判</div>
+        <div class="phase-body"><h3>阶段一：选题判断 + 内容分类</h3><div class="loads">加载：flesh/topic-taxonomy.md + skeleton/kill-gate.md §一</div><div class="desc">判定内容基因（5 类型路由 --light / --deep）。运行第一道门禁（四问）：①认知税 ②洞察值 ③分享货币 ④平台合规。3+🔴→杀；④任一🔴→杀或重定角度。</div><div class="out">→ 路由决策 + 门禁结果</div></div>
+        <div></div>
+      </div></div>
+
+      <div class="gate-break">
+        <div class="gtag">🔴 第一道门禁 · 判</div>
+        <div class="gtitle">杀稿四问 3+ 红灯 → 杀稿；平台合规 🔴 → 杀或重定角度</div>
+        <div class="gitems">
+          <span class="gi">① 认知税 ≥3 → 🔴</span>
+          <span class="gi">② 洞察值 "嗯我知道"→🔴</span>
+          <span class="gi">③ 分享货币 讲不清→🔴</span>
+          <span class="gi">④ 平台合规 🔴→杀</span>
+        </div>
+      </div>
+
+      <div class="phase"><div class="phase-inner">
+        <div class="phase-num kill">搜</div>
+        <div class="phase-body"><h3>阶段二：深度搜索 + 意外发现</h3><div class="loads">加载：skeleton/source-trace.md + fact-check.md + kill-gate.md §二</div><div class="desc">AI 透镜前置 → 6 维度并行搜索 → 素材包落盘。提炼意外发现（≥3 条，每条引用素材行号）。运行第二道门禁：0 意外发现 → 🔴 杀。</div><div class="out">→ article-source-pack.md + surprise-findings.md</div></div>
+        <div></div>
+      </div></div>
+
+      <div class="gate-break">
+        <div class="gtag">🔴 第二道门禁 · 搜</div>
+        <div class="gtitle">0 条意外发现 → 必须杀稿</div>
+        <div class="gdetail">搜完没有意外 = 每一条都在验证已知。至少 1 个意外发现来自一手来源。</div>
+      </div>
+
+      <div class="phase"><div class="phase-inner">
+        <div class="phase-num">构</div>
+        <div class="phase-body"><h3>阶段三：结构构思 + 创意简报</h3><div class="loads">加载：skeleton/reader-contract.md + flesh/writing-patterns.md</div><div class="desc">基于实际素材声明读者契约（8 类型选 ≤2 种混合）。输出 creative-brief（6 字段：意外发现 + 契约 + 递进链 + 舍弃清单 ≥3 项 + 翻牌点 + 一句话核心 ≤30 字）。</div><div class="out">→ creative-brief.md（6 字段锁定）</div></div>
+        <div></div>
+      </div></div>
+
+      <div class="phase"><div class="phase-inner">
+        <div class="phase-num">写</div>
+        <div class="phase-body"><h3>阶段四：执行写作 + 标题门禁</h3><div class="loads">加载：skeleton/writing-craft.md + density-gate.md + style-card.md + flesh/voice-signals.md + opening/closing-patterns.md</div><div class="desc">严格按 creative-brief 蓝图写作。7 节点结构检查（标题→开头3秒→中段→认同→收获→转发→结尾）+ 标题公式 A/B/C。输出 3 标题候选，过标题门禁（不是主题标签、公式匹配、三问诚实）。</div><div class="out">→ draft-v1.md + title-candidates.md</div></div>
+        <div></div>
+      </div></div>
+
+      <div class="phase"><div class="phase-inner">
+        <div class="phase-num kill">审</div>
+        <div class="phase-body"><h3>阶段五：四层质检 + 量化基线自检</h3><div class="loads">加载：humanizer-zh.md + flesh/avoid-list.md + skeleton/fact-check.md + style-card.md(自检清单)</div><div class="desc">F0 事实复核（硬阻断）→ L1 硬性扫描 → L2 风格一致性 → L3 内容质量 → L4 活人感终审。8 项量化基线自检（标题有品牌名/开头抓人/转折+例子/问句≥2/感叹≥2/句子≤50字/CTA/口语化）。第三道门禁：L4 FAIL → 🔴杀。</div><div class="out">→ draft-v2.md + gate-3-result.md</div></div>
+        <div></div>
+      </div></div>
+
+      <div class="gate-break">
+        <div class="gtag">🔴 第三道门禁 · 审</div>
+        <div class="gtitle">L4 FAIL → 杀稿 · Signal/Noise FAIL → 杀 · 上帝之声 FAIL → 杀</div>
+        <div class="gdetail">F0 ❌ → 硬阻断。量化基线自检任一 FAIL → 回阶段四修正。平台合规终审 🔴 → 杀。</div>
+      </div>
+
+      <div class="phase"><div class="phase-inner">
+        <div class="phase-num">发</div>
+        <div class="phase-body"><h3>阶段六：配图 + 排版 + Forma 预览</h3><div class="loads">加载：image-generation.md + formatting-convention.md</div><div class="desc">封面（900×383，不写标题文字）+ 配图 ≥2。终稿落盘 D:\workspace\_output\evolution-cat\文章\。Forma 排版推送 → 拷贝图片 → 打开浏览器预览 → 验证就绪。复盘：向用户提 ≥3 个问题，信号写入 flesh/。</div><div class="out">→ {标题}.md + 封面 + 配图 + Forma 预览</div></div>
+        <div></div>
+      </div></div>
+
+    </div>
+  </div>
+
+  <div class="side-stack">
+
+    <div class="panel">
+      <div class="panel-head">项目目录结构</div>
+      <div class="folder-tree">
+        <div class="row lv1"><span class="dir">evolution-cat/</span>  <span class="comment">D:\workspace\evolution-cat\</span></div>
+        <div class="row lv2"><span class="pre">├── </span><span class="file">CLAUDE.md</span>  <span class="comment">路由器（极薄）</span></div>
+        <div class="row lv2"><span class="pre">├── </span><span class="file">.gitignore</span></div>
+        <div class="row lv2"><span class="pre">├── </span><span class="dir">references/</span>  <span class="comment">写作规则 · agent 加载</span></div>
+        <div class="row lv3"><span class="pre">│   ├── </span><span class="file">production-sop.md</span>  <span class="comment">6 阶段生产指令</span></div>
+        <div class="row lv3"><span class="pre">│   ├── </span><span class="dir">skeleton/</span>  <span class="comment">骨架层 · 不可通过 retro 修改</span></div>
+        <div class="row lv4"><span class="pre">│   │   ├── </span><span class="file">kill-gate.md</span></div>
+        <div class="row lv4"><span class="pre">│   │   ├── </span><span class="file">writing-craft.md</span></div>
+        <div class="row lv4"><span class="pre">│   │   ├── </span><span class="file">reader-contract.md</span></div>
+        <div class="row lv4"><span class="pre">│   │   ├── </span><span class="file">fact-check.md</span></div>
+        <div class="row lv4"><span class="pre">│   │   ├── </span><span class="file">density-gate.md</span></div>
+        <div class="row lv4"><span class="pre">│   │   ├── </span><span class="file">source-trace.md</span></div>
+        <div class="row lv4"><span class="pre">│   │   └── </span><span class="file">style-card.md</span>  <span class="comment">7节点+量化基线+标题公式</span></div>
+        <div class="row lv3"><span class="pre">│   ├── </span><span class="dir">flesh/</span>  <span class="comment">血肉层 · 仅通过 retro 写入</span></div>
+        <div class="row lv4"><span class="pre">│   │   ├── </span><span class="file">voice-signals.md</span></div>
+        <div class="row lv4"><span class="pre">│   │   ├── </span><span class="file">opening-patterns.md</span></div>
+        <div class="row lv4"><span class="pre">│   │   ├── </span><span class="file">closing-patterns.md</span></div>
+        <div class="row lv4"><span class="pre">│   │   └── </span><span class="file">… +5</span></div>
+        <div class="row lv3"><span class="pre">│   ├── </span><span class="file">humanizer-zh.md</span></div>
+        <div class="row lv3"><span class="pre">│   ├── </span><span class="file">formatting-convention.md</span></div>
+        <div class="row lv3"><span class="pre">│   └── </span><span class="file">image-generation.md</span></div>
+        <div class="row lv2"><span class="pre">├── </span><span class="dir">_analysis/</span>  <span class="comment">蒸馏分析 · 可复现</span></div>
+        <div class="row lv3"><span class="pre">│   ├── </span><span class="dir">voices/</span>  <span class="comment">analyze.py + fingerprints/journey/playbook</span></div>
+        <div class="row lv3"><span class="pre">│   └── </span><span class="dir">titles/</span>  <span class="comment">10 位作者标题数据 + 3 层分析</span></div>
+        <div class="row lv2"><span class="pre">├── </span><span class="dir">docs/</span>  <span class="comment">system-diagram.html</span></div>
+        <div class="row lv2"><span class="pre">├── </span><span class="dir">tools/</span>  <span class="comment">bold-keywords.py</span></div>
+        <div class="row lv2"><span class="pre">└── </span><span class="dir">_runtime/</span></div>
+        <div style="margin-top:6px;font-size:11px;color:var(--grey-2)">入口：CLAUDE.md 路由 → production-sop.md<br>加载优先级：血肉 → 骨架（冲突时血肉覆盖）<br>产出：D:\workspace\_output\evolution-cat\文章\{YYYYMMDD}_{标题}\</div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head">写作者 · 进化猫</div>
+      <div style="font-size:14px;line-height:1.6">
+        <p style="margin-bottom:10px"><span class="tag tag-flesh">单人设</span> 写作人设唯一：<strong>进化猫</strong>。不切换角色，不分饰。</p>
+        <p style="color:var(--grey-3);font-size:13px">所有风格决策先查 flesh/ 层，找不到再走 skeleton/ 层。血肉优先，骨架兜底。</p>
+        <div style="background:var(--accent-light);padding:10px 14px;border:1px solid var(--accent-mid);margin-top:10px">
+          <span style="font-size:12px;color:var(--grey-3)">血肉生长：每写完一篇 → 向用户提 ≥3 个问题 → 写入 flesh/ → 下一篇自动生效</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head">轻/重分流</div>
+      <table class="tt">
+        <thead><tr><th>阶段</th><th>--deep</th><th>--light</th></tr></thead>
+        <tbody>
+          <tr><td class="rname">判</td><td class="rstep">分类+第一道门禁</td><td class="rrole">同</td></tr>
+          <tr><td class="rname">搜</td><td class="rstep">6维搜索+第二道门禁</td><td class="rrole">同（搜索不缩水）</td></tr>
+          <tr><td class="rname">构</td><td class="rstep">creative-brief 6字段</td><td class="rrole">缩减（舍弃 ≥2 项即可）</td></tr>
+          <tr><td class="rname">写</td><td class="rstep">2000-5000字</td><td class="rrole">1000-2000字，轻量化</td></tr>
+          <tr><td class="rname">审</td><td class="rstep">F0+L1-L4 完整质检+第三道门禁</td><td class="rrole">L1+L4 快扫</td></tr>
+          <tr><td class="rname">发</td><td class="rstep">配图 ≥2 + Forma</td><td class="rrole">封面 1 张 + Forma</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head">8 约束红线</div>
+      <div class="cg">
+        <div class="cr normal"><div class="cn">1 禁止虚假链接和死链</div></div>
+        <div class="cr normal"><div class="cn">2 禁止标注"待确认"后发布</div></div>
+        <div class="cr normal"><div class="cn">3 禁止编造第一人称体验</div></div>
+        <div class="cr normal"><div class="cn">4 AI 高频词命中 = 0</div></div>
+        <div class="cr normal"><div class="cn">5 术语首次出现：类比在前术语在后</div></div>
+        <div class="cr"><div class="cn">6 三道门禁 + F0 + 标题门禁全部 PASS 才能发</div></div>
+        <div class="cr normal"><div class="cn">7 retro 回流只能写入 flesh/</div><div class="ct">不能改 skeleton/</div></div>
+        <div class="cr normal"><div class="cn">8 门禁结果必须文件化</div></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head">三层架构</div>
+      <div style="font-size:14px;line-height:1.6">
+        <div style="margin-bottom:12px"><span style="font-family:var(--mono);font-weight:700;color:var(--accent);font-size:13px"><span class="tag tag-skeleton">骨架</span> skeleton/</span><br><span style="color:var(--grey-3)">通用写作工程规则。不可通过 retro 修改。含 style-card.md（7节点+量化基线+标题公式）</span></div>
+        <div style="margin-bottom:12px"><span style="font-family:var(--mono);font-weight:700;color:var(--flesh);font-size:13px"><span class="tag tag-flesh">血肉</span> flesh/</span><br><span style="color:var(--grey-3)">进化猫个人风格。每篇写完生长。retro 回流只写入此层</span></div>
+        <div style="margin-bottom:12px"><span style="font-family:var(--mono);font-weight:700;color:var(--analysis);font-size:13px"><span class="tag tag-analysis">蒸馏</span> _analysis/</span><br><span style="color:var(--grey-3)">文风分析 + 标题分析。规则从哪里来的证据链。平时不加载，重新蒸馏或查证据时用</span></div>
+        <div style="background:var(--accent-light);padding:8px 12px;border:1px solid var(--accent-mid)">
+          <span style="font-size:12px;color:var(--grey-3)">一个 git 仓库。克隆即用。原始数据→分析→规则→管线执行，完整链路。</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="panel clean" style="margin-bottom:36px">
+  <div class="panel-head">6 阶段执行链 · 判→搜→构→写→审→发</div>
+  <div style="font-size:13px;color:var(--grey-3);margin-bottom:18px">单人设（进化猫）贯穿全程。三道杀稿门禁 + F0 事实复核 + 标题门禁 + 量化基线自检。血肉优先加载，骨架填补空白。style-card.md 提供 7 节点结构骨架和 8 项自检清单。轻/重同一条管线，参数控制。</div>
+
+  <div class="fc-row">
+    <div class="fc-node"><div class="fc-box kill">判<br>选题判断</div><div class="fc-sub">第一道门禁<br>3+🔴→杀</div></div>
+    <div class="fc-arrow-h">→</div>
+    <div class="fc-node"><div class="fc-box kill">搜<br>深度搜索</div><div class="fc-sub">第二道门禁<br>0意外→杀</div></div>
+    <div class="fc-arrow-h">→</div>
+    <div class="fc-node"><div class="fc-box phase-box">构<br>结构构思</div><div class="fc-sub" style="color:rgba(255,255,255,.7)">creative-brief<br>6字段</div></div>
+  </div>
+  <div class="fc-wrap-arrow">↓</div>
+  <div class="fc-row">
+    <div class="fc-node"><div class="fc-box phase-box">写<br>执行写作</div><div class="fc-sub" style="color:rgba(255,255,255,.7)">7节点+标题公式<br>style-card.md</div></div>
+    <div class="fc-arrow-h">→</div>
+    <div class="fc-node"><div class="fc-box kill">审<br>四层质检</div><div class="fc-sub">第三道门禁<br>+8项自检</div></div>
+    <div class="fc-arrow-h">→</div>
+    <div class="fc-node"><div class="fc-box phase-box">发<br>配图+排版</div><div class="fc-sub" style="color:rgba(255,255,255,.7)">封面+配图<br>Forma预览</div></div>
+  </div>
+</div>
+
+<div class="stat-bar">
+  <div class="sc">
+    <div class="sn">6</div>
+    <div class="sl">阶段管线</div>
+    <div class="sdetail">判→搜→构→写→审→发 · 轻/重同管线参数控制</div>
+  </div>
+  <div class="sc">
+    <div class="sn">3</div>
+    <div class="sl">杀稿门禁</div>
+    <div class="sdetail">判(四问) · 搜(0意外) · 审(L4 FAIL) · +F0硬阻断</div>
+  </div>
+  <div class="sc">
+    <div class="sn">7</div>
+    <div class="sl">节点结构</div>
+    <div class="sdetail">style-card.md · 标题→开头→中段→认同→收获→转发→结尾</div>
+  </div>
+  <div class="sc">
+    <div class="sn">3</div>
+    <div class="sl">层级</div>
+    <div class="sdetail">skeleton/ 骨架 · flesh/ 血肉 · _analysis/ 蒸馏证据</div>
+  </div>
+  <div class="sc">
+    <div class="sn">8</div>
+    <div class="sl">自检项</div>
+    <div class="sdetail">量化基线自检 · 标题→开头→转折→问句→感叹→句长→CTA→口语化</div>
+  </div>
+</div>
+
+</body>
+</html>

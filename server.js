@@ -237,6 +237,7 @@ var CHINESE_NAMES = {
   'video-analyzer': '视频分析',
   'perspective-router': '视角路由器',
   'evolution-cat-article': '进化猫文章写作',
+  'evolution-cat': '进化猫写作引擎',
   'skill-craftsmanship-framework': '工匠框架',
   'social-image-publisher': '矩阵图文发布',
   'anysearch': 'AnySearch 搜索',
