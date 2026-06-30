@@ -2,16 +2,16 @@
   "name": "OpenClaw 网关",
   "id": "openclaw",
   "owner": "外部",
-  "description": "【用途】多模型API网关，聚合管理所有模型provider。当前路由DeepSeek v4 Pro作为Claude Code的推理后端。【何时用】查模型列表/状态、重启网关、切换默认模型。【何时不用】直接调API→用aigoapi/agnes-ai的base_url。只是用模型→这个透明代理自动工作，无需手动干预。【返回】CLI输出【端口】18789",
+  "description": "【用途】多模型API网关+定时任务管理。点击「启动」→自动打开控制台（已填token免登录）→Cron Jobs 面板查看/管理所有定时任务。Gateway已注册为Windows计划任务常驻运行，无需手动启停。【定时任务红线】所有定时任务唯一真相源是本地Scheduler(:3100)，Gateway内不应有任何cron job。每次打开面板顺手扫一眼Cron Jobs列表。【返回】SPA控制台【端口】18789",
   "icon": "🦞",
   "version": "1.0.0",
   "category": "设施",
   "order": 12,
   "port": 18789,
   "url": "http://localhost:18789",
-  "startCommand": "openclaw gateway restart",
+  "startCommand": "openclaw dashboard",
   "stopCommand": "openclaw gateway stop 2>/dev/null; npx kill-port 18789",
   "conflicts": [],
-  "agent_notes": "这是Claude Code和DeepSeek之间的桥梁。openclaw models status查可用模型列表。重启后Claude Code可能短暂断连。",
-  "capability": "多模型API网关和Agent调度"
+  "agent_notes": "Gateway已注册为Windows计划任务常驻运行(pid 7100, port 18789)。openclaw dashboard自动读取token打开浏览器。openclaw models status查可用模型列表。AI可通过MCP cron_list查定时任务。重启后Claude Code可能短暂断连。",
+  "capability": "多模型API网关、Agent调度、定时任务巡检（点卡片进Cron Jobs面板）"
 }

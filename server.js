@@ -1148,6 +1148,144 @@ function startServer() {
     // Also serve /open-dir for workspace subdirs via existing /open-dir route
   }
 
+  // Multi-section info page for tools that have files, not sub-projects
+  function toolInfoHTML(meta) {
+    var pp = meta.projectPath.replace(/%([^%]+)%/g, function(_, n){ return process.env[n] || '%'+n+'%'; });
+    var whitelist = meta.whitelist || [];
+    var architecture = meta.architecture || '';
+
+    // ── CSS ──
+    var style = '<style>\n' +
+      '.info-section{margin-top:36px}\n' +
+      '.info-section h2{font-size:18px;font-weight:500;color:var(--text);margin-bottom:12px;padding-top:16px;border-top:1px solid var(--border)}\n' +
+      '.sig-table{width:100%;border-collapse:collapse;font-size:13px}\n' +
+      '.sig-table th{text-align:left;padding:8px 12px;background:var(--paper-tint);font-weight:500;font-size:12px;font-family:"JetBrains Mono",monospace;color:var(--text-secondary);border:1px solid var(--border)}\n' +
+      '.sig-table td{padding:8px 12px;border:1px solid var(--border);vertical-align:top;line-height:1.6}\n' +
+      '.sig-table .sig-symptom{font-weight:500;color:var(--text);font-size:14px}\n' +
+      '.sig-table .sig-cause{color:var(--text-secondary);font-size:13px}\n' +
+      '.wl-grid{display:grid;grid-template-columns:repeat(auto-fill, minmax(300px, 1fr));gap:12px;margin-top:8px}\n' +
+      '.wl-card{background:var(--paper);padding:20px;box-shadow:var(--shadow-border),var(--shadow-card)}\n' +
+      '.wl-card .wl-name{font-size:15px;font-weight:500;margin-bottom:8px}\n' +
+      '.wl-card .wl-domains{font-family:"JetBrains Mono",monospace;font-size:11px;color:var(--text-muted);line-height:1.8;word-break:break-all}\n' +
+      '.wl-card .wl-meta{font-size:11px;color:var(--text-muted);margin-top:8px;font-family:"JetBrains Mono",monospace}\n' +
+      '.fix-steps{font-size:14px;line-height:2;color:var(--text-secondary);padding-left:20px}\n' +
+      '.fix-steps li{margin-bottom:4px}\n' +
+      '.fix-steps code{font-family:"JetBrains Mono",monospace;font-size:12px;background:var(--paper-tint);padding:1px 5px}\n' +
+      '.arch-block{font-family:"JetBrains Mono",monospace;font-size:12px;line-height:1.8;color:var(--text-secondary);background:var(--paper-tint);padding:16px 20px;white-space:pre-wrap}\n' +
+      '.proj-grid{display:grid;grid-template-columns:repeat(auto-fill, minmax(240px, 1fr));gap:10px;margin-top:8px}\n' +
+      '.proj-card{background:var(--paper);padding:16px;display:flex;flex-direction:column;gap:4px;box-shadow:var(--shadow-border),var(--shadow-card)}\n' +
+      '.proj-card:hover{transform:translateY(-1px);box-shadow:var(--shadow-border),var(--shadow-card-hover)}\n' +
+      '.card-body{display:flex;align-items:flex-start;gap:10px;flex:1}\n' +
+      '.card-mono{flex-shrink:0;width:36px;height:36px;background:var(--ink);color:var(--paper);display:flex;align-items:center;justify-content:center;font-family:"JetBrains Mono",monospace;font-size:11px;font-weight:500}\n' +
+      '.card-info{flex:1;min-width:0}\n' +
+      '.card-name{font-size:13px;font-weight:400;line-height:1.4}\n' +
+      '.card-dir{font-size:10px;font-family:"JetBrains Mono",monospace;color:var(--text-muted);margin-top:2px}\n' +
+      '.card-actions{margin-top:4px}\n' +
+      '.btn{display:inline-block;padding:4px 10px;font-size:11px;font-family:"JetBrains Mono",monospace;border:1px solid var(--border);background:var(--paper-tint);color:var(--text-secondary);cursor:pointer;text-decoration:none;transition:all .12s}\n' +
+      '.btn.go{border-color:var(--ink);color:var(--ink)}\n' +
+      '.btn:hover{background:var(--ink);color:var(--paper);border-color:var(--ink)}\n' +
+    '<\/style>\n';
+
+    // ── 1. 故障信号 ──
+    var signalsHTML = '<div class="info-section">\n<h2>⚡ 故障信号</h2>\n';
+    if (whitelist.length > 0) {
+      signalsHTML += '<table class="sig-table"><thead><tr><th style="width:35%">症状</th><th>根因</th></tr></thead><tbody>';
+      whitelist.forEach(function(w) {
+        signalsHTML += '<tr><td class="sig-symptom">' + esc(w.symptom) + '</td>' +
+          '<td class="sig-cause">SakuraCat 推送覆盖了 fake-ip-filter，<code>' + esc(w.domains[0]) + '</code> 等域名 DNS 被劫持到 198.18.0.1/16 假 IP，直连失败</td></tr>';
+      });
+      signalsHTML += '<tr><td class="sig-symptom" style="color:var(--text-muted)">其他国内服务突然不通</td>' +
+        '<td class="sig-cause">同上 —— 查目标域名是否已在下方白名单中，不在就补上</td></tr>';
+      signalsHTML += '</tbody></table>';
+    } else {
+      signalsHTML += '<p style="color:var(--text-muted)">暂无记录。新服务断连后添加到白名单。</p>';
+    }
+    signalsHTML += '</div>\n';
+
+    // ── 2. 白名单注册表 ──
+    var wlHTML = '<div class="info-section">\n<h2>📋 白名单注册表 <span style="font-weight:300;font-size:13px;color:var(--text-muted)">(fake-ip-filter)</span></h2>\n';
+    if (whitelist.length > 0) {
+      wlHTML += '<div class="wl-grid">';
+      whitelist.forEach(function(w) {
+        var domainsJoined = w.domains.join(', ');
+        wlHTML += '<div class="wl-card">' +
+          '<div class="wl-name">' + esc(w.service) + '</div>' +
+          '<div class="wl-domains">' + esc(domainsJoined) + '</div>' +
+          '<div class="wl-meta">添加于 ' + esc(w.since) + '</div>' +
+        '</div>';
+      });
+      wlHTML += '</div>';
+    }
+    wlHTML += '<p style="margin-top:12px;font-size:12px;color:var(--text-muted)">新增服务：编辑此工具的 <code>manifest.json</code> → <code>whitelist</code> 数组，追加新条目。下次断连时这里就是检查清单。</p>';
+    wlHTML += '</div>\n';
+
+    // ── 3. 修复步骤 ──
+    var fixHTML = '<div class="info-section">\n<h2>🔧 修复步骤</h2>\n' +
+      '<ol class="fix-steps">' +
+        '<li>打开 <code>' + esc(pp) + '\\config.yaml</code>，搜目标域名，不在 <code>fake-ip-filter</code> 中就补上（参考上方白名单的域名列表）</li>' +
+        '<li>关 SakuraCat → 删同目录 <code>cache.db</code></li>' +
+        '<li>重启 SakuraCat</li>' +
+        '<li>验证：<code>nslookup &lt;目标域名&gt; 127.0.0.1</code> 应返回真实 IP 而非 198.18.x.x</li>' +
+      '</ol>\n</div>\n';
+
+    // ── 4. 配置文件 ──
+    var filesHTML = '<div class="info-section">\n<h2>🗂 配置文件</h2>\n';
+    if (fs.existsSync(pp)) {
+      var entries = fs.readdirSync(pp, { withFileTypes: true });
+      var dirs = entries.filter(function(e) { return e.isDirectory() && !e.name.startsWith('.'); });
+      var fileList = entries.filter(function(e) { return e.isFile(); })
+        .map(function(f) { var s = fs.statSync(path.join(pp, f.name)); return { name: f.name, size: s.size, mtime: s.mtime }; })
+        .sort(function(a, b) { return b.mtime - a.mtime; });
+
+      var fcards = '';
+      dirs.forEach(function(d) {
+        fcards += '<div class="proj-card">' +
+          '<div class="card-body">' +
+            '<div class="card-mono">' + esc(d.name.substring(0, 2).toUpperCase()) + '</div>' +
+            '<div class="card-info">' +
+              '<div class="card-name">📁 ' + esc(d.name) + '</div>' +
+              '<div class="card-dir">' + esc(path.join(pp, d.name)) + '</div>' +
+            '</div>' +
+          '</div>' +
+          '<div class="card-actions">' +
+            '<button class="btn go" onclick="fetch(\'/workspace/' + encodeURIComponent(meta.id) + '/' + encodeURIComponent(d.name) + '\').then(function(){location.reload()})">在资源管理器打开</button>' +
+          '</div>' +
+        '</div>';
+      });
+      fileList.forEach(function(f) {
+        var sizeText = f.size < 1024 ? f.size + ' B' : (f.size < 1048576 ? (f.size / 1024).toFixed(1) + ' KB' : (f.size / 1048576).toFixed(1) + ' MB');
+        var daysAgo = Math.floor((Date.now() - f.mtime.getTime()) / 86400000);
+        var mtimeText = daysAgo === 0 ? '今天' : daysAgo + '天前';
+        var ext = f.name.split('.').pop().toUpperCase().substring(0, 3);
+        fcards += '<div class="proj-card">' +
+          '<div class="card-body">' +
+            '<div class="card-mono">' + esc(ext) + '</div>' +
+            '<div class="card-info">' +
+              '<div class="card-name">' + esc(f.name) + '</div>' +
+              '<div class="card-dir">' + sizeText + ' · ' + mtimeText + '</div>' +
+            '</div>' +
+          '</div>' +
+        '</div>';
+      });
+      filesHTML += '<div class="proj-grid">' + fcards + '</div>';
+    } else {
+      filesHTML += '<p style="color:var(--text-muted)">目录不存在: ' + esc(pp) + '</p>';
+    }
+    filesHTML += '</div>\n';
+
+    // ── 5. 代理架构 ──
+    var archHTML = '<div class="info-section">\n<h2>🏗 代理架构</h2>\n';
+    if (architecture) {
+      archHTML += '<div class="arch-block">' + esc(architecture) + '</div>';
+    }
+    archHTML += '</div>\n';
+
+    return style +
+      '<h1>' + esc(meta.name) + '</h1>' +
+      '<div class="ws-subtitle">' + esc(pp) + '</div>' +
+      signalsHTML + wlHTML + fixHTML + filesHTML + archHTML;
+  }
+
   // Workspace sub-page
   app.get('/workspace/:id', function(req, res) {
     res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
@@ -1156,7 +1294,7 @@ function startServer() {
     var mf = JSON.parse(read(mfPath));
     if (!mf.projectPath) return res.status(400).send('该工具不是工作区');
     var projects = scanWorkspace(mf.projectPath);
-    var body = workspaceHTML(projects, mf);
+    var body = projects.length > 0 ? workspaceHTML(projects, mf) : toolInfoHTML(mf);
     res.send(pageShell(mf.name, mf.projectPath, body, 'workspace', projects.length + ' 个子项目'));
   });
 
@@ -1867,6 +2005,29 @@ function startServer() {
   // Startup items page
     // Startup items page
   app.get('/startup', function(req, res) {
+    // Build display-name lookup from tool manifests
+    var toolLookup = {};
+    try {
+      var allTools = scanTools();
+      allTools.forEach(function(t) {
+        var key = t.id.toLowerCase().replace(/[^a-z0-9]/g, '');
+        toolLookup[key] = { name: t.name, desc: (t.description || '').split('【')[0].trim() };
+      });
+    } catch(_) {}
+    // Manual overrides for items without tool manifests
+    var manualMeta = {
+      'agentboard':       { name: 'Agentboard 服务',  desc: '工具架后台服务 (端口 3099)', group: '核心服务' },
+      'start-agentboard': { name: 'Agentboard 启动器', desc: '开机时启动工具架服务', group: '核心服务' },
+      'claude-startup':   { name: 'Claude 自启动',    desc: '启动 Claude Code 终端', group: '核心服务' },
+      'lark-channel-bridge': { name: '飞书通道桥接',  desc: '飞书消息 ↔ Agent 双向桥接', group: '通道' },
+      'pm2-resurrect':    { name: 'PM2 进程恢复',     desc: '恢复上次的 PM2 进程列表', group: '核心服务' },
+      'launch':           { name: 'Agentboard 启动器', desc: 'Agentboard 备用启动脚本', group: '核心服务' },
+      'Snap':             { name: 'Snap 截图',         desc: '截图小工具', group: '工具' },
+      'Snipaste':         { name: 'Snipaste',          desc: '截图贴图工具', group: '工具' }
+    };
+    // Group sort order
+    var groupOrder = { '核心服务': 0, '通道': 1, 'Agent': 2, '工具': 3, '其他': 9 };
+
     var startupDir = path.join(os.homedir(), 'AppData', 'Roaming', 'Microsoft', 'Windows', 'Start Menu', 'Programs', 'Startup');
     var items = [];
     try {
@@ -1875,7 +2036,17 @@ function startServer() {
         if (f === 'desktop.ini') return;
         var fp = path.join(startupDir, f);
         var stat = fs.statSync(fp);
-        items.push({ name: f.replace(/\.(lnk|bat|vbs|ps1)$/i, ''), file: f, path: fp, source: '启动文件夹', size: stat.size, mtime: stat.mtime.toISOString() });
+        var rawName = f.replace(/\.(lnk|bat|vbs|ps1|cmd)$/i, '');
+        var key = rawName.toLowerCase().replace(/[^a-z0-9]/g, '');
+        var meta = manualMeta[rawName] || toolLookup[key] || null;
+        var group = (meta && meta.group) ? meta.group : '其他';
+        items.push({
+          name: rawName,
+          displayName: (meta && meta.name) ? meta.name : rawName,
+          desc: (meta && meta.desc) ? meta.desc : '',
+          group: group,
+          file: f, path: fp, source: '启动文件夹', size: stat.size, mtime: stat.mtime.toISOString()
+        });
       });
     } catch(_) {}
     try {
@@ -1884,16 +2055,35 @@ function startServer() {
       agentFiles.forEach(function(f) {
         var fp = path.join(PROJECT_DIR, f);
         var stat = fs.statSync(fp);
-        items.push({ name: f.replace(/\.(bat|vbs|ps1)$/i, ''), file: f, path: fp, source: 'Agentboard', size: stat.size, mtime: stat.mtime.toISOString() });
+        var rawName = f.replace(/\.(bat|vbs|ps1)$/i, '');
+        var key = rawName.toLowerCase().replace(/[^a-z0-9]/g, '');
+        var meta = manualMeta[rawName] || toolLookup[key] || null;
+        var group = (meta && meta.group) ? meta.group : '其他';
+        items.push({
+          name: rawName,
+          displayName: (meta && meta.name) ? meta.name : rawName,
+          desc: (meta && meta.desc) ? meta.desc : '',
+          group: group,
+          file: f, path: fp, source: 'Agentboard', size: stat.size, mtime: stat.mtime.toISOString()
+        });
       });
     } catch(_) {}
+    // Sort: group order → display name
+    items.sort(function(a, b) {
+      var ga = groupOrder[a.group] != null ? groupOrder[a.group] : 9;
+      var gb = groupOrder[b.group] != null ? groupOrder[b.group] : 9;
+      if (ga !== gb) return ga - gb;
+      return a.displayName.localeCompare(b.displayName, 'zh-CN');
+    });
+
     var rows = items.map(function(item) {
       var ext = path.extname(item.file).toLowerCase();
-      var typeLabel = ext === '.lnk' ? '快捷方式' : ext === '.bat' ? '批处理' : ext === '.vbs' ? 'VBScript' : ext === '.ps1' ? 'PowerShell' : '文件';
-      return '<tr><td><strong>' + esc(item.name) + '</strong></td><td><code>' + typeLabel + '</code></td><td style="font-size:11px;color:var(--text-muted)">' + esc(item.source) + '</td><td style="font-family:JetBrains Mono,monospace;font-size:11px">' + esc(item.file) + '</td></tr>';
+      var typeLabel = ext === '.lnk' ? '快捷方式' : ext === '.bat' ? '批处理' : ext === '.vbs' ? 'VBScript' : ext === '.ps1' ? 'PowerShell' : ext === '.cmd' ? 'CMD' : '文件';
+      var descCell = item.desc ? '<td style="font-size:11px;color:var(--text-muted);max-width:280px">' + esc(item.desc) + '</td>' : '<td></td>';
+      return '<tr><td><strong>' + esc(item.displayName) + '</strong><br><span style="font-size:10px;color:var(--text-muted)">' + esc(item.name) + '</span></td>' + descCell + '<td><code>' + typeLabel + '</code></td><td style="font-size:11px;color:var(--text-muted)">' + esc(item.source) + '</td><td style="font-family:JetBrains Mono,monospace;font-size:11px">' + esc(item.file) + '</td></tr>';
     }).join('');
     var body = '<p class="sub">开机自启动的应用和脚本。添加：把 .bat/.vbs 快捷方式放入 <code>Startup</code> 文件夹。Agentboard 启动脚本放 <code>~/.agentboard/</code>。</p>' +
-      (items.length ? '<table><tr><th>名称</th><th>类型</th><th>来源</th><th>文件</th></tr>' + rows + '</table>' : '<p>暂无启动项</p>');
+      (items.length ? '<table><tr><th>名称</th><th>简介</th><th>类型</th><th>来源</th><th>文件</th></tr>' + rows + '</table>' : '<p>暂无启动项</p>');
     var full = pageShell('启动项', '启动项', body, 'startup', items.length);
     res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
     res.type('html').send(full);

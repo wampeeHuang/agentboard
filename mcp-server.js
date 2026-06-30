@@ -53,6 +53,56 @@ var TOOL_DEFS = [
       },
       required: ['id']
     }
+  },
+  {
+    name: 'agentboard_create_tool',
+    description: '创建新工具并写入 manifest.json。写入前自动校验 schema（必填字段、owner 枚举、capability 长度等），不通过则驳回并返回具体错误。必填字段: id, name, description(须含【用途】), capability(≤30字), owner(自建/外部/AI托管)。type 默认为 service，可选 service/command/folder/group。category 必须是已存在的分类(先调 list_tools 看现有分类)。',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        id: { type: 'string', description: '工具 ID，字母开头，仅含 a-z 0-9 - _' },
+        name: { type: 'string', description: '显示名称' },
+        description: { type: 'string', description: '描述，须含【用途】段' },
+        capability: { type: 'string', description: '一句话能力描述，≤30 字' },
+        owner: { type: 'string', description: '所有者: 自建, 外部, AI托管' },
+        category: { type: 'string', description: '分类名。必须先调 list_tools 查看已有分类，勿自创' },
+        type: { type: 'string', description: '卡片类型: service(默认), command, folder, group。选错=无按钮' },
+        port: { type: 'number', description: '端口号' },
+        url: { type: 'string', description: '运行时 URL。有 URL 才有"打开"按钮' },
+        projectPath: { type: 'string', description: '项目路径' },
+        startCommand: { type: 'string', description: '启动命令。service 类型+有端口时必填' },
+        stopCommand: { type: 'string', description: '停止命令' },
+        icon: { type: 'string', description: '图标 emoji' },
+        conflicts: { type: 'array', items: { type: 'string' }, description: '冲突工具 ID 列表' },
+        agent_notes: { type: 'string', description: 'AI 踩坑笔记' }
+      },
+      required: ['id', 'name', 'description', 'capability', 'owner']
+    }
+  },
+  {
+    name: 'agentboard_update_tool',
+    description: '更新已有工具的 manifest 字段。只更新传入的字段，其他保持不变。写入前同样跑 schema 校验。',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        id: { type: 'string', description: '要更新的工具 ID' },
+        name: { type: 'string', description: '新的显示名称' },
+        description: { type: 'string', description: '新的描述' },
+        capability: { type: 'string', description: '新的一句话能力描述' },
+        owner: { type: 'string', description: '所有者' },
+        category: { type: 'string', description: '分类名' },
+        type: { type: 'string', description: '卡片类型' },
+        port: { type: 'number', description: '端口号' },
+        url: { type: 'string', description: '运行时 URL' },
+        projectPath: { type: 'string', description: '项目路径' },
+        startCommand: { type: 'string', description: '启动命令' },
+        stopCommand: { type: 'string', description: '停止命令' },
+        icon: { type: 'string', description: '图标 emoji' },
+        conflicts: { type: 'array', items: { type: 'string' }, description: '冲突工具 ID 列表' },
+        agent_notes: { type: 'string', description: 'AI 踩坑笔记' }
+      },
+      required: ['id']
+    }
   }
 ];
 
@@ -100,11 +150,27 @@ function handleStopTool(args) {
   return textResult('Failed to stop ' + args.id + ': ' + result.error, true);
 }
 
+function handleCreateTool(args) {
+  if (!args || !args.id || !args.name) return textResult('Error: id and name are required', true);
+  var result = registry.createTool(args);
+  if (result.ok) return textResult('Created: ' + args.id + '\n' + JSON.stringify(result.tool, null, 2));
+  return textResult('Failed: ' + result.error, true);
+}
+
+function handleUpdateTool(args) {
+  if (!args || !args.id) return textResult('Error: id is required', true);
+  var result = registry.updateTool(args.id, args);
+  if (result.ok) return textResult('Updated: ' + args.id + '\n' + JSON.stringify(result.tool, null, 2));
+  return textResult('Failed: ' + result.error, true);
+}
+
 var TOOL_HANDLERS = {
   'agentboard_list_tools': handleListTools,
   'agentboard_get_tool': handleGetTool,
   'agentboard_start_tool': handleStartTool,
-  'agentboard_stop_tool': handleStopTool
+  'agentboard_stop_tool': handleStopTool,
+  'agentboard_create_tool': handleCreateTool,
+  'agentboard_update_tool': handleUpdateTool
 };
 
 // ── JSON-RPC handlers ──

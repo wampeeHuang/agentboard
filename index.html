@@ -128,7 +128,10 @@ body{min-height:100vh;display:flex;flex-direction:column}
 /* Filter bar */
 .filter-bar{max-width:1080px;margin:0 auto;padding:4px 32px}
 .filter-row{display:flex;align-items:center;gap:4px;margin-bottom:4px}
-.filter-dim{font-size:10px;font-weight:400;color:var(--text-muted);white-space:nowrap;font-family:'JetBrains Mono','SF Mono','Consolas',monospace;letter-spacing:.02em;width:36px;flex-shrink:0;opacity:.45;user-select:none}
+.filter-dim{font-size:11px;font-weight:400;color:var(--text-secondary);white-space:nowrap;font-family:'JetBrains Mono','SF Mono','Consolas',monospace;letter-spacing:.02em;width:36px;flex-shrink:0;user-select:none}
+.dim-count{font-size:11px;font-weight:600;color:var(--ink);font-family:'JetBrains Mono','SF Mono','Consolas',monospace;margin-right:6px;white-space:nowrap;user-select:none}
+.dim-ok{font-size:9px;color:#1A8A3F;margin-left:1px;margin-right:6px;user-select:none}
+.dim-warn{font-size:9px;color:#c0392b;margin-left:1px;margin-right:6px;user-select:none}
 .filter-pill{padding:3px 10px;background:none;font-size:12px;font-family:inherit;font-weight:400;cursor:pointer;color:var(--text-secondary);white-space:nowrap;transition:all .12s;border:none;border-radius:999px}
 .filter-pill:hover{color:var(--ink)}
 .filter-pill.active{background:var(--ink);color:var(--paper)}.filter-pill.active:hover{background:var(--ink);opacity:.7}.pill-cnt{font-size:9px;opacity:.45;margin-left:3px;font-family:'JetBrains Mono','SF Mono','Consolas',monospace}.filter-pill.active .pill-cnt{opacity:.55}
@@ -257,7 +260,7 @@ OCR:  Tesseract OCR (pytesseract)
 
 <div class="filter-bar">
   <div class="filter-row">
-    <span class="filter-dim">领域</span>
+    <span class="filter-dim">领域</span><span class="dim-count" id="domainCount">46</span><span class="dim-ok" id="domainOk">✓</span>
     <button class="filter-pill" data-domain="模型" onclick="setDomainFilter('模型')" title="本地+云端 AI 模型能力：视觉/语音/LLM API — 模型的调用入口">模型<span class="pill-cnt">0</span></button>
     <button class="filter-pill" data-domain="Agent" onclick="setDomainFilter('Agent')" title="自主 AI Agent：Claude Code/Hermes/Codex CLI/RAG — 能独立执行任务的智能体">Agent<span class="pill-cnt">0</span></button>
     <button class="filter-pill" data-domain="设施" onclick="setDomainFilter('设施')" title="透明基础设施：网关/代理/定时任务/巡检 — 管道自己跑，日常不碰">设施<span class="pill-cnt">0</span></button>
@@ -267,16 +270,18 @@ OCR:  Tesseract OCR (pytesseract)
     <button class="filter-pill" data-domain="职能" onclick="setDomainFilter('职能')" title="生活+效率：税务/社保/保障房/购物/截图 — 个人事务工具">职能<span class="pill-cnt">0</span></button>
   </div>
   <div class="filter-row">
-    <span class="filter-dim">形态</span>
+    <span class="filter-dim">形态</span><span class="dim-count" id="formCount">46</span><span class="dim-ok" id="formOk">✓</span>
     <button class="filter-pill" data-form="本地" onclick="setFormFilter('本地')" title="本地运行的服务，有端口号，需手动启动/停止">本地<span class="pill-cnt">0</span></button>
     <button class="filter-pill" data-form="API" onclick="setFormFilter('API')" title="远程API调用，通过 apiBase 配置连接，无需本地运行">API<span class="pill-cnt">0</span></button>
     <button class="filter-pill" data-form="CLI" onclick="setFormFilter('CLI')" title="命令行工具，有启动命令但无端口，在终端中使用">CLI<span class="pill-cnt">0</span></button>
     <button class="filter-pill" data-form="Web" onclick="setFormFilter('Web')" title="外部网站或Web服务，通过URL访问，无本地进程">Web<span class="pill-cnt">0</span></button>
+    <button class="filter-pill" data-form="命令" onclick="setFormFilter('命令')" title="在 Claude Code 中通过斜杠命令或自然语言调用的工具，无独立进程">命令<span class="pill-cnt">0</span></button>
   </div>
   <div class="filter-row">
-    <span class="filter-dim">归属</span>
+    <span class="filter-dim">归属</span><span class="dim-count" id="ownerCount">46</span><span class="dim-ok" id="ownerOk">✓</span>
     <button class="filter-pill" data-owner="自建" onclick="setOwnerFilter('自建')" title="自己部署和运维的工具，有启动/停止命令">自建工具<span class="pill-cnt">0</span></button>
     <button class="filter-pill" data-owner="外部" onclick="setOwnerFilter('外部')" title="第三方服务或平台，无需自己运维">外部<span class="pill-cnt">0</span></button>
+    <button class="filter-pill" data-owner="AI托管" onclick="setOwnerFilter('AI托管')" title="AI 全权管理的工具，用户不碰 GUI，Agent 自行运维">AI托管<span class="pill-cnt">0</span></button>
   </div>
   <div class="filter-row">
     <span class="filter-dim">部署</span>
@@ -621,17 +626,32 @@ function updatePillCounts() {
     var pill = document.querySelector('.filter-pill[data-domain="' + c + '"] .pill-cnt');
     if (pill) pill.textContent = domainCounts[c] || 0;
   });
-  ['本地','API','CLI','Web'].forEach(function(f) {
+  ['本地','API','CLI','Web','命令'].forEach(function(f) {
     var pill = document.querySelector('.filter-pill[data-form="' + f + '"] .pill-cnt');
     if (pill) pill.textContent = formCounts[f] || 0;
   });
-  ['自建','外部'].forEach(function(o) {
+  ['自建','外部','AI托管'].forEach(function(o) {
     var pill = document.querySelector('.filter-pill[data-owner="' + o + '"] .pill-cnt');
     if (pill) pill.textContent = ownerCounts[o] || 0;
   });
   var publicCnt = tools.filter(function(t){ return t.publicUrl; }).length;
   var publicPill = document.querySelector('.filter-pill[data-public] .pill-cnt');
   if (publicPill) publicPill.textContent = publicCnt;
+
+  // 维度合计（标签后跟总数 + ✓/⚠）
+  var total = tools.length;
+  function setDimSum(countId, okId, sum) {
+    var elC = document.getElementById(countId);
+    var elO = document.getElementById(okId);
+    if (elC) elC.textContent = sum;
+    if (elO) {
+      if (sum === total) { elO.textContent = '✓'; elO.className = 'dim-ok'; }
+      else { elO.textContent = '⚠缺' + (total - sum); elO.className = 'dim-warn'; }
+    }
+  }
+  setDimSum('domainCount', 'domainOk', Object.values(domainCounts).reduce(function(a,b){return a+b;}, 0));
+  setDimSum('formCount', 'formOk', Object.values(formCounts).reduce(function(a,b){return a+b;}, 0));
+  setDimSum('ownerCount', 'ownerOk', Object.values(ownerCounts).reduce(function(a,b){return a+b;}, 0));
 }
 
 function render() {

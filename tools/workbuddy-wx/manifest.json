@@ -1,13 +1,15 @@
 {
   "name": "微信文章提取 WorkBuddy",
   "id": "workbuddy-wx",
-  "description": "【用途】通过腾讯CodeBuddy CLI读取微信公众号文章全文。CodeBuddy是腾讯出品，请求走腾讯基础设施，微信不会拦截。【何时用】需要提取微信公众号文章内容时，尤其是coze-wx-extract遇到验证墙或Coze额度耗尽时。【何时不用】非微信文章→WebFetch。Coze --direct可用→优先coze-wx-extract(免费更快)。【返回】文章全文文本【延迟】10-30s",
+  "description": "【用途】通过腾讯CodeBuddy CLI读取微信公众号文章全文。CodeBuddy是腾讯出品，请求走腾讯基础设施，微信不会拦截。【何时用】需要提取微信公众号文章内容时，微信文章全文提取首选。【何时不用】非微信文章→WebFetch。coze-wx-extract 已停用。【返回】文章全文文本【延迟】10-30s",
   "icon": "💬",
   "version": "1.0.0",
   "category": "获取",
   "order": 98,
+  "type": "command",
+  "trigger": "提取微信文章 <URL>",
   "conflicts": [],
-  "agent_notes": "调用方式: node \"C:\\Program Files\\WorkBuddy\\resources\\app.asar.unpacked\\cli\\bin\\codebuddy\" -p -y --output-format text \"请用你的web fetch工具读取这篇微信文章，返回完整原文: <URL>\"。CodeBuddy是腾讯自家CLI Agent，web fetch走腾讯基础设施不会被微信反爬。Coze优先，本工具作为备用/互补。",
+  "agent_notes": "调用方式: node \"C:\\Program Files\\WorkBuddy\\resources\\app.asar.unpacked\\cli\\bin\\codebuddy\" -p -y --output-format text \"请用你的web fetch工具读取这篇微信文章，返回完整原文: <URL>\"。CodeBuddy是腾讯自家CLI Agent，web fetch走腾讯基础设施不会被微信反爬。微信文章提取首选。",
   "capability": "微信公众号文章全文提取（腾讯CodeBuddy CLI，不受微信反爬限制）",
   "owner": "自建"
 }

@@ -126,6 +126,7 @@ source: 触发写入的事件/任务简述
 | `dual-writer-state-overwrite.md` | diagnosis | ✅ |
 | `claude-p-prompt-describe-vs-execute.md` | diagnosis | ✅ |
 | `windows-user-env-not-visible-new-process.md` | diagnosis | ✅ |
+| `powershell-invoke-restmethod-gbk-body.md` | diagnosis | ✅ |
 
 ---
 

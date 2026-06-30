@@ -1,26 +1,17 @@
-# HANDOFF 2026-06-26 (会话2)
+# HANDOFF 2026-06-30
 
-## 本次完成
-- 智谱 Coding Plan 接入完成，双轨道可用：
-  - OpenClaw provider `bigmodel`（glm-5.2 / glm-5v-turbo）
-  - agentboard 工具卡片 `bigmodel-coding-plan`（编号 #35）
-- agentboard CLAUDE.md 新增 §模型路由——代码/Agent/截图→前端任务自动查工具架匹配模型
+## 已做
+- **CodexRelay 修复**：根因 SakuraCat fake-ip DNS 劫持 `api.deepseek.com`。config.yaml fake-ip-filter 加白名单，删 cache.db 重启。
+- **MCP 补齐**：agentboard_create_tool / agentboard_update_tool + schema TYPE_VALUES 校验（需重启 Claude Code 生效）
+- **SakuraCat 信息页改造**：五分区（故障信号 → 白名单注册表 → 修复步骤 → 配置文件 → 架构）
+- **白名单数据结构化**：manifest.json `whitelist` 数组，manifest 是唯一真相源
+- **tip**: sakuracat-fakeip-filter-overwrite.md
 
-## 国产模型选型结论
-- DeepSeek V4 Pro → 主力不动（cron巡检、结构化Agent）
-- GLM-5.2 → Coding/长程Agent任务专用
-- GLM-5V-Turbo → 截图→前端代码（Design2Code 94.8）
-- Qwen3.7-Max → Agent长程自治备选（35h连续），暂未接入
+## 恢复速查
+下次代理覆盖导致断连：
+1. 读 `~/.agentboard/tools/sakuracat-proxy/manifest.json` → `whitelist` 数组拿域名
+2. 读 config.yaml → grep fake-ip-filter → 补缺失域名
+3. 删 cache.db → 重启 SakuraCat → nslookup 验证
 
-## 关键文件
-| 文件 | 改动 |
-|------|------|
-| `~/.agentboard/tools/bigmodel-coding-plan/manifest.json` | 新增 |
-| `~/.agentboard/CLAUDE.md` | 追加§模型路由 |
-| `~/.openclaw/openclaw.json` | 追加 bigmodel provider + GLM-5.2/GLM-5V aliases |
-| `~/.claude/.../memory/reference_zhipu_coding_plan.md` | 新增（API key & 调用方式） |
-
-## 未做
-- CCwitch 模型切换面板（方案讨论过，OpenClaw 够用，没动手）
-- Qwen3.7-Max 接入（用户只买了智谱 Coding Plan）
-- GLM-5.2 按量 ¥8/28 百万token，套餐散户买不到
+## 待办
+- 用户需重启 Claude Code，新版 mcp-server 才生效
