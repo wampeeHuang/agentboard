@@ -12,16 +12,39 @@
   "whitelist": [
     {
       "service": "飞书",
-      "domains": ["feishu.cn", "+.feishu.cn", "feishucdn.com", "+.feishucdn.com", "bytedance.com", "+.bytedance.com", "byteoversea.com", "+.byteoversea.com"],
+      "domains": [
+        "feishu.cn",
+        "+.feishu.cn",
+        "feishucdn.com",
+        "+.feishucdn.com",
+        "bytedance.com",
+        "+.bytedance.com",
+        "byteoversea.com",
+        "+.byteoversea.com"
+      ],
       "symptom": "飞书 IM 长连接卡死，无法收发消息",
       "since": "2026-06-20"
     },
     {
       "service": "DeepSeek API",
-      "domains": ["api.deepseek.com", "+.api.deepseek.com"],
+      "domains": [
+        "api.deepseek.com",
+        "+.api.deepseek.com"
+      ],
       "symptom": "codex-relay 返回 502 Bad Gateway",
+      "since": "2026-06-30"
+    },
+    {
+      "service": "ToDesk",
+      "domains": [
+        "*.todesk.com",
+        "todesk.com",
+        "authds.kylinlot.com"
+      ],
+      "symptom": "外部调用时断连，无法远程连接",
       "since": "2026-06-30"
     }
   ],
-  "architecture": "SakuraCat (Electron GUI)\n  → 推送配置覆盖 config.yaml\n  → Vortex (Clash 内核)\n  → fake-ip DNS 劫持\n  → fake-ip-filter 白名单: 白名单内的域名 → 真实 DNS → 真实 IP → 直连成功\n  → 不在白名单: DNS 返回 198.18.0.1/16 假 IP → 直连假 IP → 断连"
+  "architecture": "SakuraCat (Electron GUI)\n  → 推送配置覆盖 config.yaml\n  → Vortex (Clash 内核)\n  → fake-ip DNS 劫持\n  → fake-ip-filter 白名单: 白名单内的域名 → 真实 DNS → 真实 IP → 直连成功\n  → 不在白名单: DNS 返回 198.18.0.1/16 假 IP → 直连假 IP → 断连",
+  "disabled": false
 }

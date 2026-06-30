@@ -12,5 +12,6 @@
   "conflicts": [],
   "agent_notes": "进化猫文章写作的信号源——Step 1a 6维搜索优先从这里找近期AI趋势。这是策展内容不是实时新闻。",
   "capability": "每日AI市场趋势策展",
-  "owner": "自建"
+  "owner": "自建",
+  "disabled": false
 }

@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
@@ -58,6 +58,8 @@ body{min-height:100vh;display:flex;flex-direction:column}
 .tool-card{background:var(--paper);padding:28px 14px 20px;display:flex;flex-direction:column;gap:8px;transition:transform .15s,box-shadow .15s;position:relative;box-shadow:var(--shadow-border),var(--shadow-card);height:230px;overflow:hidden}
 .tool-card:hover{transform:translateY(-1px);box-shadow:var(--shadow-border),var(--shadow-card-hover)}
 .tool-card.self{border-left:3px solid var(--ink)}
+.tool-card.disabled{opacity:.4;filter:grayscale(.5)}
+.tool-card.disabled:hover{opacity:.55;filter:grayscale(.35)}
 
 .card-dot{position:absolute;top:14px;left:14px;width:7px;height:7px;z-index:2}
 .card-dot.on{background:var(--status-on);animation:pulse 2s ease-in-out infinite}
@@ -181,6 +183,14 @@ body{min-height:100vh;display:flex;flex-direction:column}
 
 /* Stop confirm */
 .btn.stop.confirming{background:#C0392B;border-color:#C0392B;color:#fff;animation:pulse .4s ease-in-out 3}
+.toggle-disable{display:inline-flex;align-items:center;gap:6px;cursor:pointer;flex-shrink:0;user-select:none}
+.toggle-disable input{display:none}
+.toggle-disable .toggle-track{width:28px;height:16px;border-radius:8px;background:#CCC;position:relative;transition:background .2s;flex-shrink:0}
+.toggle-disable .toggle-track.on{background:#059669}
+.toggle-disable .toggle-track::after{content:"";position:absolute;top:1.5px;left:1.5px;width:13px;height:13px;border-radius:50%;background:#fff;transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.15)}
+.toggle-disable .toggle-track.on::after{transform:translateX(12px)}
+.toggle-disable .toggle-label{font-size:10px;color:var(--text-muted);font-weight:300}
+.toggle-disable .toggle-label.on{color:#059669;font-weight:400}
 </style>
 </head>
 <body>
@@ -286,7 +296,11 @@ OCR:  Tesseract OCR (pytesseract)
   <div class="filter-row">
     <span class="filter-dim">部署</span>
     <button class="filter-pill" data-public="true" onclick="setPublicFilter(true)">公开站<span class="pill-cnt">0</span></button>
-  </div>
+    <div class="filter-row">
+            <span class="filter-dim">状态</span>
+            <button class="filter-pill" data-disabled="true" onclick="setDisabledFilter()">已停用<span class="pill-cnt" id="disabledCount">0</span></button>
+          </div>
+    </div>
 </div>
 
 <!--STATS_SNAPSHOT-->
@@ -364,6 +378,7 @@ var domainFilter = 'all';
 var formFilter = 'all';
 var ownerFilter = 'all';
 var publicFilter = false;
+	var disabledFilter = false;
 
 // 领域映射：category → 领域（用于筛选栏分组）
 var domainMap = {
@@ -429,7 +444,21 @@ function setPublicFilter(v) {
   render();
 }
 
-function setPublicStatFilter() {
+function setDisabledFilter() {
+	  disabledFilter = !disabledFilter;
+	  document.querySelectorAll('.filter-pill[data-disabled]').forEach(function(p){ p.classList.remove('active'); });
+	  if (disabledFilter) {
+	    var pill = document.querySelector('.filter-pill[data-disabled]');
+	    if (pill) pill.classList.add('active');
+	    document.querySelectorAll('.stat-card').forEach(function(c){ c.classList.remove('active'); });
+	  } else {
+	    var allStat = document.querySelector('.stat-card[data-filter="all"]');
+	    if (allStat) allStat.classList.add('active');
+	  }
+	  render();
+	}
+
+	function setPublicStatFilter() {
   publicFilter = !publicFilter;
   syncPublicUI();
   // 清除其他 stat card 的 active 状态
@@ -638,6 +667,10 @@ function updatePillCounts() {
   var publicPill = document.querySelector('.filter-pill[data-public] .pill-cnt');
   if (publicPill) publicPill.textContent = publicCnt;
 
+  var disabledCnt = tools.filter(function(t){ return t.disabled; }).length;
+  var disabledPill = document.getElementById('disabledCount');
+  if (disabledPill) disabledPill.textContent = disabledCnt;
+
   // 维度合计（标签后跟总数 + ✓/⚠）
   var total = tools.length;
   function setDimSum(countId, okId, sum) {
@@ -671,6 +704,7 @@ function render() {
   if (formFilter !== 'all') sorted = sorted.filter(function(t){return getToolForm(t) === formFilter;});
   if (ownerFilter !== 'all') sorted = sorted.filter(function(t){return getToolOwner(t) === ownerFilter;});
   if (publicFilter) sorted = sorted.filter(function(t){return t.publicUrl;});
+	  if (disabledFilter) sorted = sorted.filter(function(t){return t.disabled;});
   var search = getSearchTerm();
   if (search) {
     sorted = sorted.filter(function(t){
@@ -786,7 +820,7 @@ function render() {
     var openBtn = (t.url && (t.running || v)) ? '<a href="' + t.url + '" target="_blank" class="' + openClass + '" onclick="event.stopPropagation();markOpened(\'' + t.id + '\')">' + openLabel + '</a>' : '';
     var publicBtn = t.publicUrl ? '<a href="' + t.publicUrl + '" target="_blank" class="btn public" onclick="event.stopPropagation()" title="公开站: ' + t.publicUrl + '">公开站</a>' : '';
 
-    var extraClass = v ? ' virtual' : ''; if (isSelf) extraClass += ' self'; if (cmdType === 'command') extraClass += ' cmd-card'; if (cmdType === 'folder') extraClass += ' folder-card';
+    var extraClass = v ? ' virtual' : ''; if (isSelf) extraClass += ' self'; if (cmdType === 'command') extraClass += ' cmd-card'; if (cmdType === 'folder') extraClass += ' folder-card'; if (t.disabled) extraClass += ' disabled';
 	return '<div class="tool-card' + extraClass + '" data-id="' + t.id + '" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)"' + (cmdType === 'folder' ? ' onclick="window.open(\'/workspace/' + t.id + '\', \'_blank\')" style="cursor:pointer"' : '') + '>'
       + '<span class="card-dot ' + klass + '"></span>'
       + '<div class="card-drag-handle" title="拖拽排序" draggable="true" ondragstart="handleDragStart(event)" ondragend="handleDragEnd(event)"></div>'
@@ -799,7 +833,7 @@ function render() {
           + (t.description ? '<div class="card-desc" title="' + t.description.replace(/"/g,'&quot;') + '">' + t.description + '</div>' : '')
         + '</div>'
       + '</div>'
-      + '<div class="card-actions">' + (cmdType === 'command' ? '<span class="cmd-hint">在 Claude Code 中输入</span>' : (openBtn||'') + (actionHtml||'') + (publicBtn||'')) + '<span class="card-badges">' + formBadge + ownerBadge + '</span></div>'
+      + '<div class="card-actions">' + (cmdType === 'command' ? '<span class="cmd-hint">在 Claude Code 中输入</span>' : (openBtn||'') + (actionHtml||'') + (publicBtn||'')) + '<span class="card-badges">' + formBadge + ownerBadge + '</span>' + '<label class="toggle-disable" onclick="event.stopPropagation();toggleDisabled(\'' + t.id + '\')"><input type="checkbox"' + (t.disabled ? '' : ' checked') + '><span class="toggle-track' + (t.disabled ? '' : ' on') + '"></span><span class="toggle-label' + (t.disabled ? '' : ' on') + '">' + (t.disabled ? '停用' : '启用') + '</span></label></div>'
     + '</div>';
   }).join('');
 }
@@ -912,7 +946,18 @@ async function stopTool(id) {
   }
 }
 
-function updateCounts() {
+async function toggleDisabled(id) {
+	  var t = tools.find(function(x){return x.id===id;});
+	  if (!t) return;
+	  var newVal = !t.disabled;
+	  try {
+	    var res = await fetch('/api/tools/' + id, {method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify({disabled: newVal})});
+	    var data = await res.json();
+	    if (data.ok) { fetchTools(); }
+	  } catch(e) { console.error('toggleDisabled:', e); }
+	}
+
+	function updateCounts() {
   document.getElementById('totalCount').textContent = tools.length;
   document.getElementById('openableCount').textContent = tools.filter(function(t){return (t.running || isVirtual(t)) && !opened[t.id] && t.url;}).length;
   document.getElementById('openedCount').textContent = tools.filter(function(t){return (t.running || isVirtual(t)) && opened[t.id] && t.url;}).length;

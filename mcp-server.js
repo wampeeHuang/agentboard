@@ -115,7 +115,7 @@ function textResult(text, isError) {
 }
 
 function handleListTools(args) {
-  var tools = registry.scanTools();
+  var tools = registry.scanTools().filter(function (t) { return !t.disabled; });
   if (args && args.category) tools = tools.filter(function (t) { return t.category === args.category; });
   if (args && args.id) tools = tools.filter(function (t) { return t.id === args.id; });
   var summary = tools.map(function (t) {
