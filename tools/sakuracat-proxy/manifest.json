@@ -7,8 +7,9 @@
   "owner": "外部",
   "url": "http://localhost:3099/workspace/sakuracat-proxy",
   "projectPath": "%USERPROFILE%\\.config\\com.vortex.helper",
-  "capability": "SakuraCat代理架构与飞书断连修复",
-  "agent_notes": "纯参考卡片。国内服务断连时打开面板按修复步骤操作。2026-06-20/06-30 飞书两次同样问题，2026-06-30 DeepSeek API (codex-relay) 同样问题，根因都是 SakuraCat 推送覆盖了 fake-ip-filter。codex-relay 依赖 api.deepseek.com 直连，DNS 被劫持到 198.18.0.14 会导致 relay 502。不要用 hosts 绕过——修 fake-ip-filter 是治根。",
+  "capability": "SakuraCat代理架构与断连修复",
+  "controller_port": 39798,
+  "agent_notes": "纯参考卡片。国内服务断连时打开面板按修复步骤操作。2026-06-20/06-30 飞书两次同样问题，2026-06-30 DeepSeek API (codex-relay) 同样问题，2026-06-30 ToDesk 同样问题——根因都是 SakuraCat 推送覆盖了 fake-ip-filter。不要用 hosts 绕过——修 fake-ip-filter 是治根。修复首选 API 热重载（PUT /configs），无需关代理、无需删 cache.db。cache.db 在代理运行中被锁定无法删除是正常现象。",
   "whitelist": [
     {
       "service": "飞书",
@@ -45,6 +46,28 @@
       "since": "2026-06-30"
     }
   ],
-  "architecture": "SakuraCat (Electron GUI)\n  → 推送配置覆盖 config.yaml\n  → Vortex (Clash 内核)\n  → fake-ip DNS 劫持\n  → fake-ip-filter 白名单: 白名单内的域名 → 真实 DNS → 真实 IP → 直连成功\n  → 不在白名单: DNS 返回 198.18.0.1/16 假 IP → 直连假 IP → 断连",
+  "fix_steps": [
+    {
+      "text": "打开 config.yaml，在 fake-ip-filter 中追加目标域名（参考上方白名单的域名列表）"
+    },
+    {
+      "text": "API 热重载（首选，无需关代理、无需删缓存）：",
+      "code": "curl -X PUT http://127.0.0.1:39798/configs -H \"Content-Type: application/json\" -d \"{\\\"path\\\":\\\"C:/Users/Administrator/.config/com.vortex.helper/config.yaml\\\"}\""
+    },
+    {
+      "text": "验证：nslookup <目标域名> 127.0.0.1，应返回真实 IP 而非 198.18.x.x"
+    },
+    {
+      "text": "若 API 重载无效（罕见）：关 SakuraCat → 删 cache.db → 重启 SakuraCat"
+    }
+  ],
+  "pitfalls": [
+    {
+      "title": "cache.db 被进程锁定",
+      "problem": "SakuraCat/Vortex 运行时 cache.db 被占用，rm 直接报 Device or resource busy，无法删除",
+      "fix": "不需要删缓存。优先用 API 热重载（PUT /configs），Clash 内核会重新读取 config.yaml 中的 fake-ip-filter 并刷新 DNS 解析。仅在 API 重载也无效的极端情况下才需要停进程删缓存。"
+    }
+  ],
+  "architecture": "SakuraCat (Electron GUI)\n  → 推送配置覆盖 config.yaml\n  → Vortex (Clash Meta 内核) :7897 (mixed)\n  → External Controller :39798 (REST API)\n  → fake-ip DNS 劫持 (198.18.0.1/16)\n  → fake-ip-filter 白名单: 白名单内 → 真 DNS → 真 IP → 直连成功\n  → 不在白名单: DNS → 假 IP → 直连假 IP → 断连\n\n热重载: PUT /configs → Clash 重读 config.yaml → fake-ip-filter 生效\n无需: 关 GUI / 删 cache.db / 重启服务",
   "disabled": false
 }

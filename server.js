@@ -1220,13 +1220,41 @@ function startServer() {
     wlHTML += '</div>\n';
 
     // ── 3. 修复步骤 ──
-    var fixHTML = '<div class="info-section">\n<h2>🔧 修复步骤</h2>\n' +
-      '<ol class="fix-steps">' +
+    var fixSteps = meta.fix_steps;
+    var fixHTML = '<div class="info-section">\n<h2>🔧 修复步骤</h2>\n';
+    if (fixSteps && fixSteps.length > 0) {
+      fixHTML += '<ol class="fix-steps">';
+      fixSteps.forEach(function(s) {
+        fixHTML += '<li>' + esc(s.text);
+        if (s.code) {
+          fixHTML += '<br><pre><code>' + esc(s.code) + '</code></pre>';
+        }
+        fixHTML += '</li>';
+      });
+      fixHTML += '</ol>';
+    } else {
+      fixHTML += '<ol class="fix-steps">' +
         '<li>打开 <code>' + esc(pp) + '\\config.yaml</code>，搜目标域名，不在 <code>fake-ip-filter</code> 中就补上（参考上方白名单的域名列表）</li>' +
         '<li>关 SakuraCat → 删同目录 <code>cache.db</code></li>' +
         '<li>重启 SakuraCat</li>' +
         '<li>验证：<code>nslookup &lt;目标域名&gt; 127.0.0.1</code> 应返回真实 IP 而非 198.18.x.x</li>' +
-      '</ol>\n</div>\n';
+      '</ol>';
+    }
+    fixHTML += '</div>\n';
+
+    // ── 3.5. 已知踩坑 ──
+    var pitfalls = meta.pitfalls;
+    if (pitfalls && pitfalls.length > 0) {
+      fixHTML += '<div class="info-section">\n<h2>⚠️ 已知踩坑</h2>\n';
+      pitfalls.forEach(function(p) {
+        fixHTML += '<div style="margin-bottom:16px">' +
+          '<strong style="color:var(--text)">' + esc(p.title) + '</strong>' +
+          '<p style="margin:4px 0;font-size:13px;color:var(--text-secondary)">' + esc(p.problem) + '</p>' +
+          '<p style="margin:4px 0;font-size:13px;color:var(--text-secondary)">✅ ' + esc(p.fix) + '</p>' +
+        '</div>';
+      });
+      fixHTML += '</div>\n';
+    }
 
     // ── 4. 配置文件 ──
     var filesHTML = '<div class="info-section">\n<h2>🗂 配置文件</h2>\n';

@@ -1,17 +1,30 @@
 # HANDOFF 2026-06-30
 
-## 已做
-- **OpenClaw Gateway 清理**：删除全部 16 个 Gateway cron job，本地 Scheduler (:3100) 成为定时任务唯一真相源
-- **OpenClaw 工具卡片优化**：`startCommand` 改为 `openclaw dashboard`（自动 token 免登录），description 加入定时任务红线规则
-- **a2o-proxy 删除**：翻译桥在 Claude Code 场景不可用（tool_use/tool_result 用 JSON.stringify 纯文本化，非结构化转换），已删除
-- **CodexRelay 修复**（上轮）：SakuraCat fake-ip DNS 劫持 `api.deepseek.com`。config.yaml fake-ip-filter 加白名单，删 cache.db 重启
-- **MCP 补齐**（上轮）：agentboard_create_tool / agentboard_update_tool + schema TYPE_VALUES 校验
-- **SakuraCat 信息页改造**（上轮）：五分区 + manifest.json `whitelist` 数组结构化
+## 本次会话已完成
 
-## 架构决策
+### SakuraCat 代理 — ToDesk 白名单 + 修复流程升级
 
-Claude Code ↔ DeepSeek 只有 OpenClaw Gateway 这一座桥。a2o-proxy 和 codex-relay 都不能做备份路径。Gateway 挂了 Claude Code 只能走 Anthropic 默认后端。
+| 文件 | 改动 |
+|------|------|
+| `C:\Users\Administrator\.config\com.vortex.helper\config.yaml` | fake-ip-filter 追加 `*.todesk.com`, `todesk.com`, `authds.kylinlot.com` |
+| `C:\Users\Administrator\.agentboard\tools\sakuracat-proxy\manifest.json` | 新增 `fix_steps`、`pitfalls`、`controller_port` 字段；更新 `architecture`、`agent_notes` |
+| `C:\Users\Administrator\.agentboard\server.js` | `toolInfoHTML` 不再硬编码修复步骤，改为从 manifest 的 `fix_steps`/`pitfalls` 动态渲染 |
 
-## 待办
+### 关键发现
 
-- 用户需重启 Claude Code，新版 mcp-server 才生效（上轮遗留）
+- **API 热重载优于手动重启。** `PUT http://127.0.0.1:39798/configs` 让 Clash 内核重读 config.yaml，无需关 GUI、无需删 cache.db
+- **cache.db 在代理运行中被锁定**（Device or resource busy），不能在线删除。API 热重载绕过了这个问题
+- server.js 改完后需要重启 agentboard（manifest 改动自动生效）
+
+### 标准修复流程（已写入 workspace 页面）
+
+1. 改 config.yaml → 补 fake-ip-filter
+2. `curl -X PUT http://127.0.0.1:39798/configs -H "Content-Type: application/json" -d '{"path":"..."}'`
+3. `nslookup <域名> 127.0.0.1` 验证
+4. 仅 API 重载无效时才关 GUI → 删 cache.db → 重启
+
+## 历史遗留
+
+- **上轮未做**：用户需重启 Claude Code，新版 mcp-server（agentboard_create_tool / agentboard_update_tool + schema TYPE_VALUES 校验）才生效
+- **已清理**：OpenClaw Gateway cron job 全部删除，本地 Scheduler (:3100) 为定时任务唯一真相源
+- **SakuraCat 信息页**：上轮已改造为五分区 + manifest.json `whitelist` 数组结构化，本轮进一步升级为 manifest 驱动修复步骤和踩坑
