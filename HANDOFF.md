@@ -2,29 +2,25 @@
 
 ## 本次会话已完成
 
-### SakuraCat 代理 — ToDesk 白名单 + 修复流程升级
+### 工具停用机制 — toggle 开关 + 筛选
 
 | 文件 | 改动 |
 |------|------|
-| `C:\Users\Administrator\.config\com.vortex.helper\config.yaml` | fake-ip-filter 追加 `*.todesk.com`, `todesk.com`, `authds.kylinlot.com` |
-| `C:\Users\Administrator\.agentboard\tools\sakuracat-proxy\manifest.json` | 新增 `fix_steps`、`pitfalls`、`controller_port` 字段；更新 `architecture`、`agent_notes` |
-| `C:\Users\Administrator\.agentboard\server.js` | `toolInfoHTML` 不再硬编码修复步骤，改为从 manifest 的 `fix_steps`/`pitfalls` 动态渲染 |
+| `index.html` | iOS-style toggle 替代按钮；停用卡片灰色显示；"已停用"筛选标签；BOM 移除 |
+| `lib/manifest-schema.js` | 新增 `disabled` (boolean) 字段 |
+| `lib/tool-registry.js` | `disabled` 加入 BASE_FIELDS 和 scanTools 输出 |
+| `mcp-server.js` | `list_tools` 过滤停用工具，AI 不可见 |
+| `tools/*/manifest.json` | 所有工具补齐 `disabled` 字段（coze-wx-extract/coze-xhs-scraper/bitbrowser-panel 为 true） |
 
-### 关键发现
+**MCP 行为**：`list_tools` 不返回停用工具（44/47）。`get_tool` 通过 ID 仍可查到。AI 视角看不到停用工具，但明确查询可获取。
 
-- **API 热重载优于手动重启。** `PUT http://127.0.0.1:39798/configs` 让 Clash 内核重读 config.yaml，无需关 GUI、无需删 cache.db
-- **cache.db 在代理运行中被锁定**（Device or resource busy），不能在线删除。API 热重载绕过了这个问题
-- server.js 改完后需要重启 agentboard（manifest 改动自动生效）
+### SakuraCat 代理 — ToDesk 白名单 + 修复流程升级
 
-### 标准修复流程（已写入 workspace 页面）
+- server.js 工具信息页改为从 manifest `fix_steps`/`pitfalls` 动态渲染
+- sakuracat-proxy manifest 新增结构化修复步骤和踩坑
+- API 热重载（PUT /configs）替代手动关 GUI+删缓存
 
-1. 改 config.yaml → 补 fake-ip-filter
-2. `curl -X PUT http://127.0.0.1:39798/configs -H "Content-Type: application/json" -d '{"path":"..."}'`
-3. `nslookup <域名> 127.0.0.1` 验证
-4. 仅 API 重载无效时才关 GUI → 删 cache.db → 重启
+## 待办
 
-## 历史遗留
-
-- **上轮未做**：用户需重启 Claude Code，新版 mcp-server（agentboard_create_tool / agentboard_update_tool + schema TYPE_VALUES 校验）才生效
-- **已清理**：OpenClaw Gateway cron job 全部删除，本地 Scheduler (:3100) 为定时任务唯一真相源
-- **SakuraCat 信息页**：上轮已改造为五分区 + manifest.json `whitelist` 数组结构化，本轮进一步升级为 manifest 驱动修复步骤和踩坑
+- agentboard server.js 改过后需重启（manifest 改动自动生效无需重启）
+- 上轮遗留：用户需重启 Claude Code，新版 mcp-server 才生效
