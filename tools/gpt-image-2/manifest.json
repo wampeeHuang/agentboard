@@ -1,0 +1,16 @@
+{
+  "id": "gpt-image-2",
+  "name": "gpt-image-2",
+  "description": "AI 图片生成，通过 newapi channel (aigoapi) 调用 gpt-image-2 模型",
+  "type": "api",
+  "config": {
+    "api_key": "sk-f0X9TrTs3eKDNur7lh02VaO8koR6JrXaMRgmhCUvOdjqt4eS",
+    "base_url": "https://aigoapi.com",
+    "images_endpoint": "/v1/images/generations",
+    "model": "gpt-image-2",
+    "timeout_ms": 300000,
+    "proxy": "http://127.0.0.1:7897"
+  },
+  "updated": "2026-06-30T23:03:00+08:00",
+  "notes": "需要代理 127.0.0.1:7897；API 超时设置为 300s；封面 1792x1024，配图 1792x1024"
+}

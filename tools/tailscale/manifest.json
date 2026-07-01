@@ -1,0 +1,18 @@
+{
+  "name": "Tailscale 组网",
+  "id": "tailscale",
+  "description": "【用途】零配置VPN组网，手机和桌面在同一虚拟局域网内互通。基于WireGuard。【何时用】手机远程连桌面、多设备组网。Tailscale IP是100.x.x.x段。【何时不用】局域网已通→不需要。不需要远程→不启动。【返回】tailscale status查看在线设备【端口】无（系统服务）",
+  "icon": "🔗",
+  "version": "1.98.8",
+  "category": "设施",
+  "order": 20,
+  "running": true,
+  "type": "service",
+  "owner": "外部",
+  "startCommand": "sc start Tailscale",
+  "stopCommand": "sc stop Tailscale",
+  "projectPath": "C:\\Program Files\\Tailscale",
+  "conflicts": [],
+  "agent_notes": "桌面作为System服务运行，不走用户代理。已通过注册表HKLM\\SYSTEM\\CurrentControlSet\\Services\\Tailscale\\Environment注入HTTPS_PROXY/HTTP_PROXY=127.0.0.1:7897。手机App直连无需代理。tailscale up --qr出二维码登录。桌面IP固定为100.75.95.12。",
+  "capability": "WireGuard VPN组网，移动端远程访问桌面"
+}

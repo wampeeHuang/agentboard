@@ -60,6 +60,7 @@ source: 触发写入的事件/任务简述
 | `diagnosis` | 为什么X会这样？ | 因果链：从现象追溯到根因 | gh超时但git正常 → 因为gh不走git proxy |
 | `method` | 怎么做X？ | 可执行的步骤序列 | 备份顺序：.claude.json → tools/ → skills/ |
 | `fact` | X在哪/是什么？ | 具体数据：路径、版本、架构 | 工具注册在 ~/.agentboard/tools/ 下 |
+| `capability` | 我能用X在Y场景做什么？ | 工具+场景=能力。防止"明明有这个能力但忘了用" | Chrome DevTools 能操控百度地图测通勤 → recipe 在 research-methods/_tools/ |
 
 互斥检验：一条日志不可能同时主要回答"为什么"又主要回答"怎么做"——诉求不同，写出来重点不同。
 
@@ -70,6 +71,38 @@ source: 触发写入的事件/任务简述
 - 100 行以内。超过说明拆得不够细
 - 中文为主，代码/变量名英文
 - 文件名用 kebab-case，语义化
+
+### capability 专用格式
+
+capability 不回答"为什么坏了"或"怎么做"，只回答**"我能做什么"**。格式比 diagnosis 短，不需要现象/根因/修复：
+
+```markdown
+# 一句话标题（能力描述，不是工具名）
+type: capability
+tool: 工具名
+scenario: 什么场景下用
+date: YYYY-MM-DD
+recipe: 详细操作手册的绝对路径（可选）
+
+## 能力
+（这个工具+场景组合能做什么事）
+
+## 为什么只能用这个
+（其他方案为什么不行——这是防止重复探索的关键信息）
+
+## 速查
+（一行命令或关键步骤，快速回忆怎么调）
+```
+
+### capability 准入标准
+
+capability 的准入门槛比 diagnosis 低——不需要"踩坑花了1h+"，只需要：
+
+| 条件 | 说明 |
+|------|------|
+| **跨项目可复用** | 换一个调研任务仍然能用 |
+| **非显然** | 合格开发者不会立刻想到"百度地图可以用 Chrome DevTools 操控" |
+| **有排他性** | 其他方式做不到或已被验证不可行 |
 
 ---
 
@@ -127,6 +160,10 @@ source: 触发写入的事件/任务简述
 | `claude-p-prompt-describe-vs-execute.md` | diagnosis | ✅ |
 | `windows-user-env-not-visible-new-process.md` | diagnosis | ✅ |
 | `powershell-invoke-restmethod-gbk-body.md` | diagnosis | ✅ |
+| `baidu-maps-transit-capability.md` | capability | ✅ |
+| `xiaohongshu-browser-capability.md` | capability | ✅ |
+| `codebuddy-wechat-extract-capability.md` | capability | ✅ |
+| `research-report-delivery-checklist.md` | feedback | ✅ |
 
 ---
 

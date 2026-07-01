@@ -2051,7 +2051,9 @@ function startServer() {
       'pm2-resurrect':    { name: 'PM2 进程恢复',     desc: '恢复上次的 PM2 进程列表', group: '核心服务' },
       'launch':           { name: 'Agentboard 启动器', desc: 'Agentboard 备用启动脚本', group: '核心服务' },
       'Snap':             { name: 'Snap 截图',         desc: '截图小工具', group: '工具' },
-      'Snipaste':         { name: 'Snipaste',          desc: '截图贴图工具', group: '工具' }
+      'Snipaste':         { name: 'Snipaste',          desc: '截图贴图工具', group: '工具' },
+      'paseo-daemon':     { name: 'Paseo 远程Agent编排', desc: '手机遥控桌面 Claude Code 的 Agent 编排服务 (:6767)', group: '核心服务' },
+      'tailscale-ensure': { name: 'Tailscale 组网隧道', desc: 'WireGuard 加密组网，手机和桌面在同一虚拟局域网', group: '核心服务' }
     };
     // Group sort order
     var groupOrder = { '核心服务': 0, '通道': 1, 'Agent': 2, '工具': 3, '其他': 9 };
