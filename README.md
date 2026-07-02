@@ -164,7 +164,7 @@ Windows 用户把 `~/.agentboard` 换成 `%USERPROFILE%\.agentboard`，或在 Po
 }
 ```
 
-编辑完配置后重启编辑器，可用四个 MCP 工具：
+编辑完配置后重启编辑器，可用六个 MCP 工具：
 
 | MCP 工具 | 功能 |
 |------|------|
@@ -172,6 +172,8 @@ Windows 用户把 `~/.agentboard` 换成 `%USERPROFILE%\.agentboard`，或在 Po
 | `agentboard_get_tool` | 获取单个工具详情（含 conflicts、agent_notes） |
 | `agentboard_start_tool` | 启动工具（自动检测端口冲突） |
 | `agentboard_stop_tool` | 停止工具 |
+| `agentboard_create_tool` | 创建新工具并写入 manifest（schema 校验） |
+| `agentboard_update_tool` | 更新已有工具的 manifest 字段 |
 
 AI 调工具前会先查 `conflicts`（互斥检测）和 `agent_notes`（踩坑笔记），避免已知错误。
 
@@ -199,9 +201,7 @@ Base: `http://localhost:3099`
 
 | 方法 | 路径 | 说明 |
 |------|------|------|
-| GET | `/api/health` | 健康报告（崩溃数、异常退出、uptime） |
-| GET | `/api/audit` | Schema 合规巡检（缺失字段、格式错误） |
-| GET | `/api/audit/runtime` | 运行时漂移检测（路径不存在、端口未监听） |
+| GET | `/health` | 健康报告（崩溃数、异常退出、uptime） |
 | GET | `/api/stats` | API 调用统计（按调用方/操作/工具三维度） |
 | GET | `/api/loop/health` | 联邦巡检 — 跨项目健康状态扫描 |
 
@@ -209,7 +209,6 @@ Base: `http://localhost:3099`
 
 | 方法 | 路径 | 说明 |
 |------|------|------|
-| GET | `/api/open-folder` | 在文件管理器打开目录 `?path=<绝对路径>` |
 | GET | `/open-dir/:name` | 打开技能目录（如 `/open-dir/perspective-router`） |
 
 ### 技能图表

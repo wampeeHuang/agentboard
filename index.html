@@ -508,7 +508,7 @@ function isVirtual(t) {
 
 // 形态检测：本地/API/CLI/Web
 function getToolForm(t) {
-	  if (t.type === 'command') return '命令';
+	  if (t.type === 'cli' || t.type === 'command') return 'CLI';
 	  if (t.type === 'folder') return '文件夹';
 	  if (t.type === 'group') return '命令组';
   var hasPorts = (t.ports && t.ports.length > 0) || t.port;
@@ -757,7 +757,8 @@ function render() {
     var v = isVirtual(t);
     var hasCommands = t.startCommand || t.stopCommand;
     var cmdType = t.type || 'service';
-		var klass = cmdType === 'command' ? 'cmd' : (cmdType === 'folder' ? 'folder' : (t.running ? 'on' : 'off'));
+		var isCli = cmdType === 'cli' || cmdType === 'command';
+var klass = isCli ? 'cmd' : (cmdType === 'folder' ? 'folder' : (t.running ? 'on' : 'off'));
     var pending = starting[t.id];
     var halting = stopping[t.id];
 
@@ -799,7 +800,7 @@ function render() {
       actionHtml = '<button class="btn stop" style="opacity:.6">停止中…</button>';
     } else if (cmdType === 'folder') {
       actionHtml = '<button class="btn go" onclick="event.stopPropagation();window.open(\'/workspace/' + t.id + '\', \'_blank\')">查看项目</button>';
-    } else if (hasCommands && !isSelf && cmdType !== 'command') {
+    } else if (hasCommands && !isSelf && !isCli) {
       if (isNoPortCli) {
         actionHtml = '<button class="btn go" onclick="event.stopPropagation();startTool(\'' + t.id + '\')">终端</button>';
       } else if (t.running) {
@@ -820,7 +821,7 @@ function render() {
     var openBtn = (t.url && (t.running || v)) ? '<a href="' + t.url + '" target="_blank" class="' + openClass + '" onclick="event.stopPropagation();markOpened(\'' + t.id + '\')">' + openLabel + '</a>' : '';
     var publicBtn = t.publicUrl ? '<a href="' + t.publicUrl + '" target="_blank" class="btn public" onclick="event.stopPropagation()" title="公开站: ' + t.publicUrl + '">公开站</a>' : '';
 
-    var extraClass = v ? ' virtual' : ''; if (isSelf) extraClass += ' self'; if (cmdType === 'command') extraClass += ' cmd-card'; if (cmdType === 'folder') extraClass += ' folder-card'; if (t.disabled) extraClass += ' disabled';
+    var extraClass = v ? ' virtual' : ''; if (isSelf) extraClass += ' self'; if (isCli) extraClass += ' cmd-card'; if (cmdType === 'folder') extraClass += ' folder-card'; if (t.disabled) extraClass += ' disabled';
 	return '<div class="tool-card' + extraClass + '" data-id="' + t.id + '" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)"' + (cmdType === 'folder' ? ' onclick="window.open(\'/workspace/' + t.id + '\', \'_blank\')" style="cursor:pointer"' : '') + '>'
       + '<span class="card-dot ' + klass + '"></span>'
       + '<div class="card-drag-handle" title="拖拽排序" draggable="true" ondragstart="handleDragStart(event)" ondragend="handleDragEnd(event)"></div>'
@@ -829,11 +830,11 @@ function render() {
         + '<div class="card-info">'
           + '<div class="card-name">' + (t.icon||'') + ' ' + t.name + '</div>'
           + '<div class="card-id">' + t.id + '</div>'
-          + (cmdType === 'command' && t.trigger ? '<div class="card-meta"><span class="card-trigger">/' + t.trigger + '</span></div>' : (portsText ? '<div class="card-meta">' + portsText + '</div>' : (cmdType === 'folder' ? '<div class="card-meta">文件夹</div>' : '')))
+          + (isCli && t.trigger ? '<div class="card-meta"><span class="card-trigger">/' + t.trigger + '</span></div>' : (portsText ? '<div class="card-meta">' + portsText + '</div>' : (cmdType === 'folder' ? '<div class="card-meta">文件夹</div>' : '')))
           + (t.description ? '<div class="card-desc" title="' + t.description.replace(/"/g,'&quot;') + '">' + t.description + '</div>' : '')
         + '</div>'
       + '</div>'
-      + '<div class="card-actions">' + (cmdType === 'command' ? '<span class="cmd-hint">在 Claude Code 中输入</span>' : (openBtn||'') + (actionHtml||'') + (publicBtn||'')) + '<span class="card-badges">' + formBadge + ownerBadge + '</span>' + '<label class="toggle-disable" onclick="event.stopPropagation();toggleDisabled(\'' + t.id + '\')"><input type="checkbox"' + (t.disabled ? '' : ' checked') + '><span class="toggle-track' + (t.disabled ? '' : ' on') + '"></span><span class="toggle-label' + (t.disabled ? '' : ' on') + '">' + (t.disabled ? '停用' : '启用') + '</span></label></div>'
+      + '<div class="card-actions">' + (isCli ? '<span class="cmd-hint">在 Claude Code 中输入</span>' : (openBtn||'') + (actionHtml||'') + (publicBtn||'')) + '<span class="card-badges">' + formBadge + ownerBadge + '</span>' + '<label class="toggle-disable" onclick="event.stopPropagation();toggleDisabled(\'' + t.id + '\')"><input type="checkbox"' + (t.disabled ? '' : ' checked') + '><span class="toggle-track' + (t.disabled ? '' : ' on') + '"></span><span class="toggle-label' + (t.disabled ? '' : ' on') + '">' + (t.disabled ? '停用' : '启用') + '</span></label></div>'
     + '</div>';
   }).join('');
 }

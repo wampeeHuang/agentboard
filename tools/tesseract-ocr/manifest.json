@@ -6,7 +6,7 @@
   "version": "5.4.0",
   "category": "获取",
   "order": 30,
-  "type": "command",
+  "type": "cli",
   "trigger": "tesseract <输入> <输出>",
   "projectPath": "C:\\Program Files\\Tesseract-OCR",
   "conflicts": [],

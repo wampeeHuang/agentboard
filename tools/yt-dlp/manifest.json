@@ -6,7 +6,7 @@
   "version": "2026.03.17",
   "category": "获取",
   "order": 10,
-  "type": "command",
+  "type": "cli",
   "trigger": "yt-dlp <url>",
   "projectPath": "C:\\Users\\Administrator\\AppData\\Local\\Microsoft\\WinGet\\Links",
   "conflicts": [],
