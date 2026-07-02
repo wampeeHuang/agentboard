@@ -1,0 +1,19 @@
+{
+  "name": "黄辉辉作品集",
+  "id": "vivihuang-portfolio",
+  "description": "【用途】黄辉辉 AI 产品经理个人作品集。多页静态网站，暖纸米色底+鼠尾草绿accent。【何时用】查看作品集内容/品牌套件参考时。【何时不用】无关设计参考→不打开。【返回】静态HTML网站，无API【端口】无本地服务",
+  "icon": "📋",
+  "version": "1.0.0",
+  "category": "查阅",
+  "order": 5,
+  "port": null,
+  "url": "https://vivihuang.evopearl.com/",
+  "publicUrl": "https://vivihuang.evopearl.com/",
+  "projectPath": "D:\\workspace\\vivihuang-portfolio\\site",
+  "startCommand": null,
+  "stopCommand": null,
+  "conflicts": [],
+  "agent_notes": "静态网站，Vercel部署，无本地服务器。site/目录自包含可部署。品牌套件参考brand-kit.html。",
+  "capability": "个人作品集在线浏览",
+  "owner": "自建"
+}

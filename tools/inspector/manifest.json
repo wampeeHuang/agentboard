@@ -10,5 +10,5 @@
   "projectPath": "C:\\Users\\Administrator\\.inspector",
   "url": "http://localhost:3101",
   "agent_notes": "巡检脚本用 shell executor (node checks.js)，不调 agentTurn。agent 通过 GET /api/state 读巡检结果，POST /api/run 触发巡检。不要自己改 golden-checks.json，那是人手维护的检查项定义。",
-  "category": "巡检"
+  "category": "设施"
 }

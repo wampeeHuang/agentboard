@@ -1,0 +1,13 @@
+{
+  "name": "Claude Code 能力目录",
+  "description": "【用途】Claude Code 内置能力总览：技能、架构图、命令、全局宪法。【何时用】查看 Claude Code 有哪些技能/命令可用、全局规则、技能关系架构图。【返回】Web 页面，4 个标签页切换",
+  "capability": "Claude Code 能力浏览器",
+  "icon": "📚",
+  "version": "1.0.0",
+  "category": "查阅",
+  "owner": "自建",
+  "order": 16,
+  "url": "http://localhost:3099/catalog",
+  "type": "service",
+  "agent_notes": "agentboard 内置页面，无需启动。点击「打开」直接浏览。"
+}

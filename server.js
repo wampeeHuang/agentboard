@@ -85,109 +85,6 @@ function monogram(name) { var s = (name||'').trim(); var en = s.match(/[A-Za-z][
 function listDirs(p) { try { return fs.readdirSync(p,{withFileTypes:true}).filter(e=>e.isDirectory()&&!e.name.startsWith('.')).map(e=>e.name); } catch(_) { return []; } }
 function openFolder(p) { try { exec('start "" "' + p + '"'); } catch(_) {} }
 
-var _persCache = null;
-function loadPerspectives() {
-  if (_persCache) return _persCache;
-  var result = [];
-  if (!fs.existsSync(SKILLS_DIR)) { _persCache = result; return result; }
-  listDirs(SKILLS_DIR).forEach(function(name) {
-    if (!name.startsWith('perspective-')) return;
-    var skillMd = read(path.join(SKILLS_DIR, name, 'SKILL.md'));
-    if (!skillMd) return;
-    var fm = {};
-    var fmMatch = skillMd.match(/^---\r?\n([\s\S]*?)\r?\n---/);
-    var body = '';
-    if (fmMatch) {
-      fmMatch[1].split('\n').forEach(function(line) {
-        var m = line.match(/^(\w+):\s*(.+)/);
-        if (m) fm[m[1]] = m[2].trim();
-      });
-      body = skillMd.substring(fmMatch[0].length).trim();
-    } else { body = skillMd.trim(); }
-    body = body.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
-    // Extract name_cn and name_en from trigger field
-    var triggerParts = (fm.trigger || '').split(',').map(function(s) { return s.trim(); });
-    var name_cn = triggerParts[0] || '';
-    var name_en = triggerParts[1] || '';
-    // Oneliner: from description or fallback to body
-    var desc = fm.description || '';
-    if (desc.startsWith('|')) desc = desc.substring(1).trim();
-    desc = desc.replace(/\n\s+/g, ' ');
-    var oneliner = desc.split(/[。.，,\n]/)[0].trim();
-    if (!oneliner || oneliner.length < 5) {
-      // Fallback: first meaningful line from body
-      var bodyLines = body.split('\n');
-      for (var bi = 0; bi < bodyLines.length; bi++) {
-        var bl = bodyLines[bi].trim();
-        if (bl && !bl.startsWith('#') && !bl.startsWith('>') && bl.length > 10) {
-          oneliner = bl.replace(/\r/g, '').substring(0, 100);
-          break;
-        }
-      }
-    }
-    if (oneliner.length > 100) oneliner = oneliner.substring(0, 100) + '...';
-    // Extract model names from markdown body (look for ### under 核心心智模型 section)
-    var modelNames = [];
-    var modelSection = body.match(/##\s*(?:核心心智模型|Core Mental Models|心智模型)[\s\S]*?(?=## |$)/);
-    var searchBody = modelSection ? modelSection[0] : '';
-    var modelRe = /^###\s+(.+)$/gm;
-    var mm;
-    while ((mm = modelRe.exec(searchBody)) !== null) {
-      var mn = mm[1].trim();
-      if (mn && !/^(?:使用说明|角色扮演|触发|规则|注意|排除|Step |激活|示例|自动|误激活|Gate )/.test(mn)) {
-        modelNames.push(mn);
-      }
-    }
-    // Category
-    var category = classifyPerspective(name, body, desc);
-    result.push({
-      id: name,
-      name_cn: name_cn,
-      name_en: name_en,
-      oneliner: oneliner,
-      category: category,
-      modelPills: modelNames.slice(0, 4),
-      body: body,
-      description: desc,
-      trigger: fm.trigger || ''
-    });
-  });
-  _persCache = result;
-  return result;
-}
-
-function classifyPerspective(name, body, desc) {
-  // Only use name + description — body contains methodology instructions, not identity signals
-  var firstPara = '';
-  if (body) {
-    var bp = body.split(/##\s/)[0]; // only first section before any ## heading
-    if (bp) firstPara = bp.substring(0, 300); // at most 300 chars
-  }
-  var s = (name + ' ' + (desc || '') + ' ' + firstPara).toLowerCase();
-  // Order: strong profession signals first, generic terms (设计) last
-  var sciRe = /physics|quantum|science|物理|量子|宇宙|天体|相对论|科学|霍金/;
-  var aiRe = /ai\b|llm|gpt|machine.learn|deep.learn|transformer|neural|人工智能|深度学习|机器学习|神经网络|cuda|自动驾驶/;
-  var bizRe = /founder|startup|venture|invest|创始|创业|投资|商业|增长|商业模式|创始人|企业家|产品方法论|硅谷/;
-  var mktRe = /marketing|advertising|copywriting|brand|营销|广告|品牌|文案|消费者|销售信|科学广告/;
-  var litRe = /novel|fiction|sci\.fi|小说|科幻|文学|散文|出版|三体|写作/;
-  var filmRe = /film|movie|director|cinema|电影|导演|影视|镜头|摄影|映画|动画|编剧|制片|cinematograph/;
-  var socialRe = /politic|trump|政治|社会|总统|懂王|选举|美国|政/;
-  var eduRe = /teach|learn|education|mentor|教育|导师|老师|高考|考研|网课|培训/;
-  var philoRe = /philosoph|哲学|思想|认知|随机|反脆弱|黑天鹅|不确定性/;
-  var designRe = /architect|建筑设计|室内设计|工业设计|平面设计|交互设计|用户体验|建筑师|室内装修|住宅设计|家居设计|产品设计|工业设计|设计方法论/;
-  if (sciRe.test(s)) return '科学/技术';
-  if (aiRe.test(s)) return '人工智能';
-  if (bizRe.test(s)) return '商业/经济';
-  if (mktRe.test(s)) return '营销/传播';
-  if (litRe.test(s)) return '文学/人文';
-  if (filmRe.test(s)) return '影视/创作';
-  if (socialRe.test(s)) return '社会/政治';
-  if (eduRe.test(s)) return '教育/学习';
-  if (philoRe.test(s)) return '哲学/思想';
-  if (designRe.test(s)) return '设计/艺术';
-  return '其他';
-}
-
 function safeResolve(base, ...segments) {
   const resolved = path.resolve(path.join(base, ...segments));
   if (!resolved.startsWith(path.resolve(base) + path.sep) && resolved !== path.resolve(base)) {
@@ -371,6 +268,28 @@ function classifySkill(name, desc) {
   if (/(api|mcp|sdk|server|code|test|debug|build|deploy|playwright|browser|automation|cli|git|npm|node|react|tailwind|component)/i.test(s)) return '开发与工具';
   if (/(perspective|mindset|framework|think|mentor|philosophy|methodology|distill)/i.test(s)) return '思维与方法';
   return '其他';
+}
+
+function renderMarkdown(md, opts) {
+  opts = opts || {};
+  var keepH1 = opts.keepH1 !== false;
+  var body = md.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  if (!keepH1) body = body.replace(/^#\s+.*\n/, '');
+  body = body.replace(/```(\w*)\n([\s\S]*?)```/g, function(_, lang, code) {
+    return '<pre><code>' + code.replace(/\n$/, '') + '</code></pre>';
+  });
+  body = body.replace(/`([^`]+)`/g, '<code>$1</code>');
+  body = body.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+  body = body.replace(/\*([^*]+)\*/g, '<em>$1</em>');
+  body = body.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank">$1</a>');
+  body = body.replace(/^### (.+)/gm, '<h3>$1</h3>');
+  body = body.replace(/^## (.+)/gm, '<h2>$1</h2>');
+  if (keepH1) body = body.replace(/^# (.+)/gm, '<h1>$1</h1>');
+  body = body.replace(/^- (.+)/gm, '<li>$1</li>');
+  body = body.replace(/(<li>.*<\/li>\n?)+/g, '<ul>$&</ul>');
+  body = body.replace(/^(?!<[a-z]|$)(.+)$/gm, '<p>$1</p>');
+  body = body.replace(/<p>\s*<\/p>/g, '');
+  return body;
 }
 
 function scanTools() { return registry.scanTools(TOOLS_DIRS.concat([LOCAL_TOOLS_DIR])); }
@@ -962,19 +881,58 @@ function startServer() {
     res.json({ ok: true, path: dir });
   });
 
-  // Skills (Claude Code 技能目录 — 只读索引)
-  app.get('/skills', function(req, res) {
+  // Catalog: Claude Code 能力目录 (技能 + 架构图 + 命令 + 全局宪法)
+  app.get('/catalog', function(req, res) {
     res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
     var skills = scanAllSkills();
-    var body = skillIndexHTML(skills);
-    res.send(pageShell('技能', 'Claude Code 技能目录', body, 'skills', skills.length));
-  });
+    var skillsBody = skillIndexHTML(skills);
 
-  // Commands (Claude Code 内置命令参考)
-  app.get('/commands', function(req, res) {
-    res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
-    var body = commandsIndexHTML();
-    res.send(pageShell('命令', 'Claude Code 内置命令参考', body, 'commands', BUILTIN_COMMANDS.length));
+    var diagrams = [];
+    var seen = {};
+    var dDirs = [LOCAL_SKILLS_DIR, SKILLS_DIR];
+    dDirs.forEach(function(dir) {
+      if (!fs.existsSync(dir)) return;
+      listDirs(dir).forEach(function(name) {
+        if (seen[name]) return;
+        seen[name] = true;
+        var fp = path.join(dir, name, 'references', 'system-diagram.html');
+        if (!fs.existsSync(fp)) return;
+        diagrams.push({ skill: name, file: 'system-diagram.html', displayName: getChineseName(name) });
+      });
+    });
+    diagrams.sort(function(a, b) { return a.displayName.localeCompare(b.displayName, 'zh-CN'); });
+    var diagCards = diagrams.map(function(d) {
+      var words = d.skill.split(/[-_]/).filter(function(w) { return w.length > 0; });
+      var mono = words.length >= 2 ? (words[0][0] + words[words.length-1][0]).toUpperCase() : d.skill.substring(0,2).toUpperCase();
+      return '<a href="/skill-html/' + esc(d.skill) + '/system-diagram.html" class="diagram-card" target="_blank"><div class="card-mono">' + esc(mono) + '</div><div class="card-info"><div class="card-name">' + esc(d.displayName) + '</div><div class="card-sub">' + esc(d.skill) + '</div><div class="card-link">打开结构图 →</div></div></a>';
+    }).join('\n');
+    var diagBody = '<style>.diagram-grid{display:grid;grid-template-columns:repeat(auto-fill, minmax(320px, 1fr));gap:12px;margin-top:8px}.diagram-card{background:var(--paper);padding:20px;display:flex;align-items:flex-start;gap:14px;transition:transform .15s,box-shadow .15s;box-shadow:var(--shadow-border),var(--shadow-card);text-decoration:none;color:inherit}.diagram-card:hover{transform:translateY(-1px);box-shadow:var(--shadow-border),var(--shadow-card-hover)}.diagram-card .card-mono{flex-shrink:0;width:44px;height:44px;background:var(--ink);color:var(--paper);display:flex;align-items:center;justify-content:center;font-family:"JetBrains Mono",monospace;font-size:14px;font-weight:500}.diagram-card .card-info{flex:1;min-width:0}.diagram-card .card-name{font-size:16px;font-weight:300;letter-spacing:-0.01em;line-height:1.35}.diagram-card .card-sub{font-size:11px;font-family:"JetBrains Mono",monospace;color:var(--text-muted);margin-top:1px}.diagram-card .card-link{font-size:11px;color:var(--ink);font-weight:500;margin-top:6px}</style><div class="diagram-grid">' + (diagCards || '<p>暂无架构图</p>') + '</div>';
+
+    var cmdBody = commandsIndexHTML();
+
+    var globalMdPath = path.join(os.homedir(), '.claude', 'CLAUDE.md');
+    var globalMd = read(globalMdPath) || '';
+    var globalBody = globalMd ? '<div class="line-count">' + globalMd.split('\n').length + ' 行</div>' + renderMarkdown(globalMd) : '<p>CLAUDE.md 未找到</p>';
+
+    var tabs = [
+      { id: 'skills', label: '技能', meta: skills.length + '个' },
+      { id: 'diagrams', label: '架构图', meta: diagrams.length + '张' },
+      { id: 'commands', label: '命令', meta: BUILTIN_COMMANDS.length + '个' },
+      { id: 'global', label: '全局宪法', meta: (globalMd ? globalMd.split('\n').length + '行' : '缺失') }
+    ];
+
+    var body = '<style>.tabs{display:flex;gap:0;border-bottom:2px solid var(--border);margin-bottom:24px}.tab-btn{padding:10px 20px;font-size:13px;font-family:inherit;background:none;border:none;border-bottom:2px solid transparent;margin-bottom:-2px;cursor:pointer;color:var(--text-muted);transition:color .15s,border-color .15s}.tab-btn:hover{color:var(--text)}.tab-btn.active{color:var(--ink);border-bottom-color:var(--ink);font-weight:500}.tab-btn .badge{font-size:10px;margin-left:6px;padding:1px 6px;border-radius:10px;background:var(--paper-tint);color:var(--text-muted)}.tab-btn.active .badge{background:rgba(var(--ink-rgb),0.1);color:var(--ink)}.tab-panel{display:none}.tab-panel.active{display:block}</style>\n' +
+      '<div class="tabs">' + tabs.map(function(t, i) {
+        return '<button class="tab-btn' + (i === 0 ? ' active' : '') + '" onclick="switchTab(\'' + t.id + '\',this)">' + esc(t.label) + '<span class="badge">' + t.meta + '</span></button>';
+      }).join('') + '</div>\n' +
+      '<div class="tab-panel active" id="tab-skills">' + skillsBody + '</div>\n' +
+      '<div class="tab-panel" id="tab-diagrams">' + diagBody + '</div>\n' +
+      '<div class="tab-panel" id="tab-commands">' + cmdBody + '</div>\n' +
+      '<div class="tab-panel" id="tab-global">' + globalBody + '</div>\n' +
+      '<script>function switchTab(id,btn){document.querySelectorAll(".tab-btn").forEach(function(b){b.classList.remove("active")});btn.classList.add("active");document.querySelectorAll(".tab-panel").forEach(function(p){p.classList.remove("active")});document.getElementById("tab-"+id).classList.add("active");window.location.hash=id}</script>\n' +
+      '<script>var h=window.location.hash.replace("#","");if(h){var b=document.querySelector(".tab-btn[onclick*=\'"+h+"\']");if(b)switchTab(h,b)}</script>';
+
+    res.send(pageShell('能力目录', 'Claude Code 能力目录', body, 'catalog', null));
   });
 
   // Workspace sub-page — scan project directories
@@ -1353,56 +1311,6 @@ function startServer() {
     res.send(html2);
   });
 
-  // Diagrams index — only skills with references/system-diagram.html
-  app.get('/diagrams', function(req, res) {
-    res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
-    var diagrams = [];
-    var seen = {};
-    var dirs = [LOCAL_SKILLS_DIR, SKILLS_DIR];
-    dirs.forEach(function(dir) {
-      if (!fs.existsSync(dir)) return;
-      listDirs(dir).forEach(function(name) {
-        if (seen[name]) return;
-        seen[name] = true;
-        var filePath = path.join(dir, name, 'references', 'system-diagram.html');
-        if (!fs.existsSync(filePath)) return;
-        var cnName = getChineseName(name);
-        diagrams.push({ skill: name, file: 'system-diagram.html', displayName: cnName });
-      });
-    });
-    diagrams.sort(function(a, b) { return a.displayName.localeCompare(b.displayName, 'zh-CN'); });
-    var cards = diagrams.map(function(d) {
-      var words = d.skill.split(/[-_]/).filter(function(w) { return w.length > 0; });
-      var mono = words.length >= 2 ? (words[0][0] + words[words.length-1][0]).toUpperCase() : d.skill.substring(0,2).toUpperCase();
-      return '<a href="/skill-html/' + esc(d.skill) + '/system-diagram.html" class="diagram-card" target="_blank">' +
-        '<div class="card-mono">' + esc(mono) + '</div>' +
-        '<div class="card-info">' +
-          '<div class="card-name">' + esc(d.displayName) + '</div>' +
-          '<div class="card-sub">' + esc(d.skill) + '</div>' +
-          '<div class="card-link">打开结构图 →</div>' +
-        '</div>' +
-      '</a>';
-    }).join('\n');
-
-    var body = '<style>\n' +
-      '.diagram-grid{display:grid;grid-template-columns:repeat(auto-fill, minmax(320px, 1fr));gap:12px;margin-top:8px}\n' +
-      '.diagram-card{background:var(--paper);padding:20px;display:flex;align-items:flex-start;gap:14px;transition:transform .15s,box-shadow .15s;box-shadow:var(--shadow-border),var(--shadow-card);text-decoration:none;color:inherit}\n' +
-      '.diagram-card:hover{transform:translateY(-1px);box-shadow:var(--shadow-border),var(--shadow-card-hover)}\n' +
-      '.diagram-card .card-mono{flex-shrink:0;width:44px;height:44px;background:var(--ink);color:var(--paper);display:flex;align-items:center;justify-content:center;font-family:"JetBrains Mono",monospace;font-size:14px;font-weight:500}\n' +
-      '.diagram-card .card-info{flex:1;min-width:0}\n' +
-      '.diagram-card .card-name{font-size:16px;font-weight:300;letter-spacing:-0.01em;line-height:1.35}\n' +
-      '.diagram-card .card-sub{font-size:11px;font-family:"JetBrains Mono",monospace;color:var(--text-muted);margin-top:1px}\n' +
-      '.diagram-card .card-desc{font-size:11px;color:var(--text-secondary);font-weight:300;line-height:1.5;margin-top:6px}\n' +
-      '.diagram-card .card-link{font-size:11px;color:var(--ink);font-weight:500;margin-top:6px}\n' +
-      '.back-link{display:inline-block;margin-bottom:20px;font-size:13px;font-weight:300;color:var(--text-secondary);text-decoration:none;border:1px solid var(--border);padding:6px 16px;transition:all .15s}\n' +
-      '.back-link:hover{border-color:var(--ink);color:var(--ink)}\n' +
-      '</style>\n' +
-      '<a class="back-link" href="/">\u2190 \u8FD4\u56DE\u5DE5\u5177\u67B6</a>' +
-      '<div class="diagram-grid">' + cards + '</div>';
-
-    res.send(pageShell('\u7ED3\u6784\u56FE', 'Skill HTML \u67B6\u6784\u56FE', body, null, diagrams.length));
-  });
-
   // Serve individual HTML from skill references/
   app.get('/skill-html/:skill/:file', function(req, res) {
     var fp = safeResolve(SKILLS_DIR, req.params.skill, 'references', req.params.file);
@@ -1451,36 +1359,6 @@ function startServer() {
       if (typeMatch) tipType = typeMatch[1];
 
       return { title: title, desc: desc, body: md, type: tipType };
-    }
-
-    function renderMarkdown(md) {
-      var body = md.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-      // Remove the h1 line (title is shown separately)
-      body = body.replace(/^#\s+.*\n/, '');
-      // Code blocks
-      body = body.replace(/```(\w*)\n([\s\S]*?)```/g, function(_, lang, code) {
-        return '<pre><code>' + code.replace(/\n$/, '') + '</code></pre>';
-      });
-      // Inline code
-      body = body.replace(/`([^`]+)`/g, '<code>$1</code>');
-      // Bold
-      body = body.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
-      // Italic
-      body = body.replace(/\*([^*]+)\*/g, '<em>$1</em>');
-      // Links
-      body = body.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank">$1</a>');
-      // Headings
-      body = body.replace(/^### (.+)/gm, '<h3>$1</h3>');
-      body = body.replace(/^## (.+)/gm, '<h2>$1</h2>');
-      // Unordered list items
-      body = body.replace(/^- (.+)/gm, '<li>$1</li>');
-      // Wrap consecutive <li> in <ul>
-      body = body.replace(/(<li>.*<\/li>\n?)+/g, '<ul>$&</ul>');
-      // Paragraphs: wrap non-empty, non-tag lines
-      body = body.replace(/^(?!<[a-z]|$)(.+)$/gm, '<p>$1</p>');
-      // Clean up empty <p>
-      body = body.replace(/<p>\s*<\/p>/g, '');
-      return body;
     }
 
     app.get('/tips', function(req, res) {
@@ -1758,282 +1636,9 @@ function startServer() {
     });
   });
 
-  // Design spec page
-  app.get('/design-spec', function(req, res) {
-    var md = read(path.join(PROJECT_DIR, 'design-spec.md'));
-    if (!md) return res.status(500).send('design-spec.md missing');
-    var html = renderMarkdown(md);
-    var full = pageShell('设计规范', '设计规范', html, 'design-spec', md.split('\n').length);
-    res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
-    res.type('html').send(full);
-  });
-
-  // Repo spec page
-  app.get('/repo-spec', function(req, res) {
-    var md = read(path.join(PROJECT_DIR, 'repo-spec.md'));
-    if (!md) return res.status(500).send('repo-spec.md missing');
-    var html = renderMarkdown(md);
-    var full = pageShell('工程规范', '工程规范', html, 'repo-spec', md.split('\n').length);
-    res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
-    res.type('html').send(full);
-  });
-
-  // Global constitution (renders CLAUDE.md)
-  app.get('/global', function(req, res) {
-    var claudeMdPath = path.join(os.homedir(), '.claude', 'CLAUDE.md');
-    var md = read(claudeMdPath);
-    if (!md) return res.status(500).send('CLAUDE.md not found at ' + claudeMdPath);
-    var html = renderMarkdown(md);
-    var full = pageShell('全局宪法', '全局宪法', html, 'global', md.split('\n').length);
-    res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
-    res.type('html').send(full);
-  });
-
-  // --- Minds (人物思维顾问) ---
-  var MINDS_CATEGORIES = ['影视/创作','设计/艺术','社会/政治','教育/学习','文学/人文','科学/技术','营销/传播','商业/经济','哲学/思想','人工智能','其他'];
-
-  app.get('/minds', function(req, res) {
-    var minds = loadPerspectives();
-    if (!minds.length) return res.status(500).send('perspectives not found');
-
-    // Build category counts
-    var catCounts = {};
-    minds.forEach(function(m) { var c = m.category || '其他'; catCounts[c] = (catCounts[c] || 0) + 1; });
-
-    // Category nav
-    var catNav = '<div class="cat-nav" id="catNav"><button class="cat-nav-btn active" data-cat="all" onclick="setMindFilter(\'all\')">全部<span class="cnt">' + minds.length + '</span></button>';
-    MINDS_CATEGORIES.forEach(function(cat) {
-      if (catCounts[cat]) {
-        catNav += '<button class="cat-nav-btn" data-cat="' + cat + '" onclick="setMindFilter(\'' + cat + '\')">' + cat + '<span class="cnt">' + (catCounts[cat] || 0) + '</span></button>';
-      }
-    });
-    catNav += '</div>';
-
-    // Card grid
-    var cardsHtml = minds.map(function(ch, idx) {
-      var tags = (ch.modelPills || []).slice(0, 3).map(function(m) { return '<span>' + esc(m) + '</span>'; }).join('');
-      var colorIdx = idx % 5;
-      var colors = ['cinnabar','azure','malachite','indigo','ochre'];
-      return '<div class="mind-card" data-cat="' + esc(ch.category) + '" data-id="' + ch.id + '" onclick="location=\'/minds/' + encodeURIComponent(ch.id) + '\'">' +
-        '<div class="mind-card-bar bar-' + colors[colorIdx] + '"></div>' +
-        '<div class="mind-card-body">' +
-          '<div class="mind-card-name">' + esc(ch.name_cn) + '</div>' +
-          '<div class="mind-card-en">' + esc(ch.name_en) + '</div>' +
-          '<div class="mind-card-line">' + esc(ch.oneliner) + '</div>' +
-          (tags ? '<div class="mind-card-pills">' + tags + '</div>' : '') +
-        '</div>' +
-      '</div>';
-    }).join('\n');
-
-    var html = '<!DOCTYPE html>\n<html lang="zh-CN">\n<head>\n<meta charset="UTF-8">\n<meta name="viewport" content="width=device-width,initial-scale=1.0">\n<title>' + minds.length + ' 位思维顾问 · Agentboard</title>\n<link rel="icon" href="data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" rx="4" fill="#002FA7"/><text x="16" y="22" text-anchor="middle" font-family="Inter,sans-serif" font-size="16" font-weight="600" fill="white">思</text></svg>') + '">\n<link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600&family=Noto+Sans+SC:wght@200;300;400;500;700&family=Noto+Serif+SC:wght@400;500;600;700;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">\n<style>\n' +
-      ':root{--ink:#141413;--paper:#faf9f5;--paper-tint:#f5f4ed;--cinnabar:#d97757;--cinnabar-bg:rgba(217,119,87,0.08);--azure:#5088b0;--azure-bg:rgba(80,136,176,0.08);--malachite:#509070;--malachite-bg:rgba(80,144,112,0.08);--indigo:#6058a8;--indigo-bg:rgba(96,88,168,0.08);--ochre:#b89850;--ochre-bg:rgba(184,152,80,0.08);--mono:"JetBrains Mono","IBM Plex Mono",monospace;--serif:"Noto Serif SC","Source Serif 4",Georgia,serif;--sans:"DM Sans","Noto Sans SC",system-ui,sans-serif}' +
-      '*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}' +
-      'body{background:var(--paper);color:var(--ink);font-family:"Noto Sans SC","DM Sans",system-ui,sans-serif;font-weight:400;line-height:1.7;-webkit-font-smoothing:antialiased}' +
-      '.topbar{display:flex;align-items:center;gap:12px;padding:10px 24px;background:#fff;border-bottom:1px solid rgba(0,0,0,0.06);position:sticky;top:0;z-index:10}' +
-      '.topbar a{font-size:13px;color:#002FA7;text-decoration:none;font-family:var(--mono);letter-spacing:.04em}' +
-      '.topbar a:hover{opacity:.7}' +
-      '.topbar .sep{color:rgba(0,0,0,0.15)}' +
-      '.hero{padding:64px 24px 40px;text-align:center;max-width:800px;margin:0 auto}' +
-      '.hero .eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.15em;color:var(--cinnabar);opacity:.8;margin-bottom:20px}' +
-      '.hero h1{font-family:var(--serif);font-size:clamp(2.6rem,5vw,4rem);font-weight:900;line-height:1.06;letter-spacing:-0.02em}' +
-      '.hero h1 em{font-style:normal;color:var(--cinnabar)}' +
-      '.hero .deck{font-size:15px;color:rgba(20,20,19,0.5);max-width:480px;margin:12px auto 0;line-height:1.7}' +
-      '.cat-nav{display:flex;flex-wrap:wrap;justify-content:center;gap:6px;max-width:1080px;margin:0 auto 24px;padding:0 24px}' +
-      '.cat-nav-btn{padding:5px 14px;font-size:12px;font-family:var(--mono);letter-spacing:.04em;background:var(--paper-tint);border:1px solid rgba(0,0,0,0.08);color:rgba(20,20,19,0.55);cursor:pointer;border-radius:20px;transition:all .15s;display:inline-flex;align-items:center;gap:5px}' +
-      '.cat-nav-btn:hover{border-color:var(--cinnabar);color:var(--cinnabar)}' +
-      '.cat-nav-btn.active{background:var(--ink);color:var(--paper);border-color:var(--ink)}' +
-      '.cat-nav-btn .cnt{font-size:10px;opacity:.6}' +
-      '.card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:20px;max-width:1200px;margin:0 auto;padding:0 24px 80px}' +
-      '.mind-card{background:#fff;cursor:pointer;transition:all .25s;display:flex;flex-direction:column;border-radius:8px;border:1px solid rgba(0,0,0,0.06)}' +
-      '.mind-card:hover{transform:translateY(-2px);box-shadow:0 4px 8px rgba(0,0,0,0.06),0 20px 32px rgba(0,0,0,0.06);border-color:rgba(0,0,0,0.12)}' +
-      '.mind-card-bar{height:3px;flex-shrink:0}' +
-      '.bar-cinnabar{background:var(--cinnabar)}' +
-      '.bar-azure{background:var(--azure)}' +
-      '.bar-malachite{background:var(--malachite)}' +
-      '.bar-indigo{background:var(--indigo)}' +
-      '.bar-ochre{background:var(--ochre)}' +
-      '.mind-card-body{padding:22px 24px 20px;flex:1;display:flex;flex-direction:column}' +
-      '.mind-card-name{font-family:var(--serif);font-size:1.3rem;font-weight:700;color:var(--ink);line-height:1.2}' +
-      '.mind-card-en{font-size:13px;color:rgba(20,20,19,0.4);font-style:italic;margin-bottom:8px}' +
-      '.mind-card-line{font-size:13px;color:rgba(20,20,19,0.55);line-height:1.55;flex:1}' +
-      '.mind-card-pills{margin-top:12px;display:flex;flex-wrap:wrap;gap:5px}' +
-      '.mind-card-pills span{font-family:var(--mono);font-size:10px;padding:2px 8px;border-radius:10px;background:var(--paper-tint);color:rgba(20,20,19,0.45);letter-spacing:.04em}' +
-      '.mind-card.hidden{display:none}' +
-      '.back-link{display:inline-block;margin:40px 0 0 24px;font-size:13px;color:var(--cinnabar);text-decoration:none;font-family:var(--mono);letter-spacing:.04em}' +
-      '@media(max-width:768px){.hero h1{font-size:2rem}.card-grid{grid-template-columns:1fr;padding:0 16px 60px}.hero{padding:40px 16px 28px}}' +
-      '</style>\n</head>\n<body>\n' +
-      '<div class="topbar"><a href="/">Agentboard</a><span class="sep">/</span><a href="/minds" style="color:var(--ink);font-weight:500">思维顾问</a><span class="sep">·</span><a href="/skills">技能</a></div>\n' +
-      '<div class="hero"><div class="eyebrow">Huashu Nuwa · Perspective Catalog</div><h1>' + minds.length + ' 位人物<br><em>思维顾问</em></h1><p class="deck">女娲蒸馏产物。每个人物是独立可用的思维镜片——点击任意一张卡片，进入那个人物的操作系统。</p></div>\n' +
-      catNav +
-      '<div class="card-grid" id="cardGrid">' + cardsHtml + '</div>\n' +
-      '<a class="back-link" href="/">← 返回工具架</a>\n' +
-      '<script>\n' +
-      'function setMindFilter(cat){\n' +
-      '  document.querySelectorAll(".cat-nav-btn").forEach(function(b){b.classList.remove("active");});\n' +
-      '  document.querySelectorAll(".cat-nav-btn").forEach(function(b){if(b.dataset.cat===cat)b.classList.add("active");});\n' +
-      '  document.querySelectorAll(".mind-card").forEach(function(c){\n' +
-      '    if(cat==="all"||c.dataset.cat===cat){c.classList.remove("hidden");}else{c.classList.add("hidden");}\n' +
-      '  });\n' +
-      '}\n' +
-      '<\/script>\n' +
-      '</body>\n</html>';
-    res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
-    res.type('html').send(html);
-  });
-
-  // Individual mind detail
-  app.get('/minds/:id', function(req, res) {
-    var minds = loadPerspectives();
-    var ch = null;
-    for (var i = 0; i < minds.length; i++) {
-      if (minds[i].id === req.params.id) { ch = minds[i]; break; }
-    }
-    if (!ch) return res.status(404).send('perspective not found');
-
-    var bodyHtml = renderMarkdown(ch.body);
-    var triggerBadges = (ch.trigger || '').split(',').map(function(t) {
-      return '<span class="trigger-badge">' + esc(t.trim()) + '</span>';
-    }).join(' ');
-
-    var html = '<!DOCTYPE html>\n<html lang="zh-CN">\n<head>\n<meta charset="UTF-8">\n<meta name="viewport" content="width=device-width,initial-scale=1.0">\n<title>' + esc(ch.name_cn) + ' · 思维顾问</title>\n' +
-      '<link rel="icon" href="data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" rx="4" fill="#002FA7"/><text x="16" y="22" text-anchor="middle" font-family="Inter,sans-serif" font-size="16" font-weight="600" fill="white">思</text></svg>') + '">\n' +
-      '<link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600&family=Noto+Sans+SC:wght@200;300;400;500;700&family=Noto+Serif+SC:wght@400;500;600;700;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">\n' +
-      '<style>\n' +
-      ':root{--ink:#141413;--paper:#faf9f5;--paper-tint:#f5f4ed;--cinnabar:#d97757;--cinnabar-bg:rgba(217,119,87,0.08);--azure:#5088b0;--azure-bg:rgba(80,136,176,0.08);--malachite:#509070;--malachite-bg:rgba(80,144,112,0.08);--indigo:#6058a8;--indigo-bg:rgba(96,88,168,0.08);--ochre:#b89850;--ochre-bg:rgba(184,152,80,0.08);--mono:"JetBrains Mono","IBM Plex Mono",monospace;--serif:"Noto Serif SC","Source Serif 4",Georgia,serif;--sans:"DM Sans","Noto Sans SC",system-ui,sans-serif}' +
-      '*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}' +
-      'body{background:var(--paper);color:var(--ink);font-family:"Noto Sans SC","DM Sans",system-ui,sans-serif;font-weight:400;line-height:1.7;-webkit-font-smoothing:antialiased}' +
-      '.topbar{display:flex;align-items:center;gap:12px;padding:10px 24px;background:#fff;border-bottom:1px solid rgba(0,0,0,0.06);position:sticky;top:0;z-index:10}' +
-      '.topbar a{font-size:13px;color:#002FA7;text-decoration:none;font-family:var(--mono);letter-spacing:.04em}' +
-      '.topbar a:hover{opacity:.7}' +
-      '.detail-hero{max-width:760px;margin:0 auto;padding:48px 24px 28px;border-bottom:1px solid rgba(0,0,0,0.08)}' +
-      '.detail-hero .dh-name{font-family:var(--serif);font-size:clamp(2rem,4vw,3.2rem);font-weight:900;line-height:1.06;letter-spacing:.01em;margin-bottom:8px}' +
-      '.detail-hero .dh-en{font-size:1rem;color:rgba(20,20,19,0.4);font-style:italic;margin-bottom:12px}' +
-      '.detail-hero .dh-line{font-family:var(--serif);font-size:1.05rem;color:rgba(20,20,19,0.6);line-height:1.55;margin-bottom:16px}' +
-      '.trigger-strip{display:flex;flex-wrap:wrap;gap:5px;margin-top:12px}' +
-      '.trigger-badge{font-family:var(--mono);font-size:10px;padding:3px 10px;border-radius:12px;background:var(--paper-tint);color:rgba(20,20,19,0.45);border:1px solid rgba(0,0,0,0.06);letter-spacing:.04em}' +
-      '.detail-body{max-width:760px;margin:0 auto;padding:32px 24px 80px}' +
-      '.detail-body h1{font-family:var(--serif);font-size:1.8rem;font-weight:700;color:var(--ink);margin:40px 0 16px;letter-spacing:.01em;line-height:1.25}' +
-      '.detail-body h1:first-child{margin-top:0}' +
-      '.detail-body h2{font-family:var(--serif);font-size:1.25rem;font-weight:700;color:var(--ink);margin:36px 0 12px;padding-bottom:8px;border-bottom:1px solid rgba(0,0,0,0.08);line-height:1.35}' +
-      '.detail-body h3{font-family:var(--serif);font-size:1.05rem;font-weight:600;color:var(--ink);margin:24px 0 8px;line-height:1.4}' +
-      '.detail-body p{font-size:15px;line-height:1.85;color:rgba(20,20,19,0.75);margin:10px 0}' +
-      '.detail-body ul,.detail-body ol{padding-left:24px;margin:10px 0}' +
-      '.detail-body li{font-size:14px;line-height:1.85;color:rgba(20,20,19,0.7);margin:4px 0}' +
-      '.detail-body blockquote{border-left:3px solid var(--cinnabar);padding:8px 20px;margin:16px 0;color:rgba(20,20,19,0.6);font-family:var(--serif);font-size:1rem;line-height:1.7;background:var(--cinnabar-bg);border-radius:0 8px 8px 0}' +
-      '.detail-body code{font-family:var(--mono);font-size:12px;background:var(--paper-tint);padding:1px 6px;border-radius:3px;color:var(--cinnabar)}' +
-      '.detail-body pre{background:#1e1e1e;color:#e0e0e0;padding:20px 24px;overflow-x:auto;font-size:13px;line-height:1.6;margin:16px 0;border-radius:8px}' +
-      '.detail-body pre code{background:none;padding:0;color:inherit;font-size:12px}' +
-      '.detail-body hr{border:none;border-top:1px solid rgba(0,0,0,0.08);margin:36px 0}' +
-      '.detail-body strong{font-weight:600;color:var(--ink)}' +
-      '.detail-body em{color:rgba(20,20,19,0.55)}' +
-      '.detail-body table{width:100%;border-collapse:collapse;margin:16px 0;font-size:14px}' +
-      '.detail-body th,.detail-body td{padding:8px 14px;text-align:left;border:1px solid rgba(0,0,0,0.08)}' +
-      '.detail-body th{background:var(--paper-tint);font-weight:500;font-size:12px;font-family:var(--mono);letter-spacing:.04em}' +
-      '.back-link{display:inline-block;margin-top:32px;font-size:13px;color:var(--cinnabar);text-decoration:none;font-family:var(--mono);letter-spacing:.04em;border:1px solid rgba(0,0,0,0.1);padding:6px 16px;border-radius:6px}' +
-      '.back-link:hover{border-color:var(--cinnabar)}' +
-      '@media(max-width:768px){.detail-hero{padding:32px 16px 24px}.detail-body{padding:20px 16px 60px}.detail-hero .dh-name{font-size:1.6rem}.detail-body h1{font-size:1.4rem}.detail-body h2{font-size:1.15rem}.detail-body pre{padding:14px 16px}}' +
-      '</style>\n</head>\n<body>\n' +
-      '<div class="topbar"><a href="/">Agentboard</a><span class="sep">/</span><a href="/minds">思维顾问</a><span class="sep">/</span><a style="color:var(--ink);font-weight:500">' + esc(ch.name_cn) + '</a></div>\n' +
-      '<div class="detail-hero">' +
-      '<h1 class="dh-name">' + esc(ch.name_cn) + '</h1>' +
-      '<div class="dh-en">' + esc(ch.name_en) + '</div>' +
-      '<div class="dh-line">' + esc(ch.oneliner) + '</div>' +
-      '<div class="trigger-strip">' + triggerBadges + '</div>' +
-      '</div>\n' +
-      '<div class="detail-body">' + bodyHtml + '\n<a class="back-link" href="/minds">← 返回思维顾问目录</a>\n</div>\n' +
-      '</body>\n</html>';
-    res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
-    res.type('html').send(html);
-  });
-
-  function pageShell(title, heading, body, active, lines) {
-    return '<!DOCTYPE html>\n<html lang=\"zh-CN\">\n<head>\n<meta charset=\"UTF-8\">\n<meta name=\"viewport\" content=\"width=device-width,initial-scale=1.0\">\n<title>' + esc(title) + ' · Agentboard</title>\n<link rel=\"icon\" href=\"data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 32 32\'%3E%3Crect width=\'32\' height=\'32\' rx=\'4\' fill=\'%23002FA7\'/%3E%3Ctext x=\'16\' y=\'22\' text-anchor=\'middle\' font-family=\'Inter,sans-serif\' font-size=\'16\' font-weight=\'600\' fill=\'white\'%3E法%3C/text%3E%3C/svg%3E">\n<link href=\"https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600&family=Noto+Sans+SC:wght@200;300;400;500;700&family=JetBrains+Mono:wght@400;500&display=swap\" rel=\"stylesheet\">\n<style>\n:root{--ink:#002FA7;--ink-rgb:0,47,167;--paper:#FAFAF8;--paper-tint:#F2F2F0;--border:#E0E0DC;--text:#0A0A0A;--text-secondary:#555;--text-muted:#999;--shadow-border:0 0 0 1px rgba(0,0,0,0.08);--shadow-card:0 1px 3px rgba(0,0,0,0.06);--shadow-card-hover:0 2px 8px rgba(0,0,0,0.1);font-family:\'Inter\',\'Noto Sans SC\',sans-serif;color:var(--text);background:var(--paper);font-weight:300;font-size:16px}*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}body{min-height:100vh}.header{background:var(--ink);padding:14px 32px;display:flex;align-items:center;gap:24px}.header-brand{font-family:\'JetBrains Mono\',monospace;font-size:12px;font-weight:500;letter-spacing:.06em;color:var(--paper);text-decoration:none;white-space:nowrap;opacity:.9}.header-back{font-family:\'JetBrains Mono\',monospace;font-size:11px;font-weight:400;color:var(--paper);text-decoration:none;opacity:.7;margin-left:auto;transition:opacity .15s}.header-back:hover{opacity:1}.page{max-width:1080px;margin:0 auto;padding:40px 32px 80px}.page h1{font-size:28px;font-weight:200;letter-spacing:-0.02em;color:var(--ink);margin-bottom:24px}.page h2{font-size:18px;font-weight:500;color:var(--text);margin:36px 0 12px;padding-top:16px;border-top:1px solid var(--border)}.page h3{font-size:15px;font-weight:500;color:var(--text);margin:24px 0 8px}.page p,.page li{font-size:14px;line-height:1.8;color:var(--text-secondary);margin:6px 0}.page ul,.page ol{padding-left:20px;margin:8px 0}.page strong{font-weight:500;color:var(--text)}.page code{font-family:\'JetBrains Mono\',monospace;font-size:12px;background:var(--paper-tint);padding:1px 5px}.page pre{background:#f5f5f5;padding:16px;overflow-x:auto;font-size:12px;line-height:1.6;margin:12px 0}.page pre code{background:none;padding:0}.page table{width:100%;border-collapse:collapse;margin:12px 0;font-size:13px}.page th,.page td{padding:8px 12px;border:1px solid var(--border);text-align:left;font-size:13px}.page th{background:var(--paper-tint);font-weight:500;font-size:12px}.page blockquote{border-left:3px solid var(--ink);margin:12px 0;padding:4px 16px;color:var(--text-secondary);font-size:13px}.page hr{border:none;border-top:1px solid var(--border);margin:24px 0}.page em{color:var(--text-secondary)}.line-count{font-size:11px;color:var(--text-muted);margin-bottom:20px;font-family:\'JetBrains Mono\',monospace}.back-link{display:inline-block;margin-top:40px;font-size:13px;color:var(--ink);text-decoration:none;border:1px solid var(--border);padding:6px 16px}.back-link:hover{border-color:var(--ink)}\n</style>\n</head>\n<body>\n<div class=\"header\"><a class=\"header-brand\" href=\"/\">AGENTBOARD</a><a class=\"header-back\" href=\"/\">&#8592; 返回工具架</a></div>\n<div class=\"page\"><div class=\"line-count\">' + (lines || '') + ' 行</div>\n' + body + '\n</div>\n</body>\n</html>';
-  }
-
-  function renderMarkdown(md) {
-    md = md.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
-    var lines = md.split('\n');
-    var out = '';
-    var inCode = false, inTable = false, inList = false, inBlockquote = false;
-    for (var i = 0; i < lines.length; i++) {
-      var line = lines[i];
-      // code blocks
-      if (line.startsWith('```')) {
-        if (inCode) { out += '</code></pre>\n'; inCode = false; }
-        else { var lang = line.slice(3).trim(); out += '<pre><code' + (lang ? ' class="language-' + esc(lang) + '"' : '') + '>'; inCode = true; }
-        continue;
-      }
-      if (inCode) { out += esc(line) + '\n'; continue; }
-      // tables
-      if (line.startsWith('|') && line.endsWith('|')) {
-        if (!inTable) { inTable = true; out += '<table>\n'; }
-        var isSep = /^\|[\s\-:]+\|$/.test(line);
-        if (isSep) continue;
-        var cells = line.slice(1, -1).split('|').map(function(c) { return c.trim(); });
-        var tag = inTable && out.indexOf('</table>') === -1 && out.lastIndexOf('<tr>') === -1 ? 'th' : 'td';
-        out += '<tr>' + cells.map(function(c) { return '<' + tag + '>' + renderInline(c) + '</' + tag + '>'; }).join('') + '</tr>\n';
-        continue;
-      } else if (inTable) {
-        out += '</table>\n';
-        inTable = false;
-      }
-      // blockquotes
-      if (line.startsWith('> ')) {
-        if (!inBlockquote) { inBlockquote = true; out += '<blockquote>\n'; }
-        out += renderInline(line.slice(2)) + '<br>\n';
-        continue;
-      } else if (inBlockquote) {
-        out += '</blockquote>\n';
-        inBlockquote = false;
-      }
-      // headings
-      if (line.startsWith('### ')) { out += '<h3>' + renderInline(line.slice(4)) + '</h3>\n'; continue; }
-      if (line.startsWith('## ')) { out += '<h2 id="' + slug(line.slice(3)) + '">' + renderInline(line.slice(3)) + '</h2>\n'; continue; }
-      if (line.startsWith('# ')) { out += '<h1>' + renderInline(line.slice(2)) + '</h1>\n'; continue; }
-      // hr
-      if (/^\-{3,}$/.test(line.trim())) { out += '<hr>\n'; continue; }
-      // lists
-      var listM = line.match(/^(\s*)[\-*]\s+(.*)/);
-      if (listM) {
-        if (!inList) { inList = true; out += '<ul>\n'; }
-        out += '<li>' + renderInline(listM[2]) + '</li>\n';
-        continue;
-      }
-      var olM = line.match(/^(\s*)\d+\.\s+(.*)/);
-      if (olM) {
-        if (!inList) { inList = true; out += '<ol>\n'; }
-        out += '<li>' + renderInline(olM[2]) + '</li>\n';
-        continue;
-      }
-      if (inList) { out += (out.lastIndexOf('<ol>') > out.lastIndexOf('<ul>') ? '</ol>\n' : '</ul>\n'); inList = false; }
-      // paragraph
-      if (line.trim()) { out += '<p>' + renderInline(line) + '</p>\n'; }
-    }
-    if (inCode) out += '</code></pre>\n';
-    if (inTable) out += '</table>\n';
-    if (inList) out += '</ul>\n';
-    if (inBlockquote) out += '</blockquote>\n';
-    return out;
-  }
-
-  function renderInline(text) {
-    return esc(text)
-      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-      .replace(/`([^`]+)`/g, '<code>$1</code>')
-      .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>')
-      .replace(/✅/g, '<span style="color:#1A8A3F">✅</span>')
-      .replace(/❌/g, '<span style="color:#C0392B">❌</span>')
-      .replace(/⬜/g, '<span style="color:var(--text-muted)">⬜</span>');
-  }
-
-  function slug(text) {
-    return text.toLowerCase().replace(/[^\w一-鿿]+/g, '-').replace(/^-|-$/g, '');
-  }
-
-  // Startup items page
-    // Startup items page
-  app.get('/startup', function(req, res) {
-    // Build display-name lookup from tool manifests
+  // Registry page: tabs for startup items + static docs
+  app.get('/registry', function(req, res) {
+    // --- Startup items ---
     var toolLookup = {};
     try {
       var allTools = scanTools();
@@ -2042,7 +1647,6 @@ function startServer() {
         toolLookup[key] = { name: t.name, desc: (t.description || '').split('【')[0].trim() };
       });
     } catch(_) {}
-    // Manual overrides for items without tool manifests
     var manualMeta = {
       'agentboard':       { name: 'Agentboard 服务',  desc: '工具架后台服务 (端口 3099)', group: '核心服务' },
       'start-agentboard': { name: 'Agentboard 启动器', desc: '开机时启动工具架服务', group: '核心服务' },
@@ -2055,9 +1659,7 @@ function startServer() {
       'paseo-daemon':     { name: 'Paseo 远程Agent编排', desc: '手机遥控桌面 Claude Code 的 Agent 编排服务 (:6767)', group: '核心服务' },
       'tailscale-ensure': { name: 'Tailscale 组网隧道', desc: 'WireGuard 加密组网，手机和桌面在同一虚拟局域网', group: '核心服务' }
     };
-    // Group sort order
     var groupOrder = { '核心服务': 0, '通道': 1, 'Agent': 2, '工具': 3, '其他': 9 };
-
     var startupDir = path.join(os.homedir(), 'AppData', 'Roaming', 'Microsoft', 'Windows', 'Start Menu', 'Programs', 'Startup');
     var items = [];
     try {
@@ -2098,26 +1700,50 @@ function startServer() {
         });
       });
     } catch(_) {}
-    // Sort: group order → display name
     items.sort(function(a, b) {
       var ga = groupOrder[a.group] != null ? groupOrder[a.group] : 9;
       var gb = groupOrder[b.group] != null ? groupOrder[b.group] : 9;
       if (ga !== gb) return ga - gb;
       return a.displayName.localeCompare(b.displayName, 'zh-CN');
     });
-
-    var rows = items.map(function(item) {
+    var startupRows = items.map(function(item) {
       var ext = path.extname(item.file).toLowerCase();
       var typeLabel = ext === '.lnk' ? '快捷方式' : ext === '.bat' ? '批处理' : ext === '.vbs' ? 'VBScript' : ext === '.ps1' ? 'PowerShell' : ext === '.cmd' ? 'CMD' : '文件';
       var descCell = item.desc ? '<td style="font-size:11px;color:var(--text-muted);max-width:280px">' + esc(item.desc) + '</td>' : '<td></td>';
       return '<tr><td><strong>' + esc(item.displayName) + '</strong><br><span style="font-size:10px;color:var(--text-muted)">' + esc(item.name) + '</span></td>' + descCell + '<td><code>' + typeLabel + '</code></td><td style="font-size:11px;color:var(--text-muted)">' + esc(item.source) + '</td><td style="font-family:JetBrains Mono,monospace;font-size:11px">' + esc(item.file) + '</td></tr>';
     }).join('');
-    var body = '<p class="sub">开机自启动的应用和脚本。添加：把 .bat/.vbs 快捷方式放入 <code>Startup</code> 文件夹。Agentboard 启动脚本放 <code>~/.agentboard/</code>。</p>' +
-      (items.length ? '<table><tr><th>名称</th><th>简介</th><th>类型</th><th>来源</th><th>文件</th></tr>' + rows + '</table>' : '<p>暂无启动项</p>');
-    var full = pageShell('启动项', '启动项', body, 'startup', items.length);
+    var startupHtml = '<p class="sub">开机自启动的应用和脚本。添加：把 .bat/.vbs 快捷方式放入 <code>Startup</code> 文件夹。Agentboard 启动脚本放 <code>~/.agentboard/</code>。</p>' +
+      (items.length ? '<table><tr><th>名称</th><th>简介</th><th>类型</th><th>来源</th><th>文件</th></tr>' + startupRows + '</table>' : '<p>暂无启动项</p>');
+
+    // --- Static docs ---
+    var designMd = read(path.join(PROJECT_DIR, 'design-spec.md')) || '';
+    var repoMd = read(path.join(PROJECT_DIR, 'repo-spec.md')) || '';
+
+    var tabs = [
+      { id: 'startup', label: '自启动', meta: items.length + '项' },
+      { id: 'design', label: '设计规范', meta: (designMd ? designMd.split('\n').length + '行' : '缺失') },
+      { id: 'repo', label: '工程规范', meta: (repoMd ? repoMd.split('\n').length + '行' : '缺失') }
+    ];
+
+    var body = '<style>.tabs{display:flex;gap:0;border-bottom:2px solid var(--border);margin-bottom:24px}.tab-btn{padding:10px 20px;font-size:13px;font-family:inherit;background:none;border:none;border-bottom:2px solid transparent;margin-bottom:-2px;cursor:pointer;color:var(--text-muted);transition:color .15s,border-color .15s}.tab-btn:hover{color:var(--text)}.tab-btn.active{color:var(--ink);border-bottom-color:var(--ink);font-weight:500}.tab-btn .badge{font-size:10px;margin-left:6px;padding:1px 6px;border-radius:10px;background:var(--paper-tint);color:var(--text-muted)}.tab-btn.active .badge{background:rgba(var(--ink-rgb),0.1);color:var(--ink)}.tab-panel{display:none}.tab-panel.active{display:block}</style>\n' +
+      '<div class="tabs">' + tabs.map(function(t, i) {
+        return '<button class="tab-btn' + (i === 0 ? ' active' : '') + '" onclick="switchTab(\'' + t.id + '\',this)">' + esc(t.label) + '<span class="badge">' + t.meta + '</span></button>';
+      }).join('') + '</div>\n' +
+      '<div class="tab-panel active" id="tab-startup">' + startupHtml + '</div>\n' +
+      '<div class="tab-panel" id="tab-design">' + (designMd ? '<div class="line-count">' + designMd.split('\n').length + ' 行</div>' + renderMarkdown(designMd) : '<p>design-spec.md 缺失</p>') + '</div>\n' +
+      '<div class="tab-panel" id="tab-repo">' + (repoMd ? '<div class="line-count">' + repoMd.split('\n').length + ' 行</div>' + renderMarkdown(repoMd) : '<p>repo-spec.md 缺失</p>') + '</div>\n' +
+      '<script>function switchTab(id,btn){document.querySelectorAll(".tab-btn").forEach(function(b){b.classList.remove("active")});btn.classList.add("active");document.querySelectorAll(".tab-panel").forEach(function(p){p.classList.remove("active")});document.getElementById("tab-"+id).classList.add("active");window.location.hash=id}</script>\n' +
+      '<script>var h=window.location.hash.replace("#","");if(h){var b=document.querySelector(".tab-btn[onclick*=\'"+h+"\']");if(b)switchTab(h,b)}</script>';
+
+    var full = pageShell('注册表', '注册表', body, 'registry', null);
     res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
     res.type('html').send(full);
   });
+
+  function pageShell(title, heading, body, active, lines) {
+    var lineHtml = lines != null ? '<div class="line-count">' + lines + ' 行</div>\n' : '';
+    return '<!DOCTYPE html>\n<html lang=\"zh-CN\">\n<head>\n<meta charset=\"UTF-8\">\n<meta name=\"viewport\" content=\"width=device-width,initial-scale=1.0\">\n<title>' + esc(title) + ' · Agentboard</title>\n<link rel=\"icon\" href=\"data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 32 32\'%3E%3Crect width=\'32\' height=\'32\' rx=\'4\' fill=\'%23002FA7\'/%3E%3Ctext x=\'16\' y=\'22\' text-anchor=\'middle\' font-family=\'Inter,sans-serif\' font-size=\'16\' font-weight=\'600\' fill=\'white\'%3E法%3C/text%3E%3C/svg%3E">\n<link href=\"https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600&family=Noto+Sans+SC:wght@200;300;400;500;700&family=JetBrains+Mono:wght@400;500&display=swap\" rel=\"stylesheet\">\n<style>\n:root{--ink:#002FA7;--ink-rgb:0,47,167;--paper:#FAFAF8;--paper-tint:#F2F2F0;--border:#E0E0DC;--text:#0A0A0A;--text-secondary:#555;--text-muted:#999;--shadow-border:0 0 0 1px rgba(0,0,0,0.08);--shadow-card:0 1px 3px rgba(0,0,0,0.06);--shadow-card-hover:0 2px 8px rgba(0,0,0,0.1);font-family:\'Inter\',\'Noto Sans SC\',sans-serif;color:var(--text);background:var(--paper);font-weight:300;font-size:16px}*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}body{min-height:100vh}.header{background:var(--ink);padding:14px 32px;display:flex;align-items:center;gap:24px}.header-brand{font-family:\'JetBrains Mono\',monospace;font-size:12px;font-weight:500;letter-spacing:.06em;color:var(--paper);text-decoration:none;white-space:nowrap;opacity:.9}.header-back{font-family:\'JetBrains Mono\',monospace;font-size:11px;font-weight:400;color:var(--paper);text-decoration:none;opacity:.7;margin-left:auto;transition:opacity .15s}.header-back:hover{opacity:1}.page{max-width:1080px;margin:0 auto;padding:40px 32px 80px}.page h1{font-size:28px;font-weight:200;letter-spacing:-0.02em;color:var(--ink);margin-bottom:24px}.page h2{font-size:18px;font-weight:500;color:var(--text);margin:36px 0 12px;padding-top:16px;border-top:1px solid var(--border)}.page h3{font-size:15px;font-weight:500;color:var(--text);margin:24px 0 8px}.page p,.page li{font-size:14px;line-height:1.8;color:var(--text-secondary);margin:6px 0}.page ul,.page ol{padding-left:20px;margin:8px 0}.page strong{font-weight:500;color:var(--text)}.page code{font-family:\'JetBrains Mono\',monospace;font-size:12px;background:var(--paper-tint);padding:1px 5px}.page pre{background:#f5f5f5;padding:16px;overflow-x:auto;font-size:12px;line-height:1.6;margin:12px 0}.page pre code{background:none;padding:0}.page table{width:100%;border-collapse:collapse;margin:12px 0;font-size:13px}.page th,.page td{padding:8px 12px;border:1px solid var(--border);text-align:left;font-size:13px}.page th{background:var(--paper-tint);font-weight:500;font-size:12px}.page blockquote{border-left:3px solid var(--ink);margin:12px 0;padding:4px 16px;color:var(--text-secondary);font-size:13px}.page hr{border:none;border-top:1px solid var(--border);margin:24px 0}.page em{color:var(--text-secondary)}.line-count{font-size:11px;color:var(--text-muted);margin-bottom:20px;font-family:\'JetBrains Mono\',monospace}.back-link{display:inline-block;margin-top:40px;font-size:13px;color:var(--ink);text-decoration:none;border:1px solid var(--border);padding:6px 16px}.back-link:hover{border-color:var(--ink)}\n</style>\n</head>\n<body>\n<div class=\"header\"><a class=\"header-brand\" href=\"/\">AGENTBOARD</a><a class=\"header-back\" href=\"/\">&#8592; 返回工具架</a></div>\n<div class=\"page\">' + lineHtml + body + '\n</div>\n</body>\n</html>';
+  }
 
   // Home: embed initial stats for zero-loading-flash dashboard
   app.get('/', function(req, res) {
@@ -2140,31 +1766,16 @@ function startServer() {
     var assetSkillCount = fs.existsSync(SKILLS_DIR) ? listDirs(SKILLS_DIR).length : 0;
     var assetCommandCount = BUILTIN_COMMANDS.length;
     var assetTipCount = fs.existsSync(TIPS_DIR) ? fs.readdirSync(TIPS_DIR).filter(function(f){ return f.endsWith('.md'); }).length : 0;
-    var designSpecLines = (read(path.join(PROJECT_DIR, 'design-spec.md')) || '').split('\n').length;
-    var repoSpecLines = (read(path.join(PROJECT_DIR, 'repo-spec.md')) || '').split('\n').length;
-    var globalLines = (read(path.join(os.homedir(), '.claude', 'CLAUDE.md')) || '').split('\n').length;
     var apiEndpoints = 0;
     try { app._router.stack.forEach(function(r){ if (r.route && r.route.path && r.route.path.indexOf('/api/') === 0) apiEndpoints++; }); } catch(_) {}
     var cronTasks = (function(){
       try { var schedSt = JSON.parse(fs.readFileSync(path.join(os.homedir(), '.scheduler', 'scheduler-state.json'), 'utf8')); return Object.keys(schedSt.tasks || {}).length; } catch(_) { return 0; }
     })();
-    var startupCount = (function(){
-      var n = 0;
-      try {
-        var sd = path.join(os.homedir(), 'AppData', 'Roaming', 'Microsoft', 'Windows', 'Start Menu', 'Programs', 'Startup');
-        if (fs.existsSync(sd)) fs.readdirSync(sd).forEach(function(f){ if (f !== 'desktop.ini') n++; });
-      } catch(_) {}
-      try {
-        var abs = ['.bat', '.vbs', '.ps1'];
-        fs.readdirSync(PROJECT_DIR).forEach(function(f){ if (abs.indexOf(path.extname(f).toLowerCase()) !== -1) n++; });
-      } catch(_) {}
-      return n;
-    })();
     var snap = JSON.stringify({
       todayCalls: tdy,
       byCaller: { agent: tc.agent||0, browser: tc.browser||0, unknown: tc.unknown||0 },
       byAction: { list: ta.list||0, control: (ta.control||0)+(ta.detail||0), admin: ta.admin||0 },
-      assets: { tools: assetToolCount, skills: assetSkillCount, commands: assetCommandCount, tips: assetTipCount, designSpec: designSpecLines, repoSpec: repoSpecLines, global: globalLines, api: apiEndpoints, cron: cronTasks, startup: startupCount, minds: loadPerspectives().length }
+      assets: { tools: assetToolCount, skills: assetSkillCount, commands: assetCommandCount, tips: assetTipCount, api: apiEndpoints, cron: cronTasks, registry: 1 }
     });
     html = html.replace('<!--STATS_SNAPSHOT-->', '<script>window.__stats=' + snap + '</script>');
     res.type('html').send(html);

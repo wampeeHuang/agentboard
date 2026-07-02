@@ -4,7 +4,7 @@
   "description": "【用途】比特浏览器多账号矩阵统一面板。自动扫描 CDP 端口发现已登录平台窗口（B站/小红书/公众号等），提供 Web 仪表盘和 REST API。【何时用】需要查看当前打开了哪些平台账号、要对指定账号窗口执行自动化操作时。【何时不用】只操作单个浏览器→直接用 CDP。【返回】Web 面板 :15502，API :15502/api/accounts【延迟】<1s",
   "icon": "🎛",
   "version": "1.0.0",
-  "category": "运营",
+  "category": "职能",
   "order": 10,
   "port": 15502,
   "url": "http://localhost:15502",

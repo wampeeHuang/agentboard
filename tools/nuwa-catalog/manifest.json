@@ -1,7 +1,7 @@
 {
   "name": "人物思维顾问局",
   "id": "nuwa-catalog",
-  "description": "【用途】39位人物思维顾问目录站。Anthropic暖象牙白+陶土色系。【何时用】需要不同人物视角分析问题(perspective-router调这里的人物列表)。【何时不用】不需要切换视角→不启动。【返回】Web UI :3090，公开minds.evopearl.com【端口】3090",
+  "description": "【用途】人物思维顾问目录站。Anthropic暖象牙白+陶土色系。人物持续增减，具体数量以站内实际为准。【何时用】需要不同人物视角分析问题(perspective-router调这里的人物列表)。【何时不用】不需要切换视角→不启动。【返回】Web UI :3090，公开minds.evopearl.com【端口】3090",
   "icon": "💭",
   "version": "1.0.0",
   "category": "查阅",

@@ -222,16 +222,10 @@ OCR:  Tesseract OCR (pytesseract)
       <span class="header-cn">AGENTBOARD</span>
     </a>
     <div class="header-nav" id="assetBar">
-      <a href="/global" title="Claude Code 全局宪法" id="assetGlobal">全局宪法</a>
-      <a href="/design-spec" title="设计规范" id="assetDesignSpec">设计规范</a>
-      <a href="/repo-spec" title="工程规范" id="assetRepoSpec">工程规范</a>
+      <a href="/registry" title="自启动 + 设计规范 + 工程规范" id="assetRegistry" target="_blank">注册表</a>
       <span class="nav-sep"></span>
-      <a href="/skills" title="Claude Code 技能" id="assetSkills">技能</a>
-      <a href="/diagrams" title="技能 HTML 架构图" id="assetDiagrams">架构图</a>
-	      <a href="/commands" title="Claude Code 内置命令参考" id="assetCommands">命令</a>
-      <a href="/tips" title="操作日志" id="assetTips">操作日志</a>
-      <a href="/api" title="API 文档（含 MCP JSON-RPC 接口说明）" id="assetApi">API</a>
-      <a href="/startup" title="开机自启动" id="assetStartup">开机自启动</a>
+      <a href="/tips" title="操作日志" id="assetTips" target="_blank">操作日志</a>
+      <a href="/api" title="API 文档（含 MCP JSON-RPC 接口说明）" id="assetApi" target="_blank">API</a>
     </div>
   </div>
   <div class="header-philo">文件即注册，状态即界面 · MCP (AI) + REST (人) 双平面</div>
@@ -540,16 +534,9 @@ function getToolOwner(t) {
     set('callControl', s.byAction.control);
     if (s.assets) {
       var setT = function(id, label, count) { var el = document.getElementById(id); if (el) el.title = label + ' · ' + count; };
-      setT('assetTools', '工具注册表', s.assets.tools + ' 个');
-      setT('assetSkills', 'Claude Code 技能', s.assets.skills + ' 个');
-	      setT('assetCommands', 'Claude Code 内置命令', s.assets.commands + ' 个');
+      setT('assetRegistry', '自启动 + 设计规范 + 工程规范', '1 页');
       setT('assetTips', '操作日志', s.assets.tips + ' 条');
-      setT('assetDesignSpec', '设计规范', s.assets.designSpec + ' 行');
-      setT('assetRepoSpec', '工程规范', s.assets.repoSpec + ' 行');
-      setT('assetGlobal', '全局宪法', s.assets.global + ' 行');
       setT('assetApi', 'API 文档', s.assets.api + ' 个端点');
-
-      setT('assetStartup', '开机自启动', s.assets.startup + ' 项');
 
     }
   }

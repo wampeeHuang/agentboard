@@ -23,4 +23,4 @@ manifest.json 中文字符在多次编辑中编码损坏（UTF-8 字节被当作
 ## 预防
 - server.js 已改为：`catch(e) { console.error('[scanTools] 跳过无效 manifest:', mfPath, e.message); return; }`
 - 下次再有同样问题，控制台会直接打印文件路径和错误原因
-- 写 manifest 类文件时用 Write 工具（保证 UTF-8），避免通过 PowerShell 管道重写
+- ~~写 manifest 类文件时用 Write 工具~~ — 2026-07-02 实测 Write 工具同样带 BOM，不可靠。写完后用 `node -e "JSON.parse(fs.readFileSync('manifest.json','utf8'))"` 验证，报 Unexpected token '﻿' 就是 BOM，用 `node -e "const fs=require('fs');let r=fs.readFileSync('manifest.json','utf8');if(r.charCodeAt(0)===0xFEFF)fs.writeFileSync('manifest.json',r.slice(1))"` 去之

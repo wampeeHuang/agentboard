@@ -1,7 +1,10 @@
 {
   "id": "gpt-image-2",
   "name": "gpt-image-2",
-  "description": "AI 图片生成，通过 newapi channel (aigoapi) 调用 gpt-image-2 模型",
+  "description": "【用途】AI 图片生成，通过 aigoapi 中继调用 gpt-image-2 模型。【何时用】需要 AI 生成图片时。【何时不用】不需要生图时。【返回】图片 URL【延迟】5-30s",
+  "capability": "gpt-image-2 图片生成 API",
+  "owner": "外部",
+  "category": "模型",
   "type": "cli",
   "config": {
     "api_key": "sk-f0X9TrTs3eKDNur7lh02VaO8koR6JrXaMRgmhCUvOdjqt4eS",

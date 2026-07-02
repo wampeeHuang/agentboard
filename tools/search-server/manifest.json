@@ -1,0 +1,15 @@
+{
+  "id": "search-server",
+  "name": "HTTP 搜索服务",
+  "description": "【用途】本地 HTTP 搜索 API，Tavily→Brave→DDG→Bing 自动降级。任何 Agent 通过 curl 调用。GET /search?q=关键词&lang=zh-CN。Codex 搜索能力的基础设施。【何时用】Agent 需要搜索网页或抓取网页内容时。【何时不用】已有其他搜索工具且可用时。【返回】JSON {results:[{title,url,snippet}]}【延迟】1-3s",
+  "capability": "多引擎搜索 API 降级链",
+  "owner": "自建",
+  "category": "获取",
+  "type": "service",
+  "port": 3456,
+  "url": "http://localhost:3456",
+  "projectPath": "%USERPROFILE%\\.codex\\mcp",
+  "startCommand": "node %USERPROFILE%\\.codex\\mcp\\search-server.js",
+  "stopCommand": "npx kill-port 3456",
+  "agent_notes": "2026-07-02 创建。解决 Codex GUI 沙箱封网导致 MCP 不可用的问题——独立 HTTP 服务不受沙箱影响。引擎排名：Tavily(含AI摘要)>DDG(中文好)>Brave(英文)>Bing(中文差)。TAVILY_API_KEY 和 BRAVE_API_KEY 需在环境变量中。Windows 开机自启已配在注册表 Run 键。"
+}

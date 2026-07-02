@@ -1,0 +1,17 @@
+{
+  "name": "思维顾问",
+  "description": "【用途】浏览 AI 蒸馏人物思维卡片。每个人物是独立可用的思维镜片。【何时用】需要不同视角分析问题时，选一个合适的人物镜片。【返回】人物画廊 HTML + 详情页",
+  "capability": "人物思维镜片浏览器",
+  "owner": "AI托管",
+  "icon": "🎭",
+  "version": "1.0.0",
+  "category": "查阅",
+  "order": 15,
+  "port": 3102,
+  "url": "http://localhost:3102",
+  "projectPath": "D:\\tools\\perspective-viewer",
+  "startCommand": "cd D:\\tools\\perspective-viewer && node server.js",
+  "stopCommand": "npx kill-port 3102",
+  "type": "service",
+  "agent_notes": "数据源 ~/.claude/skills/perspective-*/SKILL.md。只读浏览，不修改源文件。启动后访问 http://localhost:3102 看人物画廊。"
+}
