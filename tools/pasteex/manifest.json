@@ -4,7 +4,7 @@
   "description": "【用途】微信截图自动落盘中转站。监听剪贴板，检测到图片即自动保存为PNG到 D:\\Pictures\\截图中转站。解决微信Alt+A截图无法粘贴到文件夹的Windows限制。【何时用】微信截图后想存到文件夹。截图没落盘→查这个。【何时不用】不需要截图自动保存→关闭监听。【落盘路径】D:\\Pictures\\截图中转站 / 命名格式: 截图_YYYYMMDD_HHmmss.png【延迟】<1s（剪贴板变化即触发）",
   "icon": "📸",
   "version": "1.1.9.1",
-  "category": "职能",
+  "category": "设施",
   "order": 25,
   "type": "service",
   "owner": "AI托管",

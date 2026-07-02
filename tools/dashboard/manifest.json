@@ -4,7 +4,7 @@
   "description": "【用途】工具架控制平面。GET /api/tools返回所有工具的JSON(name/port/running/startCommand/stopCommand)。【何时用】不确定某工具是否在跑或端口号时，先调这个。任何操作前查running状态。【何时不用】只是用工具本身→直接调工具端口。【返回】{ok, tools:[{name,port,running,...}]}【延迟】<100ms【端口】3099",
   "icon": "⚙",
   "version": "2.1.0",
-  "category": "职能",
+  "category": "设施",
   "order": 1,
   "port": 3099,
   "url": "http://localhost:3099",

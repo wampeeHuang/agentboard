@@ -4,7 +4,7 @@
   "description": "【用途】百度网盘API：文件上传/下载/管理。OAuth 2.0认证。【何时用】需要在百度网盘上传/下载文件。【何时不用】本地文件→直接fs操作。不需要云备份→不调。【返回】API JSON【延迟】取决于文件大小和网络",
   "icon": "☁",
   "version": "1.0.0",
-  "category": "获取",
+  "category": "设施",
   "order": 35,
   "apiBase": "https://aip.baidubce.com",
   "apiKeyName": "BAIDU_CLOUD_CREDENTIALS",

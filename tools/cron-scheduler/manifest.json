@@ -4,7 +4,7 @@
   "description": "【用途】双引擎定时任务：日报3个(OpenClaw Gateway)+提醒1个+巡检3个(cron-runner.js)。【何时用】查定时任务状态、手动触发、修改调度时间。【何时不用】任务自动运行→无需干预。只是看日报内容→看飞书推送即可。【返回】JSON【位置】~/.scheduler/",
   "icon": "⏰",
   "version": "3.2.0",
-  "category": "职能",
+  "category": "设施",
   "order": 38,
   "type": "service",
   "owner": "自建",
