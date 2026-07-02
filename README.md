@@ -108,9 +108,9 @@ Windows 用户把 `~/.agentboard` 换成 `%USERPROFILE%\.agentboard`，或在 Po
 
 不需要。每次请求自动扫描 `tools/` 目录。
 
-## 接入 Claude Code（MCP）
+## 接入 AI Coding Agent（MCP）
 
-在 Claude Code 设置中加入 MCP 配置，AI 就能通过标准协议发现和操控工具。
+在对应编辑器的 MCP 配置中加入 agentboard，AI 就能通过标准协议发现和操控工具。下方是主流工具的配置方式。
 
 **Claude Code**（`~/.claude/settings.json`）：
 
@@ -138,7 +138,33 @@ Windows 用户把 `~/.agentboard` 换成 `%USERPROFILE%\.agentboard`，或在 Po
 }
 ```
 
-重启后可用四个 MCP 工具：
+**Cursor**（`~/.cursor/mcp.json` 全局生效，或项目根 `.cursor/mcp.json` 仅当前项目）：
+
+```json
+{
+  "mcpServers": {
+    "agentboard": {
+      "command": "node",
+      "args": ["~/.agentboard/mcp-server.js"]
+    }
+  }
+}
+```
+
+**Windsurf**（`~/.codeium/windsurf/mcp_config.json`）：
+
+```json
+{
+  "mcpServers": {
+    "agentboard": {
+      "command": "node",
+      "args": ["~/.agentboard/mcp-server.js"]
+    }
+  }
+}
+```
+
+编辑完配置后重启编辑器，可用四个 MCP 工具：
 
 | MCP 工具 | 功能 |
 |------|------|
