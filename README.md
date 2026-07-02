@@ -91,13 +91,14 @@ Windows 用户把 `~/.agentboard` 换成 `%USERPROFILE%\.agentboard`，或在 Po
 | `projectPath` | string | 项目工作目录（startCommand 在此执行） |
 | `startCommand` | string | 启动命令 |
 | `stopCommand` | string | 停止命令 |
-| `type` | string | service / group / link / script |
+| `type` | string | service / cli / folder / group |
 | `conflicts` | string[] | 互斥工具 ID（如 GPU 显存冲突） |
 | `agent_notes` | string | 给 AI 看的踩坑笔记 |
 | `trigger` | string | 触发命令（script 类型） |
 | `children` | string[] | 子工具 ID（group 类型） |
 | `publicUrl` | string | 公网地址 |
 | `dashboard` | object | 内嵌仪表盘配置 |
+| `disabled` | boolean | 停用工具（true 时卡片半透明，不参与启动/冲突检测） |
 
 ### 虚拟工具
 
@@ -166,6 +167,7 @@ Base: `http://localhost:3099`
 | POST | `/api/tools` | 创建工具 `{id, name, port, ...}` |
 | PUT | `/api/tools/:id` | 更新工具 |
 | POST | `/api/tools/reorder` | 排序 `{items: [{id, order}]}` |
+| DELETE | `/api/tools/:id` | 删除工具 `?confirm=true`（删整个 tools/{id}/ 目录，不可逆） |
 
 ### 巡检与状态
 
@@ -174,6 +176,15 @@ Base: `http://localhost:3099`
 | GET | `/api/health` | 健康报告（崩溃数、异常退出、uptime） |
 | GET | `/api/audit` | Schema 合规巡检（缺失字段、格式错误） |
 | GET | `/api/audit/runtime` | 运行时漂移检测（路径不存在、端口未监听） |
+| GET | `/api/stats` | API 调用统计（按调用方/操作/工具三维度） |
+| GET | `/api/loop/health` | 联邦巡检 — 跨项目健康状态扫描 |
+
+### 文件操作
+
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| GET | `/api/open-folder` | 在文件管理器打开目录 `?path=<绝对路径>` |
+| GET | `/open-dir/:name` | 打开技能目录（如 `/open-dir/perspective-router`） |
 
 ### 技能图表
 
@@ -223,6 +234,8 @@ Windows 上 `~` 展开为 `C:\Users\<用户名>`，或显式设 `%USERPROFILE%\.
 ├── api-page.js            ← /api 发现页面生成
 ├── launch.bat             ← Windows 一键启动（静默后台 + 打开浏览器）
 ├── launch.vbs             ← Windows VBS 启动器
+├── apps-registry.json     ← 公网应用注册表（部署域名/状态跟踪）
+├── inspection.json        ← 巡检配置（Inspector 质检项定义）
 ├── lib/
 │   ├── tool-registry.js   ← 核心逻辑（server.js 和 mcp-server.js 共享）
 │   ├── manifest-schema.js ← manifest 校验 + 巡检
@@ -232,6 +245,7 @@ Windows 上 `~` 展开为 `C:\Users\<用户名>`，或显式设 `%USERPROFILE%\.
 │   ├── dashboard/         ← agentboard 自注册
 │   └── your-tool/         ← 放你的工具
 │       └── manifest.json
+├── state/                 ← 运行时状态持久化（crash 不丢）
 ├── tips/                  ← 操作踩坑日志（可选）
 ├── skills/                ← 技能系统图表模板（可选）
 └── _runtime/              ← 运行时数据（事件日志、排序状态）
