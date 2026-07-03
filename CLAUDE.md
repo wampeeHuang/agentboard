@@ -105,9 +105,10 @@ AI agent 通过 **MCP** 调工具（`mcp-server.js`，stdio），标准 JSON-RPC
 
 ## 服务器
 
-- 端口 3099，进程 `node server.js`
-- 修改 server.js 后必须重启：`Stop-Process -Id <PID> -Force; Start-Process node -ArgumentList "server.js"`
+- 端口 3099，进程 `node server.js`，PM2 管理（ecosystem.config.js）
+- 修改 server.js 后重启：`pm2 restart agentboard`
 - manifest 改动无需重启，每次请求都会重新扫描
+- pm2-logrotate: max_size=10M retain=7 workerInterval=43200 rotateInterval="" compress=false
 
 ## 巡检
 

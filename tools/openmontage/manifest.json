@@ -1,0 +1,17 @@
+{
+  "name": "OpenMontage",
+  "id": "openmontage",
+  "owner": "外部",
+  "description": "【用途】AI 视频生产流水线——8阶段YAML编排、checkpoint断点续跑、LLM可替换。YouTube→素材→脚本→旁白→合成→成品。【何时用】需要从创意到成品的全自动视频管线。Agent驱动的管线容易漂移时，换代码驱动的确定性编排。【何时不用】只是下载视频→yt-dlp。只是转写→Whisper。只是剪辑→手动。【返回】成品视频文件路径【延迟】取决于视频长度，通常10-30min",
+  "icon": "🎬",
+  "version": "1.0.0",
+  "category": "创作",
+  "order": 55,
+  "type": "project",
+  "projectPath": "D:\\tools\\OpenMontage",
+  "startCommand": "start \"OpenMontage\" powershell -NoExit -Command \"cd D:\\tools\\OpenMontage\"",
+  "stopCommand": "echo 关了弹出的终端窗口就行",
+  "conflicts": [],
+  "agent_notes": "代码驱动的视频生产管线。编排固化在YAML文件里，进度存在checkpoint JSON里。和Agent驱动管线（AGENT_GUIDE.md）的核心区别：pipeline.py 不接受'我觉得应该跳过'——100次跑100次一样。启动方式：在AI助手中打开项目文件夹，说'开始制作视频'即可。首次使用需make setup安装依赖。",
+  "capability": "AI视频生产管线（YAML编排+checkpoint状态+LLM可替换）"
+}
