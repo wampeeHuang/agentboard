@@ -1,0 +1,18 @@
+{
+  "name": "飞书 Bot",
+  "id": "feishu-bot",
+  "description": "【用途】多租户飞书机器人服务，一个进程托管4个飞书App→claude -p→飞书API回复。【何时用】飞书bot无响应时查状态。新增bot改BOTS数组。【返回】HTML仪表盘 :3101",
+  "icon": "🦐",
+  "version": "2.1.0",
+  "category": "设施",
+  "order": 40,
+  "port": 3101,
+  "url": "http://localhost:3101/health",
+  "projectPath": "C:\\Users\\Administrator\\.feishu-bot",
+  "owner": "自建",
+  "type": "service",
+  "children": [],
+  "conflicts": [],
+  "agent_notes": "BOTS数组在server.js注册。每个飞书App独立WS连接+独立token缓存。claude -p无状态模式。扩容：加BOTS条目→pm2 restart。4个Bot详情在 /health 仪表盘查看。",
+  "capability": "飞书消息收发（4 Bot统一服务）"
+}

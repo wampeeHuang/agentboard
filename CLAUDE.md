@@ -8,6 +8,7 @@
   mcp-server.js      ← MCP JSON-RPC/stdio (AI 调工具的标准协议)
   index.html          ← 工具架前端
   tools/*/manifest.json  ← 工具注册（唯一真相源）
+  runtime/*.pid        ← 进程身份文件（启动时写入，停止时清理）
   tips/*.md           ← 操作日志（唯一真相源）
   apps-registry.json  ← 公网应用注册表
   cron/tasks.db       ← cron 任务运行时状态（SQLite）
@@ -25,6 +26,26 @@ MCP 工具: `agentboard_list_tools`, `agentboard_get_tool`, `agentboard_start_to
 工具卡片来源：
 - **manifest.json** — `~/.agentboard/tools/*/manifest.json`，一个目录一个工具
 - **cron-scheduler** — manifest 注册，`type: "group"`。日报状态来自 `/api/cron/state`
+
+### 进程身份层
+
+工具运行状态不只看端口，有三段验证（`lib/tool-registry.js` → `scanTools`）：
+
+```
+端口活跃？→ 读 runtime/{id}.pid → process.kill(pid,0) 存活？→ running=true
+                                  ↘ PID 死 → 清过期文件 → 进程名兜底验证
+```
+
+端口活跃 ≠ 工具在运行。PID 文件是 agentboard 启动工具时写入的身份凭证。无 PID 文件的工具（PM2 托管、外部启动）退回到进程名检测。
+
+**启动**：`spawn` → 写 `runtime/{id}.pid` → 轮询端口 + PID 存活双重确认（15s）→ 清 scan 缓存
+**停止**：读 PID 文件 → `taskkill /PID {pid} /T /F` 精确杀进程树 → 失败回退 `stopCommand` → 清 PID 文件 + 缓存
+**端口查重**：`createTool` / `updateTool` 写入前强制绕过缓存扫描，端口被占当场拦截（`checkPortUnique`）
+
+```
+~/.agentboard/
+  runtime/*.pid       ← 进程身份文件（agentboard 启动时写入，停止时清理）
+```
 
 ## 工具调用协议
 
