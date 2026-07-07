@@ -1,0 +1,30 @@
+{
+  "id": "page-agent",
+  "name": "Page Agent",
+  "displayName": "Page Agent (阿里 GUI Agent)",
+  "version": "1.11.0",
+  "type": "browser-tool",
+  "category": "浏览器",
+  "capability": "一行JS注入网页，自然语言操控任何Web界面——点击按钮、填写表单、导航菜单，纯DOM文本解析+LLM指令",
+  "icon": "🤖",
+  "urls": {
+    "github": "https://github.com/alibaba/page-agent",
+    "npm": "https://www.npmjs.com/package/page-agent",
+    "cdn": "https://cdn.jsdelivr.net/npm/page-agent@1.11.0/dist/iife/page-agent.demo.js",
+    "docs": "https://alibaba.github.io/page-agent/"
+  },
+  "entryPoints": {
+    "bookmarklet": "javascript:(function(){const s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/page-agent@1.11.0/dist/iife/page-agent.demo.js';s.crossOrigin='anonymous';s.onload=function(){if(window.PageAgent&&!window.__pa){window.__pa=new window.PageAgent({language:'zh-CN'});}};document.body.appendChild(s);})();",
+    "chromeExtension": "@page-agent/extension",
+    "npm": "npm install page-agent",
+    "cdnScript": "<script src=\"https://cdn.jsdelivr.net/npm/page-agent@1.11.0/dist/iife/page-agent.demo.js\" crossorigin=\"anonymous\"></script>"
+  },
+  "config": {
+    "requiresApiKey": false,
+    "demoModeAvailable": true,
+    "defaultModel": "deepseek-v3",
+    "language": "zh-CN"
+  },
+  "agent_notes": "浏览器端工具，非 MCP 可调用的服务。使用方式：1) Chrome 扩展已安装，点图标激活 2) bookmarklet 注入任意页面 3) Claude 通过 ChromeDevTools MCP evaluate_script 注入脚本。demo CDN 走阿里免费后端（Qwen/DeepSeek），每日有额度。正式使用需配自己的 API key。",
+  "conflicts": []
+}
