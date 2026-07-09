@@ -5,8 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>工具架 · Agentboard</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='4' fill='%23002FA7'/%3E%3Ctext x='16' y='22' text-anchor='middle' font-family='Inter,sans-serif' font-size='16' font-weight='600' fill='white'%3E工%3C/text%3E%3C/svg%3E">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600&family=Noto+Sans+SC:wght@200;300;400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<!-- Google Fonts removed: blocked by GFW in China. System font stack used instead. -->
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -16,7 +15,7 @@
   --shadow-border:0 0 0 1px rgba(0,0,0,0.08);
   --shadow-card:0 1px 3px rgba(0,0,0,0.06);
   --shadow-card-hover:0 2px 8px rgba(0,0,0,0.1);
-  font-family:'Inter','Noto Sans SC',sans-serif; color:var(--text); background:var(--paper);
+  font-family:system-ui,-apple-system,'Microsoft YaHei','PingFang SC',sans-serif; color:var(--text); background:var(--paper);
   font-weight:300; font-size:16px;
 }
 body{min-height:100vh;display:flex;flex-direction:column}
@@ -25,15 +24,15 @@ body{min-height:100vh;display:flex;flex-direction:column}
 .header{background:var(--ink);color:var(--paper);padding:14px 32px 10px}
 .header-top{display:flex;align-items:center;gap:16px;max-width:1080px;margin:0 auto}
 .header-brand{display:flex;align-items:center;gap:8px;text-decoration:none;color:var(--paper);white-space:nowrap}
-.header-logo{width:22px;height:22px;background:var(--paper);display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono','SF Mono','Consolas',monospace;font-size:11px;font-weight:600;color:var(--ink)}
+.header-logo{width:22px;height:22px;background:var(--paper);display:flex;align-items:center;justify-content:center;font-family:'Cascadia Code','Consolas','SF Mono',monospace;font-size:11px;font-weight:600;color:var(--ink)}
 .header-name{font-size:14px;font-weight:400;letter-spacing:.02em;opacity:.95}
-.header-cn{font-family:'JetBrains Mono','SF Mono','Consolas',monospace;font-size:10px;font-weight:400;opacity:.35;margin-left:4px;letter-spacing:.03em}
+.header-sub{font-size:11px;font-weight:300;opacity:.45;margin-left:4px;letter-spacing:.02em}
 .header-nav{display:flex;align-items:center;gap:2px;flex:1;justify-content:flex-end}
 .header-nav a{color:rgba(255,255,255,.55);text-decoration:none;font-size:12px;font-weight:300;padding:6px 10px;transition:color .15s;white-space:nowrap}
 .header-nav a:hover{color:#fff}
 .header-nav a.active{color:#fff;font-weight:500}
 .header-nav .nav-sep{width:1px;height:14px;background:rgba(255,255,255,.15);margin:0 6px}
-.header-philo{max-width:1080px;margin:0 auto;font-size:11px;font-weight:300;opacity:.35;padding:2px 0 0 30px;letter-spacing:.02em}
+.header-philo{max-width:1080px;margin:0 auto;font-size:12px;font-weight:300;opacity:.55;padding:4px 0 2px 30px;letter-spacing:.01em}
 
 /* Stats bar */
 .toolbar{max-width:1080px;margin:0 auto;padding:16px 32px;display:flex;align-items:center;gap:16px;border-bottom:1px solid var(--border)}
@@ -72,25 +71,25 @@ body{min-height:100vh;display:flex;flex-direction:column}
 .card-drag-handle::after{content:'';position:absolute;width:3px;height:3px;background:currentColor;border-radius:50%;top:0;left:3px;box-shadow:0 6px 0 currentColor,0 12px 0 currentColor,6px 0 0 currentColor,6px 6px 0 currentColor,6px 12px 0 currentColor}
 .tool-card.dragging{opacity:.35;transform:scale(.97)}
 .tool-card.drag-over{border-color:var(--ink);box-shadow:0 0 0 2px rgba(var(--ink-rgb),.25)}
-.form-badge{font-size:9px;font-weight:500;font-family:'JetBrains Mono','SF Mono','Consolas',monospace;padding:0 5px;letter-spacing:.04em;line-height:1.6;display:inline-flex;align-items:center}
+.form-badge{font-size:9px;font-weight:500;font-family:'Cascadia Code','Consolas','SF Mono',monospace;padding:0 5px;letter-spacing:.04em;line-height:1.6;display:inline-flex;align-items:center}
 .badge-本地{color:var(--status-on);background:rgba(26,138,63,.08)}
 .badge-API{color:#8B5CF6;background:rgba(139,92,246,.08)}
 .badge-CLI{color:#D97706;background:rgba(217,119,6,.08)}
 .badge-Web{color:#3B82F6;background:rgba(59,130,246,.08)}
 .badge-命令{color:#8B5CF6;background:rgba(139,92,246,.08)}
 .badge-文件夹{color:#D97706;background:rgba(217,119,6,.08)}
-.owner-badge{font-size:9px;font-weight:400;color:var(--text-muted);padding:0 5px;border:1px solid var(--border);font-family:'JetBrains Mono','SF Mono','Consolas',monospace;letter-spacing:.04em;line-height:1.6;display:inline-flex;align-items:center}
+.owner-badge{font-size:9px;font-weight:400;color:var(--text-muted);padding:0 5px;border:1px solid var(--border);font-family:'Cascadia Code','Consolas','SF Mono',monospace;letter-spacing:.04em;line-height:1.6;display:inline-flex;align-items:center}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
 
 .cmd-card{border-left:2px solid #8B5CF6}
 .folder-card{border-left:2px solid #D97706}
 .card-dot.cmd{background:#8B5CF6}
 .card-dot.folder{background:#D97706}
-.card-trigger{font-family:'JetBrains Mono','SF Mono','Consolas',monospace;font-size:11px;color:var(--ink);background:var(--paper-tint);padding:1px 6px;white-space:nowrap}
-.cmd-hint{font-size:10px;color:var(--text-muted);font-family:'JetBrains Mono','SF Mono','Consolas',monospace;padding:3px 8px;border:1px solid var(--border);white-space:nowrap}
+.card-trigger{font-family:'Cascadia Code','Consolas','SF Mono',monospace;font-size:11px;color:var(--ink);background:var(--paper-tint);padding:1px 6px;white-space:nowrap}
+.cmd-hint{font-size:10px;color:var(--text-muted);font-family:'Cascadia Code','Consolas','SF Mono',monospace;padding:3px 8px;border:1px solid var(--border);white-space:nowrap}
 .group-card{min-height:auto;height:auto;border-left:2px solid var(--ink)}
 
-.gc-section{font-size:10px;font-weight:500;color:var(--text-muted);padding:6px 0 2px;letter-spacing:.04em;border-bottom:1px solid var(--paper-tint);margin-bottom:2px;font-family:'JetBrains Mono','SF Mono','Consolas',monospace}
+.gc-section{font-size:10px;font-weight:500;color:var(--text-muted);padding:6px 0 2px;letter-spacing:.04em;border-bottom:1px solid var(--paper-tint);margin-bottom:2px;font-family:'Cascadia Code','Consolas','SF Mono',monospace}
 .gc-status{font-size:10px;font-weight:400;flex-shrink:0;padding:1px 6px;white-space:nowrap}
 .gc-status.success{color:#27ae60}
 .gc-status.error{color:#e67e22}
@@ -102,16 +101,16 @@ body{min-height:100vh;display:flex;flex-direction:column}
 .gc-dot.fatal_error{color:#c0392b}
 .gc-dot.output_missing{color:#e67e22}
 .gc-dot.idle{color:var(--border)}
-.group-count{font-size:11px;color:var(--text-muted);font-family:'JetBrains Mono','SF Mono','Consolas',monospace}
+.group-count{font-size:11px;color:var(--text-muted);font-family:'Cascadia Code','Consolas','SF Mono',monospace}
 .badge-命令组{color:var(--ink);background:rgba(var(--ink-rgb),.08)}
 
 .card-body{display:flex;align-items:flex-start;gap:14px;flex:1;padding:0 14px;min-height:0}
-.card-mono{flex-shrink:0;width:44px;height:44px;background:var(--ink);color:var(--paper);display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono','SF Mono','Consolas',monospace;font-size:14px;font-weight:500}
+.card-mono{flex-shrink:0;width:44px;height:44px;background:var(--ink);color:var(--paper);display:flex;align-items:center;justify-content:center;font-family:'Cascadia Code','Consolas','SF Mono',monospace;font-size:14px;font-weight:500}
 .card-info{flex:1;min-width:0;min-height:0;overflow:hidden}
 .card-name{font-size:16px;font-weight:300;letter-spacing:-0.01em;line-height:1.4;margin-bottom:2px}
-.card-id{font-size:11px;font-family:'JetBrains Mono','SF Mono','Consolas',monospace;color:var(--text-muted);font-weight:400;display:block;margin-top:1px}
+.card-id{font-size:11px;font-family:'Cascadia Code','Consolas','SF Mono',monospace;color:var(--text-muted);font-weight:400;display:block;margin-top:1px}
 .card-meta{font-size:11px;color:var(--text-muted);font-weight:300;margin-top:6px;display:flex;align-items:center;gap:8px}
-.card-port{font-family:'JetBrains Mono','SF Mono','Consolas',monospace;color:var(--text-muted)}
+.card-port{font-family:'Cascadia Code','Consolas','SF Mono',monospace;color:var(--text-muted)}
 .card-desc{font-size:11px;color:var(--text-secondary);font-weight:300;line-height:1.5;margin-top:6px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
 
 .card-actions{display:flex;gap:8px}
@@ -130,25 +129,25 @@ body{min-height:100vh;display:flex;flex-direction:column}
 /* Filter bar */
 .filter-bar{max-width:1080px;margin:0 auto;padding:4px 32px}
 .filter-row{display:flex;align-items:center;gap:4px;margin-bottom:4px}
-.filter-dim{font-size:11px;font-weight:400;color:var(--text-secondary);white-space:nowrap;font-family:'JetBrains Mono','SF Mono','Consolas',monospace;letter-spacing:.02em;width:36px;flex-shrink:0;user-select:none}
-.dim-count{font-size:11px;font-weight:600;color:var(--ink);font-family:'JetBrains Mono','SF Mono','Consolas',monospace;margin-right:6px;white-space:nowrap;user-select:none}
+.filter-dim{font-size:11px;font-weight:400;color:var(--text-secondary);white-space:nowrap;font-family:'Cascadia Code','Consolas','SF Mono',monospace;letter-spacing:.02em;width:36px;flex-shrink:0;user-select:none}
+.dim-count{font-size:11px;font-weight:600;color:var(--ink);font-family:'Cascadia Code','Consolas','SF Mono',monospace;margin-right:6px;white-space:nowrap;user-select:none}
 .dim-ok{font-size:9px;color:#1A8A3F;margin-left:1px;margin-right:6px;user-select:none}
 .dim-warn{font-size:9px;color:#c0392b;margin-left:1px;margin-right:6px;user-select:none}
 .filter-pill{padding:3px 10px;background:none;font-size:12px;font-family:inherit;font-weight:400;cursor:pointer;color:var(--text-secondary);white-space:nowrap;transition:all .12s;border:none;border-radius:999px}
 .filter-pill:hover{color:var(--ink)}
-.filter-pill.active{background:var(--ink);color:var(--paper)}.filter-pill.active:hover{background:var(--ink);opacity:.7}.pill-cnt{font-size:9px;opacity:.45;margin-left:3px;font-family:'JetBrains Mono','SF Mono','Consolas',monospace}.filter-pill.active .pill-cnt{opacity:.55}
+.filter-pill.active{background:var(--ink);color:var(--paper)}.filter-pill.active:hover{background:var(--ink);opacity:.7}.pill-cnt{font-size:9px;opacity:.45;margin-left:3px;font-family:'Cascadia Code','Consolas','SF Mono',monospace}.filter-pill.active .pill-cnt{opacity:.55}
 
 /* Principles — above footer */
-.principles-bar{max-width:1080px;margin:0 auto;padding:32px 32px 24px}
+.principles-bar{max-width:1080px;margin:0 auto;padding:10px 32px 24px}
 .principles-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border)}
 .principle{background:var(--paper);padding:24px 20px}
-.principle-num{font-family:'JetBrains Mono','SF Mono','Consolas',monospace;font-size:10px;font-weight:500;color:var(--ink);opacity:.45;margin-bottom:10px;letter-spacing:.04em}
+.principle-num{font-family:'Cascadia Code','Consolas','SF Mono',monospace;font-size:10px;font-weight:500;color:var(--ink);opacity:.45;margin-bottom:10px;letter-spacing:.04em}
 .principle-head{font-size:15px;font-weight:500;color:var(--text);margin-bottom:6px;letter-spacing:-0.01em;line-height:1.4}
 .principle-body{font-size:12px;font-weight:300;color:var(--text-secondary);line-height:1.6}
 
 /* Footer */
 .footer{max-width:1080px;width:100%;margin:0 auto;padding:24px 32px;border-top:1px solid var(--border)}
-.footer-bottom{font-size:11px;color:var(--text-muted);display:flex;align-items:center;justify-content:space-between;font-family:'JetBrains Mono','SF Mono','Consolas',monospace}
+.footer-bottom{font-size:11px;color:var(--text-muted);display:flex;align-items:center;justify-content:space-between;font-family:'Cascadia Code','Consolas','SF Mono',monospace}
 
 /* Empty */
 .empty{grid-column:1/-1;text-align:center;padding:72px 20px;color:var(--text-muted)}
@@ -157,7 +156,7 @@ body{min-height:100vh;display:flex;flex-direction:column}
 .empty .reset-link{color:var(--ink);cursor:pointer;text-decoration:underline;font-size:13px;margin-top:12px;display:inline-block}
 
 /* Section grouping */
-.section-label{font-size:10px;font-weight:400;color:var(--text-muted);font-family:'JetBrains Mono','SF Mono','Consolas',monospace;letter-spacing:.03em;text-transform:uppercase}
+.section-label{width:100%;max-width:1080px;margin:0 auto;padding:24px 32px 0;font-size:22px;font-weight:600;color:var(--text);font-family:system-ui,-apple-system,'Microsoft YaHei','PingFang SC',sans-serif;letter-spacing:-.01em;user-select:none}
 .section-divider{max-width:1080px;margin:0 auto;padding:0 32px;height:1px;background:var(--border);opacity:.5}
 
 /* Filter count */
@@ -169,7 +168,7 @@ body{min-height:100vh;display:flex;flex-direction:column}
 .call-stats-bar b{color:var(--text);font-weight:400}
 .call-stats-sep{color:var(--border);font-weight:200}
 .call-stats-group{display:flex;gap:10px}
-.call-stats-label{font-size:10px;opacity:.55}
+.call-stats-label{font-size:11px;opacity:.7}
 .call-stats-dot{width:5px;height:5px;display:inline-block;margin-right:3px;flex-shrink:0}
 .call-stats-dot.agent{background:var(--status-on)}
 .call-stats-dot.browser{background:var(--status-off)}
@@ -219,7 +218,7 @@ OCR:  Tesseract OCR (pytesseract)
     <a href="/" class="header-brand">
       <span class="header-logo">工</span>
       <span class="header-name">工具架</span>
-      <span class="header-cn">AGENTBOARD</span>
+      <span class="header-sub">Agentboard</span>
     </a>
     <div class="header-nav" id="assetBar">
       <a href="/registry" title="自启动 + 设计规范 + 工程规范" id="assetRegistry" target="_blank">注册表</a>
@@ -228,7 +227,7 @@ OCR:  Tesseract OCR (pytesseract)
       <a href="/api" title="API 文档（含 MCP JSON-RPC 接口说明）" id="assetApi" target="_blank">API</a>
     </div>
   </div>
-  <div class="header-philo">文件即注册，状态即界面 · MCP (AI) + REST (人) 双平面</div>
+  <div class="header-philo">一个文件一个工具 · 人点按钮，Agent 调接口 · 同一份真相，两个平面</div>
 </div>
 
 <div class="toolbar">
@@ -299,10 +298,12 @@ OCR:  Tesseract OCR (pytesseract)
 
 <!--STATS_SNAPSHOT-->
 <div id="errBox" style="display:none;background:#fff0f0;color:#c00;padding:8px 32px;font-size:12px;font-family:monospace;border-bottom:1px solid #fcc;max-width:1080px;margin:0 auto;word-break:break-all"></div>
+
 <div class="content">
   <div class="tool-grid" id="toolGrid"></div>
 </div>
 
+<div class="section-label">设计原则</div>
 <div class="principles-bar">
   <div class="principles-grid">
     <div class="principle">
@@ -343,7 +344,6 @@ OCR:  Tesseract OCR (pytesseract)
   </span>
 </div>
 
-
 <div class="footer">
   <div class="footer-bottom">
     <span>工具架 · Agentboard</span>
@@ -377,6 +377,8 @@ var publicFilter = false;
 // 领域映射：category → 领域（用于筛选栏分组）
 var domainMap = {
   '模型': '模型',
+  '本地模型': '模型',
+  '远程模型': '模型',
   'Agent': 'Agent',
   '设施': '设施',
   '获取': '获取',
@@ -389,6 +391,8 @@ var domainMap = {
 // 分类显示名 + 悬停解释。key 匹配 manifest.json 里的 category 字段
 var catMeta = {
   '模型':     {label:'模型',     tip:'本地+云端 AI 模型能力：视觉理解/语音合成/LLM API — 模型的调用入口'},
+  '本地模型': {label:'本地模型', tip:'本地部署的 AI 模型：MiniCPM视觉/CosyVoice语音/ACE音乐 — 本机 GPU 驱动'},
+  '远程模型': {label:'远程模型', tip:'云端 AI 模型 API：DeepSeek/GLM/GPT/Imagen — 按量调用的远程模型'},
   'Agent':    {label:'Agent',    tip:'自主 AI Agent：Claude Code/Hermes/Codex CLI/RAG — 能独立执行任务的智能体'},
   '设施':     {label:'设施',     tip:'透明基础设施：API网关/协议代理/定时调度/联邦巡检 — 管道自己跑，日常不碰'},
   '获取':     {label:'获取',     tip:'数据采集：网页抓取/社媒下载/OCR/云盘 — 从外部获取信息的工具'},
@@ -700,7 +704,7 @@ function render() {
   }
 
   // Sort: category group, then running first, then order
-  var catOrder = {'模型':0, 'Agent':1, '设施':2, '获取':3, '查阅':4, '创作':5, '职能':6};
+  var catOrder = {'模型':0, '本地模型':0, '远程模型':0, 'Agent':1, '设施':2, '获取':3, '查阅':4, '创作':5, '职能':6};
   var cardOrder = [];
   try { cardOrder = JSON.parse(localStorage.getItem('agentboard-card-order') || '[]'); } catch(_) {}
   if (!Array.isArray(cardOrder)) cardOrder = [];
@@ -734,7 +738,7 @@ function render() {
   }
 
   if (!sorted.length) {
-    grid.innerHTML = '<div class="empty"><p style="font-size:28px;margin-bottom:4px">(╯°□°)╯</p><p>没有工具匹配当前筛选组合</p><p style="font-size:12px;margin-top:6px">' + getFilterDesc() + '</p><a class="reset-link" onclick="resetAllFilters()">← 重置全部筛选</a></div>';
+    grid.innerHTML = '<div class="empty"><p style="font-size:28px;margin-bottom:4px">(╯°□°)╯</p><p>没有工具匹配当前筛选组合</p><p style="font-size:12px;margin-top:6px">' + getFilterDesc() + '</p><a class="reset-link" onclick="resetAllFilters()" title="清除所有领域/形态/归属/部署/状态筛选条件，恢复显示全部工具">← 重置全部筛选</a></div>';
     return;
   }
 
