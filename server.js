@@ -1,4 +1,11 @@
-﻿const express = require('express');
+﻿// Gate: only pm2 may start this server. Prevents orphan processes from
+// node -e "require('./server.js')" or bare "node server.js" holding the port.
+if (!process.env.name) {
+  console.error('agentboard must be started via pm2: pm2 restart agentboard');
+  process.exit(1);
+}
+
+const express = require('express');
 const fs = require('fs');
 const path = require('path');
 const http = require('http');
@@ -332,7 +339,7 @@ function skillIndexHTML(skills) {
 '.skill-card{background:var(--paper);padding:20px;display:flex;flex-direction:column;gap:10px;transition:transform .15s,box-shadow .15s;position:relative;box-shadow:var(--shadow-border),var(--shadow-card);cursor:default}\n' +
 '.skill-card:hover{transform:translateY(-1px);box-shadow:var(--shadow-border),var(--shadow-card-hover)}\n' +
 '.card-body{display:flex;align-items:flex-start;gap:12px;flex:1}\n' +
-'.card-mono{flex-shrink:0;width:40px;height:40px;background:var(--ink);color:var(--paper);display:flex;align-items:center;justify-content:center;font-family:"JetBrains Mono",monospace;font-size:13px;font-weight:500}\n' +
+'.card-mono{flex-shrink:0;width:40px;height:40px;background:var(--ink);color:var(--paper);display:flex;align-items:center;justify-content:center;font-family:"Cascadia Code","Consolas","SF Mono",monospace;font-size:13px;font-weight:500}\n' +
 '.card-info{flex:1;min-width:0}\n' +
 '.card-name{font-size:16px;font-weight:300;letter-spacing:-0.01em;line-height:1.35}\n' +
 '.card-sub{font-size:12px;color:var(--text-muted);font-weight:300;line-height:1.35;margin-top:2px}\n' +
@@ -341,15 +348,15 @@ function skillIndexHTML(skills) {
 '.skill-card:hover .card-desc{-webkit-line-clamp:unset;overflow:visible}\n' +
 '.skill-trigger{font-size:11px;color:var(--text-muted);margin-top:4px}\n' +
 '.skill-trigger span{font-size:9px;font-weight:500;color:var(--ink);border:1px solid var(--ink);padding:0 4px;margin-right:4px}\n' +
-'.skill-folder{font-size:11px;font-family:"JetBrains Mono",monospace;color:var(--text-muted);margin-top:6px;display:flex;align-items:center;gap:4px;cursor:pointer;padding:2px 6px;background:var(--paper-tint);transition:background .12s}\n' +
+'.skill-folder{font-size:11px;font-family:"Cascadia Code","Consolas","SF Mono",monospace;color:var(--text-muted);margin-top:6px;display:flex;align-items:center;gap:4px;cursor:pointer;padding:2px 6px;background:var(--paper-tint);transition:background .12s}\n' +
 '.skill-folder:hover{background:rgba(0,47,167,0.06)}\n' +
 '.skill-folder .folder-path{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:10px}\n' +
 '.skill-folder .folder-open{background:none;border:1px solid var(--border);color:var(--text-muted);cursor:pointer;font-size:12px;padding:1px 4px;line-height:1;flex-shrink:0}\n' +
 '.skill-folder .folder-open:hover{background:var(--ink);color:var(--paper)}\n' +
-'.folder-toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--paper);padding:8px 20px;font-family:"JetBrains Mono",monospace;font-size:12px;z-index:999;opacity:0;transition:opacity .2s;pointer-events:none}\n' +
+'.folder-toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--paper);padding:8px 20px;font-family:"Cascadia Code","Consolas","SF Mono",monospace;font-size:12px;z-index:999;opacity:0;transition:opacity .2s;pointer-events:none}\n' +
 '.folder-toast.show{opacity:1}\n' +
 '.cat-bar{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px}\n' +
-'.cat-pill{padding:5px 12px;font-size:12px;font-weight:400;font-family:"JetBrains Mono",monospace;letter-spacing:.03em;background:var(--paper-tint, #F2F2F0);border:1px solid var(--border);color:var(--text-secondary);cursor:pointer;transition:all .12s;display:inline-flex;align-items:center;gap:5px}\n' +
+'.cat-pill{padding:5px 12px;font-size:12px;font-weight:400;font-family:"Cascadia Code","Consolas","SF Mono",monospace;letter-spacing:.03em;background:var(--paper-tint, #F2F2F0);border:1px solid var(--border);color:var(--text-secondary);cursor:pointer;transition:all .12s;display:inline-flex;align-items:center;gap:5px}\n' +
 '.cat-pill:hover{background:#E4E4DE;color:var(--text)}\n' +
 '.cat-pill.active{background:var(--ink);border-color:var(--ink);color:var(--paper)}\n' +
 '.cat-pill .count{font-size:10px;opacity:.7}\n' +
@@ -460,7 +467,7 @@ function commandsIndexHTML() {
 
   return '<style>\n' +
     '.cat-bar{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:24px}\n' +
-    '.cat-pill{padding:5px 12px;font-size:12px;font-weight:400;font-family:"JetBrains Mono",monospace;letter-spacing:.03em;background:var(--paper-tint);border:1px solid var(--border);color:var(--text-secondary);cursor:pointer;transition:all .12s;display:inline-flex;align-items:center;gap:5px}\n' +
+    '.cat-pill{padding:5px 12px;font-size:12px;font-weight:400;font-family:"Cascadia Code","Consolas","SF Mono",monospace;letter-spacing:.03em;background:var(--paper-tint);border:1px solid var(--border);color:var(--text-secondary);cursor:pointer;transition:all .12s;display:inline-flex;align-items:center;gap:5px}\n' +
     '.cat-pill:hover{background:#E4E4DE;color:var(--text)}\n' +
     '.cat-pill.active{background:var(--ink);border-color:var(--ink);color:var(--paper)}\n' +
     '.cat-pill .count{font-size:10px;opacity:.7}\n' +
@@ -469,7 +476,7 @@ function commandsIndexHTML() {
     '.cmd-table{width:100%;border-collapse:collapse;font-size:13px;margin-bottom:8px}\n' +
     '.cmd-table th{background:var(--paper-tint);font-weight:500;font-size:12px;padding:8px 12px;border:1px solid var(--border);text-align:left;white-space:nowrap}\n' +
     '.cmd-table td{padding:8px 12px;border:1px solid var(--border);font-size:13px;line-height:1.5}\n' +
-    '.cmd-code{font-family:"JetBrains Mono","SF Mono","Consolas",monospace;font-size:12px;background:var(--paper-tint);padding:2px 6px;color:var(--ink);white-space:nowrap}\n' +
+    '.cmd-code{font-family:"Cascadia Code","Consolas","SF Mono","SF Mono","Consolas",monospace;font-size:12px;background:var(--paper-tint);padding:2px 6px;color:var(--ink);white-space:nowrap}\n' +
     '.cmd-desc{color:var(--text-secondary);font-size:12px}\n' +
     '.back-link{display:inline-block;margin-bottom:20px;font-size:13px;font-weight:300;color:var(--text-secondary);text-decoration:none;border:1px solid var(--border);padding:6px 16px;transition:all .15s}\n' +
     '.back-link:hover{border-color:var(--ink);color:var(--ink)}\n' +
@@ -906,7 +913,7 @@ function startServer() {
       var mono = words.length >= 2 ? (words[0][0] + words[words.length-1][0]).toUpperCase() : d.skill.substring(0,2).toUpperCase();
       return '<a href="/skill-html/' + esc(d.skill) + '/system-diagram.html" class="diagram-card" target="_blank"><div class="card-mono">' + esc(mono) + '</div><div class="card-info"><div class="card-name">' + esc(d.displayName) + '</div><div class="card-sub">' + esc(d.skill) + '</div><div class="card-link">打开结构图 →</div></div></a>';
     }).join('\n');
-    var diagBody = '<style>.diagram-grid{display:grid;grid-template-columns:repeat(auto-fill, minmax(320px, 1fr));gap:12px;margin-top:8px}.diagram-card{background:var(--paper);padding:20px;display:flex;align-items:flex-start;gap:14px;transition:transform .15s,box-shadow .15s;box-shadow:var(--shadow-border),var(--shadow-card);text-decoration:none;color:inherit}.diagram-card:hover{transform:translateY(-1px);box-shadow:var(--shadow-border),var(--shadow-card-hover)}.diagram-card .card-mono{flex-shrink:0;width:44px;height:44px;background:var(--ink);color:var(--paper);display:flex;align-items:center;justify-content:center;font-family:"JetBrains Mono",monospace;font-size:14px;font-weight:500}.diagram-card .card-info{flex:1;min-width:0}.diagram-card .card-name{font-size:16px;font-weight:300;letter-spacing:-0.01em;line-height:1.35}.diagram-card .card-sub{font-size:11px;font-family:"JetBrains Mono",monospace;color:var(--text-muted);margin-top:1px}.diagram-card .card-link{font-size:11px;color:var(--ink);font-weight:500;margin-top:6px}</style><div class="diagram-grid">' + (diagCards || '<p>暂无架构图</p>') + '</div>';
+    var diagBody = '<style>.diagram-grid{display:grid;grid-template-columns:repeat(auto-fill, minmax(320px, 1fr));gap:12px;margin-top:8px}.diagram-card{background:var(--paper);padding:20px;display:flex;align-items:flex-start;gap:14px;transition:transform .15s,box-shadow .15s;box-shadow:var(--shadow-border),var(--shadow-card);text-decoration:none;color:inherit}.diagram-card:hover{transform:translateY(-1px);box-shadow:var(--shadow-border),var(--shadow-card-hover)}.diagram-card .card-mono{flex-shrink:0;width:44px;height:44px;background:var(--ink);color:var(--paper);display:flex;align-items:center;justify-content:center;font-family:"Cascadia Code","Consolas","SF Mono",monospace;font-size:14px;font-weight:500}.diagram-card .card-info{flex:1;min-width:0}.diagram-card .card-name{font-size:16px;font-weight:300;letter-spacing:-0.01em;line-height:1.35}.diagram-card .card-sub{font-size:11px;font-family:"Cascadia Code","Consolas","SF Mono",monospace;color:var(--text-muted);margin-top:1px}.diagram-card .card-link{font-size:11px;color:var(--ink);font-weight:500;margin-top:6px}</style><div class="diagram-grid">' + (diagCards || '<p>暂无架构图</p>') + '</div>';
 
     var cmdBody = commandsIndexHTML();
 
@@ -1043,18 +1050,18 @@ function startServer() {
 
     return '<style>\n' +
       '.cat-bar-group{display:flex;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap}\n' +
-      '.cat-bar-label{font-size:11px;font-weight:500;font-family:"JetBrains Mono",monospace;color:var(--text-muted);letter-spacing:.05em;min-width:32px;flex-shrink:0}\n' +
+      '.cat-bar-label{font-size:11px;font-weight:500;font-family:"Cascadia Code","Consolas","SF Mono",monospace;color:var(--text-muted);letter-spacing:.05em;min-width:32px;flex-shrink:0}\n' +
       '.cat-bar{display:flex;flex-wrap:wrap;gap:6px;flex:1}\n' +
-      '.cat-bar .cat-pill{flex:1;min-width:80px;justify-content:center;padding:5px 12px;font-size:12px;font-weight:400;font-family:"JetBrains Mono",monospace;letter-spacing:.03em;background:var(--paper-tint);border:1px solid var(--border);color:var(--text-secondary);cursor:pointer;transition:all .12s;display:inline-flex;align-items:center;gap:5px;white-space:nowrap}\n' +
+      '.cat-bar .cat-pill{flex:1;min-width:80px;justify-content:center;padding:5px 12px;font-size:12px;font-weight:400;font-family:"Cascadia Code","Consolas","SF Mono",monospace;letter-spacing:.03em;background:var(--paper-tint);border:1px solid var(--border);color:var(--text-secondary);cursor:pointer;transition:all .12s;display:inline-flex;align-items:center;gap:5px;white-space:nowrap}\n' +
       '.cat-bar .cat-pill:hover{background:#E4E4DE;color:var(--text)}\n' +
       '.proj-grid{display:grid;grid-template-columns:repeat(auto-fill, minmax(280px, 1fr));gap:12px;margin-top:8px}\n' +
       '.proj-card{background:var(--paper);padding:20px;display:flex;flex-direction:column;gap:6px;transition:transform .15s,box-shadow .15s;box-shadow:var(--shadow-border),var(--shadow-card)}\n' +
       '.proj-card:hover{transform:translateY(-1px);box-shadow:var(--shadow-border),var(--shadow-card-hover)}\n' +
       '.card-body{display:flex;align-items:flex-start;gap:12px;flex:1}\n' +
-      '.card-mono{flex-shrink:0;width:40px;height:40px;background:var(--ink);color:var(--paper);display:flex;align-items:center;justify-content:center;font-family:"JetBrains Mono",monospace;font-size:13px;font-weight:500}\n' +
+      '.card-mono{flex-shrink:0;width:40px;height:40px;background:var(--ink);color:var(--paper);display:flex;align-items:center;justify-content:center;font-family:"Cascadia Code","Consolas","SF Mono",monospace;font-size:13px;font-weight:500}\n' +
       '.card-info{flex:1;min-width:0}\n' +
       '.card-name{font-size:15px;font-weight:400;letter-spacing:-0.01em;line-height:1.4;display:flex;align-items:center;gap:8px;flex-wrap:wrap}\n' +
-      '.card-dir{font-size:10px;font-family:"JetBrains Mono",monospace;color:var(--text-muted);margin-top:1px}\n' +
+      '.card-dir{font-size:10px;font-family:"Cascadia Code","Consolas","SF Mono",monospace;color:var(--text-muted);margin-top:1px}\n' +
       '.card-desc{font-size:11px;color:var(--text-secondary);font-weight:300;line-height:1.45;margin-top:6px}\n' +
       '.card-meta{margin-top:4px}\n' +
       '.card-actions{margin-top:4px}\n' +
@@ -1063,7 +1070,7 @@ function startServer() {
       '.status-dot.warn{background:#D97706}\n' +
       '.status-dot.off{background:var(--status-off)}\n' +
       '.status-dot.none{background:var(--border)}\n' +
-      '.status-tag{font-size:10px;padding:1px 6px;font-weight:400;font-family:"JetBrains Mono",monospace}\n' +
+      '.status-tag{font-size:10px;padding:1px 6px;font-weight:400;font-family:"Cascadia Code","Consolas","SF Mono",monospace}\n' +
       '.tag-active{color:var(--status-on);background:rgba(26,138,63,.08)}\n' +
       '.tag-archived{color:#D97706;background:rgba(217,119,6,.08)}\n' +
       '.tag-abandoned{color:var(--text-muted);background:rgba(153,153,153,.08)}\n' +
@@ -1076,7 +1083,7 @@ function startServer() {
       '.back-link{display:inline-block;margin-bottom:20px;font-size:13px;font-weight:300;color:var(--text-secondary);text-decoration:none;border:1px solid var(--border);padding:6px 16px;transition:all .15s}\n' +
       '.back-link:hover{border-color:var(--ink);color:var(--ink)}\n' +
       '.page h1{font-size:28px;font-weight:200;letter-spacing:-0.02em;color:var(--ink);margin-bottom:4px}\n' +
-      '.page .ws-subtitle{font-size:13px;color:var(--text-muted);font-weight:300;margin-bottom:20px;font-family:"JetBrains Mono",monospace}\n' +
+      '.page .ws-subtitle{font-size:13px;color:var(--text-muted);font-weight:300;margin-bottom:20px;font-family:"Cascadia Code","Consolas","SF Mono",monospace}\n' +
     '</style>\n' +
     '<h1>' + esc(meta.name) + '</h1>\n' +
     '<div class="ws-subtitle">' + esc(meta.projectPath) + ' · ' + projects.length + ' 个子项目</div>\n' +
@@ -1117,29 +1124,29 @@ function startServer() {
       '.info-section{margin-top:36px}\n' +
       '.info-section h2{font-size:18px;font-weight:500;color:var(--text);margin-bottom:12px;padding-top:16px;border-top:1px solid var(--border)}\n' +
       '.sig-table{width:100%;border-collapse:collapse;font-size:13px}\n' +
-      '.sig-table th{text-align:left;padding:8px 12px;background:var(--paper-tint);font-weight:500;font-size:12px;font-family:"JetBrains Mono",monospace;color:var(--text-secondary);border:1px solid var(--border)}\n' +
+      '.sig-table th{text-align:left;padding:8px 12px;background:var(--paper-tint);font-weight:500;font-size:12px;font-family:"Cascadia Code","Consolas","SF Mono",monospace;color:var(--text-secondary);border:1px solid var(--border)}\n' +
       '.sig-table td{padding:8px 12px;border:1px solid var(--border);vertical-align:top;line-height:1.6}\n' +
       '.sig-table .sig-symptom{font-weight:500;color:var(--text);font-size:14px}\n' +
       '.sig-table .sig-cause{color:var(--text-secondary);font-size:13px}\n' +
       '.wl-grid{display:grid;grid-template-columns:repeat(auto-fill, minmax(300px, 1fr));gap:12px;margin-top:8px}\n' +
       '.wl-card{background:var(--paper);padding:20px;box-shadow:var(--shadow-border),var(--shadow-card)}\n' +
       '.wl-card .wl-name{font-size:15px;font-weight:500;margin-bottom:8px}\n' +
-      '.wl-card .wl-domains{font-family:"JetBrains Mono",monospace;font-size:11px;color:var(--text-muted);line-height:1.8;word-break:break-all}\n' +
-      '.wl-card .wl-meta{font-size:11px;color:var(--text-muted);margin-top:8px;font-family:"JetBrains Mono",monospace}\n' +
+      '.wl-card .wl-domains{font-family:"Cascadia Code","Consolas","SF Mono",monospace;font-size:11px;color:var(--text-muted);line-height:1.8;word-break:break-all}\n' +
+      '.wl-card .wl-meta{font-size:11px;color:var(--text-muted);margin-top:8px;font-family:"Cascadia Code","Consolas","SF Mono",monospace}\n' +
       '.fix-steps{font-size:14px;line-height:2;color:var(--text-secondary);padding-left:20px}\n' +
       '.fix-steps li{margin-bottom:4px}\n' +
-      '.fix-steps code{font-family:"JetBrains Mono",monospace;font-size:12px;background:var(--paper-tint);padding:1px 5px}\n' +
-      '.arch-block{font-family:"JetBrains Mono",monospace;font-size:12px;line-height:1.8;color:var(--text-secondary);background:var(--paper-tint);padding:16px 20px;white-space:pre-wrap}\n' +
+      '.fix-steps code{font-family:"Cascadia Code","Consolas","SF Mono",monospace;font-size:12px;background:var(--paper-tint);padding:1px 5px}\n' +
+      '.arch-block{font-family:"Cascadia Code","Consolas","SF Mono",monospace;font-size:12px;line-height:1.8;color:var(--text-secondary);background:var(--paper-tint);padding:16px 20px;white-space:pre-wrap}\n' +
       '.proj-grid{display:grid;grid-template-columns:repeat(auto-fill, minmax(240px, 1fr));gap:10px;margin-top:8px}\n' +
       '.proj-card{background:var(--paper);padding:16px;display:flex;flex-direction:column;gap:4px;box-shadow:var(--shadow-border),var(--shadow-card)}\n' +
       '.proj-card:hover{transform:translateY(-1px);box-shadow:var(--shadow-border),var(--shadow-card-hover)}\n' +
       '.card-body{display:flex;align-items:flex-start;gap:10px;flex:1}\n' +
-      '.card-mono{flex-shrink:0;width:36px;height:36px;background:var(--ink);color:var(--paper);display:flex;align-items:center;justify-content:center;font-family:"JetBrains Mono",monospace;font-size:11px;font-weight:500}\n' +
+      '.card-mono{flex-shrink:0;width:36px;height:36px;background:var(--ink);color:var(--paper);display:flex;align-items:center;justify-content:center;font-family:"Cascadia Code","Consolas","SF Mono",monospace;font-size:11px;font-weight:500}\n' +
       '.card-info{flex:1;min-width:0}\n' +
       '.card-name{font-size:13px;font-weight:400;line-height:1.4}\n' +
-      '.card-dir{font-size:10px;font-family:"JetBrains Mono",monospace;color:var(--text-muted);margin-top:2px}\n' +
+      '.card-dir{font-size:10px;font-family:"Cascadia Code","Consolas","SF Mono",monospace;color:var(--text-muted);margin-top:2px}\n' +
       '.card-actions{margin-top:4px}\n' +
-      '.btn{display:inline-block;padding:4px 10px;font-size:11px;font-family:"JetBrains Mono",monospace;border:1px solid var(--border);background:var(--paper-tint);color:var(--text-secondary);cursor:pointer;text-decoration:none;transition:all .12s}\n' +
+      '.btn{display:inline-block;padding:4px 10px;font-size:11px;font-family:"Cascadia Code","Consolas","SF Mono",monospace;border:1px solid var(--border);background:var(--paper-tint);color:var(--text-secondary);cursor:pointer;text-decoration:none;transition:all .12s}\n' +
       '.btn.go{border-color:var(--ink);color:var(--ink)}\n' +
       '.btn:hover{background:var(--ink);color:var(--paper);border-color:var(--ink)}\n' +
     '<\/style>\n';
@@ -1406,12 +1413,12 @@ function startServer() {
         '  body{font-family:Inter,"Microsoft YaHei UI","Noto Sans SC",sans-serif;background:#FAFAF8;color:#0A0A0A;min-height:100vh;font-weight:300;font-size:16px}\n' +
         '  .hero{background:#002FA7;color:#FAFAF8;padding:56px 32px 48px}\n' +
         '  .hero-inner{max-width:1080px;margin:0 auto}\n' +
-        '  .hero-mono{font-family:"JetBrains Mono","SF Mono","Consolas",monospace;font-size:10px;font-weight:500;letter-spacing:.08em;opacity:.45;margin-bottom:10px}\n' +
+        '  .hero-mono{font-family:"Cascadia Code","Consolas","SF Mono","SF Mono","Consolas",monospace;font-size:10px;font-weight:500;letter-spacing:.08em;opacity:.45;margin-bottom:10px}\n' +
         '  .hero h1{font-size:min(3.6vw,4.4vh);font-weight:200;letter-spacing:-0.02em;line-height:1.15}\n' +
         '  .hero .tagline{font-size:15px;font-weight:300;opacity:.7;margin-top:10px;line-height:1.6;max-width:520px;letter-spacing:-0.01em}\n' +
         '  .content{margin:0 auto;padding:6px 32px 32px}\n' +
         '  .cat-bar{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px}\n' +
-        '  .cat-pill{padding:6px 14px;font-size:12px;font-weight:400;font-family:"JetBrains Mono","SF Mono","Consolas",monospace;letter-spacing:.03em;background:#F0F0EC;border:1px solid #E0E0DC;color:#555;cursor:pointer;transition:all .12s;display:inline-flex;align-items:center;gap:6px}\n' +
+        '  .cat-pill{padding:6px 14px;font-size:12px;font-weight:400;font-family:"Cascadia Code","Consolas","SF Mono","SF Mono","Consolas",monospace;letter-spacing:.03em;background:#F0F0EC;border:1px solid #E0E0DC;color:#555;cursor:pointer;transition:all .12s;display:inline-flex;align-items:center;gap:6px}\n' +
         '  .cat-pill:hover{background:#E4E4DE;color:#0A0A0A}\n' +
         '  .cat-pill.active{background:#002FA7;border-color:#002FA7;color:#FAFAF8}\n' +
         '  .cat-pill .count{font-size:10px;opacity:.7}\n' +
@@ -1422,25 +1429,25 @@ function startServer() {
         '  .card-wrap.drag-over::before{content:"";position:absolute;inset:0;border:2px solid #002FA7;z-index:2;pointer-events:none}\n' +
         '  .card{display:flex;align-items:flex-start;gap:28px;background:#FAFAF8;padding:22px 28px;text-decoration:none;color:inherit;transition:background .15s,box-shadow .15s;height:180px;overflow:hidden;border:1px solid #E0E0DC;box-shadow:0 1px 3px rgba(0,0,0,.06);position:relative}\n' +
         '  .card:hover{background:#F0F0EC}\n' +
-        '  .card-grip{position:absolute;top:12px;right:12px;color:#B0B0AC;font-family:"JetBrains Mono","SF Mono","Consolas",monospace;font-size:14px;opacity:.35;line-height:1;cursor:grab;user-select:none;-webkit-user-select:none;z-index:1}\n' +
+        '  .card-grip{position:absolute;top:12px;right:12px;color:#B0B0AC;font-family:"Cascadia Code","Consolas","SF Mono","SF Mono","Consolas",monospace;font-size:14px;opacity:.35;line-height:1;cursor:grab;user-select:none;-webkit-user-select:none;z-index:1}\n' +
         '  .card-grip:active{cursor:grabbing}\n' +
-        '  .card-mono{flex-shrink:0;width:52px;height:52px;background:#002FA7;color:#FAFAF8;display:flex;align-items:center;justify-content:center;font-family:"JetBrains Mono","SF Mono","Consolas",monospace;font-size:18px;font-weight:500;letter-spacing:.02em;margin-top:2px}\n' +
+        '  .card-mono{flex-shrink:0;width:52px;height:52px;background:#002FA7;color:#FAFAF8;display:flex;align-items:center;justify-content:center;font-family:"Cascadia Code","Consolas","SF Mono","SF Mono","Consolas",monospace;font-size:18px;font-weight:500;letter-spacing:.02em;margin-top:2px}\n' +
         '  .card-body{display:flex;flex-direction:column;gap:10px;min-width:0;position:relative}\n' +
         '  .card-name{font-size:18px;font-weight:300;letter-spacing:-0.01em}\n' +
         '  .card-sub{font-size:13px;font-weight:300;color:#555;line-height:1.55;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}\n' +
-        '  .card-type-tag{position:absolute;bottom:2px;right:0;font-size:9px;font-weight:500;font-family:"JetBrains Mono","SF Mono","Consolas",monospace;letter-spacing:.04em;padding:2px 6px;opacity:.55}\n' +
+        '  .card-type-tag{position:absolute;bottom:2px;right:0;font-size:9px;font-weight:500;font-family:"Cascadia Code","Consolas","SF Mono","SF Mono","Consolas",monospace;letter-spacing:.04em;padding:2px 6px;opacity:.55}\n' +
         '  .tag-diagnosis{color:#002FA7;background:rgba(0,47,167,.06)}\n' +
         '  .tag-method{color:#1A8A3F;background:rgba(26,138,63,.06)}\n' +
         '  .tag-fact{color:#666;background:rgba(0,0,0,.05)}\n' +
         '  .footer{max-width:1080px;margin:0 auto;padding:36px 32px;border-top:1px solid #E0E0DC}\n' +
         '  .phil-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1px;background:#E0E0DC;margin-bottom:0}\n' +
         '  .phil-card{background:#FAFAF8;padding:24px 20px}\n' +
-        '  .phil-num{font-family:"JetBrains Mono","SF Mono","Consolas",monospace;font-size:10px;font-weight:500;color:#002FA7;opacity:.45;margin-bottom:10px;letter-spacing:.04em}\n' +
+        '  .phil-num{font-family:"Cascadia Code","Consolas","SF Mono","SF Mono","Consolas",monospace;font-size:10px;font-weight:500;color:#002FA7;opacity:.45;margin-bottom:10px;letter-spacing:.04em}\n' +
         '  .phil-title{font-size:15px;font-weight:500;color:#0A0A0A;margin-bottom:6px;letter-spacing:-0.01em;line-height:1.4}\n' +
         '  .phil-body{font-size:12px;font-weight:300;color:#555;line-height:1.6}\n' +
         '  .phil-body strong{font-weight:500;color:#0A0A0A}\n' +
         '</style>\n</head>\n<body>\n' +
-        '<div class="hero"><div class="hero-inner"><a href="/" style="color:inherit;text-decoration:none;font-size:13px;font-family:\"JetBrains Mono\",\"SF Mono\",\"Consolas\",monospace;opacity:.5;letter-spacing:.04em">← 工具架</a><div class="hero-mono" style="margin-top:10px">OPERATIONS LOG</div><h1>操作日志</h1><div class="tagline">人+AI 共享操作记录。踩坑即记，分类即检索。</div></div></div>\n' +
+        '<div class="hero"><div class="hero-inner"><a href="/" style="color:inherit;text-decoration:none;font-size:13px;font-family:\"Cascadia Code\",\"Consolas\",\"SF Mono\",monospace;opacity:.5;letter-spacing:.04em">← 工具架</a><div class="hero-mono" style="margin-top:10px">OPERATIONS LOG</div><h1>操作日志</h1><div class="tagline">人+AI 共享操作记录。踩坑即记，分类即检索。</div></div></div>\n' +
         '<div class="content">\n' +
         '<div class="cat-bar" id="catBar">' +
           '<button class="cat-pill active" data-type="all" onclick="setTipFilter(\'all\')">全部<span class="count">' + allCount + '</span></button>' +
@@ -1474,7 +1481,7 @@ function startServer() {
         '    </div>\n' +
         '  </div>\n' +
         '</div>\n' +
-        '<div style="max-width:1080px;margin:0 auto;padding:0 32px 24px;font-size:11px;opacity:.35;font-family:\"JetBrains Mono\",\"SF Mono\",\"Consolas\",monospace">\n' +
+        '<div style="max-width:1080px;margin:0 auto;padding:0 32px 24px;font-size:11px;opacity:.35;font-family:\"Cascadia Code\",\"Consolas\",\"SF Mono\",monospace">\n' +
         '  <a href="/tips/CONSTITUTION.md" style="color:inherit">写入标准 → CONSTITUTION.md</a>（五问 &middot; 格式 &middot; 分类）\n' +
         '</div>\n' +
         '<script>\n' +
@@ -1569,7 +1576,7 @@ function startServer() {
         '  body{font-family:Inter,"Microsoft YaHei UI","Noto Sans SC",sans-serif;background:#FAFAF8;color:#0A0A0A;min-height:100vh;font-weight:300;font-size:16px;line-height:1.7}\n' +
         '  .hero{background:#002FA7;color:#FAFAF8;padding:40px 32px 36px}\n' +
         '  .hero-inner{max-width:720px;margin:0 auto}\n' +
-        '  .hero a{color:inherit;text-decoration:none;font-size:13px;font-family:"JetBrains Mono","SF Mono","Consolas",monospace;opacity:.6;letter-spacing:.04em}\n' +
+        '  .hero a{color:inherit;text-decoration:none;font-size:13px;font-family:"Cascadia Code","Consolas","SF Mono","SF Mono","Consolas",monospace;opacity:.6;letter-spacing:.04em}\n' +
         '  .hero a:hover{opacity:1}\n' +
         '  .hero h1{font-size:min(2.8vw,3.6vh);font-weight:200;letter-spacing:-0.02em;line-height:1.2;margin-top:8px}\n' +
         '  .content{max-width:720px;margin:0 auto;padding:32px}\n' +
@@ -1578,7 +1585,7 @@ function startServer() {
         '  .content p{margin:8px 0;color:#333}\n' +
         '  .content ul{margin:8px 0;padding-left:24px}\n' +
         '  .content li{margin:4px 0;color:#333;font-size:15px}\n' +
-        '  .content code{font-family:"JetBrains Mono","SF Mono","Consolas",monospace;font-size:13px;background:#F0F0EC;padding:1px 6px}\n' +
+        '  .content code{font-family:"Cascadia Code","Consolas","SF Mono","SF Mono","Consolas",monospace;font-size:13px;background:#F0F0EC;padding:1px 6px}\n' +
         '  .content pre{background:#0A0A0A;color:#FAFAF8;padding:16px 20px;margin:12px 0;overflow-x:auto;font-size:13px;line-height:1.55}\n' +
         '  .content pre code{background:none;padding:0;color:inherit}\n' +
         '  .content a{color:#002FA7;text-decoration:none}\n' +
@@ -1710,7 +1717,7 @@ function startServer() {
       var ext = path.extname(item.file).toLowerCase();
       var typeLabel = ext === '.lnk' ? '快捷方式' : ext === '.bat' ? '批处理' : ext === '.vbs' ? 'VBScript' : ext === '.ps1' ? 'PowerShell' : ext === '.cmd' ? 'CMD' : '文件';
       var descCell = item.desc ? '<td style="font-size:11px;color:var(--text-muted);max-width:280px">' + esc(item.desc) + '</td>' : '<td></td>';
-      return '<tr><td><strong>' + esc(item.displayName) + '</strong><br><span style="font-size:10px;color:var(--text-muted)">' + esc(item.name) + '</span></td>' + descCell + '<td><code>' + typeLabel + '</code></td><td style="font-size:11px;color:var(--text-muted)">' + esc(item.source) + '</td><td style="font-family:JetBrains Mono,monospace;font-size:11px">' + esc(item.file) + '</td></tr>';
+      return '<tr><td><strong>' + esc(item.displayName) + '</strong><br><span style="font-size:10px;color:var(--text-muted)">' + esc(item.name) + '</span></td>' + descCell + '<td><code>' + typeLabel + '</code></td><td style="font-size:11px;color:var(--text-muted)">' + esc(item.source) + '</td><td style="font-family:"Cascadia Code","Consolas","SF Mono",monospace;font-size:11px">' + esc(item.file) + '</td></tr>';
     }).join('');
     var startupHtml = '<p class="sub">开机自启动的应用和脚本。添加：把 .bat/.vbs 快捷方式放入 <code>Startup</code> 文件夹。Agentboard 启动脚本放 <code>~/.agentboard/</code>。</p>' +
       (items.length ? '<table><tr><th>名称</th><th>简介</th><th>类型</th><th>来源</th><th>文件</th></tr>' + startupRows + '</table>' : '<p>暂无启动项</p>');
@@ -1742,7 +1749,7 @@ function startServer() {
 
   function pageShell(title, heading, body, active, lines) {
     var lineHtml = lines != null ? '<div class="line-count">' + lines + ' 行</div>\n' : '';
-    return '<!DOCTYPE html>\n<html lang=\"zh-CN\">\n<head>\n<meta charset=\"UTF-8\">\n<meta name=\"viewport\" content=\"width=device-width,initial-scale=1.0\">\n<title>' + esc(title) + ' · Agentboard</title>\n<link rel=\"icon\" href=\"data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 32 32\'%3E%3Crect width=\'32\' height=\'32\' rx=\'4\' fill=\'%23002FA7\'/%3E%3Ctext x=\'16\' y=\'22\' text-anchor=\'middle\' font-family=\'Inter,sans-serif\' font-size=\'16\' font-weight=\'600\' fill=\'white\'%3E法%3C/text%3E%3C/svg%3E">\n<link href=\"https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600&family=Noto+Sans+SC:wght@200;300;400;500;700&family=JetBrains+Mono:wght@400;500&display=swap\" rel=\"stylesheet\">\n<style>\n:root{--ink:#002FA7;--ink-rgb:0,47,167;--paper:#FAFAF8;--paper-tint:#F2F2F0;--border:#E0E0DC;--text:#0A0A0A;--text-secondary:#555;--text-muted:#999;--shadow-border:0 0 0 1px rgba(0,0,0,0.08);--shadow-card:0 1px 3px rgba(0,0,0,0.06);--shadow-card-hover:0 2px 8px rgba(0,0,0,0.1);font-family:\'Inter\',\'Noto Sans SC\',sans-serif;color:var(--text);background:var(--paper);font-weight:300;font-size:16px}*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}body{min-height:100vh}.header{background:var(--ink);padding:14px 32px;display:flex;align-items:center;gap:24px}.header-brand{font-family:\'JetBrains Mono\',monospace;font-size:12px;font-weight:500;letter-spacing:.06em;color:var(--paper);text-decoration:none;white-space:nowrap;opacity:.9}.header-back{font-family:\'JetBrains Mono\',monospace;font-size:11px;font-weight:400;color:var(--paper);text-decoration:none;opacity:.7;margin-left:auto;transition:opacity .15s}.header-back:hover{opacity:1}.page{max-width:1080px;margin:0 auto;padding:40px 32px 80px}.page h1{font-size:28px;font-weight:200;letter-spacing:-0.02em;color:var(--ink);margin-bottom:24px}.page h2{font-size:18px;font-weight:500;color:var(--text);margin:36px 0 12px;padding-top:16px;border-top:1px solid var(--border)}.page h3{font-size:15px;font-weight:500;color:var(--text);margin:24px 0 8px}.page p,.page li{font-size:14px;line-height:1.8;color:var(--text-secondary);margin:6px 0}.page ul,.page ol{padding-left:20px;margin:8px 0}.page strong{font-weight:500;color:var(--text)}.page code{font-family:\'JetBrains Mono\',monospace;font-size:12px;background:var(--paper-tint);padding:1px 5px}.page pre{background:#f5f5f5;padding:16px;overflow-x:auto;font-size:12px;line-height:1.6;margin:12px 0}.page pre code{background:none;padding:0}.page table{width:100%;border-collapse:collapse;margin:12px 0;font-size:13px}.page th,.page td{padding:8px 12px;border:1px solid var(--border);text-align:left;font-size:13px}.page th{background:var(--paper-tint);font-weight:500;font-size:12px}.page blockquote{border-left:3px solid var(--ink);margin:12px 0;padding:4px 16px;color:var(--text-secondary);font-size:13px}.page hr{border:none;border-top:1px solid var(--border);margin:24px 0}.page em{color:var(--text-secondary)}.line-count{font-size:11px;color:var(--text-muted);margin-bottom:20px;font-family:\'JetBrains Mono\',monospace}.back-link{display:inline-block;margin-top:40px;font-size:13px;color:var(--ink);text-decoration:none;border:1px solid var(--border);padding:6px 16px}.back-link:hover{border-color:var(--ink)}\n</style>\n</head>\n<body>\n<div class=\"header\"><a class=\"header-brand\" href=\"/\">AGENTBOARD</a><a class=\"header-back\" href=\"/\">&#8592; 返回工具架</a></div>\n<div class=\"page\">' + lineHtml + body + '\n</div>\n</body>\n</html>';
+    return '<!DOCTYPE html>\n<html lang=\"zh-CN\">\n<head>\n<meta charset=\"UTF-8\">\n<meta name=\"viewport\" content=\"width=device-width,initial-scale=1.0\">\n<title>' + esc(title) + ' · Agentboard</title>\n<link rel=\"icon\" href=\"data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 32 32\'%3E%3Crect width=\'32\' height=\'32\' rx=\'4\' fill=\'%23002FA7\'/%3E%3Ctext x=\'16\' y=\'22\' text-anchor=\'middle\' font-family=\'Inter,sans-serif\' font-size=\'16\' font-weight=\'600\' fill=\'white\'%3E法%3C/text%3E%3C/svg%3E">\n\n<style>\n:root{--ink:#002FA7;--ink-rgb:0,47,167;--paper:#FAFAF8;--paper-tint:#F2F2F0;--border:#E0E0DC;--text:#0A0A0A;--text-secondary:#555;--text-muted:#999;--shadow-border:0 0 0 1px rgba(0,0,0,0.08);--shadow-card:0 1px 3px rgba(0,0,0,0.06);--shadow-card-hover:0 2px 8px rgba(0,0,0,0.1);font-family:system-ui,-apple-system,\'Microsoft YaHei\',\'PingFang SC\',sans-serif;color:var(--text);background:var(--paper);font-weight:300;font-size:16px}*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}body{min-height:100vh}.header{background:var(--ink);padding:14px 32px;display:flex;align-items:center;gap:24px}.header-brand{font-family:\'Cascadia Code\',\'Consolas\',\'SF Mono\',monospace;font-size:12px;font-weight:500;letter-spacing:.06em;color:var(--paper);text-decoration:none;white-space:nowrap;opacity:.9}.header-back{font-family:\'Cascadia Code\',\'Consolas\',\'SF Mono\',monospace;font-size:11px;font-weight:400;color:var(--paper);text-decoration:none;opacity:.7;margin-left:auto;transition:opacity .15s}.header-back:hover{opacity:1}.page{max-width:1080px;margin:0 auto;padding:40px 32px 80px}.page h1{font-size:28px;font-weight:200;letter-spacing:-0.02em;color:var(--ink);margin-bottom:24px}.page h2{font-size:18px;font-weight:500;color:var(--text);margin:36px 0 12px;padding-top:16px;border-top:1px solid var(--border)}.page h3{font-size:15px;font-weight:500;color:var(--text);margin:24px 0 8px}.page p,.page li{font-size:14px;line-height:1.8;color:var(--text-secondary);margin:6px 0}.page ul,.page ol{padding-left:20px;margin:8px 0}.page strong{font-weight:500;color:var(--text)}.page code{font-family:\'Cascadia Code\',\'Consolas\',\'SF Mono\',monospace;font-size:12px;background:var(--paper-tint);padding:1px 5px}.page pre{background:#f5f5f5;padding:16px;overflow-x:auto;font-size:12px;line-height:1.6;margin:12px 0}.page pre code{background:none;padding:0}.page table{width:100%;border-collapse:collapse;margin:12px 0;font-size:13px}.page th,.page td{padding:8px 12px;border:1px solid var(--border);text-align:left;font-size:13px}.page th{background:var(--paper-tint);font-weight:500;font-size:12px}.page blockquote{border-left:3px solid var(--ink);margin:12px 0;padding:4px 16px;color:var(--text-secondary);font-size:13px}.page hr{border:none;border-top:1px solid var(--border);margin:24px 0}.page em{color:var(--text-secondary)}.line-count{font-size:11px;color:var(--text-muted);margin-bottom:20px;font-family:\'Cascadia Code\',\'Consolas\',\'SF Mono\',monospace}.back-link{display:inline-block;margin-top:40px;font-size:13px;color:var(--ink);text-decoration:none;border:1px solid var(--border);padding:6px 16px}.back-link:hover{border-color:var(--ink)}\n</style>\n</head>\n<body>\n<div class=\"header\"><a class=\"header-brand\" href=\"/\">AGENTBOARD</a><a class=\"header-back\" href=\"/\">&#8592; 返回工具架</a></div>\n<div class=\"page\">' + lineHtml + body + '\n</div>\n</body>\n</html>';
   }
 
   // Home: embed initial stats for zero-loading-flash dashboard

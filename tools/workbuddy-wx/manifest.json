@@ -11,5 +11,6 @@
   "conflicts": [],
   "agent_notes": "调用方式: node \"C:\\Program Files\\WorkBuddy\\resources\\app.asar.unpacked\\cli\\bin\\codebuddy\" -p -y --output-format text \"请用你的web fetch工具读取这篇微信文章，返回完整原文: <URL>\"。CodeBuddy是腾讯自家CLI Agent，web fetch走腾讯基础设施不会被微信反爬。微信文章提取首选。",
   "capability": "微信公众号文章全文提取（腾讯CodeBuddy CLI，不受微信反爬限制）",
-  "owner": "自建"
+  "owner": "自建",
+  "startCommand": "node \"C:Program FilesWorkBuddy\resourcesapp.asar.unpackedcli\bincodebuddy\" -p -y --output-format text"
 }

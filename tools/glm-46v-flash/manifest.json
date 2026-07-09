@@ -4,7 +4,7 @@
   "description": "【用途】智谱云端视觉模型，理解图片内容。【何时用】需要视觉理解但不想启动本地MiniCPM-V(省2.5GB显存)。【何时不用】生成图片→aigoapi/ComfyUI。本地MiniCPM在跑且显存够→用本地免费不耗额度。【返回】OpenAI兼容chat completion【延迟】3-10s【限速】⚠️频率限制",
   "icon": "👁",
   "version": "1.0.0",
-  "category": "模型",
+  "category": "远程模型",
   "order": 37,
   "apiBase": "https://open.bigmodel.cn/api/paas/v4",
   "apiKeyName": "GLM_API_KEY",

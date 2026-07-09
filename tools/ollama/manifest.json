@@ -5,7 +5,7 @@
   "description": "【用途】本地LLM推理服务，管理本地模型列表/拉取/运行。通常开机自启。【何时用】需要拉取新模型、查看本地模型列表、测试本地推理。【何时不用】只是用模型→OpenClaw/aigoapi已统一代理，不直接调ollama。模型管理之外→不需要碰。【返回】CLI/JSON【端口】11434",
   "icon": "🦙",
   "version": "1.0.0",
-  "category": "模型",
+  "category": "本地模型",
   "order": 13,
   "port": 11434,
   "url": "http://localhost:11434",

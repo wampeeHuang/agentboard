@@ -11,6 +11,8 @@
   "projectPath": "C:\\Users\\Administrator\\.feishu-bot",
   "owner": "自建",
   "type": "service",
+  "startCommand": "cd /d %USERPROFILE%\\.feishu-bot && node server.js",
+  "stopCommand": "npx kill-port 3101",
   "children": [],
   "conflicts": [],
   "agent_notes": "BOTS数组在server.js注册。每个飞书App独立WS连接+独立token缓存。claude -p无状态模式。扩容：加BOTS条目→pm2 restart。4个Bot详情在 /health 仪表盘查看。",

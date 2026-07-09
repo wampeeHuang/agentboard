@@ -5,7 +5,7 @@
   "description": "【用途】SD WebUI(秋叶整合包v4.10)。比ComfyUI上手简单，适合快速文生图/图生图。【何时用】快速SD图像生成，不想搭ComfyUI工作流。【何时不用】ComfyUI在跑→不能同时开。简单需求→gpt-image-2更快无显存消耗。【返回】Web UI :7860【延迟】启动30s+，单图5-20s【显存】4GB+",
   "icon": "🖼",
   "version": "1.0.0",
-  "category": "模型",
+  "category": "本地模型",
   "order": 11,
   "port": 7860,
   "url": "http://localhost:7860",

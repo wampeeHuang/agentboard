@@ -5,7 +5,7 @@
   "description": "【用途】本地视觉模型，理解图片内容（OCR/描述/问答），不是生成图片。POST /v1/chat/completions，图片用 base64 data URI。【何时用】需要免费识别图片文字/图表/场景时。【何时不用】生成图片→ComfyUI/aigoapi。已有云端视觉模型→glm-46v-flash更快不占显存。【返回】OpenAI chat completion {choices:[{message:{content}}]}【延迟】单图2-10s【显存】~2.5GB",
   "icon": "👁",
   "version": "1.0.0",
-  "category": "模型",
+  "category": "本地模型",
   "order": 0,
   "port": 8080,
   "url": "http://localhost:8080",

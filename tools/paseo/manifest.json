@@ -13,7 +13,7 @@
   "owner": "外部",
   "startCommand": "paseo daemon start --listen 0.0.0.0:6767",
   "stopCommand": "npx kill-port 6767",
-  "projectPath": "npm:@getpaseo/cli",
+  "projectPath": "%APPDATA%\\npm\\node_modules\\@getpaseo\\cli",
   "conflicts": [],
   "agent_notes": "⚠️ Windows上必须以--listen 0.0.0.0:6767启动才能通过Tailscale被手机访问。旧版本会在Windows上残留supervisor/worker进程导致弹窗——重启前必须taskkill /F /IM node.exe清除所有Paseo进程。启动前先删除~/.paseo/paseo.pid。手机通过Tailscale直连100.75.95.12:6767，不需要relay。日志: ~/.paseo/daemon.log。\n\n【诊断三步】①手机Safari访问http://100.75.95.12:46723确认Tailscale隧道通→②netstat -ano|findstr :6767确认daemon在听→③查Windows防火墙是否有Node.js JavaScript Runtime拦截规则（Remove-NetFirewallRule -DisplayName 'Node.js JavaScript Runtime'），该规则静默拦截node.exe所有入站TCP。\n\n【连接参数】WebSocket路径/ws，手机App填ws://100.75.95.12:6767/ws。--no-relay禁用relay后直连仍可用，但无QR码/pairing link。Tailscale接口在Private网络，Paseo防火墙规则也需Private。",
   "capability": "多Agent远程编排，iOS/Android移动端控制面板"

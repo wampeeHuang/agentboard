@@ -7,7 +7,7 @@
   "version": "1.0.0",
   "category": "创作",
   "order": 55,
-  "type": "project",
+  "type": "cli",
   "projectPath": "D:\\tools\\OpenMontage",
   "startCommand": "start \"OpenMontage\" powershell -NoExit -Command \"cd D:\\tools\\OpenMontage\"",
   "stopCommand": "echo 关了弹出的终端窗口就行",

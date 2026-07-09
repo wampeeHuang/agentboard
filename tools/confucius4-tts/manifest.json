@@ -5,12 +5,13 @@
   "description": "【用途】有道开源多语种零样本语音克隆TTS。1.3B参数，14种语言，无需参考文本的音色复刻。通过官方 Gradio API 推理，不走本地 GPU。【何时用】跨语种语音克隆（中文→英/日/韩等14语种），音色+情感保留。【何时不用】仅需中文TTS→CosyVoice3更轻量。需要时间戳对齐→豆包TTS。【返回】WAV音频文件 22050Hz mono【延迟】单句3-12s（含网络）",
   "icon": "🗣",
   "version": "1.1.0",
-  "category": "模型",
+  "category": "远程模型",
   "order": 19,
   "projectPath": "D:\\workspace\\_output\\confucius4-tts",
   "startCommand": null,
   "stopCommand": null,
   "conflicts": [],
   "agent_notes": "本地GPU（RTX 5060 Ti Blackwell sm_120）推理不可用——PyTorch 2.11/CUDA 12.8数值偏差，产出极短安静。必须走官方Gradio API（confucius4-tts.youdao.com/gradio），不走本地GPU。项目宪法和用法见 workspace CLAUDE.md。",
-  "capability": "多语种零样本语音克隆TTS 14语言 官方API"
+  "capability": "多语种零样本语音克隆TTS 14语言 官方API",
+  "type": "cli"
 }

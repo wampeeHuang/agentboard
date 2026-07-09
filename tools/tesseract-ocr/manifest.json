@@ -12,5 +12,6 @@
   "conflicts": [],
   "agent_notes": "轻量OCR，不占显存。对于清晰文档扫描效果好，手写/模糊/复杂背景不如MiniCPM-V。C:\\Program Files\\Tesseract-OCR已安装。",
   "capability": "命令行OCR图片文字识别",
-  "owner": "自建"
+  "owner": "自建",
+  "startCommand": "tesseract"
 }
