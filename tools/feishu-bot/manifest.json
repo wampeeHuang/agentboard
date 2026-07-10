@@ -1,4 +1,4 @@
-﻿{
+{
     "name":  "飞书 Bot",
     "id":  "feishu-bot",
     "description":  "【用途】多租户飞书机器人服务，进程托管10个飞书App→claude -p→飞书API回复。【何时用】飞书bot无响应时查状态。新增bot改BOTS数组+本manifest的apps。【返回】对外ID管理 :3101",
@@ -79,12 +79,12 @@
                      "desc":  "微信文章获取"
                  },
                  {
-                     "name":  "CCHaha",
-                     "emoji":  "😄",
+                     "name":  "Vivi",
+                     "emoji":  "🌐",
                      "appId":  "cli_a9563b5523b89bc4",
                      "status":  "idle",
-                     "role":  "未分配",
-                     "desc":  "用途待确认"
+                     "role":  "对外分身",
+                     "desc":  "你的数字化身——群聊对外的唯一出口，替你说话"
                  },
                  {
                      "name":  "微信文章捕手",
