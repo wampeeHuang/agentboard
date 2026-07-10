@@ -1,21 +1,29 @@
-{
-  "name": "版式画廊 HTML",
-  "id": "html-gallery",
-  "description": "【用途】99个HTML幻灯片模板的浏览器。7个来源汇集。【何时用】做PPT/网页演示需要挑模板时。【何时不用】不需要模板→不启动。已是HTML→不需要。【返回】Web UI :3080，公开站gallery.evopearl.com【端口】3080",
-  "icon": "🎨",
-  "version": "1.0.0",
-  "category": "查阅",
-  "order": 2,
-  "port": 3080,
-  "url": "http://localhost:3080",
-  "publicUrl": "https://gallery.evopearl.com/",
-  "githubPagesUrl": "https://wampeehuang.github.io/skill-html-showcase/",
-  "repoUrl": "https://github.com/wampeeHuang/skill-html-showcase",
-  "projectPath": "D:\\\\workspace\\\\_lab\\\\2026-06-06-版式画廊部署",
-  "startCommand": "cd /d D:\\\\workspace\\\\_lab\\\\2026-06-06-版式画廊部署 && npm start",
-  "stopCommand": "npx kill-port 3080",
-  "conflicts": [],
-  "agent_notes": "模板来自7个skill来源，npm start启动。公开域名gallery.evopearl.com。每次新增模板后需刷新。",
-  "capability": "99个HTML幻灯片模板浏览器",
-  "owner": "自建"
+﻿{
+    "name":  "版式画廊 HTML",
+    "id":  "html-gallery",
+    "description":  "【用途】99个HTML幻灯片模板的浏览器。7个来源汇集。【何时用】做PPT/网页演示需要挑模板时。【何时不用】不需要模板→不启动。已是HTML→不需要。【返回】Web UI :3080，公开站gallery.evopearl.com【端口】3080",
+    "icon":  "🎨",
+    "version":  "1.0.0",
+    "category":  "查阅",
+    "order":  2,
+    "port":  3080,
+    "url":  "http://localhost:3080",
+    "publicUrl":  "https://gallery.evopearl.com/",
+    "githubPagesUrl":  "https://wampeehuang.github.io/skill-html-showcase/",
+    "repoUrl":  "https://github.com/wampeeHuang/skill-html-showcase",
+    "projectPath":  "D:\\\\workspace\\\\_lab\\\\2026-06-06-版式画廊部署",
+    "startCommand":  "cd /d D:\\\\workspace\\\\_lab\\\\2026-06-06-版式画廊部署 \u0026\u0026 npm start",
+    "stopCommand":  "npx kill-port 3080",
+    "conflicts":  [
+
+                  ],
+    "agent_notes":  "模板来自7个skill来源，npm start启动。公开域名gallery.evopearl.com。每次新增模板后需刷新。",
+    "capability":  "99个HTML幻灯片模板浏览器",
+    "owner":  "自建",
+    "runtime":  {
+                    "language":  "node",
+                    "version":  "24.13",
+                    "manager":  "npm",
+                    "note":  ""
+                }
 }

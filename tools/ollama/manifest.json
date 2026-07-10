@@ -13,5 +13,11 @@
   "stopCommand": "npx kill-port 11434",
   "conflicts": [],
   "agent_notes": "通常已自启。DeepSeek不需要本地模型也能跑——除非明确要跑本地开源模型，否则不要拉取新模型（下载慢且占磁盘）。",
-  "capability": "本地LLM推理和模型管理"
+  "capability": "本地LLM推理和模型管理",
+  "runtime": {
+    "language": "go",
+    "version": "",
+    "manager": "go-mod",
+    "note": ""
+  }
 }

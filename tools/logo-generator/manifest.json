@@ -1,19 +1,27 @@
-{
-  "name": "品牌全案设计局",
-  "id": "logo-generator",
-  "description": "【用途】AI品牌全案设计：品牌名→6个LOGO+配色+字体+名片+社媒头像。Gemini生成，curl POST localhost:3091/generate调用。【何时用】需要快速出品牌VI方案。【何时不用】已有成熟品牌→不需要。只需要一个LOGO不是整套→aigoapi gpt-image-2更快。【返回】JSON含图片URL列表【延迟】30s-2min【端口】3091",
-  "icon": "🎯",
-  "version": "1.0.0",
-  "category": "创作",
-  "order": 5,
-  "port": 3091,
-  "url": "http://localhost:3091",
-  "projectPath": "D:\\\\workspace\\\\_lab\\\\2026-05-29-Logo生成器",
-  "startCommand": "cd /d D:\\\\workspace\\\\_lab\\\\2026-05-29-Logo生成器 && python3 generate.py",
-  "stopCommand": "npx kill-port 3091",
-  "conflicts": [],
-  "agent_notes": "python3 generate.py启动。生成结果可拖入Pixso/即时设计/MasterGo编辑。curl POST传{brandName,category}。",
-  "capability": "AI品牌LOGO全案设计",
-  "owner": "自建",
-  "disabled": true
+﻿{
+    "name":  "品牌全案设计局",
+    "id":  "logo-generator",
+    "description":  "【用途】AI品牌全案设计：品牌名→6个LOGO+配色+字体+名片+社媒头像。Gemini生成，curl POST localhost:3091/generate调用。【何时用】需要快速出品牌VI方案。【何时不用】已有成熟品牌→不需要。只需要一个LOGO不是整套→aigoapi gpt-image-2更快。【返回】JSON含图片URL列表【延迟】30s-2min【端口】3091",
+    "icon":  "🎯",
+    "version":  "1.0.0",
+    "category":  "创作",
+    "order":  5,
+    "port":  3091,
+    "url":  "http://localhost:3091",
+    "projectPath":  "D:\\\\workspace\\\\_lab\\\\2026-05-29-Logo生成器",
+    "startCommand":  "cd /d D:\\\\workspace\\\\_lab\\\\2026-05-29-Logo生成器 \u0026\u0026 py -3.11 generate.py",
+    "stopCommand":  "npx kill-port 3091",
+    "conflicts":  [
+
+                  ],
+    "agent_notes":  "python3 generate.py启动。生成结果可拖入Pixso/即时设计/MasterGo编辑。curl POST传{brandName,category}。",
+    "capability":  "AI品牌LOGO全案设计",
+    "owner":  "自建",
+    "disabled":  true,
+    "runtime":  {
+                    "language":  "python",
+                    "version":  "3.11",
+                    "manager":  "pip",
+                    "note":  ""
+                }
 }

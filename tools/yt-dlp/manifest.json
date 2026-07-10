@@ -13,5 +13,11 @@
   "agent_notes": "单次CLI工具，无需后台服务。下载大文件时用 run_in_background。默认输出到当前工作目录。下载YouTube需要代理(VORTEX_PROXY 127.0.0.1:7897)。",
   "capability": "视频/音频下载（YouTube/B站等）",
   "owner": "外部",
-  "startCommand": "yt-dlp"
+  "startCommand": "yt-dlp",
+  "runtime": {
+    "language": "python",
+    "version": "",
+    "manager": "pip",
+    "note": "独立可执行文件"
+  }
 }

@@ -1,18 +1,26 @@
-{
-  "name": "个体户驾驶舱",
-  "id": "sole-prop-cockpit",
-  "description": "【用途】深圳个体工商户一站式管理：税务/社保/工商，申报日历+快捷入口。【何时用】查申报截止日、社保缴费、工商年检。【何时不用】具体税务计算→税无忧(3457)。非深圳个体户→不适用。【返回】Web UI :3456【端口】3456",
-  "icon": "🏪",
-  "version": "1.0.0",
-  "category": "职能",
-  "order": 30,
-  "port": 3456,
-  "url": "http://localhost:3456",
-  "projectPath": "D:\\\\workspace\\\\_lab\\\\2026-05-31-个体户台账",
-  "startCommand": "cd /d D:\\\\workspace\\\\_lab\\\\2026-05-31-个体户台账 && node server.js",
-  "stopCommand": "npx kill-port 3456",
-  "conflicts": [],
-  "agent_notes": "和税无忧互补：驾驶舱=日程+入口，税无忧=电商订单税务计算。两个端口不同可同时开。",
-  "capability": "个体户工商/社保/税务一站式管理",
-  "owner": "自建"
+﻿{
+    "name":  "个体户驾驶舱",
+    "id":  "sole-prop-cockpit",
+    "description":  "【用途】深圳个体工商户一站式管理：税务/社保/工商，申报日历+快捷入口。【何时用】查申报截止日、社保缴费、工商年检。【何时不用】具体税务计算→税无忧(3457)。非深圳个体户→不适用。【返回】Web UI :3456【端口】3456",
+    "icon":  "🏪",
+    "version":  "1.0.0",
+    "category":  "职能",
+    "order":  30,
+    "port":  3456,
+    "url":  "http://localhost:3456",
+    "projectPath":  "D:\\\\workspace\\\\_lab\\\\2026-05-31-个体户台账",
+    "startCommand":  "cd /d D:\\\\workspace\\\\_lab\\\\2026-05-31-个体户台账 \u0026\u0026 node server.js",
+    "stopCommand":  "npx kill-port 3456",
+    "conflicts":  [
+
+                  ],
+    "agent_notes":  "和税无忧互补：驾驶舱=日程+入口，税无忧=电商订单税务计算。两个端口不同可同时开。",
+    "capability":  "个体户工商/社保/税务一站式管理",
+    "owner":  "自建",
+    "runtime":  {
+                    "language":  "node",
+                    "version":  "24.13",
+                    "manager":  "npm",
+                    "note":  ""
+                }
 }

@@ -1,18 +1,26 @@
-{
-  "name": "浏览器控制 MCP Chrome DevTools",
-  "id": "mcp-chrome",
-  "owner": "外部",
-  "description": "【用途】Chrome DevTools MCP浏览器自动化。Claude Code内通过mcp__ChromeDevTools__*工具调用。【何时用】需要操控真实浏览器（填表单/截图/爬SPA页面）。【何时不用】简单网页抓取→WebFetch/PullMD更轻。不需要交互→不开。【返回】MCP工具输出【端口】9222",
-  "icon": "🌐",
-  "version": "1.0.0",
-  "category": "获取",
-  "order": 9,
-  "port": 9222,
-  "url": "http://localhost:9222",
-  "projectPath": "%USERPROFILE%\\.cache\\chrome-devtools-mcp\\chrome-profile",
-  "conflicts": [],
-  "agent_notes": "Profile在~/.cache/chrome-devtools-mcp/chrome-profile。Claude Code自动管理启动，不需要手动干预。mcp__ChromeDevTools__开头的工具都是它的。",
-  "capability": "Chrome浏览器自动化操控",
-  "startCommand": "npx chrome-devtools-mcp@latest",
-  "stopCommand": "npx kill-port 9222"
+﻿{
+    "name":  "浏览器控制 MCP Chrome DevTools",
+    "id":  "mcp-chrome",
+    "owner":  "外部",
+    "description":  "【用途】Chrome DevTools MCP浏览器自动化。Claude Code内通过mcp__ChromeDevTools__*工具调用。【何时用】需要操控真实浏览器（填表单/截图/爬SPA页面）。【何时不用】简单网页抓取→WebFetch/PullMD更轻。不需要交互→不开。【返回】MCP工具输出【端口】9222",
+    "icon":  "🌐",
+    "version":  "1.0.0",
+    "category":  "获取",
+    "order":  9,
+    "port":  9222,
+    "url":  "http://localhost:9222",
+    "projectPath":  "%USERPROFILE%\\.cache\\chrome-devtools-mcp\\chrome-profile",
+    "conflicts":  [
+
+                  ],
+    "agent_notes":  "Profile在~/.cache/chrome-devtools-mcp/chrome-profile。Claude Code自动管理启动，不需要手动干预。mcp__ChromeDevTools__开头的工具都是它的。",
+    "capability":  "Chrome浏览器自动化操控",
+    "startCommand":  "npx chrome-devtools-mcp@latest",
+    "stopCommand":  "npx kill-port 9222",
+    "runtime":  {
+                    "language":  "node",
+                    "version":  "24.13",
+                    "manager":  "npm",
+                    "note":  ""
+                }
 }

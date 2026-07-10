@@ -1,19 +1,27 @@
-{
-  "name": "人物思维顾问局",
-  "id": "nuwa-catalog",
-  "description": "【用途】人物思维顾问目录站。Anthropic暖象牙白+陶土色系。人物持续增减，具体数量以站内实际为准。【何时用】需要不同人物视角分析问题(perspective-router调这里的人物列表)。【何时不用】不需要切换视角→不启动。【返回】Web UI :3090，公开minds.evopearl.com【端口】3090",
-  "icon": "💭",
-  "version": "1.0.0",
-  "category": "查阅",
-  "order": 4,
-  "port": 3090,
-  "url": "http://localhost:3090",
-  "publicUrl": "https://minds.evopearl.com/",
-  "projectPath": "D:\\workspace\\nuwa-perspective-catalog",
-  "startCommand": "npx serve -l 3090 --no-clipboard",
-  "stopCommand": "npx kill-port 3090",
-  "conflicts": [],
-  "agent_notes": "单HTML纯静态，npx serve启动。公开域名minds.evopearl.com。perspective-router skill从这个人名录里选角色。",
-  "capability": "人物思维顾问目录站",
-  "owner": "自建"
+﻿{
+    "name":  "人物思维顾问局",
+    "id":  "nuwa-catalog",
+    "description":  "【用途】人物思维顾问目录站。Anthropic暖象牙白+陶土色系。人物持续增减，具体数量以站内实际为准。【何时用】需要不同人物视角分析问题(perspective-router调这里的人物列表)。【何时不用】不需要切换视角→不启动。【返回】Web UI :3090，公开minds.evopearl.com【端口】3090",
+    "icon":  "💭",
+    "version":  "1.0.0",
+    "category":  "查阅",
+    "order":  4,
+    "port":  3090,
+    "url":  "http://localhost:3090",
+    "publicUrl":  "https://minds.evopearl.com/",
+    "projectPath":  "D:\\workspace\\nuwa-perspective-catalog",
+    "startCommand":  "npx serve -l 3090 --no-clipboard",
+    "stopCommand":  "npx kill-port 3090",
+    "conflicts":  [
+
+                  ],
+    "agent_notes":  "单HTML纯静态，npx serve启动。公开域名minds.evopearl.com。perspective-router skill从这个人名录里选角色。",
+    "capability":  "人物思维顾问目录站",
+    "owner":  "自建",
+    "runtime":  {
+                    "language":  "node",
+                    "version":  "24.13",
+                    "manager":  "npm",
+                    "note":  ""
+                }
 }

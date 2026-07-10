@@ -1,18 +1,26 @@
-{
-  "name": "工具架 · Agentboard",
-  "id": "dashboard",
-  "description": "【用途】工具架控制平面。GET /api/tools返回所有工具的JSON(name/port/running/startCommand/stopCommand)。【何时用】不确定某工具是否在跑或端口号时，先调这个。任何操作前查running状态。【何时不用】只是用工具本身→直接调工具端口。【返回】{ok, tools:[{name,port,running,...}]}【延迟】<100ms【端口】3099",
-  "icon": "⚙",
-  "version": "2.1.0",
-  "category": "设施",
-  "order": 1,
-  "port": 3099,
-  "url": "http://localhost:3099",
-  "projectPath": "%USERPROFILE%\\.agentboard",
-  "startCommand": "node %USERPROFILE%\\.agentboard\\server.js",
-  "stopCommand": "npx kill-port 3099",
-  "conflicts": [],
-  "agent_notes": "每次操作工具前必须GET /api/tools确认running:true——不能因为看到port号就假设服务在跑。manifest改完无需重启，每次请求自动扫描。【新工具注册前必做三步】①读lib/manifest-schema.js查必填字段和owner枚举(自建/外部/AI托管) ②GET /api/tools搜现有分类名，勿自创 ③读index.html cmdType枚举(service/command/folder/group)，选错=卡片无按钮。写完manifest跑schema.validate()校验。2026-06-30踩坑:type写reference→无按钮,category写基础设施→前端不认,owner写第三方→枚举外。",
-  "capability": "工具架控制平面和Web面板",
-  "owner": "自建"
+﻿{
+    "name":  "工具架 · Agentboard",
+    "id":  "dashboard",
+    "description":  "【用途】工具架控制平面。GET /api/tools返回所有工具的JSON(name/port/running/startCommand/stopCommand)。【何时用】不确定某工具是否在跑或端口号时，先调这个。任何操作前查running状态。【何时不用】只是用工具本身→直接调工具端口。【返回】{ok, tools:[{name,port,running,...}]}【延迟】\u003c100ms【端口】3099",
+    "icon":  "⚙",
+    "version":  "2.1.0",
+    "category":  "设施",
+    "order":  1,
+    "port":  3099,
+    "url":  "http://localhost:3099",
+    "projectPath":  "%USERPROFILE%\\.agentboard",
+    "startCommand":  "node %USERPROFILE%\\.agentboard\\server.js",
+    "stopCommand":  "npx kill-port 3099",
+    "conflicts":  [
+
+                  ],
+    "agent_notes":  "每次操作工具前必须GET /api/tools确认running:true——不能因为看到port号就假设服务在跑。manifest改完无需重启，每次请求自动扫描。【新工具注册前必做三步】①读lib/manifest-schema.js查必填字段和owner枚举(自建/外部/AI托管) ②GET /api/tools搜现有分类名，勿自创 ③读index.html cmdType枚举(service/command/folder/group)，选错=卡片无按钮。写完manifest跑schema.validate()校验。2026-06-30踩坑:type写reference→无按钮,category写基础设施→前端不认,owner写第三方→枚举外。",
+    "capability":  "工具架控制平面和Web面板",
+    "owner":  "自建",
+    "runtime":  {
+                    "language":  "node",
+                    "version":  "24.13",
+                    "manager":  "npm",
+                    "note":  ""
+                }
 }

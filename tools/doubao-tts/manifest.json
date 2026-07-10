@@ -130,5 +130,11 @@
     "voice_override": "python D:\\tools\\doubao-tts\\tts.py \"文本\" -v zh_female_shuangkuaisisi_uranus_bigtts -o output.mp3",
     "output": "stdout 返回 JSON: {\"ok\": true, \"output\": \"<abs-path>\", \"metadata\": \"<abs-path>.json\", \"audio_duration_seconds\": 4.85, ...}",
     "env": "DOUBAO_SPEECH_API_KEY (必需), DOUBAO_SPEECH_VOICE_TYPE (默认音色，可选)"
+  },
+  "runtime": {
+    "language": "python",
+    "version": "",
+    "manager": "pip",
+    "note": "调远程API"
   }
 }

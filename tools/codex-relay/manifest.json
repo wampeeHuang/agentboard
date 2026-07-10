@@ -12,5 +12,11 @@
   "stopCommand": "taskkill /F /IM codex-relay.exe",
   "conflicts": [],
   "agent_notes": "这个工具是透明代理，Codex 正常使用即可。上游模型列表变化后需要重启 relay 刷新。Codex 配置文件在 ~/.codex/config.toml。relay 启动后 codex doctor 的 active provider 应显示为 deepseek-relay，base_url 为 http://127.0.0.1:4446/v1。",
-  "capability": "Responses API翻译桥（Codex用）"
+  "capability": "Responses API翻译桥（Codex用）",
+  "runtime": {
+    "language": "go",
+    "version": "",
+    "manager": "go-mod",
+    "note": "Go二进制"
+  }
 }

@@ -79,6 +79,15 @@ body{min-height:100vh;display:flex;flex-direction:column}
 .badge-命令{color:#8B5CF6;background:rgba(139,92,246,.08)}
 .badge-文件夹{color:#D97706;background:rgba(217,119,6,.08)}
 .owner-badge{font-size:9px;font-weight:400;color:var(--text-muted);padding:0 5px;border:1px solid var(--border);font-family:'Cascadia Code','Consolas','SF Mono',monospace;letter-spacing:.04em;line-height:1.6;display:inline-flex;align-items:center}
+.runtime-badge{font-size:9px;font-weight:500;font-family:'Cascadia Code','Consolas','SF Mono',monospace;padding:0 5px;letter-spacing:.04em;line-height:1.6;display:inline-flex;align-items:center;gap:3px;border-radius:2px}
+.rt-py{color:#3776AB;background:rgba(55,118,171,.10)}
+.rt-node{color:#27ae60;background:rgba(39,174,96,.10)}
+.rt-go{color:#00ADD8;background:rgba(0,173,216,.10)}
+.rt-rust{color:#DEA584;background:rgba(222,165,132,.12)}
+.rt-cpp{color:#00599C;background:rgba(0,89,156,.10)}
+.rt-csharp{color:#68217A;background:rgba(104,33,122,.10)}
+.rt-shell{color:#6B7280;background:rgba(107,114,128,.10)}
+.rt-other{color:#8B5CF6;background:rgba(139,92,246,.10)}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
 
 .cmd-card{border-left:2px solid #8B5CF6}
@@ -526,6 +535,16 @@ function getToolOwner(t) {
   return '外部';
 }
 
+// Runtime badge: 语言+版本
+function getRuntimeBadge(t) {
+  if (!t.runtime || !t.runtime.language) return '';
+  var rt = t.runtime;
+  var langMap = {python:'py',node:'node',go:'go',rust:'rs',cpp:'c++',csharp:'c#',shell:'sh',other:'···'};
+  var label = langMap[rt.language] || rt.language;
+  if (rt.version) label += ' ' + rt.version;
+  return '<span class="runtime-badge rt-' + rt.language + '" title="' + rt.language + (rt.version ? ' ' + rt.version : '') + (rt.note ? ' — ' + rt.note : '') + '">' + label + '</span>';
+}
+
 // Pre-populated by server; apply immediately if available
 (function() {
   if (window.__stats) {
@@ -804,6 +823,7 @@ var klass = isCli ? 'cmd' : (cmdType === 'folder' ? 'folder' : (t.running ? 'on'
     var toolForm = getToolForm(t);
     var toolOwner = getToolOwner(t);
     var formBadge = '<span class="form-badge badge-' + toolForm + '">' + toolForm + '</span>';
+    var runtimeBadge = getRuntimeBadge(t);
     var ownerBadge = toolOwner === '自建' ? '' : '<span class="owner-badge">' + toolOwner + '</span>';
 
     var isOpened = opened[t.id];
@@ -825,7 +845,7 @@ var klass = isCli ? 'cmd' : (cmdType === 'folder' ? 'folder' : (t.running ? 'on'
           + (t.description ? '<div class="card-desc" title="' + t.description.replace(/"/g,'&quot;') + '">' + t.description + '</div>' : '')
         + '</div>'
       + '</div>'
-      + '<div class="card-actions">' + (isCli ? '<span class="cmd-hint">在 Claude Code 中输入</span>' : (openBtn||'') + (actionHtml||'') + (publicBtn||'')) + '<span class="card-badges">' + formBadge + ownerBadge + '</span>' + '<label class="toggle-disable" onclick="event.stopPropagation();toggleDisabled(\'' + t.id + '\')"><input type="checkbox"' + (t.disabled ? '' : ' checked') + '><span class="toggle-track' + (t.disabled ? '' : ' on') + '"></span><span class="toggle-label' + (t.disabled ? '' : ' on') + '">' + (t.disabled ? '停用' : '启用') + '</span></label></div>'
+      + '<div class="card-actions">' + (isCli ? '<span class="cmd-hint">在 Claude Code 中输入</span>' : (openBtn||'') + (actionHtml||'') + (publicBtn||'')) + '<span class="card-badges">' + runtimeBadge + formBadge + ownerBadge + '</span>' + '<label class="toggle-disable" onclick="event.stopPropagation();toggleDisabled(\'' + t.id + '\')"><input type="checkbox"' + (t.disabled ? '' : ' checked') + '><span class="toggle-track' + (t.disabled ? '' : ' on') + '"></span><span class="toggle-label' + (t.disabled ? '' : ' on') + '">' + (t.disabled ? '停用' : '启用') + '</span></label></div>'
     + '</div>';
   }).join('');
 }

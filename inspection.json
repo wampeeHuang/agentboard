@@ -6,7 +6,7 @@
   "checks": [
     {
       "id": "manifest_schema",
-      "label": "Manifest Schema 合规",
+      "label": "Manifest Schema",
       "what": "tools/*/manifest.json 全部通过 schema 校验",
       "category": "B",
       "schedule": "daily",
@@ -26,13 +26,37 @@
     },
     {
       "id": "port_3099",
-      "label": "端口 3099 监听",
+      "label": "端口 3099",
       "what": "agentboard 主端口在 LISTENING 状态",
       "category": "B",
       "schedule": "daily",
       "severity": "error",
       "declarative": "port_listening",
       "spec": { "port": 3099 }
+    },
+    {
+      "id": "orphan_dirs",
+      "label": "孤儿目录",
+      "what": "tools/*/ 下每个子目录都有 manifest.json。有目录无 manifest = 僵尸工具，面板不可见但占位置",
+      "category": "B",
+      "schedule": "weekly",
+      "severity": "error",
+      "declarative": "node_module",
+      "spec": { "module": "lib/manifest-schema.js", "function": "auditOrphans", "passWhen": "errors === 0" }
+    },
+    {
+      "id": "api_ok",
+      "label": "API 响应",
+      "what": "/api/tools 返回 ok:true 且 tools 是数组。端口在监听 ≠ API 正常，可能返回 500",
+      "category": "B",
+      "schedule": "daily",
+      "severity": "error",
+      "declarative": "shell",
+      "spec": {
+        "command": "curl -s http://localhost:3099/api/tools | node -e \"var d='';process.stdin.on('data',function(c){d+=c});process.stdin.on('end',function(){var j=JSON.parse(d);if(!j.ok||!Array.isArray(j.tools)){console.log('FAIL: invalid response');process.exit(1)}console.log('OK all tools:',j.tools.length)})\"",
+        "timeout_sec": 10,
+        "expect_exit_code": 0
+      }
     }
   ]
 }

@@ -69,5 +69,11 @@
     }
   ],
   "architecture": "SakuraCat (Electron GUI)\n  → 推送配置覆盖 config.yaml\n  → Vortex (Clash Meta 内核) :7897 (mixed)\n  → External Controller :39798 (REST API)\n  → fake-ip DNS 劫持 (198.18.0.1/16)\n  → fake-ip-filter 白名单: 白名单内 → 真 DNS → 真 IP → 直连成功\n  → 不在白名单: DNS → 假 IP → 直连假 IP → 断连\n\n热重载: PUT /configs → Clash 重读 config.yaml → fake-ip-filter 生效\n无需: 关 GUI / 删 cache.db / 重启服务",
-  "disabled": false
+  "disabled": false,
+  "runtime": {
+    "language": "other",
+    "version": "",
+    "manager": "none",
+    "note": "Electron + Clash内核"
+  }
 }

@@ -13,5 +13,11 @@
   "stopCommand": "echo 关了弹出的终端窗口就行",
   "conflicts": [],
   "agent_notes": "代码驱动的视频生产管线。编排固化在YAML文件里，进度存在checkpoint JSON里。和Agent驱动管线（AGENT_GUIDE.md）的核心区别：pipeline.py 不接受'我觉得应该跳过'——100次跑100次一样。启动方式：在AI助手中打开项目文件夹，说'开始制作视频'即可。首次使用需make setup安装依赖。",
-  "capability": "AI视频生产管线（YAML编排+checkpoint状态+LLM可替换）"
+  "capability": "AI视频生产管线（YAML编排+checkpoint状态+LLM可替换）",
+  "runtime": {
+    "language": "python",
+    "version": "3.11",
+    "manager": "pip",
+    "note": ""
+  }
 }

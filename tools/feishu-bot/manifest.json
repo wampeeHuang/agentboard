@@ -1,20 +1,112 @@
-{
-  "name": "飞书 Bot",
-  "id": "feishu-bot",
-  "description": "【用途】多租户飞书机器人服务，一个进程托管4个飞书App→claude -p→飞书API回复。【何时用】飞书bot无响应时查状态。新增bot改BOTS数组。【返回】HTML仪表盘 :3101",
-  "icon": "🦐",
-  "version": "2.1.0",
-  "category": "设施",
-  "order": 40,
-  "port": 3101,
-  "url": "http://localhost:3101/health",
-  "projectPath": "C:\\Users\\Administrator\\.feishu-bot",
-  "owner": "自建",
-  "type": "service",
-  "startCommand": "cd /d %USERPROFILE%\\.feishu-bot && node server.js",
-  "stopCommand": "npx kill-port 3101",
-  "children": [],
-  "conflicts": [],
-  "agent_notes": "BOTS数组在server.js注册。每个飞书App独立WS连接+独立token缓存。claude -p无状态模式。扩容：加BOTS条目→pm2 restart。4个Bot详情在 /health 仪表盘查看。",
-  "capability": "飞书消息收发（4 Bot统一服务）"
+﻿{
+    "name":  "飞书 Bot",
+    "id":  "feishu-bot",
+    "description":  "【用途】多租户飞书机器人服务，进程托管10个飞书App→claude -p→飞书API回复。【何时用】飞书bot无响应时查状态。新增bot改BOTS数组+本manifest的apps。【返回】对外ID管理 :3101",
+    "icon":  "🦐",
+    "version":  "2.2.0",
+    "category":  "设施",
+    "order":  40,
+    "port":  3101,
+    "url":  "http://localhost:3101/",
+    "projectPath":  "C:\\Users\\Administrator\\.feishu-bot",
+    "owner":  "自建",
+    "type":  "service",
+    "startCommand":  "cd /d %USERPROFILE%\\.feishu-bot \u0026\u0026 node server.js",
+    "stopCommand":  "npx kill-port 3101",
+    "children":  [
+
+                 ],
+    "conflicts":  [
+
+                  ],
+    "agent_notes":  "飞书应用在 https://open.feishu.cn/app 管理。server.js的BOTS数组是已激活WS连接的Bot。其余app仅登记未连线。通知发送走feishu-notify.ps1(大CC)。",
+    "capability":  "飞书消息收发（10 App，4 Bot连线）+ 对外ID管理仪表盘",
+    "apps":  [
+                 {
+                     "name":  "2号站·内容",
+                     "emoji":  "📡",
+                     "appId":  "cli_a9036fe48178dcb3",
+                     "status":  "online",
+                     "role":  "内容平台",
+                     "desc":  "进化猫日报/精选/AI信号+猫波生产/选题"
+                 },
+                 {
+                     "name":  "3号站·编码",
+                     "emoji":  "💻",
+                     "appId":  "cli_aa992600d0215cb2",
+                     "status":  "online",
+                     "role":  "编程",
+                     "desc":  "编程助手，代码/调试/架构设计"
+                 },
+                 {
+                     "name":  "1号站·运维",
+                     "emoji":  "🛰️",
+                     "appId":  "cli_a9560e6393631bd6",
+                     "status":  "online",
+                     "role":  "运维中枢",
+                     "desc":  "备份告警+巡检异常+Bitable+通知发送"
+                 },
+                 {
+                     "name":  "4号站·生活",
+                     "emoji":  "🌸",
+                     "appId":  "cli_a947914e3b385bc2",
+                     "status":  "online",
+                     "role":  "个人事务",
+                     "desc":  "个体户申报/职位巡检/税无忧/保障房通知"
+                 },
+                 {
+                     "name":  "排版工",
+                     "emoji":  "📐",
+                     "appId":  "cli_a97188830a395bc6",
+                     "status":  "idle",
+                     "role":  "未分配",
+                     "desc":  "排版工具，飞书开放平台描述为空"
+                 },
+                 {
+                     "name":  "CozeClaw",
+                     "emoji":  "🔗",
+                     "appId":  "cli_a978626daff81bc6",
+                     "status":  "idle",
+                     "role":  "未分配",
+                     "desc":  "Coze+OpenClaw集成"
+                 },
+                 {
+                     "name":  "get微文",
+                     "emoji":  "📄",
+                     "appId":  "cli_a97860c94db8dbde",
+                     "status":  "idle",
+                     "role":  "未分配",
+                     "desc":  "微信文章获取"
+                 },
+                 {
+                     "name":  "CCHaha",
+                     "emoji":  "😄",
+                     "appId":  "cli_a9563b5523b89bc4",
+                     "status":  "idle",
+                     "role":  "未分配",
+                     "desc":  "用途待确认"
+                 },
+                 {
+                     "name":  "微信文章捕手",
+                     "emoji":  "🕸️",
+                     "appId":  "cli_a965d63a3f78dccd",
+                     "status":  "idle",
+                     "role":  "未分配",
+                     "desc":  "微信文章抓取"
+                 },
+                 {
+                     "name":  "飞书群聊推送",
+                     "emoji":  "📢",
+                     "appId":  "cli_a95a3c2972795bd1",
+                     "status":  "offline",
+                     "role":  "未分配",
+                     "desc":  "群聊推送，待上线"
+                 }
+             ],
+    "runtime":  {
+                    "language":  "node",
+                    "version":  "24.13",
+                    "manager":  "npm",
+                    "note":  ""
+                }
 }

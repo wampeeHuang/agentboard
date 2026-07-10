@@ -13,5 +13,11 @@
   "conflicts": [],
   "agent_notes": "本地GPU（RTX 5060 Ti Blackwell sm_120）推理不可用——PyTorch 2.11/CUDA 12.8数值偏差，产出极短安静。必须走官方Gradio API（confucius4-tts.youdao.com/gradio），不走本地GPU。项目宪法和用法见 workspace CLAUDE.md。",
   "capability": "多语种零样本语音克隆TTS 14语言 官方API",
-  "type": "cli"
+  "type": "cli",
+  "runtime": {
+    "language": "python",
+    "version": "",
+    "manager": "pip",
+    "note": "调远程API"
+  }
 }
