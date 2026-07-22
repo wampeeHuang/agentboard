@@ -6,6 +6,7 @@
   "icon": "🎙",
   "version": "1.0.0",
   "category": "本地模型",
+  "autoStart": false,
   "order": 18,
   "port": 8000,
   "url": "http://localhost:8000",

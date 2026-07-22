@@ -7,17 +7,19 @@
   "category": "创作",
   "order": 7,
   "owner": "外部",
+  "disabled": false,
+  "autoStart": false,
   "port": 5173,
   "url": "http://localhost:5173",
   "projectPath": "D:\\tools\\ace-step",
-  "startCommand": "cd /d D:\\tools\\ace-step && start-all.bat",
-  "stopCommand": "npx kill-port 5173 && npx kill-port 3001 && npx kill-port 8001",
+  "startCommand": "powershell -ExecutionPolicy Bypass -File D:\\tools\\ace-step\\start-headless.ps1",
+  "stopCommand": "powershell -ExecutionPolicy Bypass -File D:\\tools\\ace-step\\stop-headless.ps1",
   "conflicts": [
     "comfyui",
     "stable-diffusion",
     "minicpm-v"
   ],
-  "agent_notes": "三层架构：React前端(:5173) → Node API(:3001) → Python引擎(:8001)。模型4个共9.5GB显存。启动用start-all.bat。⚠️显存高，不能和ComfyUI/SD/MiniCPM共存。\n\n【歌词生成必读 USAGE.md】LM 1.7B 会吃掉前4-6行歌词（结构性intro预留帧），必须加4行诱饵(\"啊～\")在歌词最前面供牺牲。歌词≤150字，Duration≤100s，CFG Scale≤3.0，禁止点AI Format（会加回结构标记破坏歌词）。引擎用acestep-api不是acestep.exe，.env里ACESTEP_INIT_LLM=true不是auto。详见 USAGE.md。",
+  "agent_notes": "三层架构：React前端(:5173) → Node API(:3001) → Python引擎(:8001)。模型4个共9.5GB显存。⚠️显存高，不能和ComfyUI/SD/MiniCPM共存。\n\n【自愈启动】startCommand 已升级为 start.ps1（PowerShell），启动前自动：①杀掉 :8001 :3001 :5173 的残留进程 ②检查 GPU 冲突并给出选项 [Y]继续/[N]放弃/[K]杀冲突后继续 ③验证后打开浏览器。无需手动 diagnose。\n\n【诊断】如果启动仍失败，跑 diagnose.ps1 逐项排查：powershell -ExecutionPolicy Bypass -File D:\\tools\\ace-step\\diagnose.ps1\n\n【歌词生成必读 USAGE.md】LM 1.7B 会吃掉前4-6行歌词（结构性intro预留帧），必须加4行诱饵(\"啊～\")在歌词最前面供牺牲。歌词≤150字，Duration≤100s，CFG Scale≤3.0，禁止点AI Format（会加回结构标记破坏歌词）。引擎用acestep-api不是acestep.exe，.env里ACESTEP_INIT_LLM=true不是auto。详见 USAGE.md。",
   "capability": "AI音乐旋律生成 DiT+LM双模型",
   "runtime": {
     "language": "python",

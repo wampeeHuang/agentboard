@@ -6,11 +6,12 @@
   "icon": "🖼",
   "version": "1.0.0",
   "category": "本地模型",
+  "autoStart": false,
   "order": 11,
   "port": 7860,
   "url": "http://localhost:7860",
   "projectPath": "D:\\tools\\Stable-Diffusion\\sd-webui-aki-v4.10\\sd-webui-aki-v4.10",
-  "startCommand": "cd /d D:\\tools\\Stable-Diffusion\\sd-webui-aki-v4.10\\sd-webui-aki-v4.10 && python launch.py",
+  "startCommand": "cd /d D:/tools/Stable-Diffusion/sd-webui-aki-v4.10/sd-webui-aki-v4.10 && python/python.exe launch.py --skip-python-version-check",
   "stopCommand": "npx kill-port 7860",
   "conflicts": [
     "comfyui",

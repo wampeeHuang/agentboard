@@ -1,4 +1,4 @@
-﻿{
+{
     "name":  "ComfyUI",
     "id":  "comfyui",
     "owner":  "外部",
@@ -6,6 +6,7 @@
     "icon":  "🧩",
     "version":  "1.0.0",
     "category":  "本地模型",
+    "autoStart": false,
     "order":  6,
     "port":  8188,
     "url":  "http://localhost:8188",
