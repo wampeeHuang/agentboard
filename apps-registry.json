@@ -1,6 +1,6 @@
 {
   "description": "公网部署应用注册表。每个应用的唯一真相源。AI Agent 启动时读此文件发现所有可用应用。工具架面板展示同一份数据。",
-  "updated": "2026-06-09T18:00",
+  "updated": "2026-07-23T00:22",
   "apps": [
     {
       "id": "vivihuang.evopearl.com",
@@ -27,6 +27,16 @@
         "data": "https://data.evopearl.com/data/{task}/{date}.json"
       },
       "agentNote": "配置和数据结构见 config.json。每日数据文件格式：data/{task}/YYYY-MM-DD.json。三个 task: ai-signal, deep-read, daily-selection。"
+    },
+    {
+      "id": "dechpcba.evopearl.com",
+      "name": "德城科技 PCBA",
+      "url": "https://dechpcba.evopearl.com",
+      "description": "深圳 PCBA 制造官网。小批量、多品种、非标定制，20 年工程经验，自有工厂 3 条 SMT 产线。",
+      "category": "商业",
+      "status": "live",
+      "host": "腾讯云 DNSPod → Vercel (dechpcba)",
+      "agentNote": "静态网站，Vercel 部署。1 片起做，BGA 最小间距 0.3mm，01005 元件。深圳光明新区自有工厂。"
     },
     {
       "id": "forma.evopearl.com",

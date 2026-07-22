@@ -8,8 +8,9 @@
   mcp-server.js      ← MCP JSON-RPC/stdio (AI 调工具的标准协议)
   index.html          ← 工具架前端
   tools/*/manifest.json  ← 工具注册（唯一真相源）
+  tips/*.md           ← 踩坑沉淀（唯一真相源）
+  mechanisms/*.md     ← 系统机制说明（唯一真相源）
   runtime/*.pid        ← 进程身份文件（启动时写入，停止时清理）
-  tips/*.md           ← 操作日志（唯一真相源）
   apps-registry.json  ← 公网应用注册表
   cron/tasks.db       ← cron 任务运行时状态（SQLite）
 ```
@@ -126,10 +127,9 @@ AI agent 通过 **MCP** 调工具（`mcp-server.js`，stdio），标准 JSON-RPC
 
 ## 服务器
 
-- 端口 3099，进程 `node server.js`，PM2 管理（ecosystem.config.js）
-- 修改 server.js 后重启：`pm2 restart agentboard`
+- 端口 3099，进程 `dashboard`
+- 进程守护由 Supervisor 管理，详见 `~/.agentboard/tools/supervisor/manifest.json`
 - manifest 改动无需重启，每次请求都会重新扫描
-- pm2-logrotate: max_size=10M retain=7 workerInterval=43200 rotateInterval="" compress=false
 
 ## 巡检
 
