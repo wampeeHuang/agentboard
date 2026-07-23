@@ -22,6 +22,20 @@ node server.js
 
 跳过步骤 2。`tools/` 为空，从 `examples/` 复制模板重建。
 
+## 日常更新
+
+两个独立 repo，各自 pull：
+
+```bash
+# 框架更新（公共）
+cd ~/.agentboard && git pull
+
+# 工具注册表更新（私有）
+cd ~/.agentboard/tools && git pull
+```
+
+框架 `.gitignore` 排除 `tools/`，`git pull` 不会覆盖或干扰个人注册表。
+
 ## 验证恢复成功
 
 ```bash
