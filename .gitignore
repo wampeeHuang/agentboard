@@ -10,3 +10,5 @@ cron/tasks.db-wal
 cron/runtime-events.jsonl
 cron/scheduler-state.json
 cron/stderr.log
+tools/
+!examples/

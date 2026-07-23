@@ -1,0 +1,14 @@
+{
+  "name": "Hello Server",
+  "description": "【用途】最简示例——一个 Python HTTP 服务。【何时用】验证 agentboard 能正常发现/启动/停止工具。【返回】{ok: true}",
+  "capability": "示例 HTTP 服务",
+  "owner": "自建",
+  "icon": "🚀",
+  "version": "1.0.0",
+  "category": "设施",
+  "port": 3456,
+  "url": "http://localhost:3456",
+  "projectPath": "examples/hello-server",
+  "startCommand": "python -m http.server 3456",
+  "stopCommand": "npx kill-port 3456"
+}

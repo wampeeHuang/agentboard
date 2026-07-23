@@ -1,0 +1,25 @@
+{
+  "name": "Next.js Dev Server",
+  "description": "【用途】Next.js 开发服务器示例，展示 preStart 清理残留锁文件。【何时用】参考完整 manifest 字段写法。【返回】Web UI :3103",
+  "capability": "Next.js 开发服务器",
+  "owner": "自建",
+  "icon": "⚡",
+  "version": "1.0.0",
+  "category": "设施",
+  "order": 10,
+  "port": 3103,
+  "url": "http://localhost:3103",
+  "startCommand": "cd my-nextjs-project && npm run dev",
+  "stopCommand": "npx kill-port 3103",
+  "preStart": "npx kill-port 3103 && if exist .next\\dev\\lock del .next\\dev\\lock",
+  "type": "service",
+  "conflicts": [],
+  "agent_notes": "Next.js 崩溃后 .next/dev/lock 残留会阻止重启。preStart 自动清理。",
+  "disabled": false,
+  "runtime": {
+    "language": "node",
+    "version": "20",
+    "manager": "npm",
+    "note": "Next.js dev server, port 3103"
+  }
+}
