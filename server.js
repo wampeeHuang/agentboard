@@ -1,9 +1,20 @@
-﻿// Gate: only pm2 may start this server. Prevents orphan processes from
-// node -e "require('./server.js')" or bare "node server.js" holding the port.
-if (!process.env.name) {
-  console.error('agentboard must be started via pm2: pm2 restart agentboard');
-  process.exit(1);
-}
+﻿// Safety: PM2 io-bpm NotifyFeature calls process.exit(1) when it's the only
+// uncaughtException listener ("listeners.length === 1" check in notify.js:128).
+// This pre-handler ensures there are always ≥2 listeners, so PM2 never kills
+// the process silently. It also logs the error before PM2's handler runs,
+// since PM2's handler (registered during process bootstrap) fires first and
+// would otherwise exit before our server.js handler gets a chance to log.
+// Root cause: 2026-07-18 crash storm — 32 restarts/40min, exit code 1,
+// no error in logs. Tracked to notify.js:129 via crash-forensics.log.
+process.prependListener('uncaughtException', function(err) {
+  try {
+    var opslog_pre = require('./lib/ops-log');
+    opslog_pre.error('uncaughtException-pre', (err && err.message) || String(err), {
+      code: err && err.code,
+      stack: (err && err.stack || '').split('\n').slice(0, 3).join('\n')
+    });
+  } catch(_) {}
+});
 
 const express = require('express');
 const fs = require('fs');
@@ -1793,6 +1804,10 @@ function startServer() {
   process.on('uncaughtException', function(err) {
     opslog.error('uncaughtException', (err && err.message) || String(err), { stack: err && err.stack });
     console.error('[agentboard] uncaughtException:', err && err.stack || err);
+    // EADDRINUSE is fatal — exit so PM2 can restart cleanly instead of going zombie
+    if (err && (err.code === 'EADDRINUSE' || err.code === 'EACCES')) {
+      process.exit(1);
+    }
   });
   process.on('unhandledRejection', function(reason) {
     var msg = (reason && reason.message) || String(reason);
@@ -1863,6 +1878,41 @@ function startServer() {
     opslog.info('server-start', 'server started', { port: PORT, pid: process.pid });
     console.log('Agentboard http://localhost:' + PORT);
   });
+
+  // ── self-check: die fast so supervisor can resurrect ──────────────────────
+  var SELF_CHECK_INTERVAL = 5000;
+  var LAG_THRESHOLD_MS = 3000;
+  var MEM_THRESHOLD_GB = 2;
+  var lagFails = 0;
+
+  function checkSelf() {
+    // skip self-check when debugging — breakpoints look like event loop lag
+    if (process.execArgv.some(function(a) { return a.indexOf('--inspect') === 0; })) return;
+    // event loop lag — schedule immediate callback, measure real delay
+    var t0 = Date.now();
+    setImmediate(function() {
+      var lag = Date.now() - t0;
+      if (lag > LAG_THRESHOLD_MS) {
+        lagFails++;
+        if (lagFails >= 2) {
+          opslog.error('self-check-suicide', 'event loop lag ' + lag + 'ms x' + lagFails + ', exiting(7)', { lag_ms: lag, consecutive: lagFails });
+          process.exit(7);
+        }
+        opslog.info('self-check-lag', 'event loop lag ' + lag + 'ms', { lag_ms: lag });
+      } else {
+        lagFails = 0;
+      }
+
+      // memory
+      var heapGB = process.memoryUsage().heapUsed / (1024 * 1024 * 1024);
+      if (heapGB > MEM_THRESHOLD_GB) {
+        opslog.error('self-check-suicide', 'heap ' + heapGB.toFixed(1) + 'GB > ' + MEM_THRESHOLD_GB + 'GB, exiting(7)', { heap_gb: heapGB });
+        process.exit(7);
+      }
+    });
+  }
+
+  setInterval(checkSelf, SELF_CHECK_INTERVAL);
 }
 
 if (require.main === module) {
