@@ -6,50 +6,59 @@
   "checks": [
     {
       "id": "manifest_schema",
-      "label": "Manifest Schema",
+      "label": "工具注册格式正确",
       "what": "tools/*/manifest.json 全部通过 schema 校验",
-      "category": "B",
-      "schedule": "daily",
+      "job": "inspector-b-daily",
       "severity": "error",
       "declarative": "node_module",
-      "spec": { "module": "lib/manifest-schema.js", "function": "auditAll", "passWhen": "errors === 0" }
+      "spec": {
+        "module": "lib/manifest-schema.js",
+        "function": "auditAll",
+        "passWhen": "errors === 0"
+      }
     },
     {
       "id": "runtime_drift",
-      "label": "运行时漂移",
+      "label": "工具实际状态一致",
       "what": "声明端口在监听、projectPath 存在、命令可执行",
-      "category": "B",
-      "schedule": "daily",
+      "job": "inspector-b-daily",
       "severity": "error",
       "declarative": "node_module",
-      "spec": { "module": "lib/manifest-schema.js", "function": "auditRuntime", "passWhen": "errors === 0" }
+      "spec": {
+        "module": "lib/manifest-schema.js",
+        "function": "auditRuntime",
+        "passWhen": "errors === 0"
+      }
     },
     {
       "id": "port_3099",
-      "label": "端口 3099",
-      "what": "agentboard 主端口在 LISTENING 状态",
-      "category": "B",
-      "schedule": "daily",
+      "label": "面板可访问",
+      "what": "端口 3099 在 LISTENING 状态",
+      "job": "inspector-b-daily",
       "severity": "error",
       "declarative": "port_listening",
-      "spec": { "port": 3099 }
+      "spec": {
+        "port": 3099
+      }
     },
     {
       "id": "orphan_dirs",
-      "label": "孤儿目录",
-      "what": "tools/*/ 下每个子目录都有 manifest.json。有目录无 manifest = 僵尸工具，面板不可见但占位置",
-      "category": "B",
-      "schedule": "weekly",
+      "label": "无僵尸工具残留",
+      "what": "tools/*/ 下每个子目录都有 manifest.json，无僵尸目录",
+      "job": "inspector-b-weekly",
       "severity": "error",
       "declarative": "node_module",
-      "spec": { "module": "lib/manifest-schema.js", "function": "auditOrphans", "passWhen": "errors === 0" }
+      "spec": {
+        "module": "lib/manifest-schema.js",
+        "function": "auditOrphans",
+        "passWhen": "errors === 0"
+      }
     },
     {
       "id": "api_ok",
-      "label": "API 响应",
-      "what": "/api/tools 返回 ok:true 且 tools 是数组。端口在监听 ≠ API 正常，可能返回 500",
-      "category": "B",
-      "schedule": "daily",
+      "label": "API正常响应",
+      "what": "/api/tools 返回 ok:true 且 tools 是数组",
+      "job": "inspector-b-daily",
       "severity": "error",
       "declarative": "shell",
       "spec": {

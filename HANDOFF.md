@@ -1,35 +1,28 @@
-# HANDOFF — agentboard 审计修复 (2026-07-08)
+# HANDOFF · 2026-07-25
 
-## P0 密钥泄露
-- tencent-cloud-api: SecretId/SecretKey → 环境变量 TENCENT_SECRET_ID/KEY
-- bigmodel-coding-plan: API key → ZHIPU_CODING_PLAN_KEY
-- gpt-image-2: config.api_key 删除 → config.api_key_env
+## 本次完成
+- OmniRoute 本地部署 + 工具架注册（category=远程模型，API Key 已备份飞书）
+- Schema 补充 `公开站` 分类（CATEGORY_VALUES + CATEGORY_DEFINITIONS）
+- index.html 领域映射同步（domainMap + pill 列表，公开站不显示为领域 pill）
+- 新增 tip: manifest-disk-write-bypasses-api-validation.md
+- Git commit: `7974e9b` — schema + html + tip
 
-## P0 GFW 阻断
-- index.html: Google Fonts CDN → 系统字体栈
-- server.js pageShell: Google Fonts + 30处 JetBrains Mono → Cascadia Code
+## 新增文件
+- `~/.agentboard/tools/omniroute/manifest.json` — OmniRoute 卡片（端口20128）
+- `~/.agentboard/tips/manifest-disk-write-bypasses-api-validation.md`
+- `~/.claude/.../memory/reference_omniroute.md` — OmniRoute 备查
+- `D:\workspace\_output\retrospectives\2026-07-25-omniroute-toolrack-registration.md`
 
-## P1 完整性
-- page-agent 目录删除
-- feishu-bot +startCommand +stopCommand
-- catwave-pipeline/openmontage type project→cli
-- paseo projectPath npm→%APPDATA%
-- sole-prop-cockpit 目录+id 中→英
-- yt-dlp/tesseract-ocr/workbuddy-wx +startCommand
-- confucius4-tts type service→cli
-- hermes/claude-code 删假 url
+## 未完成
+- **agentboard 进程未重启**（PID 18116 Protected Process），manifest-schema.js 的 `公开站` 校验缓存未刷新
+  - 影响：API createTool/updateTool 仍拒 `公开站` category
+  - 不影响：dechpcba 正常显示，scanTools 不校验 category
+  - 解法：系统重启或 admin 权限 taskkill
 
-## 架构改进
-- manifest-schema: 模型→本地模型(5)+远程模型(7)
-- start.js: pm2 启动前 kill-port 3099
-- server.js: 非 pm2 启动直接 exit(1)
+## 当前状态
+- 工具架 57 个工具，51 正常 + 6 已停用
+- 领域分类全部合法
+- OmniRoute 已停止，`omniroute` 启动
 
-## Tips
-- node_e_orphan_process.md: node -e require() 占端口→pm2 静默失败
-
-## 未做
-- 5 disabled 工具保持现状
-- gpt-image-2 不加假 startCommand
-
-## 下一步
-无。审计修复完成。
+## 仓库状态
+- agentboard 仓库 1 个未推送 commit（`7974e9b`），其余大量历史未提交变更未触碰

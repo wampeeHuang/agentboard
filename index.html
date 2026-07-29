@@ -831,7 +831,7 @@ var klass = isCli ? 'cmd' : (cmdType === 'folder' ? 'folder' : (t.running ? 'on'
     var isOpened = opened[t.id];
     var openLabel = isOpened ? '打开中' : '打开';
     var openClass = isOpened ? 'btn open-done' : 'btn';
-    var openBtn = (t.url && (t.running || v)) ? '<a href="' + t.url + '" target="_blank" class="' + openClass + '" onclick="event.stopPropagation();markOpened(\'' + t.id + '\')">' + openLabel + '</a>' : '';
+    var openBtn = (t.url && (t.running || v)) ? '<a href="' + t.url + '" target="_blank" class="' + openClass + '" onclick="event.preventDefault();event.stopPropagation();verifyAndOpen(event.target,\'' + t.id + '\',\'' + t.url + '\')">' + openLabel + '</a>' : '';
     var publicBtn = t.publicUrl ? '<a href="' + t.publicUrl + '" target="_blank" class="btn public" onclick="event.stopPropagation()" title="公开站: ' + t.publicUrl + '">公开站</a>' : '';
 
     var extraClass = v ? ' virtual' : ''; if (isSelf) extraClass += ' self'; if (isCli) extraClass += ' cmd-card'; if (cmdType === 'folder') extraClass += ' folder-card'; if (t.disabled) extraClass += ' disabled';
@@ -871,6 +871,42 @@ function markOpened(id) {
   opened[id] = true;
   try { sessionStorage.setItem('opened', JSON.stringify(opened)); } catch(_) {}
   updateCounts();
+}
+
+// Pre-flight HTTP check before opening service panel
+async function verifyAndOpen(btn, id, url) {
+  var origText = btn.textContent;
+  btn.textContent = '探测中…';
+  btn.style.opacity = '0.6';
+  btn.style.pointerEvents = 'none';
+  try {
+    var ctrl = new AbortController();
+    var t = setTimeout(function() { ctrl.abort(); }, 4000);
+    await fetch(url, { method: 'HEAD', mode: 'no-cors', signal: ctrl.signal });
+    clearTimeout(t);
+    // mode:no-cors gives opaque response — can't read status. Only network errors throw.
+    markOpened(id);
+    window.open(url, '_blank');
+  } catch (e) {
+    showToast(id + ' 无法访问 — 服务端口在监听但 HTTP 无响应，可能启动中或已崩溃');
+  }
+  btn.textContent = origText;
+  btn.style.opacity = '';
+  btn.style.pointerEvents = '';
+}
+
+function showToast(msg) {
+  var t = document.getElementById('toast');
+  if (!t) {
+    t = document.createElement('div');
+    t.id = 'toast';
+    t.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#c44e3e;color:#fff;padding:10px 24px;font-size:13px;z-index:9999;border-radius:6px;box-shadow:0 4px 16px rgba(0,0,0,.25);max-width:600px;text-align:center;transition:opacity .3s;pointer-events:none';
+    document.body.appendChild(t);
+  }
+  t.textContent = msg;
+  t.style.opacity = '1';
+  clearTimeout(t._timeout);
+  t._timeout = setTimeout(function() { t.style.opacity = '0'; }, 5000);
 }
 
 function pollUntil(id, wantRunning, maxTries) {

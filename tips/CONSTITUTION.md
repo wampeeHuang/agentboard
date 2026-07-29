@@ -169,6 +169,16 @@ capability 的准入门槛比 diagnosis 低——不需要"踩坑花了1h+"，�
 | `research-report-delivery-checklist.md` | feedback | ✅ |
 | `scheduler-dashboard-dual-codebase.md` | diagnosis | ✅ |
 | `compliance-gate-unrecognized-tag-verified.md` | diagnosis | ✅ |
+| `placeholder-images-convey-intent.md` | method | ✅ |
+| `rehype-sanitize-pipeline-ordering.md` | diagnosis | ✅ |
+| `turbopack-dual-lockfile-panic.md` | diagnosis | ✅ |
+| `css-transform-scroll-anchor-offset.md` | diagnosis | ✅ |
+| `free-stock-industrial-b2b-photos.md` | fact | ✅ |
+| `acestep-startup-port-conflict.md` | diagnosis | ✅ |
+| `self-healing-tool-startup.md` | method | ✅ |
+| `nvidia-smi-wddm-misleading-vram.md` | fact | ✅ |
+| `flex-min-width-auto-content-sizing.md` | diagnosis | ✅ |
+| `edgeone-cache-per-resource-url.md` | diagnosis | ✅ |
 
 ---
 

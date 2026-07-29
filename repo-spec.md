@@ -22,7 +22,6 @@
 ├── GLOBAL.md                ← 全局宪法指针 → ~/.claude/CLAUDE.md
 ├── PATROL.md                ← 巡查规则
 ├── HANDOFF.md               ← 会话交接（gitignore）
-├── launch.bat / launch.vbs  ← 启动脚本
 ├── package.json             ← 仅 express 一个依赖
 ├── tools/                   ← 工具注册表（多 Agent 共享）
 ├── tips/                    ← 操作日志（多 Agent 共享）
