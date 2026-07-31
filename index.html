@@ -34,6 +34,16 @@ body{min-height:100vh;display:flex;flex-direction:column}
 .header-nav .nav-sep{width:1px;height:14px;background:rgba(255,255,255,.15);margin:0 6px}
 .header-philo{max-width:1080px;margin:0 auto;font-size:12px;font-weight:300;opacity:.55;padding:4px 0 2px 30px;letter-spacing:.01em}
 
+/* Resource bar */
+.res-bar{max-width:1080px;margin:0 auto;padding:8px 32px;display:flex;align-items:center;gap:12px;font-size:12px;font-weight:300;color:var(--text-secondary);border-bottom:1px solid var(--border)}
+.res-item{display:inline-flex;align-items:center;gap:4px}
+.res-val{font-weight:400;font-variant-numeric:tabular-nums}
+.res-val.warn{color:#c7902b}
+.res-val.redline{color:#c44e3e}
+.res-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.res-dot.g{background:#3b7d4b}.res-dot.y{background:#c7902b}.res-dot.r{background:#c44e3e}
+.res-sep{color:var(--border);margin:0 2px}
+.auto-badge{display:inline-block;font-size:10px;font-weight:400;padding:1px 6px;background:var(--ink);color:var(--paper);margin-left:4px;vertical-align:middle;line-height:1.5;letter-spacing:.03em}
 /* Stats bar */
 .toolbar{max-width:1080px;margin:0 auto;padding:16px 32px;display:flex;align-items:center;gap:16px;border-bottom:1px solid var(--border)}
 .stats-row{display:flex;align-items:center;gap:16px;flex:1}
@@ -269,6 +279,8 @@ OCR:  Tesseract OCR (pytesseract)
   <input class="search-input" placeholder="搜索…" oninput="render()" id="searchInput">
   <button class="btn-refresh" onclick="fetchTools()" id="refreshBtn">刷新</button>
 </div>
+
+<div class="res-bar" id="resBar">加载资源数据…</div>
 
 <div class="filter-bar">
   <div class="filter-row">
@@ -841,7 +853,7 @@ var klass = isCli ? 'cmd' : (cmdType === 'folder' ? 'folder' : (t.running ? 'on'
       + '<div class="card-body">'
         + '<div class="card-mono">' + monogram(t.name) + '</div>'
         + '<div class="card-info">'
-          + '<div class="card-name">' + (t.icon||'') + ' ' + t.name + '</div>'
+          + '<div class="card-name">' + (t.icon||'') + ' ' + t.name + (t.autoStart ? '<span class="auto-badge" title="基础设施组，Supervisor 自动启停">常驻</span>' : '') + '</div>'
           + '<div class="card-id">' + t.id + '</div>'
           + (isCli && t.trigger ? '<div class="card-meta"><span class="card-trigger">/' + t.trigger + '</span></div>' : (portsText ? '<div class="card-meta">' + portsText + '</div>' : (cmdType === 'folder' ? '<div class="card-meta">文件夹</div>' : '')))
           + (t.description ? '<div class="card-desc" title="' + t.description.replace(/"/g,'&quot;') + '">' + t.description + '</div>' : '')
@@ -1007,7 +1019,31 @@ async function toggleDisabled(id) {
 	  } catch(e) { console.error('toggleDisabled:', e); }
 	}
 
-	function updateCounts() {
+	async function fetchResources() {
+  try {
+    var r = await fetch('http://127.0.0.1:3097/api/status');
+    var d = await r.json();
+    var res = d.resources || {};
+    var svcs = d.services || [];
+    var autoCount = svcs.filter(function(s){ return s.status === 'running'; }).length;
+    var autoNames = svcs.filter(function(s){ return s.status === 'running'; }).map(function(s){ return s.id; }).join(', ') || '无';
+    var memLevel = res.mem >= 95 ? 'r' : res.mem >= 85 ? 'y' : 'g';
+    var gpuMemPct = res.gpuMemTotal > 0 ? Math.round(res.gpuMemUsed / res.gpuMemTotal * 100) : 0;
+    var gpuLevel = gpuMemPct >= 90 ? 'r' : gpuMemPct >= 80 ? 'y' : 'g';
+    var html = '<span class="res-item"><span class="res-dot ' + memLevel + '"></span>内存 <span class="res-val' + (memLevel === 'r' ? ' redline' : memLevel === 'y' ? ' warn' : '') + '">' + res.mem + '%</span></span>' +
+      '<span class="res-sep">|</span>' +
+      '<span class="res-item">CPU <span class="res-val">' + (res.cpu||0) + '%</span></span>';
+    if (res.gpuMemTotal > 0) {
+      html += '<span class="res-sep">|</span>' +
+        '<span class="res-item"><span class="res-dot ' + gpuLevel + '"></span>GPU <span class="res-val' + (gpuLevel === 'r' ? ' redline' : gpuLevel === 'y' ? ' warn' : '') + '">' + (res.gpuUtil||0) + '%</span> <span style="font-size:10px;color:var(--text-muted)">' + (res.gpuMemUsed/1024).toFixed(1) + '/' + (res.gpuMemTotal/1024).toFixed(1) + 'GB</span></span>';
+    }
+    html += '<span class="res-sep">|</span>' +
+      '<span class="res-item">常驻 <span class="res-val" title="' + autoNames + '">' + autoCount + '</span></span>';
+    document.getElementById('resBar').innerHTML = html;
+  } catch(e) { document.getElementById('resBar').textContent = 'Supervisor 离线'; }
+}
+
+function updateCounts() {
   document.getElementById('totalCount').textContent = tools.length;
   document.getElementById('openableCount').textContent = tools.filter(function(t){return (t.running || isVirtual(t)) && !opened[t.id] && t.url;}).length;
   document.getElementById('openedCount').textContent = tools.filter(function(t){return (t.running || isVirtual(t)) && opened[t.id] && t.url;}).length;
@@ -1092,7 +1128,9 @@ document.addEventListener('DOMContentLoaded', function() {
   fetchTools();
   fetchStats();
   fetchCronState();
+  fetchResources();
   setInterval(fetchStats, 30000);
+  setInterval(fetchResources, 15000);
 });
 </script>
 </body>
