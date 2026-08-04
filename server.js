@@ -92,6 +92,7 @@ const TOOLS_DIRS = [TOOLS_DIR];
 const SKILLS_DIR = process.env.AGENTBOARD_SKILLS_DIR || path.join(os.homedir(), '.claude', 'skills');
 var apiHTML = require('./api-page');
 const TIPS_DIR = process.env.AGENTBOARD_TIPS_DIR || path.join(AGENTBOARD_HOME, 'tips');
+const PRINCIPLES_DIR = process.env.AGENTBOARD_PRINCIPLES_DIR || path.join(AGENTBOARD_HOME, 'principles');
 const LOCAL_TOOLS_DIR = path.join(PROJECT_DIR, 'tools');
 const LOCAL_SKILLS_DIR = path.join(PROJECT_DIR, 'skills');
 const PREFERRED_PORT = parseInt(process.env.PORT || '3099', 10);
@@ -1337,48 +1338,49 @@ function startServer() {
     res.type('html').send(read(fp));
   });
 
-  // Tips (操作日志)
-  if (fs.existsSync(TIPS_DIR)) {
-    function parseTipFile(filePath) {
-      var md = read(filePath);
-      if (!md) return null;
-      var h1 = md.match(/^#\s+(.+)/m);
-      var title = h1 ? h1[1] : path.basename(filePath, '.md');
+  // Shared parser: tips and principles use the same markdown frontmatter extraction
+  function parseTipFile(filePath) {
+    var md = read(filePath);
+    if (!md) return null;
+    var h1 = md.match(/^#\s+(.+)/m);
+    var title = h1 ? h1[1] : path.basename(filePath, '.md');
 
-      // Extract description: frontmatter > first non-heading paragraph > first ## heading
-      var desc = '';
-      var fmMatch = md.match(/^description:\s*(.+)/m);
-      if (fmMatch) {
-        desc = fmMatch[1];
-      } else {
-        // Find first meaningful text line after # title, before any ## heading
-        var lines = md.split('\n');
-        var pastTitle = false;
-        for (var i = 0; i < lines.length; i++) {
-          var line = lines[i].trim();
-          if (line.startsWith('# ') && !pastTitle) { pastTitle = true; continue; }
-          if (!pastTitle) continue;
-          if (!line || line.startsWith('#') || line.startsWith('>') || line.startsWith('```') || line.startsWith('---')) continue;
-          if (line.startsWith('- ') || line.length < 10) continue;
-          // Skip code/English-only lines: require at least one CJK char
-          if (!/[一-鿿]/.test(line)) continue;
-          if (/[()]/.test(line) && !/[一-鿿]/.test(line)) continue;
-          desc = line.replace(/[*_`]/g, '').substring(0, 80);
-          break;
-        }
+    // Extract description: frontmatter > first non-heading paragraph > first ## heading
+    var desc = '';
+    var fmMatch = md.match(/^description:\s*(.+)/m);
+    if (fmMatch) {
+      desc = fmMatch[1];
+    } else {
+      // Find first meaningful text line after # title, before any ## heading
+      var lines = md.split('\n');
+      var pastTitle = false;
+      for (var i = 0; i < lines.length; i++) {
+        var line = lines[i].trim();
+        if (line.startsWith('# ') && !pastTitle) { pastTitle = true; continue; }
+        if (!pastTitle) continue;
+        if (!line || line.startsWith('#') || line.startsWith('>') || line.startsWith('```') || line.startsWith('---')) continue;
+        if (line.startsWith('- ') || line.length < 10) continue;
+        // Skip code/English-only lines: require at least one CJK char
+        if (!/[一-鿿]/.test(line)) continue;
+        if (/[()]/.test(line) && !/[一-鿿]/.test(line)) continue;
+        desc = line.replace(/[*_`]/g, '').substring(0, 80);
+        break;
       }
-      if (!desc) {
-        var h2m = md.match(/^##\s+(.+)/m);
-        desc = h2m ? h2m[1] : '';
-      }
-
-      var tipType = '';
-      var typeMatch = md.match(/^type:\s*(.+)/m);
-      if (typeMatch) tipType = typeMatch[1];
-
-      return { title: title, desc: desc, body: md, type: tipType };
+    }
+    if (!desc) {
+      var h2m = md.match(/^##\s+(.+)/m);
+      desc = h2m ? h2m[1] : '';
     }
 
+    var tipType = '';
+    var typeMatch = md.match(/^type:\s*(.+)/m);
+    if (typeMatch) tipType = typeMatch[1];
+
+    return { title: title, desc: desc, body: md, type: tipType };
+  }
+
+  // Tips (操作日志)
+  if (fs.existsSync(TIPS_DIR)) {
     app.get('/tips', function(req, res) {
       var files = fs.readdirSync(TIPS_DIR).filter(function(f) { return f.endsWith('.md') && f !== 'CONSTITUTION.md'; }).sort();
       var items = files.map(function(f) {
@@ -1610,6 +1612,182 @@ function startServer() {
   }
 
 
+
+  // ── Principles ─────────────────────────────────────────────
+
+  function parsePrincipleFile(filePath) {
+    return parseTipFile(filePath); // same parser: title, type, desc, body
+  }
+
+  app.get('/principles', function(req, res) {
+    var files = [];
+    try {
+      files = fs.readdirSync(PRINCIPLES_DIR).filter(function(f) { return f.endsWith('.md') && f !== 'CONSTITUTION.md'; }).sort();
+    } catch(_) { files = []; }
+
+    var items = files.map(function(f) {
+      var p = parsePrincipleFile(path.join(PRINCIPLES_DIR, f));
+      return p ? { file: f, title: p.title, desc: p.desc, type: p.type || 'review' } : null;
+    }).filter(Boolean);
+
+    var typeMeta = {
+      review: { label: '审查方法', tip: '怎么审查一个方案？' },
+      design: { label: '设计原则', tip: '怎么做设计决策？' },
+      architecture: { label: '架构决策', tip: '怎么做架构决策？' }
+    };
+    var typeLabels = { review: 'RV', design: 'DS', architecture: 'AR' };
+
+    var cats = {};
+    items.forEach(function(item) { var t = item.type || 'review'; cats[t] = (cats[t] || 0) + 1; });
+
+    var allCount = items.length;
+
+    var cardsHtml = items.map(function(item) {
+      var words = item.title.replace(/[^一-鿿a-zA-Z]/g, ' ').split(/\s+/).filter(function(w) { return w.length > 0; });
+      var mono = words.length >= 2
+        ? (words[0][0] + words[words.length - 1][0]).toUpperCase()
+        : item.title.substring(0, 2).toUpperCase();
+      var tp = item.type || 'review';
+      return '<div class="card-wrap" data-tip="' + item.file + '" data-type="' + tp + '">' +
+        '<a href="/principles/' + encodeURIComponent(item.file) + '" target="_blank" class="card">' +
+          '<span class="card-grip" draggable="true">⋮⋮</span>' +
+          '<div class="card-mono">' + esc(mono) + '</div>' +
+          '<div class="card-body">' +
+            '<div class="card-name">' + esc(item.title) + '</div>' +
+            (item.desc ? '<div class="card-sub">' + esc(item.desc) + '</div>' : '') +
+            '<span class="card-type-tag tag-' + tp + '">' + (typeLabels[tp] || tp) + '</span>' +
+          '</div>' +
+        '</a>' +
+      '</div>';
+    }).join('\n');
+
+    var html = '<!DOCTYPE html>\n<html lang="zh-CN">\n<head>\n<meta charset="UTF-8">\n<meta name="viewport" content="width=device-width, initial-scale=1.0">\n<title>原则库 · Principles</title>\n' +
+      '<link rel="icon" href="data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" rx="4" fill="#8B5CF6"/><text x="16" y="22" text-anchor="middle" font-family="Inter,sans-serif" font-size="16" font-weight="600" fill="white">PR</text></svg>') + '">\n' +
+      '<style>\n' +
+      '  *{margin:0;padding:0;box-sizing:border-box}\n' +
+      '  body{font-family:Inter,"Microsoft YaHei UI","Noto Sans SC",sans-serif;background:#FAFAF8;color:#0A0A0A;min-height:100vh;font-weight:300;font-size:16px}\n' +
+      '  .hero{background:#8B5CF6;color:#FAFAF8;padding:56px 32px 48px}\n' +
+      '  .hero-inner{max-width:1080px;margin:0 auto}\n' +
+      '  .hero-mono{font-family:"Cascadia Code","Consolas","SF Mono",monospace;font-size:10px;font-weight:500;letter-spacing:.08em;opacity:.45;margin-bottom:10px}\n' +
+      '  .hero h1{font-size:min(3.6vw,4.4vh);font-weight:200;letter-spacing:-0.02em;line-height:1.15}\n' +
+      '  .hero .tagline{font-size:15px;font-weight:300;opacity:.7;margin-top:10px;line-height:1.6;max-width:520px;letter-spacing:-0.01em}\n' +
+      '  .content{margin:0 auto;padding:6px 32px 32px}\n' +
+      '  .cat-bar{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px}\n' +
+      '  .cat-pill{padding:6px 14px;font-size:12px;font-weight:400;font-family:"Cascadia Code","Consolas","SF Mono",monospace;letter-spacing:.03em;background:#F0F0EC;border:1px solid #E0E0DC;color:#555;cursor:pointer;transition:all .12s;display:inline-flex;align-items:center;gap:6px}\n' +
+      '  .cat-pill:hover{background:#E4E4DE;color:#0A0A0A}\n' +
+      '  .cat-pill.active{background:#8B5CF6;border-color:#8B5CF6;color:#FAFAF8}\n' +
+      '  .cat-pill .count{font-size:10px;opacity:.7}\n' +
+      '  .grid{display:flex;flex-wrap:wrap;gap:12px;justify-content:flex-start}\n' +
+      '  .card-wrap{flex:0 0 480px;position:relative;user-select:text;-webkit-user-select:text}\n' +
+      '  .card-wrap.hidden-card{display:none}\n' +
+      '  .card{display:flex;align-items:flex-start;gap:28px;background:#FAFAF8;padding:22px 28px;text-decoration:none;color:inherit;transition:background .15s,box-shadow .15s;height:180px;overflow:hidden;border:1px solid #E0E0DC;box-shadow:0 1px 3px rgba(0,0,0,.06);position:relative}\n' +
+      '  .card:hover{background:#F0F0EC}\n' +
+      '  .card-grip{position:absolute;top:12px;right:12px;color:#B0B0AC;font-family:"Cascadia Code","Consolas","SF Mono",monospace;font-size:14px;opacity:.35;line-height:1;cursor:grab;user-select:none;-webkit-user-select:none;z-index:1}\n' +
+      '  .card-grip:active{cursor:grabbing}\n' +
+      '  .card-mono{flex-shrink:0;width:52px;height:52px;background:#8B5CF6;color:#FAFAF8;display:flex;align-items:center;justify-content:center;font-family:"Cascadia Code","Consolas","SF Mono",monospace;font-size:18px;font-weight:500;letter-spacing:.02em;margin-top:2px}\n' +
+      '  .card-body{display:flex;flex-direction:column;gap:10px;min-width:0;position:relative}\n' +
+      '  .card-name{font-size:18px;font-weight:300;letter-spacing:-0.01em}\n' +
+      '  .card-sub{font-size:13px;font-weight:300;color:#555;line-height:1.55;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}\n' +
+      '  .card-type-tag{position:absolute;bottom:2px;right:0;font-size:9px;font-weight:500;font-family:"Cascadia Code","Consolas","SF Mono",monospace;letter-spacing:.04em;padding:2px 6px;opacity:.55}\n' +
+      '  .tag-review{color:#8B5CF6;background:rgba(139,92,246,.06)}\n' +
+      '  .tag-design{color:#1A8A3F;background:rgba(26,138,63,.06)}\n' +
+      '  .tag-architecture{color:#002FA7;background:rgba(0,47,167,.06)}\n' +
+      '  .footer{max-width:1080px;margin:0 auto;padding:36px 32px;border-top:1px solid #E0E0DC}\n' +
+      '  .phil-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1px;background:#E0E0DC}\n' +
+      '  .phil-card{background:#FAFAF8;padding:24px 20px}\n' +
+      '  .phil-num{font-family:"Cascadia Code","Consolas","SF Mono",monospace;font-size:10px;font-weight:500;color:#8B5CF6;opacity:.45;margin-bottom:10px;letter-spacing:.04em}\n' +
+      '  .phil-title{font-size:15px;font-weight:500;color:#0A0A0A;margin-bottom:6px;letter-spacing:-0.01em;line-height:1.4}\n' +
+      '  .phil-body{font-size:12px;font-weight:300;color:#555;line-height:1.6}\n' +
+      '  .phil-body strong{font-weight:500;color:#0A0A0A}\n' +
+      '</style>\n</head>\n<body>\n' +
+      '<div class="hero"><div class="hero-inner"><a href="/" style="color:inherit;text-decoration:none;font-size:13px;font-family:\"Cascadia Code\",\"Consolas\",\"SF Mono\",monospace;opacity:.5;letter-spacing:.04em">← 工具架</a><div class="hero-mono" style="margin-top:10px">PRINCIPLES</div><h1>原则库</h1><div class="tagline">决策框架，不是踩坑记录。做决定前主动调用，不是出问题后查阅。</div></div></div>\n' +
+      '<div class="content">\n' +
+      '<div class="cat-bar" id="catBar">' +
+        '<button class="cat-pill active" data-type="all" onclick="setTipFilter(\'all\')">全部<span class="count">' + allCount + '</span></button>' +
+        Object.keys(typeMeta).map(function(t) {
+          if (!cats[t]) return '';
+          return '<button class="cat-pill" data-type="' + t + '" onclick="setTipFilter(\'' + t + '\')">' + typeMeta[t].label + '<span class="count">' + (cats[t] || 0) + '</span></button>';
+        }).join('') +
+      '</div>\n' +
+      '<div class="grid">' + cardsHtml + '</div></div>\n' +
+      '<div class="footer">\n' +
+      '  <div class="phil-grid">\n' +
+      '    <div class="phil-card">\n' +
+      '      <div class="phil-num">01</div>\n' +
+      '      <div class="phil-title">四问入库</div>\n' +
+      '      <div class="phil-body">可复现 · 可操作 · 反直觉 · 跨领域。<strong>四条全过才落盘，一条不过就放弃。</strong></div>\n' +
+      '    </div>\n' +
+      '    <div class="phil-card">\n' +
+      '      <div class="phil-num">02</div>\n' +
+      '      <div class="phil-title">决策框架，不是鸡汤</div>\n' +
+      '      <div class="phil-body">每个原则含具体检查步骤。<strong>不说"保持简单"，说"拆到原子逐条验证"。</strong></div>\n' +
+      '    </div>\n' +
+      '    <div class="phil-card">\n' +
+      '      <div class="phil-num">03</div>\n' +
+      '      <div class="phil-title">主动调用，非事后查阅</div>\n' +
+      '      <div class="phil-body">Tip 告诉你"别踩这个坑"。<strong>原则告诉你"怎么想到这里有坑"。</strong></div>\n' +
+      '    </div>\n' +
+      '    <div class="phil-card">\n' +
+      '      <div class="phil-num">04</div>\n' +
+      '      <div class="phil-title">20条上限</div>\n' +
+      '      <div class="phil-body">超过时强制审查：<strong>最弱的淘汰，保证库的锐度。</strong>5条高质量 &gt; 30条标语。</div>\n' +
+      '    </div>\n' +
+      '  </div>\n' +
+      '</div>\n' +
+      '<div style="max-width:1080px;margin:0 auto;padding:0 32px 24px;font-size:11px;opacity:.35;font-family:\"Cascadia Code\",\"Consolas\",\"SF Mono\",monospace">\n' +
+      '  <a href="/principles/CONSTITUTION.md" style="color:inherit">写入标准 → CONSTITUTION.md</a>（四问 &middot; 格式 &middot; 分类）\n' +
+      '</div>\n' +
+      '<script>\n' +
+      'var tipFilter="all";\n' +
+      'function setTipFilter(t){\n' +
+      '  tipFilter=t;\n' +
+      '  document.querySelectorAll(".cat-pill").forEach(function(p){p.classList.remove("active");});\n' +
+      '  document.querySelectorAll(".cat-pill").forEach(function(p){if(p.dataset.type===tipFilter)p.classList.add("active");});\n' +
+      '  document.querySelectorAll(".card-wrap").forEach(function(c){\n' +
+      '    if(tipFilter==="all"||c.dataset.type===tipFilter){c.classList.remove("hidden-card");}\n' +
+      '    else{c.classList.add("hidden-card");}\n' +
+      '  });\n' +
+      '}\n' +
+      '</script>\n</body>\n</html>';
+    res.send(html);
+  });
+
+  app.get('/principles/:name', function(req, res) {
+    var filePath = safeResolve(PRINCIPLES_DIR, req.params.name);
+    if (!filePath) return res.status(403).send('forbidden');
+    var p = parsePrincipleFile(filePath);
+    if (!p) return res.status(404).send('principle not found');
+
+    var html = '<!DOCTYPE html>\n<html lang="zh-CN">\n<head>\n<meta charset="UTF-8">\n<meta name="viewport" content="width=device-width, initial-scale=1.0">\n<title>' + p.title + ' · Principles</title>\n' +
+      '<link rel="icon" href="data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" rx="4" fill="#8B5CF6"/><text x="16" y="22" text-anchor="middle" font-family="Inter,sans-serif" font-size="16" font-weight="600" fill="white">PR</text></svg>') + '">\n' +
+      '<style>\n' +
+      '  *{margin:0;padding:0;box-sizing:border-box}\n' +
+      '  body{font-family:Inter,"Microsoft YaHei UI","Noto Sans SC",sans-serif;background:#FAFAF8;color:#0A0A0A;min-height:100vh;font-weight:300;font-size:16px;line-height:1.7}\n' +
+      '  .hero{background:#8B5CF6;color:#FAFAF8;padding:40px 32px 36px}\n' +
+      '  .hero-inner{max-width:720px;margin:0 auto}\n' +
+      '  .hero a{color:inherit;text-decoration:none;font-size:13px;font-family:"Cascadia Code","Consolas","SF Mono",monospace;opacity:.6;letter-spacing:.04em}\n' +
+      '  .hero a:hover{opacity:1}\n' +
+      '  .hero h1{font-size:min(2.8vw,3.6vh);font-weight:200;letter-spacing:-0.02em;line-height:1.2;margin-top:8px}\n' +
+      '  .content{max-width:720px;margin:0 auto;padding:32px}\n' +
+      '  .content h2{font-size:20px;font-weight:400;margin:32px 0 10px;color:#0A0A0A;letter-spacing:-0.01em}\n' +
+      '  .content h3{font-size:17px;font-weight:400;margin:24px 0 8px;color:#333}\n' +
+      '  .content p{margin:8px 0;color:#333}\n' +
+      '  .content ul{margin:8px 0;padding-left:24px}\n' +
+      '  .content li{margin:4px 0;color:#333;font-size:15px}\n' +
+      '  .content code{font-family:"Cascadia Code","Consolas","SF Mono",monospace;font-size:13px;background:#F0F0EC;padding:1px 6px}\n' +
+      '  .content pre{background:#0A0A0A;color:#FAFAF8;padding:16px 20px;margin:12px 0;overflow-x:auto;font-size:13px;line-height:1.55}\n' +
+      '  .content pre code{background:none;padding:0;color:inherit}\n' +
+      '  .content a{color:#8B5CF6;text-decoration:none}\n' +
+      '  .content a:hover{text-decoration:underline}\n' +
+      '  .content strong{font-weight:500;color:#0A0A0A}\n' +
+      '</style>\n</head>\n<body>\n' +
+      '<div class="hero"><div class="hero-inner"><a href="/principles">← 返回列表</a><h1>' + p.title + '</h1></div></div>\n' +
+      '<div class="content">' + renderMarkdown(p.body) + '</div>\n</body>\n</html>';
+    res.send(html);
+  });
+
+
+
   app.get('/api/stats', function(req, res) {
     var now = new Date();
     var today = now.toISOString().slice(0, 10);
@@ -1784,6 +1962,7 @@ function startServer() {
     var assetSkillCount = fs.existsSync(SKILLS_DIR) ? listDirs(SKILLS_DIR).length : 0;
     var assetCommandCount = BUILTIN_COMMANDS.length;
     var assetTipCount = fs.existsSync(TIPS_DIR) ? fs.readdirSync(TIPS_DIR).filter(function(f){ return f.endsWith('.md'); }).length : 0;
+    var assetPrincipleCount = fs.existsSync(PRINCIPLES_DIR) ? fs.readdirSync(PRINCIPLES_DIR).filter(function(f){ return f.endsWith('.md') && f !== 'CONSTITUTION.md'; }).length : 0;
     var apiEndpoints = 0;
     try { app._router.stack.forEach(function(r){ if (r.route && r.route.path && r.route.path.indexOf('/api/') === 0) apiEndpoints++; }); } catch(_) {}
     var cronTasks = (function(){
@@ -1793,7 +1972,7 @@ function startServer() {
       todayCalls: tdy,
       byCaller: { agent: tc.agent||0, browser: tc.browser||0, unknown: tc.unknown||0 },
       byAction: { list: ta.list||0, control: (ta.control||0)+(ta.detail||0), admin: ta.admin||0 },
-      assets: { tools: assetToolCount, skills: assetSkillCount, commands: assetCommandCount, tips: assetTipCount, api: apiEndpoints, cron: cronTasks, registry: 1 }
+      assets: { tools: assetToolCount, skills: assetSkillCount, commands: assetCommandCount, tips: assetTipCount, principles: assetPrincipleCount, api: apiEndpoints, cron: cronTasks, registry: 1 }
     });
     html = html.replace('<!--STATS_SNAPSHOT-->', '<script>window.__stats=' + snap + '</script>');
     res.type('html').send(html);
