@@ -1,13 +1,11 @@
-// MCP (Model Context Protocol) server for agentboard
-// JSON-RPC 2.0 over stdio — AI-native tool protocol
+// MCP server for agentboard — @modelcontextprotocol/sdk
 // Human visibility: http://localhost:3099/ (REST API + Dashboard)
 // Shared truth: ~/.agentboard/tools/*/manifest.json
-// Core logic: lib/tool-registry.js (唯一真相源)
 
-var readline = require('readline');
+var { Server } = require('@modelcontextprotocol/sdk/server/index.js');
+var { StdioServerTransport } = require('@modelcontextprotocol/sdk/server/stdio.js');
+var { CallToolRequestSchema, ListToolsRequestSchema } = require('@modelcontextprotocol/sdk/types.js');
 var registry = require('./lib/tool-registry');
-
-// ── MCP Tool definitions ──
 
 var TOOL_DEFS = [
   {
@@ -106,8 +104,6 @@ var TOOL_DEFS = [
   }
 ];
 
-// ── Tool call handlers ──
-
 function textResult(text, isError) {
   var r = { content: [{ type: 'text', text: text }] };
   if (isError) r.isError = true;
@@ -173,71 +169,27 @@ var TOOL_HANDLERS = {
   'agentboard_update_tool': handleUpdateTool
 };
 
-// ── JSON-RPC handlers ──
+var server = new Server(
+  { name: 'agentboard', version: '2.0.0' },
+  { capabilities: { tools: {} } }
+);
 
-function handleInitialize(id) {
-  return {
-    jsonrpc: '2.0', id: id,
-    result: {
-      protocolVersion: '2024-11-05',
-      capabilities: { tools: {} },
-      serverInfo: { name: 'agentboard', version: '1.0.0' }
-    }
-  };
-}
+server.setRequestHandler(ListToolsRequestSchema, async function () {
+  return { tools: TOOL_DEFS };
+});
 
-function handleToolsList(id) {
-  return { jsonrpc: '2.0', id: id, result: { tools: TOOL_DEFS } };
-}
-
-function handleToolsCall(id, params) {
-  var name = params && params.name;
-  var args = params && params.arguments;
-  if (!name) return { jsonrpc: '2.0', id: id, error: { code: -32602, message: 'Missing tool name' } };
+server.setRequestHandler(CallToolRequestSchema, async function (request) {
+  var name = request.params.name;
+  var args = request.params.arguments;
+  if (!name) return textResult('Error: Missing tool name', true);
   var handler = TOOL_HANDLERS[name];
-  if (!handler) return { jsonrpc: '2.0', id: id, error: { code: -32601, message: 'Unknown tool: ' + name } };
+  if (!handler) return textResult('Error: Unknown tool: ' + name, true);
   try {
-    var result = handler(args);
-    return { jsonrpc: '2.0', id: id, result: result };
+    return handler(args);
   } catch (e) {
-    return { jsonrpc: '2.0', id: id, error: { code: -32603, message: e.message } };
-  }
-}
-
-function handlePing(id) {
-  return { jsonrpc: '2.0', id: id, result: {} };
-}
-
-var METHOD_HANDLERS = {
-  'initialize': handleInitialize,
-  'tools/list': handleToolsList,
-  'tools/call': handleToolsCall,
-  'ping': handlePing
-};
-
-// ── Main loop ──
-
-var rl = readline.createInterface({ input: process.stdin, output: null, terminal: false });
-
-rl.on('line', function (line) {
-  line = line.trim();
-  if (!line) return;
-
-  var msg;
-  try { msg = JSON.parse(line); } catch (_) { return; }
-
-  if (msg.method && !msg.id) return; // notification — no response
-
-  if (msg.method && msg.id != null) {
-    var handler = METHOD_HANDLERS[msg.method];
-    if (!handler) {
-      process.stdout.write(JSON.stringify({ jsonrpc: '2.0', id: msg.id, error: { code: -32601, message: 'Method not found: ' + msg.method } }) + '\n');
-      return;
-    }
-    process.stdout.write(JSON.stringify(handler(msg.id, msg.params)) + '\n');
+    return textResult('Error: ' + e.message, true);
   }
 });
 
-rl.on('close', function () { process.exit(0); });
-
-process.stderr.write('[mcp-server] agentboard MCP server ready (stdio)\n');
+var transport = new StdioServerTransport();
+server.connect(transport);
