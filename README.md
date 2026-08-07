@@ -338,7 +338,7 @@ Same codebase, all three platforms, zero native dependencies.
 - **Manifest 是唯一真相源。** 不运行时编辑 manifest 文件会立即生效——没有"提交"按钮，不需要重启。这也是陷阱：格式错误会静默降级，务必用 schema 验证
 - **已注册工具需要手动配置。** agentboard 不扫描系统自动发现已有服务——每个工具必须手动创建 manifest。这是有意为之：自动发现 = 安全隐患
 
-## Design Principles
+## 设计哲学 · Design Principles
 
 
 - **Filesystem as registry** — No database. No YAML orchestrator. No schema migrations. Add file = register. Delete file = unregister.
