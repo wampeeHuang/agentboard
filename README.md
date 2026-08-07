@@ -329,7 +329,17 @@ Same codebase, all three platforms, zero native dependencies.
 
 ---
 
+
+## 诚实边界
+
+- **仅限 localhost。** 无认证、无 TLS、无用户隔离——信任边界是文件系统。任何能写 `~/.agentboard/tools/` 的人都能执行任意 shell 命令。不要暴露到公网，不要绑定 0.0.0.0
+- **不做进程监控（Supervisor 的职责）。** agentboard 启动/停止工具，不保证它们活着。进程守护交给 [supervisor](https://github.com/wampeeHuang/supervisor)
+- **不适合多用户。** 单用户设计，无权限系统、无多租户
+- **Manifest 是唯一真相源。** 不运行时编辑 manifest 文件会立即生效——没有"提交"按钮，不需要重启。这也是陷阱：格式错误会静默降级，务必用 schema 验证
+- **已注册工具需要手动配置。** agentboard 不扫描系统自动发现已有服务——每个工具必须手动创建 manifest。这是有意为之：自动发现 = 安全隐患
+
 ## Design Principles
+
 
 - **Filesystem as registry** — No database. No YAML orchestrator. No schema migrations. Add file = register. Delete file = unregister.
 - **OS-level truth** — Port status comes from the OS network stack, not HTTP ping. (Pingable ≠ healthy. Timeout ≠ port not listening.)
