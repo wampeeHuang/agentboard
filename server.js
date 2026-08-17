@@ -94,7 +94,7 @@ const AGENTBOARD_HOME = process.env.AGENTBOARD_HOME || path.join(os.homedir(), '
 const TOOLS_DIR = process.env.AGENTBOARD_TOOLS_DIR || path.join(AGENTBOARD_HOME, 'tools');
 const TOOLS_DIRS = [TOOLS_DIR];
 const SKILLS_DIR = process.env.AGENTBOARD_SKILLS_DIR || path.join(os.homedir(), '.claude', 'skills');
-var apiHTML = require('./api-page');
+var apiHTML = require('./lib/api-page');
 const TIPS_DIR = process.env.AGENTBOARD_TIPS_DIR || path.join(AGENTBOARD_HOME, 'tips');
 const PRINCIPLES_DIR = process.env.AGENTBOARD_PRINCIPLES_DIR || path.join(AGENTBOARD_HOME, 'principles');
 const LOCAL_TOOLS_DIR = path.join(PROJECT_DIR, 'tools');
@@ -1916,8 +1916,8 @@ function startServer() {
       (items.length ? '<table><tr><th>名称</th><th>简介</th><th>类型</th><th>来源</th><th>文件</th></tr>' + startupRows + '</table>' : '<p>暂无启动项</p>');
 
     // --- Static docs ---
-    var designMd = read(path.join(PROJECT_DIR, 'design-spec.md')) || '';
-    var repoMd = read(path.join(PROJECT_DIR, 'repo-spec.md')) || '';
+    var designMd = read(path.join(PROJECT_DIR, 'docs', 'design-spec.md')) || '';
+    var repoMd = read(path.join(PROJECT_DIR, 'docs', 'repo-spec.md')) || '';
 
     var tabs = [
       { id: 'startup', label: '自启动', meta: items.length + '项' },
@@ -1947,7 +1947,7 @@ function startServer() {
 
   // Home: embed initial stats for zero-loading-flash dashboard
   app.get('/', function(req, res) {
-    var html = read(path.join(PROJECT_DIR, 'index.html'));
+    var html = read(path.join(PROJECT_DIR, 'web', 'index.html'));
     if (!html) return res.status(500).send('index.html missing');
     var now = new Date();
     var today = now.toISOString().slice(0, 10);
@@ -1982,7 +1982,7 @@ function startServer() {
     res.type('html').send(html);
   });
 
-  app.use(express.static(PROJECT_DIR));
+  app.use(express.static(path.join(PROJECT_DIR, 'web')));
 
   process.on('uncaughtException', function(err) {
     opslog.error('uncaughtException', (err && err.message) || String(err), { stack: err && err.stack });
