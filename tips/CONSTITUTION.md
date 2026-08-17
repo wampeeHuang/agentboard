@@ -179,6 +179,7 @@ capability 的准入门槛比 diagnosis 低——不需要"踩坑花了1h+"，�
 | `nvidia-smi-wddm-misleading-vram.md` | fact | ✅ |
 | `flex-min-width-auto-content-sizing.md` | diagnosis | ✅ |
 | `edgeone-cache-per-resource-url.md` | diagnosis | ✅ |
+| `tool-card-pointer-not-cache.md` | method | ✅ |
 
 ---
 

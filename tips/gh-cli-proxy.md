@@ -28,3 +28,34 @@ git clone https://github.com/owner/repo.git
 ## 预防
 - 远程操作优先用 `git` 命令，不用 `gh`
 - 记住 gh 和 git 是两套网络栈
+- **需要调 GitHub API 时**：`gh auth token` 取 token → `curl.exe --proxy http://127.0.0.1:7897` 发包，不要用 `gh api`
+
+## API 调用模板
+
+```bash
+# 取 token（gh auth token 不需要网络，读本地凭证）
+TOKEN=$(gh auth token)
+
+# GET（读文件）
+curl -s --proxy http://127.0.0.1:7897 --max-time 15 \
+  -H "Authorization: Bearer $TOKEN" \
+  "https://api.github.com/repos/owner/repo/readme"
+
+# PUT（写文件，需要 SHA）
+curl -s --proxy http://127.0.0.1:7897 --max-time 15 \
+  -X PUT \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json; charset=utf-8" \
+  --data-binary @payload.json \
+  "https://api.github.com/repos/owner/repo/contents/path"
+
+# PATCH（改仓库属性）
+curl -s --proxy http://127.0.0.1:7897 --max-time 15 \
+  -X PATCH \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Accept: application/vnd.github+json" \
+  --data-binary @payload.json \
+  "https://api.github.com/repos/owner/repo"
+```
+
+关键：`gh` 只用来取 token，所有网络请求走 `curl --proxy`。
