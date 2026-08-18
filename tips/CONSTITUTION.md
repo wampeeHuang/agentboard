@@ -121,9 +121,9 @@ capability 的准入门槛比 diagnosis 低——不需要"踩坑花了1h+"，�
 
 ## 四、维护规则
 
-- **过期即删。** 路径变了、API 变了、不再适用的——直接删除，不留"历史参考"
+- **过期即归档。** 路径变了、API 变了、不再适用的——移 `tips/archive/`，从检索面移除，保留历史可恢复。三条淘汰触发：① 根因已被代码修复（tip 过期）② 与现有 tip 重复 ③ 症状消失
 - **发现即修。** 读到一个 tip 发现有错——立刻改，不等下次
-- **重复即合并。** 同一个 insight 两个文件——合并为一个，删另一个
+- **重复即合并。** 同一个 insight 两个文件——合并为一个，被合并方移 `tips/archive/`
 - **不凑数。** 3 条高质量 > 30 条流水账
 
 ---
@@ -180,6 +180,7 @@ capability 的准入门槛比 diagnosis 低——不需要"踩坑花了1h+"，�
 | `flex-min-width-auto-content-sizing.md` | diagnosis | ✅ |
 | `edgeone-cache-per-resource-url.md` | diagnosis | ✅ |
 | `tool-card-pointer-not-cache.md` | method | ✅ |
+| `feature-removal-dead-doc-clearance.md` | method | ✅ |
 
 ---
 
