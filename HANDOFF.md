@@ -12,7 +12,7 @@
 
 ## 当前状态
 - Agentboard :3099 正常运行，`/mcp` POST 端点响应正常
-- `mcp-server.js` 保留不删（stdio 备用）
+- `mcp-server.js` 已删（旧 stdio 入口，无引用，Streamable HTTP 取代）
 - 工具架 57 工具，全部通过 MCP 可调用
 
 ## 仓库状态

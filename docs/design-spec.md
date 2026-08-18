@@ -55,6 +55,21 @@ UTP — manifest schema + 三个契约       ← 定义"可插拔的工具长什
 - 永不做 SaaS
 - 永不替代 MCP
 
+## 六、骨件边界
+
+agentboard 是一个骨件，不是全部。兄弟骨件各管一段，本骨件只代理/只读，不越界：
+
+| 边界 | 归属 | agentboard 的动作 |
+|------|------|------------------|
+| 定时任务 | ~/.scheduler 骨件（:3100） | 只读 scheduler-state.json 做面板展示；不存 SQLite、不写 jobs.json |
+| 进程守护 | ~/.supervisor 骨件（:3097） | 不守护自己。agentboard 唯一守护 = supervisor（supervisor.js 30s 探活 + guard.ps1 5min 敲门） |
+| 模型/密钥 | tools/*/manifest.json | 只读 apiKeyName 指向的环境变量，不存密钥副本 |
+
+三条红线：
+- 永不存 SQLite（cron 状态委托 scheduler，见"五、永不"）
+- 永不守护自己（supervisor 管，agentboard 不 spawn 自己的守护进程）
+- 永不写 ~/.scheduler/jobs.json（走 scheduler CLI / REST API）
+
 ---
 
 *工程规范见 [repo-spec.md](repo-spec.md)。全局 Agent 行为规则见 [GLOBAL.md](GLOBAL.md)。*

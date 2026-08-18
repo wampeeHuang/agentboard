@@ -6,6 +6,8 @@ source: agentboard 手写 readline+JSON-RPC MCP 在 Claude Code/Codex 中超时�
 ## 现象
 手写 `readline` + JSON-RPC 的 MCP stdio server：
 - `echo '{"jsonrpc":"2.0"...}' | node mcp-server.js` → 命令行测试全过
+
+> 注：上文 `mcp-server.js` 是当时被诊断的旧手写 stdio 入口，该文件已删除，仅作历史记录。
 - Claude Code / Codex 启动 → 30 秒超时、120 秒还是超时
 - 无报错，stdout 干净，stderr 无异常
 

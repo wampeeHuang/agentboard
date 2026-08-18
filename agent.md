@@ -4,18 +4,17 @@
 
 ```
 ~/.agentboard/
-  server.js          ← REST API + Dashboard (人对 AI 的观察窗口)
-  mcp-server.js      ← MCP JSON-RPC/stdio (AI 调工具的标准协议)
+  server.js          ← 装配骨架 (建 app → 挂 lib/ 模块 → listen；REST + Dashboard + /mcp + 自检)
+  mcp-server.js      ← [遗留] 旧 stdio 入口，已被 lib/mcp-http.js 取代（Streamable HTTP，无引用）
   start.js           ← 启动入口 (kill-port → require server.js)
-  lib/               ← 后端模块 (tool-registry, manifest-schema, api-page, mcp-handlers, ops-log, crash-guard)
+  lib/               ← 后端模块 (routes, static, mcp-http, self-check, tool-registry, manifest-schema, api-page, mcp-handlers, ops-log, crash-guard)
   web/               ← 工具架前端 (index.html, _style.css, _script.js, logo)
   docs/              ← 文档 (design-spec.md, repo-spec.md, ...)
   tools/*/manifest.json  ← 工具注册（唯一真相源）
   tips/*.md           ← 踩坑沉淀（唯一真相源）
   mechanisms/*.md     ← 系统机制说明（唯一真相源）
   principles/*.md     ← 原则
-  runtime/*.pid        ← 进程身份文件（启动时写入，停止时清理）
-  _runtime/           ← 运行产物 (events.jsonl, logs, crash; git 忽略)
+  _runtime/           ← 运行产物 (events.jsonl, logs, crash, pids/; git 忽略)
   apps-registry.json  ← 公网应用注册表
 ```
 
@@ -23,7 +22,7 @@
 
 | 平面 | 协议 | 传输 | 消费者 |
 |------|------|------|--------|
-| 工具面 (MCP) | JSON-RPC 2.0 over stdio | `mcp-server.js` | AI agent (Claude Code, Cursor 等) |
+| 工具面 (MCP) | JSON-RPC 2.0 over Streamable HTTP | `lib/mcp-http.js` (POST /mcp) | AI agent (Claude Code, Cursor 等) |
 | 管理面 (REST) | HTTP | `server.js:3099` | 人 (dashboard), 脚本, 外部系统 |
 
 MCP 工具: `agentboard_list_tools`, `agentboard_get_tool`, `agentboard_start_tool`, `agentboard_stop_tool`, `agentboard_create_tool`, `agentboard_update_tool`。注册在 `~/.claude/settings.json` → `mcpServers.agentboard`。
@@ -37,19 +36,19 @@ MCP 工具: `agentboard_list_tools`, `agentboard_get_tool`, `agentboard_start_to
 工具运行状态不只看端口，有三段验证（`lib/tool-registry.js` → `scanTools`）：
 
 ```
-端口活跃？→ 读 runtime/{id}.pid → process.kill(pid,0) 存活？→ running=true
+端口活跃？→ 读 _runtime/pids/{id}.pid → process.kill(pid,0) 存活？→ running=true
                                   ↘ PID 死 → 清过期文件 → 进程名兜底验证
 ```
 
 端口活跃 ≠ 工具在运行。PID 文件是 agentboard 启动工具时写入的身份凭证。无 PID 文件的工具（PM2 托管、外部启动）退回到进程名检测。
 
-**启动**：`spawn` → 写 `runtime/{id}.pid` → 轮询端口 + PID 存活双重确认（15s）→ 清 scan 缓存
+**启动**：`spawn` → 写 `_runtime/pids/{id}.pid` → 轮询端口 + PID 存活双重确认（15s）→ 清 scan 缓存
 **停止**：读 PID 文件 → `taskkill /PID {pid} /T /F` 精确杀进程树 → 失败回退 `stopCommand` → 清 PID 文件 + 缓存
 **端口查重**：`createTool` / `updateTool` 写入前强制绕过缓存扫描，端口被占当场拦截（`checkPortUnique`）
 
 ## 工具调用协议
 
-AI agent 通过 **MCP** 调工具（`mcp-server.js`，stdio），标准 JSON-RPC 协议。
+AI agent 通过 **MCP** 调工具（`lib/mcp-http.js`，Streamable HTTP，`POST /mcp`），标准 JSON-RPC 协议。
 人通过 **Dashboard**（`http://localhost:3099/`）观察和控制，保持可见性。
 
 **每次操作工具前必须查 `/api/tools`**（或 MCP `agentboard_get_tool`），不只是看 `running` 状态，还要读两个字段：

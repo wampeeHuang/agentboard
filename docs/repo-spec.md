@@ -10,7 +10,7 @@
 ```
 ~/.agentboard/               ← Agentboard 全部领土（唯一真相源）
 ├── server.js                ← REST API + Dashboard
-├── mcp-server.js            ← MCP JSON-RPC/stdio（AI 平面）
+├── lib/mcp-http.js          ← MCP JSON-RPC over Streamable HTTP（AI 平面，POST /mcp）
 ├── index.html               ← Web Dashboard
 ├── api-page.js              ← API 文档页
 ├── apps-registry.json       ← 公网应用注册表

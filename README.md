@@ -123,14 +123,14 @@ Agentboard stops when you close the terminal. To keep it alive:
 | Plane | Protocol | Entry | Consumer |
 |-------|----------|-------|----------|
 | **Human** | REST HTTP | `http://localhost:3099` | Browser dashboard |
-| **AI Agent** | MCP JSON-RPC stdio | `mcp-server.js` | Claude Code, Cursor, Windsurf, etc. |
+| **AI Agent** | MCP JSON-RPC over Streamable HTTP | `lib/mcp-http.js` (POST `/mcp`) | Claude Code, Cursor, Windsurf, etc. |
 
 Both planes share one truth source: `tools/{id}/manifest.json`. Change a file, both planes see it instantly.
 
 ```
 ~/.agentboard/
 ├── server.js              ← REST API + Dashboard (humans)
-├── mcp-server.js          ← MCP JSON-RPC stdio (AI agents)
+├── lib/mcp-http.js        ← MCP JSON-RPC over Streamable HTTP (AI agents, POST /mcp)
 ├── index.html             ← Dashboard frontend (zero-framework HTML/CSS/JS)
 ├── lib/
 │   ├── tool-registry.js   ← Core logic (shared by both planes)
@@ -160,8 +160,8 @@ After agentboard is running, tell your AI agent how to find it:
 {
   "mcpServers": {
     "agentboard": {
-      "command": "node",
-      "args": ["~/.agentboard/mcp-server.js"]
+      "type": "streamableHttp",
+      "url": "http://127.0.0.1:3099/mcp"
     }
   }
 }
@@ -173,8 +173,8 @@ After agentboard is running, tell your AI agent how to find it:
 {
   "mcpServers": {
     "agentboard": {
-      "command": "node",
-      "args": ["C:\\Users\\你的用户名\\.agentboard\\mcp-server.js"]
+      "type": "streamableHttp",
+      "url": "http://127.0.0.1:3099/mcp"
     }
   }
 }
@@ -186,8 +186,8 @@ After agentboard is running, tell your AI agent how to find it:
 {
   "mcpServers": {
     "agentboard": {
-      "command": "node",
-      "args": ["~/.agentboard/mcp-server.js"]
+      "type": "streamableHttp",
+      "url": "http://127.0.0.1:3099/mcp"
     }
   }
 }
@@ -333,7 +333,7 @@ Same codebase, all three platforms, zero native dependencies.
 
 - **Filesystem as registry** — No database. No YAML orchestrator. No schema migrations. Add file = register. Delete file = unregister.
 - **OS-level truth** — Port status comes from the OS network stack, not HTTP ping. (Pingable ≠ healthy. Timeout ≠ port not listening.)
-- **Shared core logic** — `lib/tool-registry.js` is the one source of truth. `server.js` (REST) and `mcp-server.js` (MCP) are thin protocol adapters.
+- **Shared core logic** — `lib/tool-registry.js` is the one source of truth. `server.js` (REST) and `lib/mcp-http.js` (MCP) are thin protocol adapters.
 - **Agent-first** — All operations are HTTP calls. No SDK, no new tools to learn.
 - **Fixed port** — Dashboard is always `:3099`. Port conflicts fail loudly — discoverability beats fault tolerance.
 
