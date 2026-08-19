@@ -1,7 +1,10 @@
-# GitHub /readme 端点加 Accept header 反而返回错误格式
+---
 type: diagnosis
 date: 2026-08-07
 source: github-mgmt README 批量检查，所有仓库返回 NO README FOUND
+---
+
+# GitHub /readme 端点加 Accept header 反而返回错误格式
 
 ## 现象
 `GET /repos/{owner}/{repo}/readme` 加了 `Accept: application/vnd.github.raw+json` 后，返回体不再是 JSON，`json.loads()` 失败，静默返回 None → 19 个仓库全部报 "NO README FOUND"。

@@ -1,8 +1,10 @@
-# Python regex `\b` + `re.ASCII` + 中文 = 静默失效
-
-type: pitfall
+---
+type: diagnosis
 date: 2026-08-01
 source: 德城BOM报价，classifier regex匹配中文封装名失败
+---
+
+# Python regex `\b` + `re.ASCII` + 中文 = 静默失效
 
 ## 现象
 

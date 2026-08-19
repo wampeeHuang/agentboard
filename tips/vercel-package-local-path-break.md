@@ -1,8 +1,10 @@
-# Vercel 部署：package.json 本地文件引用导致云构建失败
-
-type: pitfall
+---
+type: diagnosis
 date: 2026-07-14
 source: Forma 主题系统统一 + 部署到 forma.evopearl.com
+---
+
+# Vercel 部署：package.json 本地文件引用导致云构建失败
 
 ## 现象
 

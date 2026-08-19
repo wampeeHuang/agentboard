@@ -1,8 +1,10 @@
-# .vercelignore 独立于 .gitignore — Vercel CLI 上传本地文件
-
-type: pitfall
+---
+type: diagnosis
 date: 2026-07-14
 source: Forma 部署时发现本地文章目录 public/previews/ 被上传到 Vercel
+---
+
+# .vercelignore 独立于 .gitignore — Vercel CLI 上传本地文件
 
 ## 现象
 

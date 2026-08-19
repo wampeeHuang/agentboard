@@ -1,7 +1,10 @@
-# UTF-8 BOM 导致 HTTP header 编码失败
+---
 type: diagnosis
 date: 2026-06-14
 source: 小红书 scraper cookie 文件带 BOM，httpx 请求头编码报错
+---
+
+# UTF-8 BOM 导致 HTTP header 编码失败
 
 ## 现象
 httpx 请求失败：`UnicodeEncodeError: 'ascii' codec can't encode character '﻿' in position 0`

@@ -1,8 +1,10 @@
-# 图片扩展名 ≠ 实际格式：下载后验魔数，别信 URL 扩展名
-
+---
 type: diagnosis
 date: 2026-08-19
 source: Obsidian 书籍封面本地化（DK设计全书，Google Books 返回 PNG 但存成 .jpg）
+---
+
+# 图片扩展名 ≠ 实际格式：下载后验魔数，别信 URL 扩展名
 
 ## 现象
 下载的图片文件名 `.jpg`，但 Obsidian / 编辑器按 JPEG 解析异常，或图片实际是 PNG。`DK设计全书.jpg` 前 8 字节是 `89 50 4E 47 0D 0A 1A 0A`（PNG 魔数），不是 JPEG 的 `FF D8 FF`。

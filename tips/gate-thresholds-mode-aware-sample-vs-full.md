@@ -1,7 +1,10 @@
-# 门禁阈值需区分样品/全片模式，不能共用一套标准
+---
 type: diagnosis
 date: 2026-08-10
 source: film-translation Mimino 变体B管线 — Gate 4 用全片阈值（100MB/时长差≤5s）检查样品（54MB/180s）
+---
+
+# 门禁阈值需区分样品/全片模式，不能共用一套标准
 
 ## 现象
 

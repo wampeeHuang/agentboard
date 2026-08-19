@@ -1,8 +1,10 @@
-# check.js 报错只报第一个（.match() 非 global）
-
+---
 type: diagnosis
 date: 2026-08-14
 source: 写 Obsidian 概念笔记系列，check.js 报 bold 冒号错误，改完重跑又出一个
+---
+
+# check.js 报错只报第一个（.match() 非 global）
 
 ## 现象
 `node scripts/check.js` 报一条「中文 bold 概念名后用冒号，不用句号或逗号」错误。改完这条重跑，又报另一条同类错误，像无穷尽，怀疑自己没改干净。

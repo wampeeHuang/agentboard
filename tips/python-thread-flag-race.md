@@ -1,7 +1,10 @@
-# Python daemon thread 设 flag 停止 — 线程在 IO 阻塞中不会检查
+---
 type: diagnosis
 date: 2026-06-15
 source: WeChat 抓取 — Stop 后启动新任务，两个线程抢同一个 state dict 导致 fetched 计数跳跃
+---
+
+# Python daemon thread 设 flag 停止 — 线程在 IO 阻塞中不会检查
 
 ## 现象
 调用 stop API（`state["running"] = False`）后立即启动新任务，出现两个线程同时写 `state` 字典：旧线程的 `fetched` 从 438 继续增长，新线程的 `fetched` 从 0 开始增长，日志中间歇出现两个序列的数值。

@@ -1,8 +1,10 @@
-# DeepSeek v4-pro 长管线截断 + file 模式验证修复
-
-type: diagnostic + fix
+---
+type: diagnosis
 date: 2026-06-29
 source: 猫波信号站 cron job 只跑阶段 A 不跑阶段 B/C
+---
+
+# DeepSeek v4-pro 长管线截断 + file 模式验证修复
 
 ## 现象
 cron job 的 agent 跑完阶段 A（选题巡检）后干净退出（exit 0，stderr 空），阶段 B/C 从未执行。stdout 最后一行是"现在进入阶段B..."的声明，之后无输出。调度器 stdout 验证通过（894 bytes > 0），判为成功。

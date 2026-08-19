@@ -1,8 +1,10 @@
-# 调度器原子写 + 归档恢复
-
-type: architecture
+---
+type: method
 date: 2026-07-10
 source: BOM 污染 jobs.json → 调度器全盲事件的事后架构加固
+---
+
+# 调度器原子写 + 归档恢复
 
 ## 问题
 

@@ -1,8 +1,10 @@
-# git mv 目录报 "fatal: bad source"，因 index 有已删除文件
-
-type: pitfall
+---
+type: diagnosis
 date: 2026-08-15
 source: layout-gallery platform/ → scripts/ + growth/ 目录拆分
+---
+
+# git mv 目录报 "fatal: bad source"，因 index 有已删除文件
 
 ## 现象
 

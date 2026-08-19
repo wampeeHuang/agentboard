@@ -1,9 +1,12 @@
-# Vercel 静态网站部署管线（camellia3hs-projects scope）
+---
 type: capability
 tool: vercel-deploy skill
 scenario: 新项目要上线/已有项目要更新，需要知道有什么部署渠道
 date: 2026-07-21
 recipe: ~/.claude/skills/vercel-deploy/SKILL.md
+---
+
+# Vercel 静态网站部署管线（camellia3hs-projects scope）
 
 ## 能力
 

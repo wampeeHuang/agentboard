@@ -1,8 +1,10 @@
-# llms.txt —— AI 爬虫的内容目录
-
+---
 type: fact
 date: 2026-07-25
 source: dechpcba.evopearl.com GEO 优化
+---
+
+# llms.txt —— AI 爬虫的内容目录
 
 ## 现象
 

@@ -1,7 +1,10 @@
-# Codex CLI 通过聚合平台 API 运行：codex-relay 桥接方案
+---
 type: method
 date: 2026-06-15
 source: Codex CLI v0.139.0 使用 DeepSeek/AIGO 后端时报 404，因为 Codex 已移除 Chat Completions 支持，只用 Responses API
+---
+
+# Codex CLI 通过聚合平台 API 运行：codex-relay 桥接方案
 
 ## 现象
 - Codex CLI v0.139.0 用 DeepSeek 或 AIGO 聚合 API 时报 `404 Not Found: url: https://api.deepseek.com/v1/responses`

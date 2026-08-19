@@ -1,7 +1,10 @@
-# 服务端 Session 过期 ≠ 浏览器刷新能续
+---
 type: diagnosis
 date: 2026-06-15
 source: XHS Cookie 检测 — 用户刷新页面后 Cookie 仍过期，排查发现 web_session 是服务端 token
+---
+
+# 服务端 Session 过期 ≠ 浏览器刷新能续
 
 ## 现象
 用户按提示"浏览几个页面再提取 Cookie"，粘贴后检测仍然过期。页面能正常访问，但 API 调用全部返回 SessionExpiredError（code: -100/-1）。

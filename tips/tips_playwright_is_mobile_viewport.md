@@ -1,8 +1,10 @@
-# Playwright is_mobile:True 导致 window.innerWidth 虚高
-
-type: trap
+---
+type: diagnosis
 date: 2026-07-22
 source: decheng-landing-page audit-mobile.py
+---
+
+# Playwright is_mobile:True 导致 window.innerWidth 虚高
 
 ## 现象
 

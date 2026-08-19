@@ -1,8 +1,10 @@
-# 元素不可见先查 CSS 可见性属性，再查异步加载逻辑
-
+---
 type: diagnosis
 date: 2026-08-05
 source: 版式画廊 /library 卡片预览不显示——误诊 IntersectionObserver/RAF 时序，实际是 opacity:0
+---
+
+# 元素不可见先查 CSS 可见性属性，再查异步加载逻辑
 
 ## 现象
 

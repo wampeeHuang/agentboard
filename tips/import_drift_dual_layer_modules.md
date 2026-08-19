@@ -1,8 +1,10 @@
-# Import 漂移：双轨模块间的静默断裂
-
-type: pattern
+---
+type: diagnosis
 date: 2026-07-30
 source: 猫波信号站 validate_cover.py import MIN_TITLE_PX 不存在，生产全挂
+---
+
+# Import 漂移：双轨模块间的静默断裂
 
 ## 现象
 

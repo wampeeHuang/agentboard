@@ -1,8 +1,10 @@
-# EdgeOne Makers ≠ EdgeOne EO
-
-type: product-trap
+---
+type: diagnosis
 date: 2026-07-01
 source: vivihuang 托管方案调研 · 2026-06-30
+---
+
+# EdgeOne Makers ≠ EdgeOne EO
 
 ## 现象
 EdgeOne 国际版有两个产品名字很像，选错=中国用户被 401 挡死。

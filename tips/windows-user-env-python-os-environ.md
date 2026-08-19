@@ -1,8 +1,10 @@
-# Windows 用户环境变量 Python os.environ 不可见
-
-type: 诊断
+---
+type: diagnosis
 date: 2026-06-26
 source: 猫波信号站管线 DeepSeek API Key 读取失败
+---
+
+# Windows 用户环境变量 Python os.environ 不可见
 
 ## 现象
 `os.environ.get("DEEPSEEK_API_KEY")` 返回 `None`，但 `[Environment]::GetEnvironmentVariable("DEEPSEEK_API_KEY", "User")` 能读到值。

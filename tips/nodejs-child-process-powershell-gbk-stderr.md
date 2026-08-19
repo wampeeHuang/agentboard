@@ -1,8 +1,10 @@
-# Node.js child_process 读 PowerShell stderr 中文乱码
-
-type: capability
+---
+type: diagnosis
 date: 2026-07-09
 source: Inspector 面板 scheduler 运行时错误信息乱码
+---
+
+# Node.js child_process 读 PowerShell stderr 中文乱码
 
 ## 现象
 

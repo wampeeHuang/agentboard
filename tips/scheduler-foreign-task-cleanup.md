@@ -1,8 +1,10 @@
-# scheduler 外来任务无法通过 API 删除
-
-type: capability
+---
+type: diagnosis
 date: 2026-07-10
 source: scheduler 巡检 no_foreign_tasks 修复
+---
+
+# scheduler 外来任务无法通过 API 删除
 
 ## 现象
 `scheduler-state.json` 中有任务 ID 不在 `jobs.json` 注册表中，巡检报 `no_foreign_tasks` 失败。直接编辑文件删除 → 过一会又回来。

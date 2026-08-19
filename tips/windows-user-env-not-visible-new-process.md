@@ -1,8 +1,10 @@
-# Windows User 级环境变量设置后新终端看不到——所有 Claude Code 会话集体失 auth
-
+---
 type: diagnosis
 date: 2026-06-27
 source: 将 ANTHROPIC_AUTH_TOKEN 从 settings.json 移到 User 级环境变量后，除当前会话外所有新会话报 "Not logged in"
+---
+
+# Windows User 级环境变量设置后新终端看不到——所有 Claude Code 会话集体失 auth
 
 ## 现象
 `[Environment]::SetEnvironmentVariable("ANTHROPIC_AUTH_TOKEN", "sk-...", "User")` 执行成功。注册表里能读到，`[Environment]::GetEnvironmentVariable(..., "User")` 返回正确的值。但同一个终端里开的新 Claude Code 会话全部 "Not logged in"，发不出 API 请求。只有当时已在运行的会话存活。

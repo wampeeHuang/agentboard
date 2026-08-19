@@ -1,8 +1,10 @@
-# 程序化 .click() 触发 toggle handler 状态反转
-
+---
 type: diagnosis
 date: 2026-06-29
 source: scheduler dashboard Step 3 重构 — 日历自动展开逻辑失效
+---
+
+# 程序化 .click() 触发 toggle handler 状态反转
 
 ## 现象
 

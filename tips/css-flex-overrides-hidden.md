@@ -1,8 +1,10 @@
-# CSS flex/grid 覆盖 [hidden] 属性
-
-type: diagnostic  
-date: 2026-08-06  
+---
+type: diagnosis
+date: 2026-08-06
 source: source-rack 图谱视图开发
+---
+
+# CSS flex/grid 覆盖 [hidden] 属性
 
 ## 现象
 - 带 `hidden` 属性的元素仍然可见

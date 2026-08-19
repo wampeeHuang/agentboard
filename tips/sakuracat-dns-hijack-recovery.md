@@ -1,7 +1,10 @@
-# SakuraCat 非正常关机后 DNS 劫持残留导致全网断连
+---
 type: diagnosis
 date: 2026-07-03
 source: 重启后全网断连，排查发现 SakuraCat DNS/代理配置残留
+---
+
+# SakuraCat 非正常关机后 DNS 劫持残留导致全网断连
 
 ## 现象
 - 电脑重启后所有程序无法上网（浏览器、飞书、终端均不通）

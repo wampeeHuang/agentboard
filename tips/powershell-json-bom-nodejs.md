@@ -1,8 +1,10 @@
-# PowerShell UTF-8 JSON 被 Node.js 读 → BOM 炸 JSON.parse
-
-type: pitfall
+---
+type: diagnosis
 date: 2026-06-25
 source: 标题知识库 L1 分析 + 人物数据清洗
+---
+
+# PowerShell UTF-8 JSON 被 Node.js 读 → BOM 炸 JSON.parse
 
 ## 现象
 

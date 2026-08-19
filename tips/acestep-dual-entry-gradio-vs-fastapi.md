@@ -1,7 +1,10 @@
-# ACE Step 双入口陷阱：acestep(Gradio) vs acestep-api(FastAPI)
+---
 type: diagnosis
 date: 2026-06-29
 source: AI Format 按钮报 "LLM may not be available"，前端调 Node API → Python 引擎返回 404
+---
+
+# ACE Step 双入口陷阱：acestep(Gradio) vs acestep-api(FastAPI)
 
 ## 现象
 ACE Step 前端点 AI Format 按钮，报 "Format failed. The LLM may not be available."。Node API (`:3001`) 调 Python 引擎 `POST /format_input` 返回 404。

@@ -1,8 +1,10 @@
-# Windows Python 文本模式写文件把 LF 变 CRLF——正则 `/\n/` 静默失配
-
+---
 type: diagnosis
 date: 2026-08-13
 source: wiki check.js 质量闸门重建后报 48 FAIL，全报"标签分类缺失"，实际字段都在
+---
+
+# Windows Python 文本模式写文件把 LF 变 CRLF——正则 `/\n/` 静默失配
 
 ## 现象
 Python 脚本用 `open(path, 'w', encoding='utf-8')` 批量改写 md 文件后，Node 写的 check.js 大量 FAIL，报"标签分类缺失/违规"。但打开文件看，字段明明都在。

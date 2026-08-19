@@ -1,8 +1,10 @@
-# curl on Windows 发 POST 中文自动转 GBK，不是 UTF-8
-
+---
 type: diagnosis
 date: 2026-07-23
 source: Supervisor 飞书告警推送乱码排查，用户收到 `[Supervisor ????]` 替换字符
+---
+
+# curl on Windows 发 POST 中文自动转 GBK，不是 UTF-8
 
 ## 现象
 

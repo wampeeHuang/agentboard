@@ -1,8 +1,10 @@
-# font-family 中的 Google Fonts 名称在国内永远不会加载
-
+---
 type: diagnosis
 date: 2026-06-25
 source: SOLUTION_TOC.html 准备离线演示，发现全篇用 Geist/Instrument Serif 但从未加载
+---
+
+# font-family 中的 Google Fonts 名称在国内永远不会加载
 
 ## 现象
 

@@ -1,7 +1,10 @@
-# bs4 的 replace_with/get_text 在嵌套 HTML 结构上会破坏正文——正文提取优先纯正则
+---
 type: diagnosis
 date: 2026-08-13
 source: Paul Graham 文章 HTML 提取，bs4 只返回 69 字符
+---
+
+# bs4 的 replace_with/get_text 在嵌套 HTML 结构上会破坏正文——正文提取优先纯正则
 
 ## 现象
 

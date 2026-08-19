@@ -1,8 +1,10 @@
-# 类比 ≠ 实现
-
-type: pattern
+---
+type: diagnosis
 date: 2026-08-03
 source: portfolio hero redesign — 用户说"类比湖仓"，Agent 在 catalog.html 实现了完整的 Bronze/Silver/Gold 分层过滤器
+---
+
+# 类比 ≠ 实现
 
 ## 现象
 用户说"像X一样"/"类比Y"/"参考Z的思路"，Agent 把 X/Y/Z 的功能实现搬进了项目。

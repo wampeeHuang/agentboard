@@ -1,8 +1,10 @@
-# Prompt产出结构化JSON → 独立验证器自纠正循环
-
-type: pattern
+---
+type: diagnosis
 date: 2026-07-28
 source: 猫波信号站 validate_curation.py
+---
+
+# Prompt产出结构化JSON → 独立验证器自纠正循环
 
 ## 现象
 

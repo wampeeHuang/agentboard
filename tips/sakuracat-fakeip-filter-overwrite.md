@@ -1,7 +1,10 @@
-# SakuraCat 推送配置静默覆盖 fake-ip-filter，国内服务断连
+---
 type: diagnosis
 date: 2026-06-30
 source: 飞书客户端断连（第二次复发）+ DeepSeek API (codex-relay) 502
+---
+
+# SakuraCat 推送配置静默覆盖 fake-ip-filter，国内服务断连
 
 ## 现象
 - 飞书 IM 长连接卡死，无法收发消息

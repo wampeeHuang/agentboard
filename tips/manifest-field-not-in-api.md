@@ -1,7 +1,10 @@
-# manifest 新增字段后 API 不返回（scanTools 字段白名单遗漏）
+---
 type: diagnosis
 date: 2026-07-10
 source: 给 52 个 manifest 加 runtime 字段，API 返回全是 null，因为 scanTools() push 对象没加 runtime
+---
+
+# manifest 新增字段后 API 不返回（scanTools 字段白名单遗漏）
 
 ## 现象
 manifest.json 加了新字段，manifest-schema.js 也加了 FIELD_RULES，文件是有效 JSON。API 正常返回工具列表，但新字段不存在或为 null。工具总数正常，无报错。

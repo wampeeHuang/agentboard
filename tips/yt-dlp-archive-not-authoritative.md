@@ -1,8 +1,10 @@
-# yt-dlp archive.txt 不能作为文件存在证明
-
-type: capability
+---
+type: diagnosis
 date: 2026-07-16
 source: 海外历史汉化管线 Secrets_dHistoire 视频丢失
+---
+
+# yt-dlp archive.txt 不能作为文件存在证明
 
 ## 现象
 `archive.txt` 记录 10 个视频 ID 已下载，但 raw 目录空无一物。脚本根据 archive 跳过这些视频，实际素材缺失。

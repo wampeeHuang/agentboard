@@ -1,8 +1,10 @@
-# ChatGPT Search 底层用 Bing 索引，不是 Google
-
+---
 type: fact
 date: 2026-07-25
 source: dechpcba.evopearl.com GEO 优化调研
+---
+
+# ChatGPT Search 底层用 Bing 索引，不是 Google
 
 ## 现象
 

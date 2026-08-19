@@ -1,7 +1,10 @@
-# Obsidian frontmatter tag 不能含空格——带空格 tag 显示红色划掉
+---
 type: fact
 date: 2026-08-14
 source: 重写 Design Token 笔记，tag 从「设计令牌」改成「Design Token」（带空格），Obsidian 显示红色+删除线
+---
+
+# Obsidian frontmatter tag 不能含空格——带空格 tag 显示红色划掉
 
 ## 事实
 

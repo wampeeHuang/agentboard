@@ -1,8 +1,10 @@
-# 解耦默认集成后必须补文档指针，否则创造静默失败模式
-
-type: pattern
+---
+type: diagnosis
 date: 2026-07-30
 source: evopearl-data — Vercel Git Integration 被解耦，但没在任何地方写"改代码后要手动部署"
+---
+
+# 解耦默认集成后必须补文档指针，否则创造静默失败模式
 
 ## 现象
 

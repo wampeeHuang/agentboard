@@ -1,7 +1,10 @@
-# Windows 上 nvidia-smi 报告的显存"已用"不可信：WDDM 模式含 DWM 缓存
+---
 type: fact
 date: 2026-07-17
 source: ACE Step 启动诊断，杀完 ComfyUI+MiniCPM-V 后 nvidia-smi 数字不降，误判显存不足
+---
+
+# Windows 上 nvidia-smi 报告的显存"已用"不可信：WDDM 模式含 DWM 缓存
 
 ## 真相
 

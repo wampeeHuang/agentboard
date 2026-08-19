@@ -1,7 +1,10 @@
-# manifest 字段内容随项目变化而静默过时
+---
 type: diagnosis
 date: 2026-07-02
 source: catwave-pipeline 删除 stage_15_publish.py 后，manifest 的 capability 仍标"B站发布"，startCommand 指向已不存在的 _tools/pipeline-run.ps1
+---
+
+# manifest 字段内容随项目变化而静默过时
 
 ## 现象
 工具卡片正常显示、API 正常返回，但卡片上的能力描述、启动命令、agent_notes 描述的能力实际上已经不存在。用户点"启动"按钮会失败（文件不存在），agent 读到错误的 capability 会误判工具能做什么。

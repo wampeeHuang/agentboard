@@ -1,8 +1,10 @@
-# EdgeOne CDN cache-control max-age=0 仍返回 stale HTML
-
+---
 type: diagnosis
 date: 2026-07-20
 source: evopearl-data Vercel 部署后 EdgeOne 缓存旧 HTML，ETag 不变导致 304 循环
+---
+
+# EdgeOne CDN cache-control max-age=0 仍返回 stale HTML
 
 ## 现象
 Vercel 部署成功（新 HTML 已上线），浏览器访问域名仍看到旧页面。响应头显示 `cache-control: max-age=0, must-revalidate`，但 EdgeOne CDN 返回 304 Not Modified。连续两次部署之间 ETag 不变，304 使浏览器继续用本地缓存。

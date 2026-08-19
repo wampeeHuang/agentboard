@@ -1,8 +1,10 @@
-# 飞书多维表格日期字段格式陷阱
-
-type: capability
+---
+type: diagnosis
 date: 2026-07-15
 source: 猫波信号站状态面板 录入/日期列全显示"-"
+---
+
+# 飞书多维表格日期字段格式陷阱
 
 ## 现象
 `gen_status_board.py` 读飞书 bitable 的日期字段（`录入时间`、`视频发布日期`），显示到 HTML 面板时全部变成 `-`。

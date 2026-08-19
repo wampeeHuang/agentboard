@@ -1,8 +1,10 @@
-# CSS filter 处理透明 PNG logo 的陷阱
-
-type: capability
+---
+type: diagnosis
 date: 2026-07-14
 source: 德城科技 logo 在白色背景上不可见，用 filter 修复反而彻底消失
+---
+
+# CSS filter 处理透明 PNG logo 的陷阱
 
 ## 现象
 透明 PNG logo 在白色背景上看不清，加 `filter: brightness(0) invert(1)` 后 logo 完全消失。

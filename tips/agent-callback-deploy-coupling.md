@@ -1,8 +1,10 @@
-# Agent 回调部署耦合——scheduler 崩溃导致部署静默丢失
-
-type: architecture
+---
+type: diagnosis
 date: 2026-07-22
 source: data.evopearl.com 部署管线重构
+---
+
+# Agent 回调部署耦合——scheduler 崩溃导致部署静默丢失
 
 ## 现象
 Agent 产出 JSON 文件成功，scheduler 回调负责 git push。scheduler 在 agent 运行期间崩溃，回调未触发，网站未更新。无报错，无告警——静默失败。

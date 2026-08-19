@@ -1,8 +1,10 @@
-# CSS Grid 行固定高度导致内容溢出重叠
-
-type: tip
+---
+type: method
 date: 2026-08-05
 source: source-rack UI 重构 — 数据行完全重叠
+---
+
+# CSS Grid 行固定高度导致内容溢出重叠
 
 ## 现象
 CSS Grid 模拟表格，`.row { height: 36px }` 固定高度。内容（描述文字、多个 domain badge、tag）溢出到下一行，视觉效果是所有行交叠在一起。

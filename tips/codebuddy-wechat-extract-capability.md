@@ -1,9 +1,12 @@
-# CodeBuddy CLI 穿透微信封闭生态提取公众号文章
+---
 type: capability
 tool: CodeBuddy CLI (WorkBuddy)
 scenario: 任何需要从微信公众号提取信息的调研
 date: 2026-07-01
 recipe: D:\workspace\research-methods\_tools\codebuddy-wechat-extract.md
+---
+
+# CodeBuddy CLI 穿透微信封闭生态提取公众号文章
 
 ## 能力
 

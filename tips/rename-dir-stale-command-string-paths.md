@@ -1,8 +1,10 @@
-# 目录重命名：sed 顶层文件漏了被移动脚本内部的命令字符串
-
-type: anti-pattern
+---
+type: diagnosis
 date: 2026-08-15
 source: layout-gallery platform/ → scripts/ 重命名后 check.mjs 命令门禁仍跑旧路径
+---
+
+# 目录重命名：sed 顶层文件漏了被移动脚本内部的命令字符串
 
 ## 现象
 

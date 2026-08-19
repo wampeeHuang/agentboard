@@ -1,7 +1,10 @@
-# 并行 prompt 模板漂移：兄弟模板各自迭代后关键约束不一致
+---
 type: diagnosis
 date: 2026-08-02
 source: 趋势深读评分 7.9-9.1，AI新品评分正常 3.5-4.0——两个 prompt 从同一骨架分化后分数范围约束不同步
+---
+
+# 并行 prompt 模板漂移：兄弟模板各自迭代后关键约束不一致
 
 ## 现象
 `gate-ai-signal.md` 产出的 score 在 1-5 范围，`gate-deep-read.md` 产出的 score 在 8-10 范围。

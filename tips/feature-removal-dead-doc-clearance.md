@@ -1,7 +1,10 @@
-# 功能下架靠 grep 反查残留清零，不靠记忆判断「改完了」
+---
 type: method
 date: 2026-08-18
 source: 猫波信号站 EPUB+百度云下架，grep 抓出 manifest 孤儿字段 epub_chunk_sec
+---
+
+# 功能下架靠 grep 反查残留清零，不靠记忆判断「改完了」
 
 ## 现象
 

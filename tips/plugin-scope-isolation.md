@@ -1,7 +1,10 @@
-# 插件按域隔离——大型 marketplace 插件不进全局 context
+---
 type: method
 date: 2026-07-08
 source: Vercel d0 案例启发 + PM 技能插件清量减负审计
+---
+
+# 插件按域隔离——大型 marketplace 插件不进全局 context
 
 ## 现象
 

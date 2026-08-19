@@ -1,7 +1,10 @@
-# Vortex fake-ip 只代理浏览器，CLI 工具全断
+---
 type: diagnosis
 date: 2026-06-12
 source: curl/npm/git/node 全部超时，浏览器正常
+---
+
+# Vortex fake-ip 只代理浏览器，CLI 工具全断
 
 ## 现象
 浏览器能上网，但所有 CLI 工具（curl、npm、git、python、node）访问任何外网都超时。`WebSearch` 工具却正常——因为它走 Anthropic 服务器，不经本机。

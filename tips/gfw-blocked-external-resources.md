@@ -1,8 +1,10 @@
-# GFW 封锁外部资源导致国内手机白屏
-
-type: deploy-gate
+---
+type: method
 date: 2026-06-23
 source: vivihuang.evopearl.com 手机端（微信/夸克）白屏排查
+---
+
+# GFW 封锁外部资源导致国内手机白屏
 
 ## 现象
 

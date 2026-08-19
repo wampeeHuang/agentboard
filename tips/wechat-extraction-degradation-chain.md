@@ -1,7 +1,10 @@
-# 微信文章提取降级链：CodeBuddy → Chrome DevTools snapshot
+---
 type: method
 date: 2026-07-20
 source: 同步微信发布版文章到本地，CodeBuddy CLI 返回 429 额度用尽
+---
+
+# 微信文章提取降级链：CodeBuddy → Chrome DevTools snapshot
 
 ## 降级链（按优先级）
 

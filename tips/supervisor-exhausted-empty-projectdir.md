@@ -1,8 +1,10 @@
-# supervisor 服务 exhausted — 运行时目录为空
-
+---
 type: diagnosis
 date: 2026-08-07
 source: feishu-bot 在 supervisor 面板显示 exhausted(restart_count=5)，manifest 配置完全正确但服务无法启动
+---
+
+# supervisor 服务 exhausted — 运行时目录为空
 
 ## 现象
 

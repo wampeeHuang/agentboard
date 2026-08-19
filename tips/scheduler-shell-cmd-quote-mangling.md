@@ -1,8 +1,10 @@
-# scheduler shell job 命令含引号 → cmd /d /c 路径吞噬
-
+---
 type: diagnosis
 date: 2026-07-14
 source: JSONL 冷存储迁移 cron job — `node "F:\warehouse\jsonl-archive\migrate.js"` 报 Cannot find module
+---
+
+# scheduler shell job 命令含引号 → cmd /d /c 路径吞噬
 
 ## 现象
 - cron job shell 类型，prompt 为 `node "带引号的路径"`

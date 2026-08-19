@@ -1,7 +1,10 @@
-# 技术 Portfolio HR 视角审查：四个必改项
+---
 type: method
 date: 2026-08-03
 source: vivihuang-portfolio AgentOS 区对抗性审查
+---
+
+# 技术 Portfolio HR 视角审查：四个必改项
 
 ## 现象
 

@@ -1,8 +1,10 @@
-# Scheduler `_runningSince` 粘连 — agent 卡死后 cron 永久不重试
-
-type: bug-pattern
+---
+type: diagnosis
 date: 2026-07-16
 source: data.evopearl.com AI信号 cron 7:30 触发但 agent zero-output 卡死
+---
+
+# Scheduler `_runningSince` 粘连 — agent 卡死后 cron 永久不重试
 
 ## 现象
 

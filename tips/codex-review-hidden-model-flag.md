@@ -1,8 +1,10 @@
-# /codex:review 隐藏 --model 参数，--effort 真的不支持
-
+---
 type: fact
 date: 2026-08-04
 source: codex-companion.mjs 源码验证
+---
+
+# /codex:review 隐藏 --model 参数，--effort 真的不支持
 
 ## 现象
 

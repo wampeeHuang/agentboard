@@ -1,7 +1,10 @@
-# Windows Get-Process -Id 不可靠——用端口健康检查代替 PID 文件做守护检测
+---
 type: diagnosis
 date: 2026-06-28
 source: scheduler 多实例状态竞争——guard.ps1 的 Get-Process 和 WMI 回退均未检测到 3 个运行实例，每次触发都新增不杀旧
+---
+
+# Windows Get-Process -Id 不可靠——用端口健康检查代替 PID 文件做守护检测
 
 ## 现象
 - `Get-Process -Id <有效PID>` 返回 `$null`，进程明明在运行（tasklist 看得到，netstat 看得到端口）

@@ -1,8 +1,10 @@
-# 第三方 API Key 环境变量名先验证再写代码
-
-type: development
+---
+type: method
 date: 2026-07-29
 source: layout-gallery growth-agent, AIGO API 集成
+---
+
+# 第三方 API Key 环境变量名先验证再写代码
 
 ## 现象
 growth-agent.js 用 `process.env.AIGO_API_KEY` 读 AIGO API Key，但实际系统环境变量是 `AIGOAPI_API_KEY`。代码写完 API 调用静默失败 "API Key 未配置"。

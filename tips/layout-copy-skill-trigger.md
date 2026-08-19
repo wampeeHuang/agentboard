@@ -1,7 +1,10 @@
-# "抄网站"没触发 beautiful-html-templates 技能
+---
 type: diagnosis
 date: 2026-06-14
 source: coze.cn → 发版船 ReleaseShip 模板抄写
+---
+
+# "抄网站"没触发 beautiful-html-templates 技能
 
 ## 现象
 

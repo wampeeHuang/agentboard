@@ -1,8 +1,10 @@
-# 微信内置浏览器静默拦截局域网 HTTP
-
-type: capability
+---
+type: diagnosis
 date: 2026-07-23
 source: 德城 landing page 手机预览
+---
+
+# 微信内置浏览器静默拦截局域网 HTTP
 
 ## 现象
 手机和电脑同 WiFi，电脑起 Python HTTP 服务器（`python -m http.server 8080`），防火墙已放行，电脑本地 curl 200 OK，但手机微信内打开 `http://192.168.x.x:8080/` 一直加载、最终失败，无明确错误提示。

@@ -1,8 +1,10 @@
-# 二版对比时，不要给当前版本免检通行证
-
-type: capability
+---
+type: diagnosis
 date: 2026-07-08
 source: evolution-cat 文章迭代，v6（在用）vs v7（新生成），agent 默认 v6 为正确答案，从 v7 只提取明显新增内容，漏了 5 处已改好的标题和比喻
+---
+
+# 二版对比时，不要给当前版本免检通行证
 
 ## 现象
 

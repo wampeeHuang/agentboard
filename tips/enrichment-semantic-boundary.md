@@ -1,7 +1,10 @@
-# 富化/同步阶段的语义边界：元数据 vs 运营数据
-type: anti-pattern
+---
+type: diagnosis
 date: 2026-07-29
 source: 猫波信号站 日期漂移 bug — sync_feishu_to_curation.py 富化路径覆写 date
+---
+
+# 富化/同步阶段的语义边界：元数据 vs 运营数据
 
 ## 现象
 富化阶段无条件 `c["date"] = date_str_f`，把飞书日期直接盖到策展文件上。策展 agent 写出正确 YouTube 发布日期 → 飞书数据一脏全脏。

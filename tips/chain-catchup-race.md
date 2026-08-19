@@ -1,8 +1,10 @@
-# Chain 补跑竞态：跨链下游提前触发
-
-type: bug-pattern
+---
+type: diagnosis
 date: 2026-07-24
 source: data.evopearl.com 猫波译站数据未上线排查
+---
+
+# Chain 补跑竞态：跨链下游提前触发
 
 ## 现象
 补跑后网站数据不完整。某个模块（猫波译站）数据文件已 git push，但网站 404。

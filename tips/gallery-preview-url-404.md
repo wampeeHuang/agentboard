@@ -1,7 +1,10 @@
-# 公网画廊 iframe 全部 404
+---
 type: diagnosis
 date: 2026-06-14
 source: gallery.evopearl.com 用户反馈"模板都看不到了"
+---
+
+# 公网画廊 iframe 全部 404
 
 ## 现象
 

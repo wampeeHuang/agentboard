@@ -1,8 +1,10 @@
-# lark-cli --json 文件传递：相对路径 + 无BOM
-
-type: tip
+---
+type: method
 date: 2026-06-25
 source: 猫波信号站 · 飞书选题库批量更新
+---
+
+# lark-cli --json 文件传递：相对路径 + 无BOM
 
 ## 现象
 

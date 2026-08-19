@@ -1,8 +1,10 @@
-# lark-cli +record-delete silently fails without --yes
-
-type: tip
+---
+type: method
 date: 2026-07-16
 source: O3 历史管线 Phase 04 重复记录清理
+---
+
+# lark-cli +record-delete silently fails without --yes
 
 ## 现象
 

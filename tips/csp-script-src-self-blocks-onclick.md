@@ -1,8 +1,10 @@
-# CSP script-src 'self' 拦截 onclick 静默失效
-
-type: tip
+---
+type: method
 date: 2026-08-06
 source: source-rack v4.0 CSP 收紧实战
+---
+
+# CSP script-src 'self' 拦截 onclick 静默失效
 
 ## 现象
 CSP 把 `script-src` 从 `'self' 'unsafe-inline'` 收紧为 `'self'` 后，页面按钮/芯片点击无响应。浏览器控制台**无报错**——事件静默不触发。

@@ -1,8 +1,10 @@
-# 数据管线下游消费方做显式字段兼容，不要求上游统一
-
+---
 type: method
 date: 2026-07-20
 source: evopearl-data 猫波驿站管线——agent 输出 JSON 用 source/score，飞书同步脚本用 source_channel/total_score
+---
+
+# 数据管线下游消费方做显式字段兼容，不要求上游统一
 
 ## 步骤
 

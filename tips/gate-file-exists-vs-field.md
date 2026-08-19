@@ -1,8 +1,10 @@
-# 状态机推导：文件存在 ≠ 通过
-
-type: anti-pattern
+---
+type: diagnosis
 date: 2026-07-02
 source: evolution-cat 管线架构修复，对抗性审查
+---
+
+# 状态机推导：文件存在 ≠ 通过
 
 ## 现象
 

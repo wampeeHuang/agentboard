@@ -1,7 +1,10 @@
-# 费曼技术写作：术语不丢，场景说清
-type: methodology
+---
+type: method
 date: 2026-08-11
 source: 编辑 Obsidian 笔记《Agent 项目文件架构》，写流水线范式落地笔记前复盘踩坑经验
+---
+
+# 费曼技术写作：术语不丢，场景说清
 
 ## 问题
 

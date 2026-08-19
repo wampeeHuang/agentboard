@@ -1,7 +1,10 @@
-# 管线闸门只信任系统控制字段
-type: anti-pattern
+---
+type: diagnosis
 date: 2026-07-29
 source: 猫波信号站 日期漂移 bug — sync_feishu_to_curation.py
+---
+
+# 管线闸门只信任系统控制字段
 
 ## 现象
 管线用飞书"视频发布日期"字段做二次过滤，日期被人为/自动化改动 → 记录匹配到错误的 curation date → 已策展视频被重复处理，旧工作被新目录覆盖。

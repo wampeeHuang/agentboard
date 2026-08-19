@@ -1,7 +1,10 @@
-# 双模块写同一 state 文件，API 修改被 tick 静默覆盖
+---
 type: diagnosis
 date: 2026-06-24
 source: scheduler 仪表盘三个任务异常无法通过 API reset 清除
+---
+
+# 双模块写同一 state 文件，API 修改被 tick 静默覆盖
 
 ## 现象
 - `/api/cron/reset/:id` 返回 302 重定向，看起来成功

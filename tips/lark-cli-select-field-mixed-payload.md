@@ -1,8 +1,10 @@
-# lark-cli select 字段在 number+select 混合 payload 中可能不生效
-
-type: tip
+---
+type: method
 date: 2026-07-16
 source: O3 历史管线 Phase 04 飞书回填
+---
+
+# lark-cli select 字段在 number+select 混合 payload 中可能不生效
 
 ## 现象
 

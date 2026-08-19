@@ -32,11 +32,16 @@
 
 ### 文件结构
 
+标准格式：**YAML frontmatter（`---` 包裹）在前，正文 H1 标题在后**。frontmatter 只放元数据，不放标题。
+
 ```markdown
-# 一句话标题（洞察，不是主题）
-type: diagnosis | method | fact
+---
+type: diagnosis | method | fact | capability | feedback
 date: YYYY-MM-DD
 source: 触发写入的事件/任务简述
+---
+
+# 一句话标题（洞察，不是主题）
 
 ## 现象
 （你看到了什么）
@@ -53,7 +58,7 @@ source: 触发写入的事件/任务简述
 
 ### 分类标准
 
-三类，同一维度：**这条日志回答什么问题**。
+五类，同一维度：**这条日志回答什么问题**。
 
 | 分类 | 回答什么 | 判定 | 示例 |
 |------|---------|------|------|
@@ -61,6 +66,7 @@ source: 触发写入的事件/任务简述
 | `method` | 怎么做X？ | 可执行的步骤序列 | 备份顺序：.claude.json → tools/ → skills/ |
 | `fact` | X在哪/是什么？ | 具体数据：路径、版本、架构 | 工具注册在 ~/.agentboard/tools/ 下 |
 | `capability` | 我能用X在Y场景做什么？ | 工具+场景=能力。防止"明明有这个能力但忘了用" | Chrome DevTools 能操控百度地图测通勤 → recipe 在 research-methods/_tools/ |
+| `feedback` | 用户/环境给我的行为纠正是什么？ | 记录被纠正的做法 + 为什么 | 用户说"别 mock 数据库" → 集成测试连真库 |
 
 互斥检验：一条日志不可能同时主要回答"为什么"又主要回答"怎么做"——诉求不同，写出来重点不同。
 
@@ -77,12 +83,15 @@ source: 触发写入的事件/任务简述
 capability 不回答"为什么坏了"或"怎么做"，只回答**"我能做什么"**。格式比 diagnosis 短，不需要现象/根因/修复：
 
 ```markdown
-# 一句话标题（能力描述，不是工具名）
+---
 type: capability
 tool: 工具名
 scenario: 什么场景下用
 date: YYYY-MM-DD
 recipe: 详细操作手册的绝对路径（可选）
+---
+
+# 一句话标题（能力描述，不是工具名）
 
 ## 能力
 （这个工具+场景组合能做什么事）
@@ -130,59 +139,12 @@ capability 的准入门槛比 diagnosis 低——不需要"踩坑花了1h+"，�
 
 ## 五、当前日志清单
 
-| 文件 | type | 状态 |
-|------|------|------|
-| `gh-cli-proxy.md` | diagnosis | ✅ |
-| `double-serverjs.md` | diagnosis | ✅ |
-| `cloud-reset-lessons.md` | diagnosis | ✅ |
-| `agentboard-tools-lifecycle.md` | method | ✅ 路径已修正为 ~/.agentboard/ |
-| `backup-strategy.md` | method | ⚠️ 基于旧版 .claude/ 布局，部分过时 |
-| `agentboard-architecture.md` | fact | ⚠️ 部分内容与 design-spec.md 重叠 |
-| `cron-run-ok-means-nothing.md` | diagnosis | ✅ |
-| `api-prefix-mismatch-silent-fail.md` | diagnosis | ✅ |
-| `phone-frame-safe-area-scrim.md` | diagnosis | ✅ |
-| `utf8-bom-breaks-http-headers.md` | diagnosis | ✅ |
-| `windows-dual-port-bind.md` | diagnosis | ✅ |
-| `cron-unpinned-model-output-shrink.md` | diagnosis | ✅ |
-| `session-server-side-expiry.md` | diagnosis | ✅ |
-| `python-thread-flag-race.md` | diagnosis | ✅ |
-| `mcp-no-auto-retry.md` | diagnosis | ✅ |
-| `windows-gbk-python-io.md` | diagnosis | ✅ |
-| `node-spawn-cmd-powershell-path.md` | diagnosis | ✅ |
-| `tool-relocation.md` | method | ✅ |
-| `git-init-default-branch-main.md` | diagnosis | ✅ |
-| `gitmodules-chinese-encoding-corruption.md` | diagnosis | ✅ |
-| `git-first-commit-project-dating.md` | method | ✅ |
-| `script-tag-injection-js-exposed.md` | diagnosis | ✅ |
-| `tun-fallback-dead-proxy-nodes.md` | diagnosis | ✅ |
-| `windows-start-b-kills-children.md` | diagnosis | ✅ |
-| `dual-writer-state-overwrite.md` | diagnosis | ✅ |
-| `claude-p-prompt-describe-vs-execute.md` | diagnosis | ✅ |
-| `windows-user-env-not-visible-new-process.md` | diagnosis | ✅ |
-| `powershell-invoke-restmethod-gbk-body.md` | diagnosis | ✅ |
-| `baidu-maps-transit-capability.md` | capability | ✅ |
-| `xiaohongshu-browser-capability.md` | capability | ✅ |
-| `codebuddy-wechat-extract-capability.md` | capability | ✅ |
-| `port-listening-not-means-running.md` | diagnosis | ✅ |
-| `manifest-content-rot.md` | diagnosis | ✅ |
-| `manifest-silent-drop.md` | diagnosis | ✅ |
-| `research-report-delivery-checklist.md` | feedback | ✅ |
-| `scheduler-dashboard-dual-codebase.md` | diagnosis | ✅ |
-| `compliance-gate-unrecognized-tag-verified.md` | diagnosis | ✅ |
-| `placeholder-images-convey-intent.md` | method | ✅ |
-| `rehype-sanitize-pipeline-ordering.md` | diagnosis | ✅ |
-| `turbopack-dual-lockfile-panic.md` | diagnosis | ✅ |
-| `css-transform-scroll-anchor-offset.md` | diagnosis | ✅ |
-| `free-stock-industrial-b2b-photos.md` | fact | ✅ |
-| `acestep-startup-port-conflict.md` | diagnosis | ✅ |
-| `self-healing-tool-startup.md` | method | ✅ |
-| `nvidia-smi-wddm-misleading-vram.md` | fact | ✅ |
-| `flex-min-width-auto-content-sizing.md` | diagnosis | ✅ |
-| `edgeone-cache-per-resource-url.md` | diagnosis | ✅ |
-| `tool-card-pointer-not-cache.md` | method | ✅ |
-| `feature-removal-dead-doc-clearance.md` | method | ✅ |
-| `ps1-utf8-no-bom-gbk-parse-error.md` | diagnosis | ✅ |
-| `card-equalizer-hardcoded-grid-selector.md` | diagnosis | ✅ |
+> 已废弃手工清单。全量索引见工具架 `/tips` 页面（机器自动扫描 `tips/*.md`，唯一真相源）。type 校验由 `lib/tip-schema.js` 统一执行，不合规值在 /tips 页面标红。
+
+- **365 条全部合规** — diagnosis 250 / method 89 / capability 6 / fact 18 / feedback 2（2026-08-19 批量迁移后）
+- **frontmatter 已标准化** — 全部 YAML `---` 包裹，type 收敛到 5 类标准值
+- **25 条 capability 误标已纠正** — 原标 capability 但无 tool/scenario 的诊断/方法类日志，改回 diagnosis(20)/method(5)
+- **6 条遗留缺 source** — agentboard-architecture / agentboard-tools-lifecycle / backup-strategy / json-parse-null / project-json-pattern / toolrack-delete-first-verify，触发事件不可考，留空待人工补
 
 ---
 

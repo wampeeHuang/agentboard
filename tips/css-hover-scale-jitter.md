@@ -1,8 +1,10 @@
-# CSS transform:scale() hover 导致元素震荡
-
+---
 type: diagnosis
 date: 2026-07-29
 source: vivihuang-portfolio #xitong 架构环图节点 hover 效果
+---
+
+# CSS transform:scale() hover 导致元素震荡
 
 ## 现象
 鼠标悬停 SVG 节点卡片时，元素反复缩放抖动（震荡），无法稳定在 hover 状态。`transform: scale(1.06)` 看起来正常，实际鼠标在边缘反复进出。

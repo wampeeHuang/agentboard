@@ -1,8 +1,10 @@
-# Windows CPU/磁盘/网络监控：只用 typeperf/PDH，不碰 WMI
-
+---
 type: diagnosis
 date: 2026-07-22
 source: Supervisor 面板 CPU 数值与任务管理器对不齐，5 轮迭代从 wmic→WMI→Get-Counter→typeperf
+---
+
+# Windows CPU/磁盘/网络监控：只用 typeperf/PDH，不碰 WMI
 
 ## 现象
 

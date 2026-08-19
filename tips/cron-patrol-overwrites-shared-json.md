@@ -1,7 +1,10 @@
-# Cron 巡检重写共享 JSON，非巡检字段被静默丢弃
+---
 type: diagnosis
 date: 2026-07-03
 source: 深圳保障房导航 dashboard — personal data 反复消失，根因是 scheduler patrol 重写 data.json
+---
+
+# Cron 巡检重写共享 JSON，非巡检字段被静默丢弃
 
 ## 现象
 - Dashboard 页面正常工作，`/data` 端点返回完整数据

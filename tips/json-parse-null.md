@@ -1,7 +1,10 @@
-# JSON.parse(null) 不抛错，静默返回 null
+---
 type: diagnosis
 description: server.js scanWorkspace 里 JSON.parse(read()) 当文件不存在时静默返回 null，覆盖默认值 {}，导致后续属性访问崩溃。附修复代码和预防规则。
 date: 2026-06-12
+---
+
+# JSON.parse(null) 不抛错，静默返回 null
 
 ## 现象
 `/workspace/workspace-projects` 返回 500：`Cannot read properties of null (reading 'status')`。scanWorkspace 里 `meta.status` 报错，但 `meta` 初始化为 `{}`，按说不该是 null。

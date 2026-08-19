@@ -1,8 +1,10 @@
-# Catch-up 提前设 lastRun 导致 triggerJob 日成功守卫跳过执行
-
+---
 type: diagnosis
 date: 2026-07-09
 source: data.evopearl.com AI 信号 cron 7:30 错过 → catch-up 触发但实际未执行 → 网站无当日内容
+---
+
+# Catch-up 提前设 lastRun 导致 triggerJob 日成功守卫跳过执行
 
 ## 现象
 

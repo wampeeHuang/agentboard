@@ -1,7 +1,10 @@
-# PowerShell 5.1 读 .ps1 无 BOM 按 GBK 解析，中文炸语法
+---
 type: diagnosis
 date: 2026-08-18
 source: 写 DeepSeek 余额监控 balance.ps1，Write 工具落盘后冒烟测试报 ParserError
+---
+
+# PowerShell 5.1 读 .ps1 无 BOM 按 GBK 解析，中文炸语法
 
 ## 现象
 Write 工具写的 .ps1 文件（UTF-8 无 BOM）含中文，powershell.exe 运行时报 ParserError：

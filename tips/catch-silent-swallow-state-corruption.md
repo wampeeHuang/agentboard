@@ -1,7 +1,10 @@
-# `catch(_){}` 静默吞咽 = 状态悄悄损坏 + 故障不可解释
+---
 type: diagnosis
 date: 2026-07-07
 source: scheduler.js 186 次崩溃根因排查，发现 9+ 个 `catch(_){}` 全部丢弃诊断信息，状态损坏累积到不可解释
+---
+
+# `catch(_){}` 静默吞咽 = 状态悄悄损坏 + 故障不可解释
 
 ## 现象
 - Node.js 常驻进程不崩溃（没有 uncaughtException），但行为异常

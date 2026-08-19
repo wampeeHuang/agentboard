@@ -1,7 +1,10 @@
-# 正则 lookbehind 在分隔符与目标之间夹注释时失配——改用捕获边界
+---
 type: diagnosis
 date: 2026-08-16
 source: layout-gallery Stage 3 迁移脚本，`(?<=[{;}]\s*)` 声明匹配在 `;` 后夹注释时漏 10 处声明
+---
+
+# 正则 lookbehind 在分隔符与目标之间夹注释时失配——改用捕获边界
 
 ## 现象
 CSS 声明迁移脚本用 lookbehind 匹配声明，编译门禁报出 10 处声明没迁移到（如 `--tl-dot:8px` 仍硬编码）。grep 能搜到该属性，但脚本匹配不到。

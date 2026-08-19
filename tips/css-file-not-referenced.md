@@ -1,7 +1,10 @@
-# CSS 文件存在但未被 HTML 引用 → 所有改动静默失效
+---
 type: diagnosis
 date: 2026-07-09
 source: 工具架设计原则板块样式调整，改 _style.css 多轮无效
+---
+
+# CSS 文件存在但未被 HTML 引用 → 所有改动静默失效
 
 ## 现象
 改 `_style.css` 里的样式规则，刷新页面完全没变化。浏览器 DevTools 看不到对应的样式规则。

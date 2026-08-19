@@ -1,7 +1,10 @@
-# Archived 仓库编辑三步法：解档 → 编辑 → 重归档
+---
 type: method
 date: 2026-08-07
 source: github-mgmt 审计，persona-article/evolution-cat-article/wechat-article-reader 三个归档仓库需更新 description
+---
+
+# Archived 仓库编辑三步法：解档 → 编辑 → 重归档
 
 ## 现象
 对已归档仓库执行 `PATCH /repos/{owner}/{repo}` 或 `PUT .../contents/README.md` 返回 403：`"Repository was archived so is read-only"`。

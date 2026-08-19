@@ -1,8 +1,10 @@
-# PowerShell `>` 重定向 → UTF-16 LE 编码陷阱
+---
+type: diagnosis
+date: 2026-08-07
+source: gallery deploy — 全站中文乱码 30 分钟
+---
 
-**type**: pitfall
-**date**: 2026-08-07
-**source**: gallery deploy — 全站中文乱码 30 分钟
+# PowerShell `>` 重定向 → UTF-16 LE 编码陷阱
 
 ## 现象
 

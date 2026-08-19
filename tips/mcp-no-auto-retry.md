@@ -1,7 +1,10 @@
-# MCP 修复根因后不会自动恢复——需重启 Session
+---
 type: diagnosis
 date: 2026-06-16
 source: codex-relay 挂了导致 codex_apps MCP 启动失败，修好 relay 后 MCP 仍不可用
+---
+
+# MCP 修复根因后不会自动恢复——需重启 Session
 
 ## 现象
 - MCP server 因依赖服务挂了（如 codex-relay 未启动）导致 session 启动时加载失败

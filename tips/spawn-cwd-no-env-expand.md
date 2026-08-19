@@ -1,7 +1,10 @@
-# Node.js spawn cwd 不展开 Windows 环境变量
+---
 type: diagnosis
 date: 2026-06-23
 source: inspector :3101 无法通过 agentboard API 拉起
+---
+
+# Node.js spawn cwd 不展开 Windows 环境变量
 
 ## 现象
 - agentboard 面板点"启动"返回 `{"ok":true}`，但工具端口不监听

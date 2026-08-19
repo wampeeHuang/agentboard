@@ -1,7 +1,10 @@
-# Windows 启动脚本 start /b 会在父进程退出时杀死子进程
+---
 type: diagnosis
 date: 2026-06-22
 source: 系统重启后 agentboard:3099 未自启 → inspector:3101 卡"启动中"
+---
+
+# Windows 启动脚本 start /b 会在父进程退出时杀死子进程
 
 ## 现象
 Windows 重启后，启动文件夹里的 `.bat` 脚本用 `start /b` 拉起的 Node.js 常驻服务不存活。但同一个脚本里其他进程碰巧活下来了（不可靠），造成"偶尔能自启、偶尔不行"的错觉。

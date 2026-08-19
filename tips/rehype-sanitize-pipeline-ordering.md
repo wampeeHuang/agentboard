@@ -1,7 +1,10 @@
-# rehype-sanitize 放在 highlight 之后会清除代码高亮
+---
 type: diagnosis
 date: 2026-07-10
 source: Forma 排版引擎安全审查 — XSS 修复时反复调整 rehype 管线排序
+---
+
+# rehype-sanitize 放在 highlight 之后会清除代码高亮
 
 ## 现象
 加 `rehype-sanitize` 修复 XSS 后，代码高亮全部消失。`<span class="hljs-keyword">` 等节点被 sanitize 清除。反过来去掉 `allowDangerousHtml: true`，高亮 span 被 HTML-encode 成 `&lt;span&gt;` 显示为源码。

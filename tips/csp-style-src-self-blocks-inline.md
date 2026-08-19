@@ -1,8 +1,10 @@
-# CSP style-src 'self' 封锁所有行内 style 属性
-
-type: tip
+---
+type: method
 date: 2026-08-05
 source: source-rack UI 重构 — CSP 收紧后大量样式失效
+---
+
+# CSP style-src 'self' 封锁所有行内 style 属性
 
 ## 现象
 CSP 设置为 `style-src 'self'`（去掉 `'unsafe-inline'`），页面元素样式丢失、布局错乱。浏览器 Console 报 CSP violation。

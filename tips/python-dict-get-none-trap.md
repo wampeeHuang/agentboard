@@ -1,8 +1,10 @@
-# Python dict.get() 链式调用 None 值陷阱
-
-type: language-gotcha
+---
+type: diagnosis
 date: 2026-07-15
 source: O1 纪录片管线 compile_o1_phase03.py 解析 MiniCPM-V 评估结果
+---
+
+# Python dict.get() 链式调用 None 值陷阱
 
 ## 现象
 

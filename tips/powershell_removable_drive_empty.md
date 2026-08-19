@@ -1,8 +1,10 @@
-# PowerShell Get-ChildItem 在外接驱动器上静默返回空
-
-type: pitfall
+---
+type: diagnosis
 date: 2026-08-01
 source: camera-import session
+---
+
+# PowerShell Get-ChildItem 在外接驱动器上静默返回空
 
 ## 现象
 PowerShell `Get-ChildItem E:\` 或 `Get-ChildItem E:\ -Recurse` 对外接 SD 卡/USB 驱动器返回空，无任何报错。第一次调用偶尔成功，后续全部静默失败。

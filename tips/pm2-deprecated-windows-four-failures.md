@@ -1,8 +1,10 @@
-# PM2 已弃用：Windows 四连坑 + 禁止 Agent 再次建议
-
+---
 type: fact
 date: 2026-08-01
 source: 骨架打包调研——Agent 反复建议 PM2，用户要求固化弃用原因
+---
+
+# PM2 已弃用：Windows 四连坑 + 禁止 Agent 再次建议
 
 ## 事实
 

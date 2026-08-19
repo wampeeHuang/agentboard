@@ -1,7 +1,10 @@
-# Agent 写入门禁不需要新建 API 服务
+---
 type: method
 date: 2026-08-05
 source: source-rack 写入门禁方案评审——从"加三个 API 端点"精简到"改一个 CLAUDE.md"
+---
+
+# Agent 写入门禁不需要新建 API 服务
 
 ## 现象
 多个 agent 需要向同一个数据源写入（如 Obsidian .md 文件），本能反应是加 API 网关——GET /vocabulary、POST /validate、强化 POST /sources。方案评审时发现是过度工程。

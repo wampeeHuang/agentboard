@@ -1,8 +1,10 @@
-# Server 搬家后静态资源 404
-
-type: debug
+---
+type: diagnosis
 date: 2026-08-06
 source: source-rack 文件夹架构重构
+---
+
+# Server 搬家后静态资源 404
 
 ## 现象
 

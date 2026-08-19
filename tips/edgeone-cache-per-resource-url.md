@@ -1,8 +1,10 @@
-# EdgeOne CDN 缓存按 URL 独立，purge 页面不联动刷新子资源
-
+---
 type: diagnosis
 date: 2026-07-24
 source: 德城 landing page 替换 aoiuser-01005-precision.jpg 后线上仍然是旧图，已 purge 页面 URL
+---
+
+# EdgeOne CDN 缓存按 URL 独立，purge 页面不联动刷新子资源
 
 ## 现象
 

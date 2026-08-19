@@ -1,8 +1,10 @@
-# PM2 Windows: script: 'npm' → SyntaxError Unexpected token ':'
-
-type: capability
+---
+type: diagnosis
 date: 2026-07-10
 source: Forma 端口 3103 修复
+---
+
+# PM2 Windows: script: 'npm' → SyntaxError Unexpected token ':'
 
 ## 现象
 PM2 `script: 'npm'` + `args: 'run dev'`，启动后立即报错：

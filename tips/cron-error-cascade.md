@@ -1,7 +1,10 @@
-# Cron 错误无分类导致 27 次重试烧光 credits
+---
 type: diagnosis
 date: 2026-06-13
 source: 进化猫三个日报 cron job（3cfba668/591346bc/a85e2d4c）全部陷入重试风暴，2.5 小时内触发 27 次只有 5 次成功
+---
+
+# Cron 错误无分类导致 27 次重试烧光 credits
 
 ## 现象
 

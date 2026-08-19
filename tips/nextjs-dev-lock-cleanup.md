@@ -1,8 +1,10 @@
-# Forma Next.js .next/dev/lock 残留 → 启动失败
-
+---
 type: diagnosis
 date: 2026-07-10
 source: 20260710_AI定价困局 Forma 推送
+---
+
+# Forma Next.js .next/dev/lock 残留 → 启动失败
 
 ## 现象
 

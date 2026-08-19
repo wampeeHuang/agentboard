@@ -1,8 +1,10 @@
-# UTF-8 BOM 导致 SRT 第一条字幕被静默丢弃
-
-type: bug
+---
+type: diagnosis
 date: 2026-06-25
 source: 猫波信号站 pipeline stage_06 输出缺少第一条字幕
+---
+
+# UTF-8 BOM 导致 SRT 第一条字幕被静默丢弃
 
 ## 现象
 

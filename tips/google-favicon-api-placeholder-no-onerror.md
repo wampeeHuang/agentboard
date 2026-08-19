@@ -1,8 +1,10 @@
-# Google Favicon API 返回 200 + 占位图，不触发 img onerror
-
+---
 type: diagnosis
 date: 2026-07-19
 source: 德城 landing page favicon 自托管，ECHA/IPC 图标加载失败排查
+---
+
+# Google Favicon API 返回 200 + 占位图，不触发 img onerror
 
 ## 现象
 

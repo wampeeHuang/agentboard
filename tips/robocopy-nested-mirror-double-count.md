@@ -1,8 +1,10 @@
-# robocopy 嵌套路径双重镜像
-
-type: operations
+---
+type: diagnosis
 date: 2026-07-10
 source: F 盘跑满 0 字节，排查发现 mirror 233 GB 中 _output 被抄了两遍
+---
+
+# robocopy 嵌套路径双重镜像
 
 ## 现象
 

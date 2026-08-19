@@ -1,8 +1,10 @@
-# push-forma.py check_forma_alive 对 404 误判
-
-type: capability
+---
+type: diagnosis
 date: 2026-07-10
 source: 20260710_AI定价困局 Forma 推送
+---
+
+# push-forma.py check_forma_alive 对 404 误判
 
 ## 现象
 

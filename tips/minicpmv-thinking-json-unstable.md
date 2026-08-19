@@ -1,8 +1,10 @@
-# MiniCPM-V Q4_K_M thinking 变体 JSON 输出不稳定
-
-type: model-behavior
+---
+type: diagnosis
 date: 2026-07-15
 source: O1 纪录片管线 Phase 03 MiniCPM-V F1-F4 初筛
+---
+
+# MiniCPM-V Q4_K_M thinking 变体 JSON 输出不稳定
 
 ## 现象
 

@@ -1,5 +1,9 @@
-# Agentboard 架构原则
+---
 type: fact
+date: 2026-06-12
+---
+
+# Agentboard 架构原则
 
 ## 核心理念
 文件即注册，状态即界面。

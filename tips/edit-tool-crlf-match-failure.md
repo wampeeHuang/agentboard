@@ -1,7 +1,10 @@
-# Edit 工具在 Windows 文件上反复匹配失败
+---
 type: diagnosis
 date: 2026-06-14
 source: skill-html-showcase 项目多次 Edit 操作 index.html 均报 "String to replace not found"
+---
+
+# Edit 工具在 Windows 文件上反复匹配失败
 
 ## 现象
 

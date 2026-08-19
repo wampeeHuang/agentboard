@@ -1,8 +1,10 @@
-# 调度器重试导致 agent 副作用重复
-
-type: architecture
+---
+type: diagnosis
 date: 2026-07-08
 source: 个体户申报提醒同一天发了两遍飞书消息
+---
+
+# 调度器重试导致 agent 副作用重复
 
 ## 现象
 cron job 第一次运行成功发送飞书通知，但没写产出文件 → 调度器标记 output_missing → 自动重试 → agent 又发了一遍消息。

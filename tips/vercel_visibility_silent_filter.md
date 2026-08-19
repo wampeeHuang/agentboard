@@ -1,8 +1,10 @@
-# Vercel `visibility: public` 静默过滤
+---
+type: diagnosis
+date: 2026-08-07
+source: gallery deploy — 7 个新模板部署后公网不可见
+---
 
-**type**: pitfall
-**date**: 2026-08-07
-**source**: gallery deploy — 7 个新模板部署后公网不可见
+# Vercel `visibility: public` 静默过滤
 
 ## 现象
 

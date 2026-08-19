@@ -1,8 +1,10 @@
-# Agent 误读跨会话粘贴文本
-
-type: guard
+---
+type: method
 date: 2026-08-07
 source: layout-gallery 会话 — 用户贴了另一段对话的内容，Agent 当成当前会话指令执行
+---
+
+# Agent 误读跨会话粘贴文本
 
 ## 现象
 - 用户在 Claude Code 里粘贴了从其他对话复制的文本（"明天会直接在workspace新建一个生活向视频解说项目"）

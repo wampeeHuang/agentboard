@@ -1,8 +1,10 @@
-# SVG `<use>` 引用时不能用 `display:none` 隐藏 defs
-
+---
 type: diagnosis
 date: 2026-07-17
 source: 德城品牌套件 logo 区段用隐藏 SVG defs 提供 `<use href>` 引用路径
+---
+
+# SVG `<use>` 引用时不能用 `display:none` 隐藏 defs
 
 ## 现象
 

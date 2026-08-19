@@ -1,7 +1,10 @@
-# node -e require 语法检查产生孤儿进程占端口
+---
 type: method
 date: 2026-07-08
 source: agentboard 审查时 server.js 改完不生效，排查发现旧 node 进程占 3099
+---
+
+# node -e require 语法检查产生孤儿进程占端口
 
 ## 现象
 - pm2 显示 agentboard online，但页面内容不更新（旧代码在响应）

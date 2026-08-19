@@ -1,8 +1,10 @@
-# 内部工具看板写成开发文档——受众错位
-
-type: pattern
+---
+type: diagnosis
 date: 2026-07-21
 source: D:\workspace\_output\retrospectives\2026-07-21-dashboard-mockup.md
+---
+
+# 内部工具看板写成开发文档——受众错位
 
 ## 现象
 

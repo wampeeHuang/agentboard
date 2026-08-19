@@ -1,8 +1,10 @@
-# execSync 阻塞事件循环导致 HTTP 超时
-
-type: debug
+---
+type: diagnosis
 date: 2026-07-31
 source: Supervisor 面板 10s+ 超时排查
+---
+
+# execSync 阻塞事件循环导致 HTTP 超时
 
 ## 现象
 - Node.js HTTP 服务器端口在监听，连接能建立

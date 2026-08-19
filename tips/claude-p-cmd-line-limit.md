@@ -1,8 +1,10 @@
-# claude -p 遇到 Windows 命令行 8191 字符限制
-
-type: capability
+---
+type: diagnosis
 date: 2026-07-08
 source: 猫波选题 cron job 持续失败
+---
+
+# claude -p 遇到 Windows 命令行 8191 字符限制
 
 ## 现象
 `claude -p $longPrompt` 在 PowerShell 脚本中报错 "no stdin data received"，但 prompt 内容确实非空。

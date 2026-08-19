@@ -1,8 +1,10 @@
-# rAF + innerHTML 导致 click 事件丢失
-
-type: diagnostic  
-date: 2026-08-06  
+---
+type: diagnosis
+date: 2026-08-06
 source: source-rack 力导向图谱点击节点无响应
+---
+
+# rAF + innerHTML 导致 click 事件丢失
 
 ## 现象
 - 高频渲染的元素（canvas/SVG）点击无响应

@@ -1,7 +1,10 @@
-# git 里 deleted+modified 并存，先问意图不默认 restore
+---
 type: diagnosis
 date: 2026-08-18
 source: 黄皮油柑海边日落源图，用户只留一张对的图
+---
+
+# git 里 deleted+modified 并存，先问意图不默认 restore
 
 ## 现象
 git status 显示图片 `海边日落.png modified`（尺寸变小）+ `海边日落1.png deleted`，第一反应当数据损坏要 restore。

@@ -1,8 +1,10 @@
-# Feishu formula field returns string in API
-
-type: reference
+---
+type: fact
 date: 2026-08-01
 source: decheng-landing-page 定价引擎迁移 Phase 5 验证
+---
+
+# Feishu formula field returns string in API
 
 ## 现象
 Python 脚本对比 Feishu API 返回的公式字段值与预期值：`1 == "1"` → `False`，所有验证断言误报为失败。

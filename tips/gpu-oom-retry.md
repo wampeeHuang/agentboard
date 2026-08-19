@@ -1,7 +1,10 @@
-# GPU 工具不声明 conflicts，靠 OOM 重试
+---
 type: method
 date: 2026-06-28
 source: 部署 Confucius4-TTS 时讨论 GPU 工具冲突管理方案
+---
+
+# GPU 工具不声明 conflicts，靠 OOM 重试
 
 ## 现象
 

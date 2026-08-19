@@ -1,8 +1,10 @@
-# CSS 文字金属渐变 = 假
-
-type: design
+---
+type: diagnosis
 date: 2026-07-15
 source: 德城 PCBA hero 文字特效迭代
+---
+
+# CSS 文字金属渐变 = 假
 
 ## 现象
 

@@ -1,7 +1,10 @@
-# MCP bridge status 误报：不信任 connected 字段
+---
 type: diagnosis
 date: 2026-07-10
 source: Figma MCP 可用性测试，bridge_status 报 plugin.connected=false 但实际操作正常
+---
+
+# MCP bridge status 误报：不信任 connected 字段
 
 ## 现象
 figma-mcp daemon 的 bridge_status 端点固定返回 `plugin.connected: false`。直觉判断"插件未连接"→ 排查配置 → 实际插件已连通且所有操作正常。

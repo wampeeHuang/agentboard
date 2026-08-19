@@ -1,8 +1,10 @@
-# OpenAI 服务代理区域限制
-
-type: capability
+---
+type: diagnosis
 date: 2026-08-04
 source: 2026-08-04-codex-chatgpt-plus-setup
+---
+
+# OpenAI 服务代理区域限制
 
 ## 规则
 

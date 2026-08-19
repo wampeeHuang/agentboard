@@ -1,8 +1,10 @@
-# OpenClaw cron: shell job 静默 skipped
-
-type: cron
+---
+type: diagnosis
 date: 2026-06-26
 source: localhost:3100/cron 显示4个异常
+---
+
+# OpenClaw cron: shell job 静默 skipped
 
 ## 现象
 - cron job 的 `lastStatus: "skipped"`，实际从未执行

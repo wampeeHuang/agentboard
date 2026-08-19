@@ -1,7 +1,10 @@
-# 技术写作——宣布选X时必须等量介绍Y
+---
 type: method
 date: 2026-08-11
 source: Workflow Engine 笔记——自建路线只说"走 Checkpoint-Resume"，没解释为什么 Event Sourcing 不适合用户场景
+---
+
+# 技术写作——宣布选X时必须等量介绍Y
 
 ## 现象
 

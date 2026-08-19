@@ -1,7 +1,10 @@
-# CLI `openclaw cron run` 返回 ok+jobs 不代表成功
+---
 type: diagnosis
 date: 2026-06-13
 source: cron 调度器架构改造，A/B 测试 CLI vs MCP 触发通道
+---
+
+# CLI `openclaw cron run` 返回 ok+jobs 不代表成功
 
 ## 现象
 `openclaw cron run <id>` 永远返回 `{ok: true, enqueued: true}`，exit code 0，即使 job 实际上因为欠费、超时、网络错误失败。

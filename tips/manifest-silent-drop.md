@@ -1,7 +1,10 @@
-# manifest JSON 编码损坏导致工具卡片静默消失
+---
 type: diagnosis
 date: 2026-06-14
 source: cron-scheduler 卡片从工具架消失，API 返回不包含该工具
+---
+
+# manifest JSON 编码损坏导致工具卡片静默消失
 
 ## 现象
 工具架某个卡片突然不显示，`GET /api/tools` 返回的列表里缺少该工具。

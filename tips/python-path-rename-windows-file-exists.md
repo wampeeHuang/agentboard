@@ -1,8 +1,10 @@
-# Python Path.rename Windows 覆盖陷阱
-
-type: bug-pattern
+---
+type: diagnosis
 date: 2026-07-21
 source: O4 美食管线下载脚本，重试时组织文件步骤崩溃
+---
+
+# Python Path.rename Windows 覆盖陷阱
 
 ## 现象
 ```python

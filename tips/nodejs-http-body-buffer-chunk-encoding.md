@@ -1,8 +1,10 @@
-# Node.js HTTP body Buffer 逐片解码中文乱码
-
-type: anti-pattern
+---
+type: diagnosis
 date: 2026-08-07
 source: feishu-bot /send 端点接收 supervisor 推送的中文告警，飞书收到乱码
+---
+
+# Node.js HTTP body Buffer 逐片解码中文乱码
 
 ## 现象
 

@@ -1,8 +1,10 @@
-# Edit tool 中文内容匹配失败
-
-type: encoding
+---
+type: diagnosis
 date: 2026-07-23
 source: scheduler dashboard CSS tokenization — index.html brand kit 字体层级编辑
+---
+
+# Edit tool 中文内容匹配失败
 
 ## 现象
 Edit 工具对含中文字符的 `old_string` 反复报 "String to replace not found in file"，即使 Read 工具显示内容完全匹配。无报错原因提示，静默失败。

@@ -1,7 +1,10 @@
-# git init 默认分支 master 导致 push main 失败
+---
 type: diagnosis
 date: 2026-06-20
 source: 20 个 skill 批量独立建仓 + push GitHub，前 5 个全部报 `error: src refspec main does not match any`
+---
+
+# git init 默认分支 master 导致 push main 失败
 
 ## 现象
 

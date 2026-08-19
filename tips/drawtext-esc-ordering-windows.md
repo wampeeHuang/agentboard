@@ -1,8 +1,10 @@
-# Python drawtext filter: `esc()` ordering on Windows
-
+---
 type: diagnosis
 date: 2026-08-07
 source: Mimino subtitle burn project — `gen_filter_cn.py`
+---
+
+# Python drawtext filter: `esc()` ordering on Windows
 
 ## 现象
 

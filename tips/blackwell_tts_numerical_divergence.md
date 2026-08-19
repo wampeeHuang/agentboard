@@ -1,8 +1,10 @@
-# Blackwell GPU 自回归模型数值偏差诊断
-
+---
 type: diagnosis
 date: 2026-06-28
 source: Confucius4-TTS 本地推理 vs 官方 demo 对比
+---
+
+# Blackwell GPU 自回归模型数值偏差诊断
 
 ## 现象
 TTS 模型本地推理产出极短（0.5-1s vs 官方 3-9s）、极安静（peak 0.02-0.10 vs 官方 0.70-0.89）的音频。合成正弦波 prompt 正常、真人录音 prompt 失败，但官方 demo 用同一录音正常。

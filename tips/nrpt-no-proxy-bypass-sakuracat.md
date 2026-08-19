@@ -1,7 +1,10 @@
-# NRPT + NO_PROXY：双绕代理访问国内 API
+---
 type: method
 date: 2026-07-21
 source: DeepSeek API 代理故障——SakuraCat/Vortex 代理到 DeepSeek TLS 握手断裂，CONNECT 返回 200 但 SSL 失败
+---
+
+# NRPT + NO_PROXY：双绕代理访问国内 API
 
 ## 问题
 

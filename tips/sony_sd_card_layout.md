@@ -1,8 +1,10 @@
-# Sony 相机 SD 卡文件布局
-
-type: reference
+---
+type: fact
 date: 2026-08-01
 source: camera-import session
+---
+
+# Sony 相机 SD 卡文件布局
 
 ## 卡上目录结构
 

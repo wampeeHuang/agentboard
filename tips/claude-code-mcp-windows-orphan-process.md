@@ -1,8 +1,10 @@
-# Claude Code MCP 在 Windows 上累积孤儿 cmd/conhost 进程
-
+---
 type: diagnosis
 date: 2026-07-19
 source: 任务管理器显示 68 个终端进程 → 排查 MCP 生命周期泄漏
+---
+
+# Claude Code MCP 在 Windows 上累积孤儿 cmd/conhost 进程
 
 ## 现象
 

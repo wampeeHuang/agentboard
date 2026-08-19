@@ -1,7 +1,10 @@
-# ACESTEP_INIT_LLM=auto 不生效：env_bool 不认 "auto"
+---
 type: diagnosis
 date: 2026-06-29
 source: ACE Step 引擎启动，AI Format 报 500，追踪发现 LLM 未初始化
+---
+
+# ACESTEP_INIT_LLM=auto 不生效：env_bool 不认 "auto"
 
 ## 现象
 `.env` 设 `ACESTEP_INIT_LLM=auto`，引擎启动后 LLM 未加载。调用 `/format_input` 时报 LLM not initialized。日志显示 "Server is ready to accept requests (models not loaded yet)"。

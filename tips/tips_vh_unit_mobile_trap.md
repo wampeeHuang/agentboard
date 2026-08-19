@@ -1,8 +1,10 @@
-# vh 单位在移动端字号上的陷阱
-
-type: trap
+---
+type: diagnosis
 date: 2026-07-22
 source: decheng-landing-page Hero headline mobile overflow
+---
+
+# vh 单位在移动端字号上的陷阱
 
 ## 现象
 

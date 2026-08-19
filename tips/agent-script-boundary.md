@@ -1,8 +1,10 @@
-# Agent/脚本边界：机械操作脚本化，不给agent自由裁量
-
-type: principle
+---
+type: method
 date: 2026-07-07
 source: 飞书乱码三次复发根因分析 — 宪法修订
+---
+
+# Agent/脚本边界：机械操作脚本化，不给agent自由裁量
 
 ## 边界定义
 

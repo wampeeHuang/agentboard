@@ -1,8 +1,10 @@
-# 技能产出换语言：翻译已有产出，不重跑管线
-
+---
 type: method
 date: 2026-06-29
 source: codebase-to-course 中文版——英文 HTML 模块已存在且结构正确，却重跑了整个 brief→agent→assemble 管线
+---
+
+# 技能产出换语言：翻译已有产出，不重跑管线
 
 ## 现象
 - 技能（如 codebase-to-course）的产出物已经生成完毕，结构正确、交互元素齐全

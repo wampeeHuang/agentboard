@@ -1,7 +1,10 @@
-# Windows hook 命令弹出控制台窗口
+---
 type: diagnosis
 date: 2026-07-13
 source: Claude Code session guard 调试——hook 阶段性弹出终端窗口，显示红字后消失
+---
+
+# Windows hook 命令弹出控制台窗口
 
 ## 现象
 

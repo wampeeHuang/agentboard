@@ -1,8 +1,10 @@
-# BOM 污染 jobs.json → 调度器全盲，18 个 cron 任务集体静默
-
+---
 type: diagnosis
 date: 2026-07-10
 source: data.evopearl.com 今日数据未生成，排查发现 jobs.json 带 BOM
+---
+
+# BOM 污染 jobs.json → 调度器全盲，18 个 cron 任务集体静默
 
 ## 现象
 

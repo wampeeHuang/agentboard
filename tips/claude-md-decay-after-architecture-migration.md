@@ -1,8 +1,10 @@
-# 架构迁移后 CLAUDE.md 漂移成废纸——agent 冷启动读到错误信息
-
-type: pattern
+---
+type: diagnosis
 date: 2026-07-30
 source: evopearl-data — 多次架构迁移（OpenClaw→scheduler、v1→v2 prompt、runtime→D:\workspace）后 CLAUDE.md 仍描述旧架构
+---
+
+# 架构迁移后 CLAUDE.md 漂移成废纸——agent 冷启动读到错误信息
 
 ## 现象
 

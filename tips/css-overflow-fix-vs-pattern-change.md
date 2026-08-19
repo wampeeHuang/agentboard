@@ -1,7 +1,10 @@
-# CSS溢出修复：加规则不改模式 —— 断点重构失败的教训
+---
 type: diagnosis
 date: 2026-08-02
 source: dechpcba-landing 首页在 portfolio iframe 503px 视口下元素溢出，修 bug 过程中错误重构了整个断点体系
+---
+
+# CSS溢出修复：加规则不改模式 —— 断点重构失败的教训
 
 ## 现象
 

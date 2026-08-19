@@ -1,7 +1,10 @@
-# ACE Step 风格 Prompt 覆盖人声性别下拉框
+---
 type: fact
 date: 2026-07-17
 source: 音乐作坊 SO-0003 生成，选 Female 但始终出男声
+---
+
+# ACE Step 风格 Prompt 覆盖人声性别下拉框
 
 ## 现象
 ACE Step 界面人声性别选 Female，但生成出来的歌永远是男声。反复生成不改变。

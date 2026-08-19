@@ -1,7 +1,10 @@
-# 飞书 bitable 字段更新：GET 404 + property 覆盖陷阱
+---
 type: method
 date: 2026-06-28
 source: 猫波选题库 24 字段 description 批量设置，API 踩坑
+---
+
+# 飞书 bitable 字段更新：GET 404 + property 覆盖陷阱
 
 ## 现象
 

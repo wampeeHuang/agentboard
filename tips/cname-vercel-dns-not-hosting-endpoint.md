@@ -1,8 +1,10 @@
-# cname.vercel-dns.com 是 Vercel DNS 服务，不是托管端点——EdgeOne/CDN 回源必须用 Vercel 部署域名
-
+---
 type: diagnosis
 date: 2026-07-22
 source: 德城 landing page 部署，EdgeOne 回源 cname.vercel-dns.com 导致无缓存节点回源失败，用户无法访问
+---
+
+# cname.vercel-dns.com 是 Vercel DNS 服务，不是托管端点——EdgeOne/CDN 回源必须用 Vercel 部署域名
 
 ## 现象
 

@@ -1,7 +1,10 @@
-# CSS 变量映射必须区分简写值和标量值
+---
 type: diagnosis
 date: 2026-08-02
 source: 版式画廊 49 模板标准化迁移，neo-brutalist 的 `--border: 3px solid #0d0d0d` 被 VAR_MAP 盲映射为 `--line: 3px solid #0d0d0d`，导致 `box-shadow: 0 0 0 var(--line)` 渲染异常
+---
+
+# CSS 变量映射必须区分简写值和标量值
 
 ## 现象
 CSS 变量迁移脚本将 `--border` 映射到 `--line` 后，neo-brutalist 模板的 box-shadow 边框消失或渲染异常。grep 确认映射已执行，但页面效果不对。

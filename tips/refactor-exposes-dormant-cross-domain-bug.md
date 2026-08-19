@@ -1,7 +1,10 @@
-# 跨域重构暴露休眠 JS 选择器 bug
+---
 type: diagnosis
 date: 2026-07-28
 source: catalog 字号迁移 CSS 变量后，位置筛选 pill 全部失活。根因在 JS syncPills() 选择器，不在 CSS
+---
+
+# 跨域重构暴露休眠 JS 选择器 bug
 
 ## 现象
 CSS 字号 token 化重构完成后，位置筛选 pill（全部位置/工作区/实验区）全部显示为非激活态，点击无反应。状态筛选不受影响。

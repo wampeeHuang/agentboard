@@ -1,7 +1,10 @@
-# Skill description 触发词不全 → 路由静默失效，无报错
+---
 type: diagnosis
 date: 2026-07-23
 source: 用户说"PG 出来"，perspective-router 未触发，description 缺少"XX 出来"模式
+---
+
+# Skill description 触发词不全 → 路由静默失效，无报错
 
 ## 现象
 用户说"PG 出来"想调用 perspective-router，skill 不触发。文件在、索引在、触发词大部分在，但 description 没覆盖用户的实际口语表达。静默失效——用户以为 skill 坏了，实际是路由不匹配。

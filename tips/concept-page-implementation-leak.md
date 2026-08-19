@@ -1,8 +1,10 @@
-# 概念页被解耦工作改写成实现文档
-
-type: pitfall
+---
+type: diagnosis
 date: 2026-08-08
 source: vault governance audit — 模板-SCHEMA 解耦时 Vault治理架构模式 被改写成本 vault 说明书
+---
+
+# 概念页被解耦工作改写成实现文档
 
 ## 现象
 概念页出现本 vault 的具体文件名（check.js、SCHEMA.md）、行数（~70 行）、"当前选择：单次编译 + 嵌入式"等 vault 特有决策。页面零外部信源，不满足概念升级门禁。

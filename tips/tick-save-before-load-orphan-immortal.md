@@ -1,7 +1,10 @@
-# tick() 先 saveState 再 loadState，内存孤儿条目永生不死
+---
 type: diagnosis
 date: 2026-07-14
 source: scheduler no_foreign_tasks 巡检 FAIL——短 UUID `3cfba668` 从 scheduler-state.json 反复删除反复重生
+---
+
+# tick() 先 saveState 再 loadState，内存孤儿条目永生不死
 
 ## 现象
 - 手动从 JSON state 文件删除某个条目 → 60 秒内条目精确复原

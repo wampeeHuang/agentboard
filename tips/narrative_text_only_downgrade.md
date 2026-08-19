@@ -1,8 +1,10 @@
-# 纯文字替换视觉内容永远是降级
-
-type: principle
+---
+type: method
 date: 2026-08-04
 source: vivihuang-portfolio 叙事重构失败
+---
+
+# 纯文字替换视觉内容永远是降级
 
 ## 现象
 

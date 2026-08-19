@@ -1,8 +1,10 @@
-# Windows cmd.exe spawn 空格路径引号 bug
-
-type: bug
+---
+type: diagnosis
 date: 2026-07-10
 source: supervisor.js 5个服务连续死亡，forma :3103 无法访问
+---
+
+# Windows cmd.exe spawn 空格路径引号 bug
 
 ## 现象
 supervisor spawn 的所有 npm/npx 服务（路径含 `C:\Program Files\nodejs\`）启动后 3-8 秒退出，exit code 1。手动在终端执行相同命令正常运行。

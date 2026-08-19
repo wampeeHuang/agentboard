@@ -1,7 +1,10 @@
-# 手机框架状态栏不能是纯色块
+---
 type: diagnosis
 date: 2026-06-14
 source: 折光 MVP 手机预览——phone-frame.html 构建
+---
+
+# 手机框架状态栏不能是纯色块
 
 ## 现象
 在 iPhone 15 Pro 框架里加载 App 时，顶部状态栏区域显示为纯黑块，不像真手机。

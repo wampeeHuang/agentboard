@@ -1,8 +1,10 @@
-# lark-cli +record-upsert without --record-id creates new records, not upsert
-
-type: tip
+---
+type: method
 date: 2026-07-16
 source: O3 历史管线 Phase 04 飞书回填
+---
+
+# lark-cli +record-upsert without --record-id creates new records, not upsert
 
 ## 现象
 

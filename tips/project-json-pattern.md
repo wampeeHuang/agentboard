@@ -1,7 +1,10 @@
-# .project.json 文件系统元数据模式
+---
 type: method
 description: 在项目目录下放一个 .project.json，Agentboard 自动扫描并渲染为项目卡片。零数据库，文件即状态，人工定义 status + 自动计算 recency。
 date: 2026-06-12
+---
+
+# .project.json 文件系统元数据模式
 
 ## 用法
 项目目录下创建 `.project.json`：

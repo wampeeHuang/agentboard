@@ -1,8 +1,10 @@
-# Claude -p 模式下 agent 描述 prompt 而非执行
-
+---
 type: diagnosis
 date: 2026-06-26
 source: 进化猫日报×2 连续 3 天 output_missing，stdout 显示 agent 在总结模板结构
+---
+
+# Claude -p 模式下 agent 描述 prompt 而非执行
 
 ## 现象
 - `claude -p` 触发的 cron 任务，exit code 0（成功），但实际产出文件未创建

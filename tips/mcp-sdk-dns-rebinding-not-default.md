@@ -1,7 +1,10 @@
-# MCP SDK DNS rebinding 保护默认关闭，allowedHosts 必须含端口号
+---
 type: diagnosis
 date: 2026-08-05
 source: agentboard MCP stdio→Streamable HTTP 升级，安全配置踩坑
+---
+
+# MCP SDK DNS rebinding 保护默认关闭，allowedHosts 必须含端口号
 
 ## 现象
 `@modelcontextprotocol/sdk` StreamableHTTPServerTransport 启动后，正常 Host header `127.0.0.1:3099` 被拒绝，返回 `Invalid Host header`。

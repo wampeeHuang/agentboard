@@ -1,7 +1,10 @@
-# 过时 CLAUDE.md 让 Agent 复活已删除的 PM2 并撞端口
+---
 type: diagnosis
 date: 2026-07-23
 source: 注册 dechpcba 到工具架时 3099 不通，Agent 读 agentboard CLAUDE.md 见 "PM2 管理" → npx 下载 PM2 启动 agentboard → 与 Supervisor 的 dashboard:3099 撞端口
+---
+
+# 过时 CLAUDE.md 让 Agent 复活已删除的 PM2 并撞端口
 
 ## 现象
 - `curl localhost:3099` 偶发不通（可能是 bash curl IPv6 问题）

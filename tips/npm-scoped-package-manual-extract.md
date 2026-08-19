@@ -1,8 +1,10 @@
-# npm scoped package 安装失败 → 手工解包兜底
-
-type: capability
+---
+type: method
 date: 2026-07-10
 source: 20260710_AI定价困局 Forma 推送
+---
+
+# npm scoped package 安装失败 → 手工解包兜底
 
 ## 现象
 

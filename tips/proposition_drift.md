@@ -1,7 +1,10 @@
-# 命题漂移：研究杀死原始命题后，降级方案被包装回原术语
-type: capability
+---
+type: diagnosis
 date: 2026-07-10
 source: cross-border-arbitrage v7→v8 命题修正
+---
+
+# 命题漂移：研究杀死原始命题后，降级方案被包装回原术语
 
 ## 现象
 

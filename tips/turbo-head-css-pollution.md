@@ -1,8 +1,10 @@
-# "刷新正常、跳转异常"是 Turbo 缓存污染特征信号
-
+---
 type: diagnosis
 date: 2026-08-05
 source: 版式画廊 /library 页面卡片预览不显示，iframe 全部不可见
+---
+
+# "刷新正常、跳转异常"是 Turbo 缓存污染特征信号
 
 ## 现象
 

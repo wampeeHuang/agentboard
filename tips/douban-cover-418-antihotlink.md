@@ -1,8 +1,10 @@
-# 豆瓣封面 418 反盗链：换 OpenLibrary covers 封面 API
-
+---
 type: diagnosis
 date: 2026-08-19
 source: Obsidian 书籍笔记封面本地化（《藏书·家》尼娜·弗洛登伯格）
+---
+
+# 豆瓣封面 418 反盗链：换 OpenLibrary covers 封面 API
 
 ## 现象
 下载豆瓣图书封面 URL（`img*.doubanio.com/.../sXXXXXX.jpg`）返回 `HTTP 418`，封面本地化失败。curl 不带 header 直接 418，带普通 UA 仍 418。

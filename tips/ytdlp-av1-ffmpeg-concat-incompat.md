@@ -1,8 +1,10 @@
-# yt-dlp 下载 AV1 导致 FFmpeg concat 只能输出音频
-
+---
 type: diagnosis
 date: 2026-06-24
 source: 猫波信号站 Dan Shipper 管线 stage_08 渲染产出无声
+---
+
+# yt-dlp 下载 AV1 导致 FFmpeg concat 只能输出音频
 
 ## 现象
 - yt-dlp 下载成功，source.mp4 播放正常

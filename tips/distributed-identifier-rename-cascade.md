@@ -1,8 +1,10 @@
-# 分布式常量反模式：重命名需同步 N 个文件，漏一个断链
-
-type: anti-pattern
+---
+type: diagnosis
 date: 2026-06-25
 source: evopearl-data "每日选题" → "每日精选" 重命名
+---
+
+# 分布式常量反模式：重命名需同步 N 个文件，漏一个断链
 
 ## 现象
 

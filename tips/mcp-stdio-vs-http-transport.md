@@ -1,7 +1,10 @@
-# stdio 不适合基础设施管理工具 — 串行阻塞+无自动重连
+---
 type: method
 date: 2026-08-05
 source: agentboard MCP 运输层选型，stdio→Streamable HTTP 升级
+---
+
+# stdio 不适合基础设施管理工具 — 串行阻塞+无自动重连
 
 ## 现象
 工具架的 `start_tool` 需要等 15-30 秒端口就绪。stdio 串行通道被这条请求占死，期间所有其他工具调用（list/get/stop）全部排队等。

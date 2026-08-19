@@ -1,7 +1,10 @@
-# 双 server.js 版本分歧
+---
 type: diagnosis
 date: 2026-06-12
 source: .agentboard/server.js 和 Projects/agentboard/server.js 两个版本并行
+---
+
+# 双 server.js 版本分歧
 
 ## 现象
 改了 `.agentboard/server.js` 的分类逻辑，但 3099 端口跑的是 `Projects/agentboard/server.js`。改完重启无效，因为杀错进程、启错文件。

@@ -1,8 +1,10 @@
-# lark-cli 有 base-block-move 命令，别再说"CLI不支持移动block"
-
+---
 type: method
 date: 2026-07-29
 source: 飞书Base数据治理——分类依据枚举和点位计算方式枚举在文件夹外，HANDOFF记录"CLI不支持"
+---
+
+# lark-cli 有 base-block-move 命令，别再说"CLI不支持移动block"
 
 ## 现象
 

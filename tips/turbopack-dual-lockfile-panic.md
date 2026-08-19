@@ -1,7 +1,10 @@
-# Turbopack 双 lockfile 警告后静默崩溃，Ready 不等于稳定
+---
 type: diagnosis
 date: 2026-07-10
 source: Forma 安全审查 — 开发服务器反复 Turbopack panic，干扰验证节奏
+---
+
+# Turbopack 双 lockfile 警告后静默崩溃，Ready 不等于稳定
 
 ## 现象
 Next.js 16 Turbopack 启动时提示检测到多个 lockfile，选择了父目录的作为工作区根。服务器显示 `✓ Ready`，正常响应几分钟，然后突然 `FATAL: Turbopack panic`，报 "Next.js package not found"，HTTP 请求全部超时。

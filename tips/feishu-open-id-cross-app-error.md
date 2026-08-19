@@ -1,8 +1,10 @@
-# 飞书 open_id cross app 错误 — 用错 Bot 发消息
-
+---
 type: diagnosis
 date: 2026-07-22
 source: Supervisor 飞书告警推送返回 `99992361 open_id cross app`
+---
+
+# 飞书 open_id cross app 错误 — 用错 Bot 发消息
 
 ## 现象
 

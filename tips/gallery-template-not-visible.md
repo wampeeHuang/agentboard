@@ -1,7 +1,10 @@
-# 模板写入 _index.json 但画廊页面看不到
+---
 type: diagnosis
 date: 2026-06-14
 source: coze.cn → 发版船 ReleaseShip 模板抄写，用户连续三次"找不到"
+---
+
+# 模板写入 _index.json 但画廊页面看不到
 
 ## 现象
 

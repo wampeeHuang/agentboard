@@ -1,7 +1,10 @@
-# 调度器 wasMissed 不认新终点状态导致 catch-up 重试风暴
+---
 type: diagnosis
 date: 2026-06-23
 source: 两层质量门禁实现后验证，loop-engine自检 output_missing 被 wasMissed 无限重触发
+---
+
+# 调度器 wasMissed 不认新终点状态导致 catch-up 重试风暴
 
 ## 现象
 

@@ -1,7 +1,10 @@
-# 扫描器按命名约定筛选，不按文件后缀泛扫
+---
 type: diagnosis
 date: 2026-06-13
 source: 技能架构图卡片 — 初版 `/diagrams` 用 `*.html` 泛扫，误收录 skeleton/_base/_footer 等非架构图文件
+---
+
+# 扫描器按命名约定筛选，不按文件后缀泛扫
 
 ## 现象
 

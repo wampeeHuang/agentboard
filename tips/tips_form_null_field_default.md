@@ -1,8 +1,10 @@
-# form:null schema 字段陷阱
-
-type: pattern
+---
+type: diagnosis
 date: 2026-08-02
 source: ~/.scheduler/ dashboard 链路改造
+---
+
+# form:null schema 字段陷阱
 
 ## 现象
 schema 中 `form: null` 的字段不渲染到表单 HTML，`submitForm()` 跳过该字段。服务端收到 `body.field === undefined`。

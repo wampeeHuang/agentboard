@@ -1,8 +1,10 @@
-# 截图在自渲染格式下不是质量证据
-
-type: principle
+---
+type: method
 date: 2026-08-09
 source: layout-gallery 质量体系复盘
+---
+
+# 截图在自渲染格式下不是质量证据
 
 ## 现象
 

@@ -1,8 +1,10 @@
-# HTML onclick 属性中 Windows 路径反斜杠被 JS 吃掉
-
+---
 type: diagnosis
 date: 2026-07-27
 source: catalog 项目总览点击项目名无法打开文件夹，报"Windows找不到文件'D:workspace音乐作坊'"
+---
+
+# HTML onclick 属性中 Windows 路径反斜杠被 JS 吃掉
 
 ## 现象
 

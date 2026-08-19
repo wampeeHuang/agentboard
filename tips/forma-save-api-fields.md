@@ -1,7 +1,10 @@
-# Forma /api/save 字段名：markdown/slug/displayName 不是 content
+---
 type: diagnosis
 date: 2026-07-20
 source: Forma 排版推送，POST /api/save 返回 400 "缺少必填字段"
+---
+
+# Forma /api/save 字段名：markdown/slug/displayName 不是 content
 
 ## 现象
 调 `POST /api/save` 返回 400，报 "缺少必填字段: markdown、slug、displayName"。直觉用 `content` 存文章正文、`theme` 当顶层字段。

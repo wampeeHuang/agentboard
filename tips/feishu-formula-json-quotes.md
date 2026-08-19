@@ -1,7 +1,10 @@
-# 飞书公式字段 JSON 传参：中文双引号被转义破坏公式语法
+---
 type: diagnosis
 date: 2026-07-17
 source: 音乐作坊飞书表格"外部AI提示词"公式字段创建，报"左侧缺少运算符"
+---
+
+# 飞书公式字段 JSON 传参：中文双引号被转义破坏公式语法
 
 ## 现象
 lark-cli `+field-create` / `+field-update` 传入含中文双引号 `""` 的公式 expression → Feishu 报"左侧缺少运算符，请补充完整"。公式字段显示空白。

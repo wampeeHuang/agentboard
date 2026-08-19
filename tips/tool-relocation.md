@@ -1,8 +1,10 @@
-# 工具搬迁：从杂散路径统一到 D:\tools\
-
+---
 type: method
 date: 2026-06-19
 source: 4 工具搬迁到 D:\tools\，源归档到 F:\warehouse\inbox\
+---
+
+# 工具搬迁：从杂散路径统一到 D:\tools\
 
 ## 现象
 

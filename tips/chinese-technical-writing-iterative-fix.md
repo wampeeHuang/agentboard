@@ -1,7 +1,10 @@
-# Agent 写中文技术文章——修不完的迭代循环
+---
 type: diagnosis
 date: 2026-08-11
 source: 编辑 Obsidian 笔记《Agent 项目文件架构》，从初版到定稿经历 10+ 轮用户纠正
+---
+
+# Agent 写中文技术文章——修不完的迭代循环
 
 ## 现象
 

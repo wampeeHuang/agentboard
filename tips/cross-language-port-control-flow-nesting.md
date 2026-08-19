@@ -1,8 +1,10 @@
-# 跨语言移植：逐块对比控制流结构，不只测功能
-
-type: pitfall
+---
+type: diagnosis
 date: 2026-08-02
 source: admin.html matchOne — Python→JS 移植子串匹配块嵌套错误
+---
+
+# 跨语言移植：逐块对比控制流结构，不只测功能
 
 ## 现象
 

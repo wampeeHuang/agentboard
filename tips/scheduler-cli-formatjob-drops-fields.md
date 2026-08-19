@@ -1,8 +1,10 @@
-# 手动字段映射必定漏字段 — scheduler CLI formatJob 丢了 prompt
-
+---
 type: diagnosis
 date: 2026-07-31
 source: cron 模型迁移 — CLI update 十个作业八个失败，改完一个 422 又来一个
+---
+
+# 手动字段映射必定漏字段 — scheduler CLI formatJob 丢了 prompt
 
 ## 现象
 

@@ -1,8 +1,10 @@
-# 读者心智模型预检：Use vs Build
-
-type: pattern
+---
+type: diagnosis
 date: 2026-08-10
 source: 2026-08-10-graph-engineering-wiki 复盘
+---
+
+# 读者心智模型预检：Use vs Build
 
 ## 现象
 面向架构师的内容写成面向用户的 App 推荐指南，反之亦然。用户反馈："你给的是如何去用别人的应用，但我更想倾向的是如何去搭建出这些框架来"。

@@ -1,7 +1,10 @@
-# SSL EOF 先查 DNS，不修证书
+---
 type: diagnosis
 date: 2026-07-20
 source: gpt-image-2 生图，Python requests 调 aigoapi 报 SSLError UNEXPECTED_EOF_WHILE_READING
+---
+
+# SSL EOF 先查 DNS，不修证书
 
 ## 现象
 `SSLError: UNEXPECTED_EOF_WHILE_READING`，多次重试一致。直觉反应是证书链问题、TLS 版本不匹配、或不信任自签证书。

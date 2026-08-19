@@ -1,7 +1,10 @@
-# Vercel 两个项目绑同一域名，部署成功但线上不走新代码
+---
 type: diagnosis
 date: 2026-07-02
 source: gallery.evopearl.com 修 Google Fonts → 部署到 layout-gallery 项目 → 线上仍残留旧内容
+---
+
+# Vercel 两个项目绑同一域名，部署成功但线上不走新代码
 
 ## 现象
 - `npx vercel --prod --yes` 部署成功，deployment READY

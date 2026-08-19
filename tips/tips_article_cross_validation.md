@@ -1,8 +1,10 @@
-# AI 写长文章：内部信息不交圈
-
-type: diagnostic
+---
+type: diagnosis
 date: 2026-08-10
 source: Skill 文件架构.md 重写复盘
+---
+
+# AI 写长文章：内部信息不交圈
 
 ## 现象
 

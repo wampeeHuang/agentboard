@@ -1,8 +1,10 @@
-# MiniCPM-V 结构化评估的矛盾检测
-
-type: capability
+---
+type: diagnosis
 date: 2026-07-14
 source: cross-border-arbitrage O2 素材筛选 · Roommy 案例
+---
+
+# MiniCPM-V 结构化评估的矛盾检测
 
 ## 现象
 

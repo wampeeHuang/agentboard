@@ -1,8 +1,10 @@
-# 长管线 cron 拆 agentTurn + shell，不靠 LLM 跑全程
-
+---
 type: method
 date: 2026-07-02
 source: 猫波信号站 cron 管线两次静默失败，DeepSeek 3000+ 字 prompt 上下文耗尽截断 Stage B+C
+---
+
+# 长管线 cron 拆 agentTurn + shell，不靠 LLM 跑全程
 
 ## 现象
 cron job 配了一个 3000+ 字的 agentTurn prompt，包含三个完整阶段。agent 跑完第一阶段后干净退出（exit 0，stderr 空），后续阶段从未执行。file 验证只能发现"最终产出缺失"触发重试，但不能阻止截断发生。

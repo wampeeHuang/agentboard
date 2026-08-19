@@ -1,8 +1,10 @@
-# CSS ::after 工具提示被父元素遮挡
-
-type: tip
+---
+type: method
 date: 2026-07-22
 source: pm-toolkit dashboard 工具提示迭代
+---
+
+# CSS ::after 工具提示被父元素遮挡
 
 ## 现象
 

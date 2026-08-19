@@ -1,7 +1,10 @@
-# 同端口双 manifest → supervisor 死锁，禁用一个后 dead 不消失
+---
 type: diagnosis
 date: 2026-07-31
 source: 巡检面板报警 supervisor 托管服务 catalog:3104 dead，restart_count=4
+---
+
+# 同端口双 manifest → supervisor 死锁，禁用一个后 dead 不消失
 
 ## 现象
 1. 巡检面板 supervisor 项报错：`DEAD: 1 services - catalog:3104`

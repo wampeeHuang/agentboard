@@ -1,7 +1,10 @@
-# Windows 允许同端口双进程绑定，新实例静默失效
+---
 type: diagnosis
 date: 2026-06-14
 source: 小红书 scraper 重启后仍跑旧代码，发现 3095 端口有 2 个进程
+---
+
+# Windows 允许同端口双进程绑定，新实例静默失效
 
 ## 现象
 改了代码、清了缓存、重启服务，API 行为没变（仍在报旧版本的错误）。`netstat -ano | findstr :3095` 显示两个 PID 同时 LISTENING。

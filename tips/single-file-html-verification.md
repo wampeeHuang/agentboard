@@ -1,8 +1,10 @@
-# 单文件HTML编辑完成后四步验证
-
+---
 type: method
 date: 2026-07-17
 source: 德城落地页 index.html 多次重命名/删除 class 和 ID 后漏掉 JS 选择器和导航链接
+---
+
+# 单文件HTML编辑完成后四步验证
 
 ## 步骤
 

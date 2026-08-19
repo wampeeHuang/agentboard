@@ -1,8 +1,10 @@
-# CLAUDE.md 目录树必须对齐 ls 物理顺序
-
-type: convention
+---
+type: method
 date: 2026-08-06
 source: source-rack CLAUDE.md 重写
+---
+
+# CLAUDE.md 目录树必须对齐 ls 物理顺序
 
 ## 现象
 

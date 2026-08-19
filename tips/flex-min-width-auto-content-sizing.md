@@ -1,8 +1,10 @@
-# flex 子项 min-width: auto 会撑破固定 flex-basis
-
+---
 type: diagnosis
 date: 2026-07-24
 source: 德城 landing page 流程卡片手机端宽度不一致，160px~197px 浮动
+---
+
+# flex 子项 min-width: auto 会撑破固定 flex-basis
 
 ## 现象
 

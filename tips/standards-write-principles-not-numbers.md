@@ -1,8 +1,10 @@
-# 验证标准写原则不写硬编码数字
-
-type: principle
+---
+type: method
 date: 2026-08-09
 source: layout-gallery quality-tiers.md 重写
+---
+
+# 验证标准写原则不写硬编码数字
 
 ## 现象
 

@@ -1,7 +1,10 @@
-# CSS 自定义属性不能进 @media 条件——断点是架构常量不是 token
+---
 type: diagnosis
 date: 2026-08-16
 source: layout-gallery Stage 3 体 token 化，compile.mjs hardcoded-px 门禁把 22 处 `@media (max-width: Npx)` 断点误标为"该 token 化"
+---
+
+# CSS 自定义属性不能进 @media 条件——断点是架构常量不是 token
 
 ## 现象
 迁移 body CSS 硬编码值为 var() token 引用时，px 扫描门禁把媒体查询断点里的 px 也当成可迁移硬编码，要求 `@media (max-width: 768px)` 里的 768px 也换成 `var(--bp-*)`。

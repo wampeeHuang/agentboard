@@ -1,8 +1,10 @@
-# faster-whisper GPU 检测：用 ctranslate2 而非 torch.cuda
-
+---
 type: diagnosis
 date: 2026-06-24
 source: 猫波信号站 stage_03 GPU 转写调试
+---
+
+# faster-whisper GPU 检测：用 ctranslate2 而非 torch.cuda
 
 ## 现象
 RTX 5060 Ti 16GB 显卡，CUDA 已安装，但 `torch.cuda.is_available()` 返回 `False`，

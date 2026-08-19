@@ -1,8 +1,10 @@
-# Agent 跨格式搬运必定丢字段
-
-type: tip
+---
+type: method
 date: 2026-07-09
 source: 深圳职位巡检 cron — 飞书卡片两次丢失 URL
+---
+
+# Agent 跨格式搬运必定丢字段
 
 ## 现象
 Agent 产出 MD 表格（含链接）→ Agent 手工改写为飞书卡片 JSON → URL 列全部消失。两次巡检同样问题，用户无法跳转。

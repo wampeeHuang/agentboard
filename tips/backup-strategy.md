@@ -1,5 +1,9 @@
-# .claude 备份策略
+---
 type: method
+date: 2026-06-12
+---
+
+# .claude 备份策略
 
 `~/.claude/` 目录是 Claude Code 的全部状态，丢失后无法自动恢复。
 

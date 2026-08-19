@@ -1,8 +1,10 @@
-# `</script>` 注入在已有 script 标签内导致 JS 裸奔为文本
-
+---
 type: diagnosis
 date: 2026-06-20
 source: loop-dashboard.html 页面修复——server.js 往 HTML 模板的 <!--LOOP_DATA_INJECT--> 占位符注入 `<script>` 包装的 JS 数据
+---
+
+# `</script>` 注入在已有 script 标签内导致 JS 裸奔为文本
 
 ## 现象
 

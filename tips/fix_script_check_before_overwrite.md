@@ -1,5 +1,5 @@
 ---
-type: capability
+type: method
 date: 2026-07-15
 source: O3 Phase 03 MiniCPM-V fix scripts
 ---

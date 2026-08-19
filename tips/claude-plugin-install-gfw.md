@@ -1,7 +1,10 @@
-# Claude Code 插件安装绕过 GFW
+---
 type: method
 date: 2026-06-30
 source: 安装 PM Skills Marketplace (phuryn/pm-skills) 时 GitHub 直连被墙
+---
+
+# Claude Code 插件安装绕过 GFW
 
 ## 现象
 `claude plugin marketplace add phuryn/pm-skills` 失败：SSH timeout 或 SSL/TLS connection failed。

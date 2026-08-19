@@ -1,8 +1,10 @@
-# lark-cli --filter-json 相对路径 + lookup 静默失败
-
-type: reference
+---
+type: diagnosis
 date: 2026-08-01
 source: decheng-landing-page 定价引擎迁移 Phase 5 验证
+---
+
+# lark-cli --filter-json 相对路径 + lookup 静默失败
 
 ## 现象
 `lark-cli base +record-list --filter-json @D:\absolute\path\filter.json` → `invalid file path` 报错。

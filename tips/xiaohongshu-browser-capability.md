@@ -1,9 +1,12 @@
-# Chrome DevTools 浏览小红书搜索+评论区挖掘
+---
 type: capability
 tool: Chrome DevTools MCP
 scenario: 任何需要从小红书提取中文社区信息的调研（租房、选品、用户反馈等）
 date: 2026-07-01
 recipe: D:\workspace\research-methods\_tools\xiaohongshu-browser-scout.md
+---
+
+# Chrome DevTools 浏览小红书搜索+评论区挖掘
 
 ## 能力
 

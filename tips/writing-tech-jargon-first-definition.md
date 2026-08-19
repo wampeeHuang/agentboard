@@ -1,7 +1,10 @@
-# 技术写作——npm包名和子系统名首次出现必须定义
+---
 type: method
 date: 2026-08-11
 source: Workflow Engine 笔记——Mermaid 图中出现 `@trigger.dev/sdk`、Dequeue、RunAttempt 等专有名词，未解释
+---
+
+# 技术写作——npm包名和子系统名首次出现必须定义
 
 ## 现象
 

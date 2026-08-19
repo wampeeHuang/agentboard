@@ -1,8 +1,10 @@
-# ES module 未闭合 try/catch → 静默空白页
-
+---
 type: diagnosis
 date: 2026-07-24
 source: scheduler dashboard — 两个并发 Claude 会话修改 app.js，一个加了 `try {` 被中断，`catch` 块未写入
+---
+
+# ES module 未闭合 try/catch → 静默空白页
 
 ## 现象
 

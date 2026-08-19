@@ -1,7 +1,10 @@
-# Shell job 用 exit 0 表示"跳过"会静默掩盖故障
+---
 type: diagnosis
 date: 2026-07-25
 source: evopearl-data deploy.ps1 硬编码四模块检查，缺 catwave 时 exit 0 → scheduler 报告 job_completed → 整站空白无人知
+---
+
+# Shell job 用 exit 0 表示"跳过"会静默掩盖故障
 
 ## 现象
 

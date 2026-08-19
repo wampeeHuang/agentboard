@@ -1,8 +1,10 @@
-# yt-dlp 多语言字幕请求触发 YouTube 429
-
-type: capability
+---
+type: diagnosis
 date: 2026-07-16
 source: 海外历史汉化管线 Phase 05 下载
+---
+
+# yt-dlp 多语言字幕请求触发 YouTube 429
 
 ## 现象
 yt-dlp 下载 YouTube 视频正常，但 `--write-auto-subs --sub-langs en,fr,de,es,ja,ru,zh-Hans` 每次都报 HTTP 429。重试加重限流，恶性循环。

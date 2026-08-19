@@ -1,8 +1,10 @@
-# 工具推荐：先理解需求再推，不反向
-
-type: principle
+---
+type: method
 date: 2026-08-07
 source: 治愈系解说管线 — Hyperframe/Remotion 被直接推荐后全拒，Kimi K3 被用户提及后被 LLM 当默认推荐
+---
+
+# 工具推荐：先理解需求再推，不反向
 
 ## 现象
 - 用户说"管线需要做视频渲染"，LLM 直接推 Hyperframe + Remotion → 全被拒（"不合适 当我没说"）

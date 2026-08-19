@@ -1,7 +1,10 @@
-# PowerShell Invoke-RestMethod 默认 GBK 编码导致 HTTP body 中文变问号
+---
 type: diagnosis
 date: 2026-06-30
 source: 深圳求职巡检 cron job 调飞书 API 发卡片消息，中文全部显示为 ????
+---
+
+# PowerShell Invoke-RestMethod 默认 GBK 编码导致 HTTP body 中文变问号
 
 ## 现象
 

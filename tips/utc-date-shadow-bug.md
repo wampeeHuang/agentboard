@@ -1,8 +1,10 @@
-# UTC 时区影子 Bug：toISOString() 在非 UTC 时区凌晨截出前一天日期
-
-type: bug-pattern
+---
+type: diagnosis
 date: 2026-06-25
 source: evopearl-data 调度器日报缺失排查
+---
+
+# UTC 时区影子 Bug：toISOString() 在非 UTC 时区凌晨截出前一天日期
 
 ## 现象
 

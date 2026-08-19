@@ -1,8 +1,10 @@
-# mtime 活跃信号被会话产物污染
-
-type: bug-pattern
+---
+type: diagnosis
 date: 2026-07-29
 source: catalog server.js walkMaxMtime 修复
+---
+
+# mtime 活跃信号被会话产物污染
 
 ## 现象
 

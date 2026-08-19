@@ -1,8 +1,10 @@
-# 飞书认证页面（脑图/文档）用 Chrome DevTools snapshot 读取
-
+---
 type: method
 date: 2026-07-27
 source: 德城报价系统——读取飞书脑图中的计价规则
+---
+
+# 飞书认证页面（脑图/文档）用 Chrome DevTools snapshot 读取
 
 ## 现象
 

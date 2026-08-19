@@ -1,8 +1,10 @@
-# Node spawn 跑 PowerShell 必须直连，不能过 cmd /d /c
-
+---
 type: diagnosis
 date: 2026-06-18
 source: backup-daily-fdrive cron job 连续失败，报"路径中具有非法字符"
+---
+
+# Node spawn 跑 PowerShell 必须直连，不能过 cmd /d /c
 
 ## 现象
 

@@ -1,7 +1,10 @@
-# 免费图库没有工业B2B车间实拍素材
+---
 type: fact
 date: 2026-07-16
 source: 德城B2B独立站 — 无尘车间/DIP插件线占位图搜索
+---
+
+# 免费图库没有工业B2B车间实拍素材
 
 ## 发现
 免费图库（Pexels、Unsplash、Pixabay）几乎搜不到PCBA/电子制造车间的实拍照片。搜"clean room"返回医疗/制药实验室，搜"PCB assembly"返回PCB macro微距，搜"SMT factory"返回PCB特写或半导体fab（不是PCBA组装车间）。中国行业媒体（21ic、gongkong）的工厂照片尺寸太小（600×300级别），不适合做网页全宽展示。

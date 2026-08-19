@@ -1,8 +1,10 @@
-# ASS Style 行字段位置 — Outline 是第 17 字段不是第 6
-
-type: debugging
+---
+type: diagnosis
 date: 2026-07-02
 source: 猫波信号站 validate_outputs.py ASS bord 检查修复
+---
+
+# ASS Style 行字段位置 — Outline 是第 17 字段不是第 6
 
 ## 现象
 正则 `Style:[^,]*,[^,]*,[^,]*,[^,]*,[^,]*,([^,]*),` 想抓 Outline 值，结果抓到的是 OutlineColour（颜色 `&HFF000000&`）而不是 Outline（宽度 `3`）。int("&HFF000000&") 抛 ValueError，检查静默跳过，不报警。

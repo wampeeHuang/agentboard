@@ -1,7 +1,10 @@
-# SCHEMA type 合法性分两层——Raw 层比 wiki 层多 3 个扩展类型
+---
 type: fact
 date: 2026-08-13
 source: 误判 D:\Obsidian\Raw\文章 下 type:research 非法，实际是 Raw 层合法类型
+---
+
+# SCHEMA type 合法性分两层——Raw 层比 wiki 层多 3 个扩展类型
 
 ## 事实
 

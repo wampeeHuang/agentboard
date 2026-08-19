@@ -1,7 +1,10 @@
-# argparse default 覆盖管线意图：不传flag ≠ 全量处理
+---
 type: diagnosis
 date: 2026-08-10
 source: film-translation Mimino 变体B管线首测 — 全片模式输出180s样品
+---
+
+# argparse default 覆盖管线意图：不传flag ≠ 全量处理
 
 ## 现象
 

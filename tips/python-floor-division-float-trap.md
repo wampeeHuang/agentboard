@@ -1,7 +1,10 @@
-# Python `//` 在 float 操作数时隐性返回 float，破坏整数预期接口
+---
 type: diagnosis
 date: 2026-08-11
 source: 猫波信号站 orchestrator.py `_cover_title()` 截断逻辑，`str.rfind(d, 0, limit)` 抛 TypeError
+---
+
+# Python `//` 在 float 操作数时隐性返回 float，破坏整数预期接口
 
 ## 现象
 ```python

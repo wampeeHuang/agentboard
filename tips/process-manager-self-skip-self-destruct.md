@@ -1,8 +1,10 @@
-# 进程管理器自管自毁：跳过自己
-
-type: architecture
+---
+type: diagnosis
 date: 2026-07-31
 source: Supervisor 启动自己 → 子进程抢端口失败 → kill-port 反向杀父进程
+---
+
+# 进程管理器自管自毁：跳过自己
 
 ## 现象
 - 进程管理器（Supervisor）稳定运行一段时间后突然崩溃

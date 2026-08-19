@@ -1,8 +1,10 @@
-# brand-renderer.js 注释标记必须是制表符 U+2500
-
-type: pitfall
+---
+type: diagnosis
 date: 2026-08-04
 source: layout-gallery brand page textures/cursors 消失
+---
+
+# brand-renderer.js 注释标记必须是制表符 U+2500
 
 ## 现象
 品牌页 `/brand/:slug` 纹理正常但光标和草地全部缺失。template.html 里 CSS 注释写的是 `/* --- Custom cursor --- */` 和 `/* --- Texture system --- */`。

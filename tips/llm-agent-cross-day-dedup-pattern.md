@@ -1,8 +1,10 @@
-# LLM Agent 跨日查重模式：7天窗口 + URL精确 + 标题模糊
-
-type: pattern
+---
+type: diagnosis
 date: 2026-07-30
 source: evopearl-data v2 — 三个日报栏目均缺查重，频繁推送重复内容
+---
+
+# LLM Agent 跨日查重模式：7天窗口 + URL精确 + 标题模糊
 
 ## 问题
 

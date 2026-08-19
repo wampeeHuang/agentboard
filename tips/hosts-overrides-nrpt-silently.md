@@ -1,7 +1,10 @@
-# hosts 优先级高于 NRPT，nslookup 测不出来
+---
 type: diagnosis
 date: 2026-07-21
 source: DeepSeek API 代理故障——三层故障链排查，hosts 过期 IP 静默覆盖 NRPT 真实 DNS
+---
+
+# hosts 优先级高于 NRPT，nslookup 测不出来
 
 ## 现象
 

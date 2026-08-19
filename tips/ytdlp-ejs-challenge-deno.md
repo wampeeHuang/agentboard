@@ -1,8 +1,10 @@
-# yt-dlp YouTube EJS 挑战：加 --remote-components
-
+---
 type: diagnosis
 date: 2026-06-24
 source: 猫波信号站 Dan Shipper 下载重试 10 次失败
+---
+
+# yt-dlp YouTube EJS 挑战：加 --remote-components
 
 ## 现象
 yt-dlp 下载 YouTube 视频反复失败，重试数小时仍无法完成：

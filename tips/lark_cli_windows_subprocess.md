@@ -1,8 +1,10 @@
-# lark-cli Windows subprocess JSON 传递三坑
-
-type: tool-usage
+---
+type: method
 date: 2026-07-15
 source: O1 纪录片管线 Feishu bitable 建表入库
+---
+
+# lark-cli Windows subprocess JSON 传递三坑
 
 ## 坑1: subprocess 内联 JSON → Windows shell 转义炸
 

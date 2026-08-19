@@ -1,8 +1,10 @@
-# 巡检面板文字不要硬编码数字/列表
-
-type: capability
+---
+type: method
 date: 2026-07-10
 source: supervisor 集成到 Inspector 巡检面板
+---
+
+# 巡检面板文字不要硬编码数字/列表
 
 ## 现象
 加第 5 个骨项目（supervisor）后，面板多处文字过期：

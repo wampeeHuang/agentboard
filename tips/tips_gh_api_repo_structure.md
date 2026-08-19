@@ -1,8 +1,10 @@
-# 开源仓库结构分析：用 API 不靠记忆
-
-type: operational
+---
+type: method
 date: 2026-08-10
 source: Skill 文件架构.md Anthropic skills 仓库结构分析
+---
+
+# 开源仓库结构分析：用 API 不靠记忆
 
 ## 现象
 

@@ -1,7 +1,10 @@
-# flex:1 on grid container silently destroys fixed row heights
+---
 type: diagnosis
 date: 2026-07-10
 source: feishu-bot dashboard — card labels not aligning across cards despite fixed 20px grid rows
+---
+
+# flex:1 on grid container silently destroys fixed row heights
 
 ## 现象
 CSS Grid 容器内行高设为 `height: 20px`（绝对像素），但渲染结果各行高度被拉伸，跨卡片标签无法水平对齐。Chrome DevTools 检查 `height: 20px` 规则生效但实际渲染高度不对。

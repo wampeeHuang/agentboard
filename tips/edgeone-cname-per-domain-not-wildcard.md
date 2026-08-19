@@ -1,8 +1,10 @@
-# EdgeOne partial 模式必须用每域名专用 CNAME，泛域名导致 SSL 无法签发
-
+---
 type: diagnosis
 date: 2026-07-01
 source: evopearl.com 全部子域名 SSL 显示 *.cdn.myqcloud.com，微信/夸克打不开
+---
+
+# EdgeOne partial 模式必须用每域名专用 CNAME，泛域名导致 SSL 无法签发
 
 ## 现象
 

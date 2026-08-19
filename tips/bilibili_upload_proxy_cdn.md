@@ -1,8 +1,10 @@
-# B站大文件上传：浏览器 > Python API
-
-type: diagnostic
+---
+type: diagnosis
 date: 2026-06-23
 source: Cursor视频推B站草稿箱（1.3GB）
+---
+
+# B站大文件上传：浏览器 > Python API
 
 ## 现象
 Python `stage_15_publish.py` 上传1.3GB MP4到B站CDN，chunk上传频繁断开：

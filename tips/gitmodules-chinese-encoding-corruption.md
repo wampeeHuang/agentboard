@@ -1,7 +1,10 @@
-# .gitmodules 中文路径用正则编辑会编码损坏
+---
 type: diagnosis
 date: 2026-06-20
 source: 批量修改 claude-skills 的 .gitmodules，用 PowerShell 正则删除 huashu 条目后，猫波信号站的 section 编码变成乱码
+---
+
+# .gitmodules 中文路径用正则编辑会编码损坏
 
 ## 现象
 

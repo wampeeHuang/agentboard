@@ -1,8 +1,10 @@
-# agentboard /api/tools 响应慢→分层缓存+跳过无效I/O
-
+---
 type: diagnosis
 date: 2026-07-06
 source: 工具架53个工具，点刷新响应~1s、偶发8s
+---
+
+# agentboard /api/tools 响应慢→分层缓存+跳过无效I/O
 
 ## 现象
 `GET /api/tools` 响应 1-8 秒。`netstat -ano` 50ms、manifest 读取 100ms——都不是瓶颈。`tasklist /FO CSV /NH` 占了 800ms。

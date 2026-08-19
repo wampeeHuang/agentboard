@@ -1,8 +1,10 @@
-# 文件名-H1-title 三统一
-
-type: tip
+---
+type: method
 date: 2026-08-09
 source: Obsidian wiki Agent工程重写——Skill 架构模式.md H1 是"AI 项目文件架构六大范式"
+---
+
+# 文件名-H1-title 三统一
 
 ## 现象
 

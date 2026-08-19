@@ -1,8 +1,10 @@
-# 双进程管理器打架：Agentboard 和 Supervisor 各自 spawn/kill 同一进程
-
+---
 type: diagnosis
 date: 2026-08-04
 source: 版式画廊启停割裂——Supervisor 显示运行中，Agentboard 启动报端口冲突
+---
+
+# 双进程管理器打架：Agentboard 和 Supervisor 各自 spawn/kill 同一进程
 
 ## 现象
 

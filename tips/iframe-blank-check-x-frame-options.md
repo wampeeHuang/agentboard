@@ -1,8 +1,10 @@
-# iframe 空白先查响应头，不查渲染逻辑
-
+---
 type: diagnosis
 date: 2026-08-02
 source: 作品集 Forma 卡片 iframe 空白——花了 10min 查 scaleOne 缩放逻辑，最后发现是服务器拒绝嵌入
+---
+
+# iframe 空白先查响应头，不查渲染逻辑
 
 ## 现象
 

@@ -1,7 +1,10 @@
-# Windows 装字体不用管理员：用户级安装到 LOCALAPPDATA + HKCU
+---
 type: method
 date: 2026-08-18
 source: 黄皮油柑项目部署字体（一点明体 I.MingCP、Aa厚底黑）
+---
+
+# Windows 装字体不用管理员：用户级安装到 LOCALAPPDATA + HKCU
 
 ## 现象
 复制字体到 `C:\Windows\Fonts` 报 Access denied——非管理员 shell 无系统级字体目录写权限。

@@ -1,7 +1,10 @@
-# cron job 不指定模型时 Agent 随机选模型，flash 产出比 pro 缩水 40-60%
+---
 type: diagnosis
 date: 2026-06-15
 source: 排查 data.evopearl.com 每日选题内容异常简短
+---
+
+# cron job 不指定模型时 Agent 随机选模型，flash 产出比 pro 缩水 40-60%
 
 ## 现象
 

@@ -1,8 +1,10 @@
-# Windows 上 cmd /c 包裹启动命令导致 PID 不匹配，stranger 检测误杀子进程
-
+---
 type: diagnosis
 date: 2026-07-24
 source: 版式画廊启动按钮静默失败排查
+---
+
+# Windows 上 cmd /c 包裹启动命令导致 PID 不匹配，stranger 检测误杀子进程
 
 ## 现象
 

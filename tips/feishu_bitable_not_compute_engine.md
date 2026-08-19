@@ -1,8 +1,10 @@
-# 飞书多维表格不适合做定价计算层
-
-type: architecture
+---
+type: fact
 date: 2026-08-01
 source: 德城BOM报价，定价公式表→物理封装表link+lookup+formula链断裂
+---
+
+# 飞书多维表格不适合做定价计算层
 
 ## 现象
 

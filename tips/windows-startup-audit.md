@@ -1,7 +1,10 @@
-# Windows 开机自启审计：四层逐项对抗
+---
 type: method
 date: 2026-07-13
 source: 本机 17 项 Startup → 7 项清理，发现 4 僵尸 + 3 重叠机制
+---
+
+# Windows 开机自启审计：四层逐项对抗
 
 ## 步骤
 

@@ -1,8 +1,10 @@
-# WIIFM 门禁：技术文档写作前自检
-
-type: pattern
+---
+type: diagnosis
 date: 2026-08-10
 source: 2026-08-10-graph-engineering-wiki 复盘
+---
+
+# WIIFM 门禁：技术文档写作前自检
 
 ## 现象
 写技术文档直接进入"怎么做"，读者看完不知道能得到什么。用户反馈："扑面而来就开始教我做事，连告诉我做的事是什么都不知道"。

@@ -1,8 +1,10 @@
-# 项目搬家后路径残留导致定时任务静默失败
-
-type: anti-pattern
+---
+type: diagnosis
 date: 2026-06-25
 source: 保障房导航 + 个体户台账从 D:\Claude code_workspace\ 迁移到 D:\workspace\_lab\
+---
+
+# 项目搬家后路径残留导致定时任务静默失败
 
 ## 现象
 

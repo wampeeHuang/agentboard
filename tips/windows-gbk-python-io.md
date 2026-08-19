@@ -1,8 +1,10 @@
-# Windows 中文系统 Python `open()` 默认 GBK，读 UTF-8 文件静默乱码
-
+---
 type: diagnosis
 date: 2026-06-16
 source: youtube-content-pipeline 字幕管线开发，Python 读写 SRT/中文文本全程乱码
+---
+
+# Windows 中文系统 Python `open()` 默认 GBK，读 UTF-8 文件静默乱码
 
 ## 现象
 

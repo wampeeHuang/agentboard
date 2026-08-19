@@ -1,8 +1,10 @@
-# 动态计算字段与静态源文件的值不一致
-
-type: tip
+---
+type: method
 date: 2026-08-06
 source: source-rack check.js tier_mismatch 误报修复
+---
+
+# 动态计算字段与静态源文件的值不一致
 
 ## 现象
 验证脚本（check.js）读 YAML 文件的 `tier` 字段，和服务器 `/health` API 返回的 tier 分布对比，报 tier_mismatch。但服务器实际运行正确。

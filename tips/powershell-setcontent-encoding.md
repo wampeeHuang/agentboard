@@ -1,8 +1,10 @@
-# PowerShell Set-Content 无 -Encoding → GBK 炸 UTF-8 文件
-
+---
 type: diagnosis
 date: 2026-08-04
 source: Portfolio agentboard.html 预览编码损坏——PowerShell 替换文本后标题栏出现 �� 乱码
+---
+
+# PowerShell Set-Content 无 -Encoding → GBK 炸 UTF-8 文件
 
 ## 现象
 

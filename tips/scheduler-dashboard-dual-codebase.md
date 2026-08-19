@@ -1,7 +1,10 @@
-# Scheduler 仪表盘双代码库陷阱：dashboard.js ≠ app.js
+---
 type: diagnosis
 date: 2026-07-03
 source: cron 仪表盘拖拽回弹 bug，修改 dashboard.js 多次无效，最终发现真实 UI 代码在另一文件
+---
+
+# Scheduler 仪表盘双代码库陷阱：dashboard.js ≠ app.js
 
 ## 现象
 修改 `~/.scheduler/dashboard.js` 的 `renderCards` 函数，重启 server，浏览器 Ctrl+F5，修改不生效。curl 验证修改后的代码不在返回的 JS 中。

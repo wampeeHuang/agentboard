@@ -1,8 +1,10 @@
-# EdgeOne CDN 缓存 Vercel 函数响应
-
+---
 type: diagnosis
 date: 2026-07-30
 source: evopearl-data 税务确认页面部署
+---
+
+# EdgeOne CDN 缓存 Vercel 函数响应
 
 ---
 

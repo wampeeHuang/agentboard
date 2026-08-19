@@ -1,8 +1,10 @@
-# CHECKPOINT.md 删了又自动重建
-
-type: debug
+---
+type: diagnosis
 date: 2026-08-06
 source: source-rack CHECKPOINT.md 搬运失败
+---
+
+# CHECKPOINT.md 删了又自动重建
 
 ## 现象
 

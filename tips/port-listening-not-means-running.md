@@ -1,7 +1,10 @@
-# 工具假活：端口 LISTENING ≠ 进程在跑
+---
 type: diagnosis
 date: 2026-07-02
 source: codex 502 Bad Gateway，工具架显示 running=true 但 relay 实际没跑
+---
+
+# 工具假活：端口 LISTENING ≠ 进程在跑
 
 ## 现象
 - agentboard 工具架显示某工具 `running: true`

@@ -1,8 +1,10 @@
-# 本地 HTML 的 href="/" 会跳到磁盘根目录
-
-type: capability
+---
+type: diagnosis
 date: 2026-07-14
 source: 德城科技 B2B 官网本地调试
+---
+
+# 本地 HTML 的 href="/" 会跳到磁盘根目录
 
 ## 现象
 本地浏览器打开 `index.html`，点击 logo 或链接跳到 `D:\` 或 `C:\` 文件列表。

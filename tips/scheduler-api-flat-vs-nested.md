@@ -1,8 +1,10 @@
-# Scheduler API GET返回嵌套PUT要扁平
-
-type: tip
+---
+type: method
 date: 2026-07-25
 source: 求职巡检cron job方向切换，直接PUT GET结果报"缺少必填字段: output_kind"
+---
+
+# Scheduler API GET返回嵌套PUT要扁平
 
 ## 现象
 

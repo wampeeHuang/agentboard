@@ -1,8 +1,10 @@
-# PowerShell JSON BOM 炸 GitHub API → HTTP 400 "Problems parsing JSON"
-
+---
 type: diagnosis
 date: 2026-07-22
 source: github-mgmt 批量推送 32 个仓库 README — gh api PUT 全部 400
+---
+
+# PowerShell JSON BOM 炸 GitHub API → HTTP 400 "Problems parsing JSON"
 
 ## 现象
 

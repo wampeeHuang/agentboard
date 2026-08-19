@@ -1,7 +1,10 @@
-# 多段管线必须在末端接验证闸门
+---
 type: method
 date: 2026-08-05
 source: 猫波信号站 — 三段管线（curation→feishu→catwave）数据漂移无人知，加 verify_chain.ps1 终检
+---
+
+# 多段管线必须在末端接验证闸门
 
 ## 现象
 

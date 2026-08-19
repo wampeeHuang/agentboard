@@ -1,8 +1,10 @@
-# nvidia-smi utilization.gpu 只含 3D 核心，不是 GPU 总利用率
-
+---
 type: fact
 date: 2026-07-22
 source: Supervisor GPU 显示 0%，用户质疑"cpu又没显存 都是靠gpu渲染的 怎么会是0"
+---
+
+# nvidia-smi utilization.gpu 只含 3D 核心，不是 GPU 总利用率
 
 ## 现象
 

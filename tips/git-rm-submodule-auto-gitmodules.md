@@ -1,8 +1,10 @@
-# git rm 子模块会自动删 .gitmodules 条目，不用手动编辑
-
+---
 type: method
 date: 2026-08-14
 source: claude-skills 清理 17 个已删 submodule（彻底清）
+---
+
+# git rm 子模块会自动删 .gitmodules 条目，不用手动编辑
 
 ## 现象
 

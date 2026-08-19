@@ -1,9 +1,12 @@
-# Chrome DevTools 操控百度地图测中国城市通勤
+---
 type: capability
 tool: Chrome DevTools MCP
 scenario: 任何需要评估中国城市公共交通可达性/通勤时间的调研
 date: 2026-07-01
 recipe: D:\workspace\research-methods\_tools\baidu-maps-transit.md
+---
+
+# Chrome DevTools 操控百度地图测中国城市通勤
 
 ## 能力
 

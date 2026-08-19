@@ -1,8 +1,10 @@
-# Codex marketplace add 走 git clone，需单独配代理
-
-type: troubleshooting
+---
+type: diagnosis
 date: 2026-07-03
 source: 安装 cc-plugin-codex 时踩坑
+---
+
+# Codex marketplace add 走 git clone，需单独配代理
 
 ## 现象
 

@@ -1,8 +1,10 @@
-# Shell job 缺少 agent job 同等的质量门禁
-
+---
 type: diagnosis
 date: 2026-08-04
 source: 猫波译站重复视频——sync-catwave.ps1 无跨日去重，ai-signal/deep-read 的 prompt 有 Gate 0.5 去重
+---
+
+# Shell job 缺少 agent job 同等的质量门禁
 
 ## 现象
 

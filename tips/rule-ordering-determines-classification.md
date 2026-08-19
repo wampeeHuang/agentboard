@@ -1,8 +1,10 @@
-# 规则排序决定分类结果
-
-type: pattern
+---
+type: diagnosis
 date: 2026-08-01
 source: 版式画廊 extract-tokens.js CSS 变量分类（3 轮迭代）
+---
+
+# 规则排序决定分类结果
 
 ## 现象
 

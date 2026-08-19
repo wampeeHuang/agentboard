@@ -1,10 +1,12 @@
-# YouTube 视频上传 — OAuth 自动上传 + 清单模板
-
+---
 type: capability
 tool: youtube-upload
 scenario: 烹饪视频/自媒体视频上传到 YouTube，需要中英双语元数据、缩略图、片尾画面
 date: 2026-07-22
 recipe: D:\tools\youtube-upload\upload_youtube.py
+---
+
+# YouTube 视频上传 — OAuth 自动上传 + 清单模板
 
 ## 能力
 

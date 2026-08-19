@@ -1,7 +1,10 @@
-# Chrome DevTools MCP 锁——残留进程持有 profile 导致"browser already running"
+---
 type: diagnosis
 date: 2026-06-18
 source: MCP session 异常结束后，Chrome DevTools MCP 全部工具返回 "The browser is already running" 错误
+---
+
+# Chrome DevTools MCP 锁——残留进程持有 profile 导致"browser already running"
 
 ## 现象
 - Chrome DevTools MCP 所有工具（take_snapshot、navigate_page 等）调用失败

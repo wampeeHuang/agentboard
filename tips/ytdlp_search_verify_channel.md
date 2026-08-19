@@ -1,5 +1,5 @@
 ---
-type: capability
+type: diagnosis
 date: 2026-07-15
 source: O3 Phase 02/03 yt-dlp channel search
 ---

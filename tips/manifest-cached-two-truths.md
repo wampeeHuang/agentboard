@@ -1,8 +1,10 @@
-# 配置缓存 = 双真相源：读磁盘，不缓存配置对象
-
+---
 type: diagnosis
 date: 2026-07-31
 source: Supervisor 缓存 manifest → 工具架改 disabled 不生效
+---
+
+# 配置缓存 = 双真相源：读磁盘，不缓存配置对象
 
 ## 现象
 - 工具架改 manifest（disabled/autoStart/port），Supervisor 面板不感知

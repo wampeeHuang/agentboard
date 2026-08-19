@@ -1,8 +1,10 @@
-# PM2 online + PID N/A = 进程未启动
-
-type: diagnostic
+---
+type: diagnosis
 date: 2026-07-02
 source: agentboard 和个体户台账同时挂掉，访问时才发现
+---
+
+# PM2 online + PID N/A = 进程未启动
 
 ## 现象
 - `pm2 list` 显示 status: online

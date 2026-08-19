@@ -1,8 +1,10 @@
-# CSS contain:size 是锁死 aspect-ratio 的唯一手段
-
+---
 type: method
 date: 2026-08-02
 source: 作品集产品区卡片重构——aspect-ratio:16/9 设了不生效，子元素撑开容器
+---
+
+# CSS contain:size 是锁死 aspect-ratio 的唯一手段
 
 ## 现象
 

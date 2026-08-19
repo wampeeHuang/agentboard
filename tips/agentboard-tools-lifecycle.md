@@ -1,5 +1,9 @@
-# Agentboard 工具生命周期
+---
 type: method
+date: 2026-06-12
+---
+
+# Agentboard 工具生命周期
 
 工具在 Agentboard 上的完整生命周期：
 

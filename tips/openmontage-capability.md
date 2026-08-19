@@ -1,9 +1,12 @@
-# OpenMontage：AI 视频生产模板库，不是 SaaS——二次开发是预期路径
+---
 type: capability
 tool: OpenMontage (D:\tools\OpenMontage\)
 scenario: 任何 AI 驱动的视频生产任务（纪录片、讲解视频、动画短片等）
 date: 2026-08-03
 recipe: D:\tools\OpenMontage\skills\meta\capability-extension.md
+---
+
+# OpenMontage：AI 视频生产模板库，不是 SaaS——二次开发是预期路径
 
 ## 能力
 

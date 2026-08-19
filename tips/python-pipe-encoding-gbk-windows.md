@@ -1,8 +1,10 @@
-# Python管道stdin编码：Windows上echo|python中文乱码
-
-type: capability
+---
+type: diagnosis
 date: 2026-07-07
 source: 深圳职位巡检飞书乱码事故
+---
+
+# Python管道stdin编码：Windows上echo|python中文乱码
 
 ## 现象
 飞书卡片消息中文全部乱码。`今日职位巡检 · 7月7日` → `浠婃棩鑱屼綅宸℃�� 路 7鏈�7鏃�`

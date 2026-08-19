@@ -1,7 +1,10 @@
-# WMIC 终极杀进程：Windows Access Denied 的最后手段
+---
 type: method
 date: 2026-08-08
 source: 版式画廊生产服重启——taskkill /F + Stop-Process -Force 均 Access Denied
+---
+
+# WMIC 终极杀进程：Windows Access Denied 的最后手段
 
 ## 现象
 ```

@@ -1,8 +1,10 @@
-# Codex 桌面端国内更新（Microsoft Store 不可用）
-
-type: capability
+---
+type: method
 date: 2026-08-04
 source: 2026-08-04-codex-chatgpt-plus-setup
+---
+
+# Codex 桌面端国内更新（Microsoft Store 不可用）
 
 ## 背景
 

@@ -1,8 +1,10 @@
-# 端口冲突：两个 manifest 同一端口 → 都显示 running
-
-type: pattern
+---
+type: diagnosis
 date: 2026-07-25
 source: catalog 工具上线复盘，catalog:3103 与 forma:3103 冲突
+---
+
+# 端口冲突：两个 manifest 同一端口 → 都显示 running
 
 ## 现象
 

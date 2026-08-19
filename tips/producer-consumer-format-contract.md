@@ -1,7 +1,10 @@
-# 数据管线生产者和消费者的格式契约必须在边界校验
+---
 type: diagnosis
 date: 2026-08-02
 source: 版式画廊 `infer-scales.js` 产出 `{level, size, unit}` 但 `brand-renderer.js` 期望 `{name, value}`，brand 页 500 错误：`Cannot read properties of undefined (reading 'replace')`
+---
+
+# 数据管线生产者和消费者的格式契约必须在边界校验
 
 ## 现象
 brand 页 `/brand/stencil-tablet/` 返回 500。错误栈：

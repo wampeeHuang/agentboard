@@ -1,7 +1,10 @@
-# SKILL.md 不在目录根 → 斜杠命令不出现，静默失效
+---
 type: diagnosis
 date: 2026-07-03
 source: 安装 caveman (JuliusBrussee/caveman)，`/caveman` 命令不出现
+---
+
+# SKILL.md 不在目录根 → 斜杠命令不出现，静默失效
 
 ## 现象
 Claude Code 的 `/command` 列表中找不到某个 skill，但 `~/.claude/skills/<name>/` 目录存在，文件也完整。无任何报错。

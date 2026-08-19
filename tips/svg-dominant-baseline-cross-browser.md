@@ -1,8 +1,10 @@
-# SVG `dominant-baseline` 跨浏览器不可靠，用 `dy=".35em"` 代替
-
+---
 type: diagnosis
 date: 2026-07-29
 source: 个人站系统板块架构图 — 图例文字在用户浏览器垂直偏移、与色块重叠，MCP DevTools 浏览器却正常
+---
+
+# SVG `dominant-baseline` 跨浏览器不可靠，用 `dy=".35em"` 代替
 
 ## 现象
 

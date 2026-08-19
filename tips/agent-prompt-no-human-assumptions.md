@@ -1,8 +1,10 @@
-# Agent prompt 禁用人类交互假设
-
-type: principle
+---
+type: method
 date: 2026-06-28
 source: 猫波信号站 cron prompt 审计 — "1-2% 黄灯警告需人工确认" 对自动化 agent 无意义
+---
+
+# Agent prompt 禁用人类交互假设
 
 ## 现象
 - cron agent 读取包含"人工判断""手动操作""需人工确认"的 prompt 后，行为不确定

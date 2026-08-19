@@ -1,7 +1,10 @@
-# Node 进程无崩溃处理器 = 静默死亡
+---
 type: diagnosis
 date: 2026-06-23
 source: agentboard :3099 反复挂掉，排查发现 server.js 没有任何 uncaughtException / unhandledRejection 处理器
+---
+
+# Node 进程无崩溃处理器 = 静默死亡
 
 ## 现象
 - Node 常驻服务（Express）随机挂掉，端口消失

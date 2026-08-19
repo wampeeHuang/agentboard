@@ -1,8 +1,10 @@
-# Edit 工具不适用于大函数替换
+---
+type: method
+date: 2026-07-24
+source: scheduler dashboard renderCards 回退，两次 Edit 失败，最终用 node 脚本一次成功
+---
 
-**type**: technique
-**date**: 2026-07-24
-**source**: scheduler dashboard renderCards 回退，两次 Edit 失败，最终用 node 脚本一次成功
+# Edit 工具不适用于大函数替换
 
 ## 现象
 

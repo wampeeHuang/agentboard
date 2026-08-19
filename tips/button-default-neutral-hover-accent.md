@@ -1,8 +1,10 @@
-# 按钮默认中性，hover 才上色
-
-type: pattern
+---
+type: diagnosis
 date: 2026-07-31
 source: 版式画廊 library.html 弹窗按钮交互打磨（3轮迭代）
+---
+
+# 按钮默认中性，hover 才上色
 
 ## 现象
 

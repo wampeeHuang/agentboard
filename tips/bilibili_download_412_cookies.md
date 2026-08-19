@@ -1,8 +1,10 @@
-# B站下载 412：要浏览器 cookies（含 HttpOnly SESSDATA）
-
-type: diagnostic
+---
+type: diagnosis
 date: 2026-08-13
 source: 雅院视频批量下载（BV1H8411e7cc 等 4 个）
+---
+
+# B站下载 412：要浏览器 cookies（含 HttpOnly SESSDATA）
 
 ## 现象
 `yt-dlp` 下 B站视频报 `HTTP Error 412: Precondition Failed`，卡在 `Downloading video formats for cid`。只传 `buvid3/buvid4` 等 document.cookie 里能读到的 cookie，仍 412。

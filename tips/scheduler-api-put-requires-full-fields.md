@@ -1,8 +1,10 @@
-# 调度器 REST API PUT 要求全字段，不支持 partial update
-
-type: pitfall
+---
+type: diagnosis
 date: 2026-07-30
 source: evopearl-data v2 迭代 — 改 job cron 时间和名称
+---
+
+# 调度器 REST API PUT 要求全字段，不支持 partial update
 
 ## 现象
 

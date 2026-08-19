@@ -1,8 +1,10 @@
-# Icaros 安装后 MP4 缩略图不显示
-
-type: bugfix
+---
+type: diagnosis
 date: 2026-08-01
 source: 黄皮油柑做饭项目，Sony ZV-1 MP4 文件在资源管理器不显示缩略图
+---
+
+# Icaros 安装后 MP4 缩略图不显示
 
 ## 现象
 装完 Icaros v3.3.6，MP4 文件仍不显示缩略图。Windows 11 原生声称支持 MP4 缩略图但 Sony 相机拍的 H.264 实际不显示。

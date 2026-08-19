@@ -1,8 +1,10 @@
-# 验证脚本硬编码批次清单会过期，每天都报假失败
-
+---
 type: diagnosis
 date: 2026-08-17
 source: 猫波信号站 pipeline 巡检修复（check_pipeline.py 的 check_feishu）
+---
+
+# 验证脚本硬编码批次清单会过期，每天都报假失败
 
 ## 现象
 

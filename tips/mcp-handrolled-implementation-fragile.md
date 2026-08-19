@@ -1,7 +1,10 @@
-# 手写 MCP 是伪需求 — 命令行能过≠客户端能过
+---
 type: diagnosis
 date: 2026-08-05
 source: agentboard 手写 readline+JSON-RPC MCP 在 Claude Code/Codex 中超时，命令行 pipe 测试全过
+---
+
+# 手写 MCP 是伪需求 — 命令行能过≠客户端能过
 
 ## 现象
 手写 `readline` + JSON-RPC 的 MCP stdio server：

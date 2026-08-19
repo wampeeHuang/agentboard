@@ -1,7 +1,10 @@
-# Node.js https.request 不读 HTTP_PROXY，得用 global-agent
+---
 type: fact
 date: 2026-06-12
 source: 飞书 API 调用脚本 execute.js 在代理环境下请求超时
+---
+
+# Node.js https.request 不读 HTTP_PROXY，得用 global-agent
 
 ## 现象
 Node.js 脚本里用 `https.request()` 调飞书 API 全部超时，但同机器的 `curl` 和 PowerShell `Invoke-RestMethod` 用同样的代理设置就正常。

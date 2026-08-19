@@ -1,8 +1,10 @@
-# output.kind: "stdout" 导致 git push 静默跳过
-
-type: config-gap
+---
+type: diagnosis
 date: 2026-06-25
 source: evopearl-data 调度器重构后日报持续不出
+---
+
+# output.kind: "stdout" 导致 git push 静默跳过
 
 ## 现象
 

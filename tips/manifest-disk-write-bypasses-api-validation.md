@@ -1,7 +1,10 @@
-# 直接写 manifest 文件绕过 API schema 校验
+---
 type: diagnosis
 date: 2026-07-25
 source: OmniRoute 注册到工具架时，Write 工具直写 manifest.json，category 填了不存在的 "AI基础设施"，API 校验门禁被绕过
+---
+
+# 直接写 manifest 文件绕过 API schema 校验
 
 ## 现象
 manifest.json 直接写到 `~/.agentboard/tools/{id}/` 目录，category 填了不在 CATEGORY_VALUES 中的值。API 返回该工具（因为 scanTools 不校验 schema），但前端筛选/计数异常——领域 pill 不显示、domainMap 无映射导致工具被归入 fallback 领域。API 校验门禁形同虚设。

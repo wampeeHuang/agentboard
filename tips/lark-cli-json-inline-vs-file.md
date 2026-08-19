@@ -1,8 +1,10 @@
-# lark-cli 命令 JSON 传递方式不统一：有的用 inline 有的用 @file
-
+---
 type: method
 date: 2026-07-29
 source: 飞书Base枚举表重建——table-create/record-batch-create 用 @file 静默失败
+---
+
+# lark-cli 命令 JSON 传递方式不统一：有的用 inline 有的用 @file
 
 ## 现象
 

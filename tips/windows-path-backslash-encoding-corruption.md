@@ -1,8 +1,10 @@
-# Windows 路径反斜杠经多层编码后损坏，agent 在错误位置创建目录
-
+---
 type: diagnosis
 date: 2026-07-08
 source: D 盘根目录出现 D:\workspace_lab、D:\_runtime 两个多余目录，向上溯源修复
+---
+
+# Windows 路径反斜杠经多层编码后损坏，agent 在错误位置创建目录
 
 ## 现象
 

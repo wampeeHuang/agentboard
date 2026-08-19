@@ -1,7 +1,10 @@
-# 元数据/配置文件的值不能覆盖实际数据
+---
 type: diagnosis
 date: 2026-08-02
 source: 版式画廊 `ensureStandardTokens()` 用 `brandKit.colorRoles.textSecondary || find('--text-soft')` 导致 12 个模板 :root 输出错误值，cobalt-grid 的 --text-soft 被 brandKit 的 `#888` 覆盖而非正确的 `#5560E5`
+---
+
+# 元数据/配置文件的值不能覆盖实际数据
 
 ## 现象
 迁移脚本生成的 :root 块颜色值不对——`--text-soft` 本应是品牌色派生值（如 `#5560E5`），却输出了 `#888`（brandKit 默认值）。Validator 报 :root 与 tokens.json 不一致（12 个模板）。

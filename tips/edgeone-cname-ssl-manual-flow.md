@@ -1,8 +1,10 @@
-# EdgeOne CNAME 接入域名 SSL 免费证书必须走手动四步，eofreecert 自动模式静默失效
-
+---
 type: method
 date: 2026-07-21
 source: 德城 landing page 部署上线，dechpcba.evopearl.com EdgeOne SSL 配置排障
+---
+
+# EdgeOne CNAME 接入域名 SSL 免费证书必须走手动四步，eofreecert 自动模式静默失效
 
 ## 现象
 

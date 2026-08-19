@@ -1,7 +1,10 @@
-# doctor.js 反向校验系统说明书.md 内容——改它前先读 checkSystemDocDrift
+---
 type: fact
 date: 2026-08-16
 source: 给系统说明书加四节+目录树时，发现 doctor.js 会反向审计文档内容
+---
+
+# doctor.js 反向校验系统说明书.md 内容——改它前先读 checkSystemDocDrift
 
 ## 事实
 

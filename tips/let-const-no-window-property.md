@@ -1,8 +1,10 @@
-# let/const 在全局 script 作用域不创建 window 属性——动态属性读写必须用对象
-
+---
 type: diagnosis
 date: 2026-07-22
 source: 版式画廊筛选器全部失灵，selectFilter 用 window[key] 写入、fetchFiltered 读 let 变量，两边不同绑定
+---
+
+# let/const 在全局 script 作用域不创建 window 属性——动态属性读写必须用对象
 
 ## 现象
 

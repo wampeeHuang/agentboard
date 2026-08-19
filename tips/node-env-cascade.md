@@ -1,8 +1,10 @@
-# NODE_ENV=production 进程传染链
-
-type: bug
+---
+type: diagnosis
 date: 2026-07-10
 source: supervisor 管理的 Next.js 服务 (forma) 因 NODE_ENV=production 退出
+---
+
+# NODE_ENV=production 进程传染链
 
 ## 现象
 supervisor spawn 的 Next.js 服务启动后立即退出，stderr 显示：

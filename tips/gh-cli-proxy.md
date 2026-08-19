@@ -1,7 +1,10 @@
-# gh CLI 不走 git proxy
+---
 type: diagnosis
 date: 2026-06-12
 source: gh repo clone 超时，git clone 正常
+---
+
+# gh CLI 不走 git proxy
 
 ## 现象
 `gh repo clone` 报 `dial tcp: connectex: A connection attempt failed`，但 `git clone` 和 `curl -x` 都正常。

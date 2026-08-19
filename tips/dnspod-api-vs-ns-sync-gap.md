@@ -1,8 +1,10 @@
-# DNSPod ModifyRecord API 返回成功但权威 NS 不更新，等 5-10 分钟或删重建触发同步
-
+---
 type: diagnosis
 date: 2026-07-21
 source: 德城 landing page 部署，dechpcba.evopearl.com CNAME 记录修改后 Google DNS/权威 NS 持续返回旧值
+---
+
+# DNSPod ModifyRecord API 返回成功但权威 NS 不更新，等 5-10 分钟或删重建触发同步
 
 ## 现象
 

@@ -1,8 +1,10 @@
-# IntersectionObserver rootMargin 不支持 vh 单位
-
-type: capability
+---
+type: diagnosis
 date: 2026-07-15
 source: 德城 landing page hero — header 滚动触发时机调试
+---
+
+# IntersectionObserver rootMargin 不支持 vh 单位
 
 ## 现象
 

@@ -1,8 +1,10 @@
-# ffmpeg NVENC 孤儿进程 + moov atom 缺失 → ffprobe 验证 + 杀进程重试
-
+---
 type: diagnosis
 date: 2026-07-02
 source: 猫波信号站 stage_08_render.py 渲染后 mp4 存在但 ffprobe 报 moov atom not found，3 次重试才成功
+---
+
+# ffmpeg NVENC 孤儿进程 + moov atom 缺失 → ffprobe 验证 + 杀进程重试
 
 ## 现象
 ffmpeg NVENC 长视频渲染（1h+），subprocess.run 退出后 mp4 文件存在、大小正常（~1GB），但播放器和 ffprobe 都报错：moov atom not found。文件实质是损坏的。

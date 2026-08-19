@@ -1,8 +1,10 @@
-# Supervisor exit handler 不区分手动停和崩溃，导致 stop→restart 死循环
-
+---
 type: diagnosis
 date: 2026-08-04
 source: 版式画廊 Agentboard-Supervisor 双控打架排障
+---
+
+# Supervisor exit handler 不区分手动停和崩溃，导致 stop→restart 死循环
 
 ## 现象
 

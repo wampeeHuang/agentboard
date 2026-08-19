@@ -1,8 +1,10 @@
-# Mermaid live preview 源文件在 ~/.config/claude-mermaid/live/
-
+---
 type: fact
 date: 2026-08-11
 source: 架构图驱动写作 — 需要从 localhost:3737 预览提取 Mermaid 源码
+---
+
+# Mermaid live preview 源文件在 ~/.config/claude-mermaid/live/
 
 ## 现象
 

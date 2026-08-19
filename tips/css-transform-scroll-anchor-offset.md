@@ -1,7 +1,10 @@
-# CSS transform 导致锚点跳转首次/二次位置不一致
+---
 type: diagnosis
 date: 2026-07-16
 source: 德城B2B独立站 — section scroll-reveal 动画用 translateY(48px) 导致导航锚点首次点击偏位
+---
+
+# CSS transform 导致锚点跳转首次/二次位置不一致
 
 ## 现象
 导航栏点击锚点链接跳转到页面 section，**首次点击和二次点击的停止位置不同**。首次偏上或偏下，二次点击后稳定在正确位置。排除项：图片加载（容器已预留尺寸）、字体加载（系统字体栈）、`scroll-behavior: smooth`（已移除）、`scroll-padding-top`（已设）。

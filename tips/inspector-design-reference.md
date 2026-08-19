@@ -1,8 +1,10 @@
-# Dashboard UI 以 Inspector panel.html 为视觉参考系
-
+---
 type: method
 date: 2026-07-22
 source: scheduler /cron 底部设计原理+架构图重设计，4 轮迭代才收敛
+---
+
+# Dashboard UI 以 Inspector panel.html 为视觉参考系
 
 ## 现象
 

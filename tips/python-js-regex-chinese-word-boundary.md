@@ -1,8 +1,10 @@
-# Python 3 vs JS regex `\b` — 中文字符行为差异
-
-type: pitfall
+---
+type: diagnosis
 date: 2026-08-02
 source: admin.html 重写实测 — 203 行 BOM 与 batch_quote.py 逐行对比
+---
+
+# Python 3 vs JS regex `\b` — 中文字符行为差异
 
 ## 现象
 

@@ -1,7 +1,10 @@
-# 对比页绑定项目立场，check.js 拦不住
+---
 type: diagnosis
 date: 2026-08-08
 source: D:\Obsidian\wiki\对比\PCBA 在线报价系统对比.md 重写
+---
+
+# 对比页绑定项目立场，check.js 拦不住
 
 ## 现象
 对比页文件名"竞品调研"、正文"最成熟的""最值得借鉴的""可学"，check.js exit 0 全部通过。用户一眼识别不合规。
