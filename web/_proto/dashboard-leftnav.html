@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>工具架 · 左侧导航原型</title>
+<style>
+  :root{
+    --paper:#FAFAF8; --paper-tint:#F2F2F0; --border:#E0E0DC;
+    --ink:#0A0A0A; --ink-blue:#002FA7;
+    --text:#0A0A0A; --text-secondary:#555; --text-muted:#8A8A86;
+    --green:#3D6B4A; --green-deep:#2E5038; --green-soft:#E9EFEB;
+    --status-on:#3D6B4A; --status-off:#BBB;
+    --amber:#D97706; --amber-soft:#FEF3C7;
+    --red:#C0392B; --red-soft:#FBE9E7;
+    --purple:#8B5CF6; --purple-soft:#F1EBFF;
+    --blue:#3B82F6; --blue-soft:#E8EEFF;
+    --mono:'Cascadia Code',Consolas,'Courier New',monospace;
+    --radius-sm:8px; --radius-md:12px; --radius-pill:999px;
+    --shadow-card:0 1px 2px rgba(0,0,0,.05);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,'Segoe UI','Microsoft YaHei',sans-serif;background:var(--paper);color:var(--text);font-size:13px}
+  a{text-decoration:none;color:inherit}
+
+  /* ── 左侧导航（256px） ── */
+  .sidebar{position:fixed;top:0;left:0;bottom:0;width:256px;background:var(--paper);border-right:1px solid var(--border);display:flex;flex-direction:column;z-index:10}
+  .sidebar-logo{padding:12px 16px 14px;border-bottom:1px solid var(--border);display:flex;flex-direction:column;align-items:center;gap:4px}
+  .logo-glyph{width:56px;height:56px;flex-shrink:0}
+  .logo-name{font-size:36px;font-weight:600;color:#3D6B4A;font-family:var(--mono);letter-spacing:.01em;line-height:1.15}
+  .nav{padding:16px 8px;display:flex;flex-direction:column;gap:4px;flex:1}
+  .nav-item{display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:var(--radius-md);font-size:14px;color:var(--text-secondary);cursor:pointer;user-select:none;transition:background .12s,color .12s}
+  .nav-item:hover{background:var(--paper-tint)}
+  .nav-item.active{background:var(--green-soft);color:var(--green-deep);font-weight:600}
+  .nav-item .ico{width:18px;height:18px;display:flex;align-items:center;justify-content:center;flex-shrink:0;opacity:.85}
+  .nav-item .ico svg{width:18px;height:18px;display:block}
+  .nav-item.active .ico{opacity:1}
+  .nav-item .cnt{margin-left:auto;font-size:10px;color:var(--text-muted);background:var(--paper-tint);padding:1px 8px;border-radius:var(--radius-pill);font-family:var(--mono)}
+  .nav-item.active .cnt{background:#fff;color:var(--green-deep)}
+  .nav-label{display:inline}
+  .sidebar-foot{height:64px;display:flex;align-items:center;padding:0 16px;border-top:1px solid var(--border);font-size:16px;color:var(--text-muted);font-family:var(--mono)}
+  .foot-txt{display:inline}
+
+  /* ── 右侧内容 ── */
+  .main{margin-left:256px;min-height:100vh}
+  .page{display:none;padding:0 0 64px;max-width:none}
+  .page.show{display:block}
+  /* 内容区：英雄栏占满整条通栏，下面内容保持 1280 内宽 */
+  .page .toolbar,.page .filter-bar,.page .search-bar,.page .tool-grid,.page .app-grid,.page .tip-list,.page .doc-grid{max-width:1280px;margin-left:32px;margin-right:32px}
+
+  /* 右侧顶部英雄栏：128px 高、深绿色打底、占满整条通栏 */
+  .hero-bar{height:128px;background:var(--green-deep);color:#fff;display:flex;flex-direction:column;justify-content:center;padding:0 32px;border-bottom:1px solid rgba(255,255,255,.1);margin-bottom:24px}
+  /* 工具架页：筛选区紧靠英雄栏，不留间距 */
+  #page-tools .hero-bar{margin-bottom:0}
+  .hero-title{font-size:32px;font-weight:400;letter-spacing:0;font-family:inherit}
+  .hero-sub{font-size:16px;font-weight:300;color:rgba(255,255,255,.82);margin-top:8px;line-height:1.6;font-family:var(--mono)}
+
+  /* 筛选区 3 行：第 1 行维度 / 第 2 行二级选项 / 第 3 行搜索 */
+  .toolbar{height:36px;display:flex;align-items:center;border-bottom:1px solid var(--border)}
+  .filter-dims{display:flex;align-items:center;gap:28px;flex-wrap:nowrap}
+  .dim-label{font-size:15px;color:#52525B;cursor:pointer;user-select:none;font-weight:500;line-height:24px;display:inline-flex;gap:6px;align-items:center}
+  .dim-label:hover{color:var(--green)}
+  .dim-label.active{color:var(--green);font-weight:600}
+  .filter-bar{height:64px;display:flex;align-items:center;border-bottom:1px solid var(--border)}
+  #optRow{height:36px;border-bottom:none}
+  #optRow .filter-row{gap:20px}
+  .filter-row{display:flex;align-items:center;gap:4px;flex-wrap:nowrap}
+  .filter-dim{font-size:12px;font-weight:600;color:var(--text-muted);margin-right:12px}
+  .opt-txt{font-size:13px;font-weight:400;color:#52525B;cursor:pointer;padding:2px 6px;border-radius:4px;display:inline-flex;align-items:center;line-height:20px}
+  .opt-txt:hover{color:var(--green);background:var(--green-soft)}
+  .opt-txt.active{color:var(--green);font-weight:600}
+  .search-bar{padding:12px 0;display:flex;align-items:center}
+  .search-group{display:flex;gap:8px;align-items:center;width:392px}
+  .search-input{width:320px;height:32px;padding:0 12px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:14px;outline:none;background:#fff;color:var(--text)}
+  .search-input:focus{border-color:var(--green)}
+  .search-input::placeholder{color:var(--text-muted)}
+  .search-btn{width:64px;height:32px;padding:0;cursor:pointer;border:1px solid var(--green);background:var(--green);color:#fff;border-radius:var(--radius-sm);font-size:13px;white-space:nowrap}
+  .search-btn:hover{background:var(--green-deep)}
+  .filter-pill{cursor:pointer;border:1px solid var(--border);background:#fff;border-radius:var(--radius-pill);padding:4px 12px;font-size:12px;color:var(--text-secondary);display:inline-flex;gap:8px;align-items:center;transition:all .12s}
+  .filter-pill:hover{border-color:var(--green)}
+  .filter-pill.active{background:var(--green);border-color:var(--green);color:#fff}
+  .pill-cnt{font-size:10px;opacity:.6;font-weight:600;font-family:var(--mono)}
+  .dim-note{font-size:12px;color:var(--text-muted)}
+
+  /* ── 工具卡片 ── */
+  .tool-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+  @media(max-width:1600px){.tool-grid{grid-template-columns:repeat(3,1fr)}}
+  @media(max-width:1200px){.tool-grid{grid-template-columns:repeat(2,1fr)}}
+  @media(max-width:820px){.tool-grid{grid-template-columns:1fr}}
+  .tool-card{background:#fff;border:1px solid var(--border);border-radius:var(--radius-md);padding:16px;display:flex;flex-direction:column;gap:12px;box-shadow:var(--shadow-card);transition:box-shadow .15s,transform .15s;min-width:0}
+  .tool-card:hover{box-shadow:0 6px 20px rgba(0,0,0,.08);transform:translateY(-1px)}
+  .tool-card.s-on{border-color:#B7E3C4}
+  .tool-card.s-start_failed,.tool-card.s-broken,.tool-card.s-incomplete,.tool-card.s-orphan,.tool-card.s-stale_path{border-color:#F2C6C3}
+  .tool-card.s-disabled{opacity:.5;filter:grayscale(.4)}
+
+  .p0{display:flex;gap:12px;align-items:center}
+  .card-mono{width:40px;height:40px;border-radius:8px;background:var(--green-soft);color:var(--green-deep);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0}
+  .card-info{min-width:0;flex:1}
+  .card-name{font-size:14px;font-weight:600;display:flex;align-items:center;gap:8px;color:var(--ink)}
+  .card-name .chev{margin-left:auto;font-size:10px;color:var(--text-muted);cursor:pointer}
+  .auto-badge{font-size:9px;background:var(--amber-soft);color:var(--amber);padding:0 8px;border-radius:4px;font-weight:500}
+  .card-id{font-size:10px;color:var(--text-muted);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:var(--mono)}
+
+  .p1{display:flex;justify-content:space-between;align-items:center;gap:8px}
+  .status-chip{font-size:10px;font-weight:600;padding:2px 8px;border-radius:var(--radius-pill);display:inline-flex;align-items:center;gap:4px;white-space:nowrap}
+  .status-chip::before{content:'';width:8px;height:8px;border-radius:50%;background:currentColor}
+  .s-on .status-chip{background:var(--green-soft);color:var(--green-deep)}
+  .s-off .status-chip{background:var(--paper-tint);color:var(--text-muted)}
+  .s-start_failed .status-chip,.s-broken .status-chip,.s-incomplete .status-chip,.s-orphan .status-chip,.s-stale_path .status-chip{background:var(--red-soft);color:var(--red)}
+  .s-starting .status-chip,.s-halting .status-chip{background:var(--amber-soft);color:var(--amber)}
+  .s-disabled .status-chip{background:var(--paper-tint);color:var(--text-muted)}
+  .card-meta{font-size:10px;color:var(--text-muted);font-family:var(--mono);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+  .p2{display:flex;flex-wrap:wrap;gap:4px}
+  .b{font-size:10px;padding:1px 8px;border-radius:4px;font-weight:500;white-space:nowrap}
+  .b-fn{background:var(--blue-soft);color:var(--ink-blue)}
+  .b-access{background:var(--green-soft);color:var(--green-deep)}
+  .b-loc{background:var(--purple-soft);color:var(--purple)}
+  .b-owner{background:#F1F1EE;color:var(--text-secondary)}
+  .b-rt{background:var(--paper-tint);color:var(--text-muted);font-family:var(--mono)}
+
+  .p3{font-size:12px;color:var(--text-secondary);line-height:1.5;min-height:32px}
+  .card-desc{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .card-placeholder{color:var(--text-muted)}
+
+  .p4{display:flex;gap:8px;align-items:center;margin-top:auto;flex-wrap:wrap}
+  .btn{font-size:12px;padding:4px 12px;border-radius:var(--radius-sm);border:1px solid var(--border);background:#fff;cursor:pointer;color:var(--text);transition:all .12s}
+  .btn:hover{border-color:var(--green);color:var(--green-deep)}
+  .btn.go{background:var(--green);border-color:var(--green);color:#fff}
+  .btn.go:hover{background:var(--green-deep)}
+  .btn.stop{background:#fff;border-color:#F2C6C3;color:var(--red)}
+  .btn.stop:hover{background:var(--red-soft)}
+  .btn.open{background:var(--ink-blue);border-color:var(--ink-blue);color:#fff}
+  .btn.fix{background:var(--amber-soft);border-color:#F3D9A4;color:var(--amber)}
+  .p4-spacer{flex:1}
+  .toggle{display:flex;align-items:center;gap:4px;font-size:12px;color:var(--text-muted);cursor:pointer}
+
+  /* ── 公网应用卡片 ── */
+  .app-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+  @media(max-width:1200px){.app-grid{grid-template-columns:repeat(2,1fr)}}
+  .app-card{background:#fff;border:1px solid var(--border);border-radius:var(--radius-md);padding:16px;box-shadow:var(--shadow-card);transition:box-shadow .15s,transform .15s}
+  .app-card:hover{box-shadow:0 6px 20px rgba(0,0,0,.08);transform:translateY(-1px)}
+  .app-top{display:flex;justify-content:space-between;align-items:center;gap:8px}
+  .app-name{font-size:14px;font-weight:600;color:var(--ink)}
+  .status-pill{font-size:10px;font-weight:600;padding:2px 8px;border-radius:var(--radius-pill)}
+  .status-pill.live{background:var(--green-soft);color:var(--green-deep)}
+  .status-pill.local{background:var(--paper-tint);color:var(--text-muted)}
+  .app-domain{font-size:12px;color:var(--ink-blue);font-family:var(--mono);margin-top:4px;display:block;overflow:hidden;text-overflow:ellipsis}
+  .app-desc{font-size:12px;color:var(--text-secondary);margin-top:8px;line-height:1.5}
+  .app-meta{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+
+  /* ── 操作日志列表 ── */
+  .tip-list{display:flex;flex-direction:column;gap:12px}
+  .tip-row{background:#fff;border:1px solid var(--border);border-radius:var(--radius-md);padding:12px 16px;display:flex;gap:16px;align-items:flex-start;box-shadow:var(--shadow-card)}
+  .tip-type{flex-shrink:0;font-size:10px;font-weight:600;padding:2px 8px;border-radius:var(--radius-pill);margin-top:1px}
+  .tip-type.diagnosis{background:var(--red-soft);color:var(--red)}
+  .tip-type.method{background:var(--blue-soft);color:var(--ink-blue)}
+  .tip-type.fact{background:var(--purple-soft);color:var(--purple)}
+  .tip-type.capability{background:var(--amber-soft);color:var(--amber)}
+  .tip-type.feedback{background:var(--green-soft);color:var(--green-deep)}
+  .tip-body{flex:1;min-width:0}
+  .tip-title{font-size:14px;font-weight:600;color:var(--ink)}
+  .tip-date{font-size:10px;color:var(--text-muted);font-family:var(--mono);margin-left:8px;font-weight:400}
+  .tip-desc{font-size:12px;color:var(--text-secondary);margin-top:4px;line-height:1.5}
+
+  /* ── 说明页 ── */
+  .doc-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
+  @media(max-width:900px){.doc-grid{grid-template-columns:1fr}}
+  .doc-card{background:#fff;border:1px solid var(--border);border-radius:var(--radius-md);padding:16px}
+  .doc-title{font-size:14px;font-weight:600;color:var(--ink);margin-bottom:12px;display:flex;align-items:center;gap:8px}
+  .doc-title .dot{width:8px;height:8px;border-radius:50%;background:var(--green)}
+  .doc-row{display:flex;justify-content:space-between;font-size:12px;padding:8px 0;border-top:1px solid var(--paper-tint)}
+  .doc-row .k{color:var(--text-muted)}
+  .doc-row .v{color:var(--text);font-family:var(--mono)}
+  .doc-note{font-size:12px;color:var(--text-secondary);line-height:1.7;margin-top:4px}
+  .doc-note b{color:var(--ink)}
+
+  .empty{padding:64px;text-align:center;color:var(--text-muted);font-size:14px}
+  .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1a1f2e;color:#fff;padding:12px 16px;border-radius:var(--radius-md);font-size:12px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:99;box-shadow:0 4px 16px rgba(0,0,0,.25)}
+  .toast.show{opacity:1}
+
+  /* ── 网格参考层：32px 高面板、8px 圆角、细黑体，刻度由 JS 绘制，左上角为零线 ── */
+  .grid-overlay{position:fixed;inset:0;pointer-events:none;z-index:-1;background-position:0 0}
+  .grid-ctl{position:fixed;right:16px;bottom:16px;display:flex;align-items:center;gap:2px;height:32px;min-width:56px;background:#fff;border:1px solid var(--border);border-radius:8px;padding:0 4px;box-shadow:0 2px 10px rgba(0,0,0,.12);z-index:80;font-family:'Microsoft YaHei UI Light','Microsoft YaHei Light','PingFang SC Light',sans-serif;font-weight:300}
+  .grid-ctl .gl{font-size:10px;color:var(--text-muted);padding:0 8px;font-family:'Microsoft YaHei UI Light','Microsoft YaHei Light','PingFang SC Light',sans-serif;font-weight:300}
+  .grid-ctl button{height:24px;border:none;background:transparent;padding:0 8px;border-radius:8px;font-size:12px;cursor:pointer;color:var(--text-secondary);font-family:'Microsoft YaHei UI Light','Microsoft YaHei Light','PingFang SC Light',sans-serif;font-weight:300}
+  .grid-ctl button:hover{background:var(--paper-tint)}
+  .grid-ctl button.active{background:var(--green);color:#fff}
+  .grid-ctl .g-sep{color:var(--border);padding:0 2px;font-family:var(--mono);font-weight:300}
+  .grid-ctl .g-toggle:not(.active){color:var(--text-muted);background:var(--paper-tint)}
+  .grid-ctl .g-layer{width:24px;height:24px;padding:0;border-radius:50%;border:1px solid var(--border);background:#fff;display:inline-flex;align-items:center;justify-content:center}
+  .grid-ctl .g-layer:not(.active){color:var(--text-muted);background:var(--paper-tint)}
+
+</style>
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <svg class="logo-glyph" viewBox="0 0 32 32" aria-label="Agentboard">
+      <rect width="32" height="32" rx="5" fill="#3D6B4A"/>
+      <rect x="4" y="4" width="10" height="10" rx="2" fill="#fff" opacity=".9"/>
+      <rect x="18" y="4" width="10" height="10" rx="2" fill="#fff" opacity=".9"/>
+      <rect x="4" y="18" width="10" height="10" rx="2" fill="#fff" opacity=".55"/>
+      <rect x="18" y="18" width="10" height="10" rx="2" fill="#fff" opacity=".55"/>
+    </svg>
+    <div class="logo-name">Agentboard</div>
+  </div>
+  <nav class="nav" id="nav">
+    <div class="nav-item active" data-page="tools" onclick="showPage('tools')"><span class="ico"><svg viewBox="0 0 20 20" aria-hidden="true"><rect width="20" height="20" rx="3" fill="#3D6B4A"/><rect x="3.5" y="3.5" width="6" height="6" rx="1.4" fill="#fff" opacity=".9"/><rect x="10.5" y="3.5" width="6" height="6" rx="1.4" fill="#fff" opacity=".9"/><rect x="3.5" y="10.5" width="6" height="6" rx="1.4" fill="#fff" opacity=".55"/><rect x="10.5" y="10.5" width="6" height="6" rx="1.4" fill="#fff" opacity=".55"/></svg></span><span class="nav-label">工具架</span><span class="cnt" id="navToolsCnt">10</span></div>
+    <div class="nav-item" data-page="apps" onclick="showPage('apps')"><span class="ico"><svg viewBox="0 0 20 20" aria-hidden="true"><rect width="20" height="20" rx="3" fill="#3D6B4A"/><circle cx="10" cy="10" r="5" fill="none" stroke="#fff" stroke-width="1.4"/><path d="M10 3.8 L12.4 6.2 M10 3.8 L7.6 6.2 M10 3.8 V10" fill="none" stroke="#fff" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="nav-label">我的网站</span><span class="cnt" id="navAppsCnt">7</span></div>
+    <div class="nav-item" data-page="tips" onclick="showPage('tips')"><span class="ico"><svg viewBox="0 0 20 20" aria-hidden="true"><rect width="20" height="20" rx="3" fill="#3D6B4A"/><path d="M10 3.6 C7.5 3.6 6 5.4 6 7.5 C6 9.1 6.8 10 7.6 10.8 C8.2 11.4 8.5 11.8 8.6 12.6 H11.4 C11.5 11.8 11.8 11.4 12.4 10.8 C13.2 10 14 9.1 14 7.5 C14 5.4 12.5 3.6 10 3.6 Z" fill="#fff"/><path d="M8.8 14 H11.2" stroke="#fff" stroke-width="1.2" stroke-linecap="round"/><path d="M8.3 15.6 H11.7" stroke="#fff" stroke-width="1.2" stroke-linecap="round"/></svg></span><span class="nav-label">经验日志</span><span class="cnt" id="navTipsCnt">6</span></div>
+    <div class="nav-item" data-page="registry" onclick="showPage('registry')"><span class="ico"><svg viewBox="0 0 20 20" aria-hidden="true"><rect width="20" height="20" rx="3" fill="#3D6B4A"/><path d="M10 3.6 V9.6" stroke="#fff" stroke-width="1.6" stroke-linecap="round"/><path d="M6.4 5.8 a5.2 5.2 0 1 0 7.2 0" fill="none" stroke="#fff" stroke-width="1.4" stroke-linecap="round"/></svg></span><span class="nav-label">系统规范</span><span class="cnt" id="navRegCnt">2</span></div>
+    <div class="nav-item" data-page="docs" onclick="showPage('docs')"><span class="ico"><svg viewBox="0 0 20 20" aria-hidden="true"><rect width="20" height="20" rx="3" fill="#3D6B4A"/><path d="M10 5 C8.6 4.2 6.6 4 4.2 4.3 V14.6 C6.6 14.3 8.6 14.5 10 15.3 C11.4 14.5 13.4 14.3 15.8 14.6 V4.3 C13.4 4 11.4 4.2 10 5 Z" fill="none" stroke="#fff" stroke-width="1.4" stroke-linejoin="round"/><path d="M10 5 V15.3" stroke="#fff" stroke-width="1.4"/></svg></span><span class="nav-label">说明书</span></div>
+  </nav>
+  <div class="sidebar-foot"><span class="foot-txt">双平面 一份真相</span></div>
+</aside>
+
+<main class="main">
+
+  <!-- ── 工具架 ── -->
+  <section class="page show" id="page-tools">
+    <div class="hero-bar">
+      <div class="hero-title">工具架</div>
+      <div class="hero-sub">本机工具架 一份真相，两个平面</div>
+    </div>
+    <div class="toolbar" id="dimsRow">
+      <div class="filter-dims" id="dimsBar"></div>
+    </div>
+    <div class="filter-bar" id="optRow">
+      <div class="filter-row" id="dimOpts"></div>
+    </div>
+    <div class="search-bar">
+      <div class="search-group">
+        <input class="search-input" id="searchInput" placeholder="输入工具名、功能或描述搜索…" oninput="renderTools()">
+        <button class="search-btn" onclick="renderTools()">搜索</button>
+      </div>
+    </div>
+    <div class="tool-grid" id="toolGrid"></div>
+  </section>
+
+  <!-- ── 我的网站 ── -->
+  <section class="page" id="page-apps">
+    <div class="hero-bar">
+      <div class="hero-title">我的网站</div>
+      <div class="hero-sub">已部署的公网网站 点开直达</div>
+    </div>
+    <div class="filter-bar" id="appFilterBar"></div>
+    <div class="app-grid" id="appGrid"></div>
+  </section>
+
+  <!-- ── 经验日志 ── -->
+  <section class="page" id="page-tips">
+    <div class="hero-bar">
+      <div class="hero-title">经验日志</div>
+      <div class="hero-sub">踩坑沉淀 同一坑不踩第二次</div>
+    </div>
+    <div class="filter-bar" id="tipFilterBar"></div>
+    <div class="tip-list" id="tipList"></div>
+  </section>
+
+  <!-- ── 说明书 ── -->
+  <section class="page" id="page-docs">
+    <div class="hero-bar">
+      <div class="hero-title">说明书</div>
+      <div class="hero-sub">工具架是什么、怎么访问、数据从哪来</div>
+    </div>
+    <div class="doc-grid">
+      <div class="doc-card">
+        <div class="doc-title"><span class="dot"></span>这是什么</div>
+        <div class="doc-note">本机工具架。一个文件一个工具，每个工具一份 <b>manifest.json</b> 作为唯一真相源。本地应用，工具都跑在你自己的机器上。</div>
+      </div>
+      <div class="doc-card">
+        <div class="doc-title"><span class="dot"></span>怎么访问（两个面）</div>
+        <div class="doc-note"><b>人</b> → 浏览器 UI，看卡片、点启停<br><b>AI</b> → MCP 协议，自动发现和调工具<br><b>脚本/守护</b> → REST 接口，写自动化</div>
+      </div>
+      <div class="doc-card">
+        <div class="doc-title"><span class="dot"></span>数据从哪来</div>
+        <div class="doc-row"><span class="k">工具</span><span class="v">tools/*/manifest.json</span></div>
+        <div class="doc-row"><span class="k">我的网站</span><span class="v">apps-registry.json</span></div>
+        <div class="doc-row"><span class="k">经验日志</span><span class="v">tips/*.md</span></div>
+        <div class="doc-row"><span class="k">定时任务</span><span class="v">localhost:3100</span></div>
+      </div>
+      <div class="doc-card">
+        <div class="doc-title"><span class="dot"></span>架构原则</div>
+        <div class="doc-note">服务是代理不是主人 —— 架子熄了，项目照跑。真相在文件里，不在服务里。MCP 给 AI，REST 给脚本，UI 给人，同一份数据。</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── 系统规范 ── -->
+  <section class="page" id="page-registry">
+    <div class="hero-bar">
+      <div class="hero-title">系统规范</div>
+      <div class="hero-sub">本机的设计原则与工程边界</div>
+    </div>
+    <div class="doc-grid">
+      <div class="doc-card">
+        <div class="doc-title"><span class="dot"></span>设计规范</div>
+        <div class="doc-note">工具架的 UI/UX 设计原则与架构约束。File-first、Local-first、Agent-first，文件即注册。</div>
+        <div class="doc-row"><span class="k">文件</span><span class="v">docs/design-spec.md</span></div>
+      </div>
+      <div class="doc-card">
+        <div class="doc-title"><span class="dot"></span>工程规范</div>
+        <div class="doc-note">文件边界、落盘规则、技术选型与决策框架。本机是唯一控制面。</div>
+        <div class="doc-row"><span class="k">文件</span><span class="v">docs/repo-spec.md</span></div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<div class="grid-overlay" id="gridOverlay"></div>
+<div class="grid-ctl">
+  <span class="gl">网格</span>
+  <button class="g-toggle active" onclick="setGridOn(!gridOn)"><span class="g-toggle-txt">开</span></button>
+  <span class="g-sep">·</span>
+  <button class="g-layer active" data-v="8" onclick="toggleLayer(8)">8</button>
+  <button class="g-layer active" data-v="32" onclick="toggleLayer(32)">32</button>
+  <button class="g-layer active" data-v="128" onclick="toggleLayer(128)">128</button>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]}); }
+function mono(name){ var s=(name||'').trim(); var en=s.match(/[A-Za-z][A-Za-z\s]+/); if(en){var w=en[0].split(/\s+/).filter(Boolean);if(w.length>=2)return (w[0][0]+w[w.length-1][0]).toUpperCase();if(w.length===1&&w[0].length>=2)return w[0].substring(0,2).toUpperCase();} var cn=s.replace(/[^一-鿿]/g,''); if(cn.length>=2)return cn[0]+cn[cn.length-1]; var a=s.replace(/[^A-Za-z0-9]/g,''); if(a.length>=2)return a.substring(0,2).toUpperCase(); return (s.substring(0,2)||'??').toUpperCase(); }
+function toast(m){ var t=document.getElementById('toast'); t.textContent=m; t.classList.add('show'); setTimeout(function(){t.classList.remove('show')},1600); }
+/* ── 网格：8/32/128 三层，颜色深浅+线宽区分，选层制，左上角为零线 ── */
+var gridOn=true, gridLayers={128:true,32:true,8:true};
+/* [刻度, 颜色, 线宽px] —— 大→小叠层：128 顶层优先，全部 1px，透明度 100/45/20% 区分（疏的实、密的淡） */
+var GRID_TIERS=[[128,'rgba(51,51,51,1)',1],[32,'rgba(51,51,51,0.45)',1],[8,'rgba(51,51,51,0.2)',1]];
+function gridStyle(){
+  var o=document.getElementById('gridOverlay'); if(!o)return;
+  var imgs=[],szs=[];
+  if(gridOn){
+    GRID_TIERS.forEach(function(t){
+      if(!gridLayers[t[0]])return;
+      imgs.push('linear-gradient('+t[1]+' '+t[2]+'px,transparent '+t[2]+'px)');
+      imgs.push('linear-gradient(90deg,'+t[1]+' '+t[2]+'px,transparent '+t[2]+'px)');
+      szs.push(t[0]+'px '+t[0]+'px');
+      szs.push(t[0]+'px '+t[0]+'px');
+    });
+  }
+  o.style.backgroundImage=imgs.length?imgs.join(','):'none';
+  o.style.backgroundSize=szs.length?szs.join(','):'auto';
+}
+function setGridOn(v){
+  gridOn=!!v;
+  var b=document.querySelector('.g-toggle');
+  if(b){
+    b.classList.toggle('active',gridOn);
+    var t=b.querySelector('.g-toggle-txt'); if(t)t.textContent=gridOn?'开':'关';
+  }
+  gridStyle();
+}
+function toggleLayer(v){
+  gridLayers[v]=!gridLayers[v];
+  document.querySelectorAll('.g-layer').forEach(function(b){
+    if(+b.getAttribute('data-v')===v)b.classList.toggle('active',gridLayers[v]);
+  });
+  gridStyle();
+}
+
+/* ── 导航 ── */
+function showPage(p){
+  document.querySelectorAll('.page').forEach(function(s){s.classList.remove('show')});
+  document.getElementById('page-'+p).classList.add('show');
+  document.querySelectorAll('.nav-item').forEach(function(n){n.classList.toggle('active',n.getAttribute('data-page')===p)});
+}
+
+/* ── 首页：模拟工具数据（4轴 + 状态） ── */
+var TOOLS=[
+ {id:'comfyui',name:'ComfyUI',fn:'本地模型',acc:'Web',loc:'本地',own:'外部',state:'running',port:'8188',rt:'py',url:'http://localhost:8188',desc:'节点式 AI 图像生成工作流，本地 GPU 驱动。'},
+ {id:'deepseek-api',name:'DeepSeek API',fn:'远程模型',acc:'API',loc:'远程',own:'外部',state:'stopped',desc:'云端大模型 API，文本/视觉/推理，按量调用。'},
+ {id:'claude-code',name:'Claude Code',fn:'Agent',acc:'CLI',loc:'本地',own:'自建',state:'running',rt:'node',desc:'终端里的 AI 编码 Agent，能独立执行任务。'},
+ {id:'openclaw',name:'OpenClaw',fn:'设施',acc:'CLI',loc:'本地',own:'自建',state:'disabled',rt:'node',desc:'多 Agent 网关，当前已停用。'},
+ {id:'tencent-cloud',name:'腾讯云 API',fn:'设施',acc:'API',loc:'远程',own:'外部',state:'stopped',desc:'EdgeOne + DNSPod 凭证 / SDK / 站点配置。'},
+ {id:'gallery',name:'版式画廊',fn:'查阅',acc:'Web',loc:'远程',own:'外部',state:'running',url:'https://gallery.evopearl.com',public:true,desc:'网站设计排版灵感库，已部署公网。'},
+ {id:'wechat-scraper',name:'微信抓取',fn:'获取',acc:'CLI',loc:'本地',own:'自建',state:'stopped',rt:'py',desc:'微信公众号文章抓取 CLI，token 过期时暂停。'},
+ {id:'ace-step',name:'ACE Step',fn:'创作',acc:'Web',loc:'本地',own:'外部',state:'running',port:'7860',rt:'py',url:'http://localhost:7860',desc:'本地音乐生成，GPU 驱动。'},
+ {id:'dashboard',name:'Agentboard',fn:'设施',acc:'Web',loc:'本地',own:'自建',state:'running',port:'3099',rt:'node',url:'http://localhost:3099',desc:'工具架本身，你现在看的这个。'},
+ {id:'cosyvoice',name:'CosyVoice',fn:'本地模型',acc:'Web',loc:'本地',own:'外部',state:'start_failed',port:'8090',rt:'py',desc:'语音合成，上次启动失败待重试。'}
+];
+var DIMS={
+  fn:{label:'功能分类',values:['本地模型','远程模型','Agent','设施','获取','查阅','创作','职能']},
+  acc:{label:'接入方式',values:['Web','CLI','API']},
+  loc:{label:'运行位置',values:['本地','远程']},
+  own:{label:'归属',values:['自建','外部']}
+};
+var F={fn:'all',acc:'all',loc:'all',own:'all',status:'all'};
+var STATE_META={running:{label:'运行中',chip:'on'},stopped:{label:'已停止',chip:'off'},start_failed:{label:'启动失败',chip:'start_failed'},starting:{label:'启动中',chip:'starting'},halting:{label:'停止中',chip:'halting'},broken:{label:'配置损坏',chip:'broken'},incomplete:{label:'字段不全',chip:'incomplete'},orphan:{label:'未注册',chip:'orphan'},stale_path:{label:'路径失效',chip:'stale_path'},disabled:{label:'已停用',chip:'disabled'}};
+
+function opt(key,val,active){
+  var d=DIMS[key];
+  return '<span class="opt-txt'+(active?' active':'')+'" onclick="setF(\''+key+'\',\''+val+'\')" title="'+d.label+' — '+val+'">'+val+'</span>';
+}
+var activeDim='fn';
+function buildDims(){
+  var html='';
+  Object.keys(DIMS).forEach(function(key){
+    var d=DIMS[key];
+    var on=(activeDim===key);
+    html+='<span class="dim-label'+(on?' active':'')+'" onclick="setDim(\''+key+'\')" title="'+d.label+'">'+d.label+'</span>';
+  });
+  document.getElementById('dimsBar').innerHTML=html;
+}
+function setDim(key){ activeDim=key; buildDims(); buildOpts(); }
+function buildOpts(){
+  var d=DIMS[activeDim];
+  var html='';
+  d.values.forEach(function(v){
+    var c=TOOLS.filter(function(t){return t[activeDim]===v}).length;
+    if(!c)return;
+    html+=opt(activeDim,v,F[activeDim]===v);
+  });
+  document.getElementById('dimOpts').innerHTML=html;
+}
+function setF(key,val){ F[key]=(F[key]===val?'all':val); buildDims(); buildOpts(); renderTools(); }
+
+function p2Html(t){
+  var o='';
+  o+='<span class="b b-fn" title="功能分类">'+esc(t.fn)+'</span>';
+  o+='<span class="b b-access" title="接入方式">'+esc(t.acc)+'</span>';
+  o+='<span class="b b-loc" title="运行位置">'+esc(t.loc)+'</span>';
+  o+='<span class="b b-owner" title="归属">'+esc(t.own)+'</span>';
+  if(t.rt){ var lm={py:'py',node:'node',go:'go'}; o+='<span class="b b-rt">'+(lm[t.rt]||t.rt)+'</span>'; }
+  return '<div class="p2">'+o+'</div>';
+}
+function p1Meta(t){
+  if(t.state==='broken'||t.state==='incomplete'||t.state==='orphan'||t.state==='start_failed'||t.state==='disabled')return '';
+  return t.port?(':'+t.port):'';
+}
+function actions(t){
+  var st=t.state; var b=[];
+  var hasCmd=t.port||t.state==='running';
+  if(st==='running')b.push('<button class="btn stop" onclick="toast(\'原型：停止示意\')">停止</button>');
+  if(st==='stopped'&&hasCmd)b.push('<button class="btn go" onclick="toast(\'原型：启动示意\')">启动</button>');
+  if(st==='start_failed')b.push('<button class="btn fix" onclick="toast(\'原型：重试\')">重试</button>');
+  if(t.url)b.push('<a class="btn open" href="'+esc(t.url)+'" target="_blank" onclick="event.stopPropagation()">打开</a>');
+  b.push('<button class="btn" onclick="toast(\'原型：编辑示意\')">编辑</button>');
+  if(t.public)b.push('<a class="btn" style="background:var(--amber-soft);border-color:#F3D9A4;color:var(--amber)" href="'+esc(t.url)+'" target="_blank" onclick="event.stopPropagation()">公开站</a>');
+  return b.join('')+'<span class="p4-spacer"></span><span class="toggle" onclick="toast(\'原型：启停示意\')">'+(t.state==='disabled'?'停用':'启用')+'</span>';
+}
+function card(t){
+  var m=STATE_META[t.state]||STATE_META.stopped;
+  return '<div class="tool-card s-'+m.chip+'">'
+    +'<div class="p0"><div class="card-mono">'+esc(t.icon||mono(t.name))+'</div><div class="card-info">'
+    +'<div class="card-name">'+esc(t.name)+(t.state==='running'&&t.rt?'<span class="auto-badge">常驻</span>':'')+'<span class="chev" onclick="toast(\'原型：展开详情示意\')">▾</span></div>'
+    +'<div class="card-id">'+esc(t.id)+'</div></div></div>'
+    +'<div class="p1"><span class="status-chip">'+m.label+'</span><span class="card-meta">'+p1Meta(t)+'</span></div>'
+    +p2Html(t)
+    +'<div class="p3">'+(t.desc?'<div class="card-desc" title="'+esc(t.desc)+'">'+esc(t.desc)+'</div>':'<span class="card-placeholder">—</span>')+'</div>'
+    +'<div class="p4">'+actions(t)+'</div>'
+    +'</div>';
+}
+function renderTools(){
+  var q=(document.getElementById('searchInput').value||'').trim().toLowerCase();
+  var list=TOOLS.filter(function(t){
+    if(F.fn!=='all'&&t.fn!==F.fn)return false;
+    if(F.acc!=='all'&&t.acc!==F.acc)return false;
+    if(F.loc!=='all'&&t.loc!==F.loc)return false;
+    if(F.own!=='all'&&t.own!==F.own)return false;
+    if(F.status==='running'&&t.state!=='running')return false;
+    if(F.status==='stopped'&&t.state!=='stopped')return false;
+    if(F.status==='public'&&!t.public)return false;
+    if(q&&(t.name+' '+t.id+' '+t.desc+' '+t.fn+' '+t.acc+' '+t.loc+' '+t.own).toLowerCase().indexOf(q)===-1)return false;
+    return true;
+  });
+  document.getElementById('toolGrid').innerHTML=list.length?list.map(card).join(''):'<div class="empty">没有匹配的工具</div>';
+}
+
+/* ── 公网应用 ── */
+var APPS=[
+ {name:'黄辉辉作品集',domain:'vivihuang.evopearl.com',cat:'作品集',status:'live',host:'腾讯云→Vercel',desc:'AI 产品经理（Agent 工具生态）个人作品集。'},
+ {name:'进化猫每日信号站',domain:'data.evopearl.com',cat:'内容',status:'live',host:'Vercel',desc:'每日信号数据站。'},
+ {name:'德城科技 PCBA',domain:'dechpcba.evopearl.com',cat:'商业',status:'live',host:'Vercel',desc:'PCBA 企业官网。'},
+ {name:'排版工匠 Forma',domain:'forma.evopearl.com',cat:'工具',status:'live',host:'Vercel',desc:'排版工匠工具。'},
+ {name:'人物思维顾问局',domain:'minds.evopearl.com',cat:'内容',status:'live',host:'Vercel',desc:'人物思维顾问。'},
+ {name:'税无忧',domain:'shuiwuyou.evopearl.com',cat:'工具',status:'live',host:'Vercel',desc:'税务工具站。'},
+ {name:'版式画廊',domain:'gallery.evopearl.com',cat:'查阅',status:'live',host:'Vercel',desc:'网站排版灵感画廊。'}
+];
+var appCat='all',appStatus='all';
+function renderApps(){
+  var cats={},st={};
+  APPS.forEach(function(a){cats[a.cat]=(cats[a.cat]||0)+1;st[a.status]=(st[a.status]||0)+1});
+  var p='<div class="filter-row"><span class="filter-dim">类型</span>';
+  p+='<button class="filter-pill'+(appCat==='all'?' active':'')+'" onclick="setAppCat(\'all\')">全部<span class="pill-cnt">'+APPS.length+'</span></button>';
+  Object.keys(cats).forEach(function(c){p+='<button class="filter-pill'+(appCat===c?' active':'')+'" onclick="setAppCat(\''+c+'\')">'+c+'<span class="pill-cnt">'+cats[c]+'</span></button>';});
+  p+='</div><div class="filter-row"><span class="filter-dim">状态</span>';
+  Object.keys(st).forEach(function(s){p+='<button class="filter-pill'+(appStatus===s?' active':'')+'" onclick="setAppStatus(\''+s+'\')">'+(s==='live'?'线上':'本地')+'<span class="pill-cnt">'+st[s]+'</span></button>';});
+  p+='</div>';
+  document.getElementById('appFilterBar').innerHTML=p;
+  var list=APPS.filter(function(a){return (appCat==='all'||a.cat===appCat)&&(appStatus==='all'||a.status===appStatus)});
+  document.getElementById('appGrid').innerHTML=list.map(function(a){
+    return '<div class="app-card">'
+      +'<div class="app-top"><span class="app-name">'+esc(a.name)+'</span><span class="status-pill '+a.status+'">'+(a.status==='live'?'线上':'本地')+'</span></div>'
+      +'<a class="app-domain" href="https://'+esc(a.domain)+'" target="_blank">'+esc(a.domain)+' ↗</a>'
+      +'<div class="app-desc">'+esc(a.desc)+'</div>'
+      +'<div class="app-meta"><span class="b b-fn">'+esc(a.cat)+'</span><span class="b b-owner">'+esc(a.host)+'</span></div>'
+      +'</div>';
+  }).join('');
+}
+function setAppCat(c){appCat=c;renderApps();}
+function setAppStatus(s){appStatus=s;renderApps();}
+
+/* ── 操作日志 ── */
+var TIPS=[
+ {t:'诊断',type:'diagnosis',date:'2026-08-22',title:'scheduler 双代码库',desc:'dashboard.js ≠ app.js，require() 加载的文件不参与 UI 渲染，改错文件 3 次才发现。'},
+ {t:'方法',type:'method',date:'2026-08-21',title:'BOM + JSON',desc:'PowerShell 写 JSON → Node.js 读，BOM 直接炸 JSON.parse，写文件必须 -Encoding utf8。'},
+ {t:'诊断',type:'diagnosis',date:'2026-08-20',title:'ACE Step 双入口',desc:'acestep(Gradio) ≠ acestep-api(FastAPI)，AI Format 404 根因。'},
+ {t:'事实',type:'fact',date:'2026-08-19',title:'Google Fonts 名称陷阱',desc:'font-family 里写 Google Font 名在中国永不加载，必须用系统字体栈。'},
+ {t:'能力',type:'capability',date:'2026-08-18',title:'百度地图 / 小红书 / 微信',desc:'新增 capability 类型，记录工具+场景能力，防止"明明有能力但忘了用"。'},
+ {t:'反馈',type:'feedback',date:'2026-08-17',title:'具名代替计数',desc:'对外展示用具名系统代替数字计数，数字会过期名字不会。'}
+];
+var TIP_DEFS=[['all','全部'],['diagnosis','诊断'],['method','方法'],['fact','事实'],['capability','能力'],['feedback','反馈']];
+var tipF='all';
+function renderTips(){
+  var p='<div class="filter-row"><span class="filter-dim">类型</span>';
+  TIP_DEFS.forEach(function(d,i){
+    var c=i===0?TIPS.length:TIPS.filter(function(x){return x.type===d[0]}).length;
+    p+='<button class="filter-pill'+(tipF===d[0]?' active':'')+'" onclick="setTipF(\''+d[0]+'\')">'+d[1]+'<span class="pill-cnt">'+c+'</span></button>';
+  });
+  p+='</div>';
+  document.getElementById('tipFilterBar').innerHTML=p;
+  var list=TIPS.filter(function(x){return tipF==='all'||x.type===tipF});
+  document.getElementById('tipList').innerHTML=list.map(function(x){
+    return '<div class="tip-row"><span class="tip-type '+x.type+'">'+x.t+'</span><div class="tip-body">'
+      +'<div class="tip-title">'+esc(x.title)+'<span class="tip-date">'+x.date+'</span></div>'
+      +'<div class="tip-desc">'+esc(x.desc)+'</div></div></div>';
+  }).join('');
+}
+function setTipF(f){tipF=f;renderTips();}
+
+/* ── 初始化 ── */
+document.getElementById('navToolsCnt').textContent=TOOLS.length;
+document.getElementById('navAppsCnt').textContent=APPS.length;
+document.getElementById('navTipsCnt').textContent=TIPS.length;
+buildDims(); buildOpts(); renderTools();
+renderApps(); renderTips();
+setGridOn(true);
+</script>
+</body>
+</html>
