@@ -6,220 +6,17 @@
 <title>工具架 · Agentboard</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='4' fill='%23002FA7'/%3E%3Ctext x='16' y='22' text-anchor='middle' font-family='Inter,sans-serif' font-size='16' font-weight='600' fill='white'%3E工%3C/text%3E%3C/svg%3E">
 <!-- Google Fonts removed: blocked by GFW in China. System font stack used instead. -->
-<style>
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-:root{
-  --ink:#002FA7; --ink-rgb:0,47,167; --paper:#FAFAF8; --paper-tint:#F2F2F0;
-  --border:#E0E0DC; --text:#0A0A0A; --text-secondary:#555; --text-muted:#999;
-  --status-on:#1A8A3F; --status-off:#BBB;
-  --shadow-border:0 0 0 1px rgba(0,0,0,0.08);
-  --shadow-card:0 1px 3px rgba(0,0,0,0.06);
-  --shadow-card-hover:0 2px 8px rgba(0,0,0,0.1);
-  font-family:system-ui,-apple-system,'Microsoft YaHei','PingFang SC',sans-serif; color:var(--text); background:var(--paper);
-  font-weight:300; font-size:16px;
-}
-body{min-height:100vh;display:flex;flex-direction:column}
-
-/* Header */
-.header{background:var(--ink);color:var(--paper);padding:14px 32px 10px}
-.header-top{display:flex;align-items:center;gap:16px;max-width:1080px;margin:0 auto}
-.header-brand{display:flex;align-items:center;gap:8px;text-decoration:none;color:var(--paper);white-space:nowrap}
-.header-logo{width:22px;height:22px;background:var(--paper);display:flex;align-items:center;justify-content:center;font-family:'Cascadia Code','Consolas','SF Mono',monospace;font-size:11px;font-weight:600;color:var(--ink)}
-.header-name{font-size:14px;font-weight:400;letter-spacing:.02em;opacity:.95}
-.header-sub{font-size:11px;font-weight:300;opacity:.45;margin-left:4px;letter-spacing:.02em}
-.header-nav{display:flex;align-items:center;gap:2px;flex:1;justify-content:flex-end}
-.header-nav a{color:rgba(255,255,255,.55);text-decoration:none;font-size:12px;font-weight:300;padding:6px 10px;transition:color .15s;white-space:nowrap}
-.header-nav a:hover{color:#fff}
-.header-nav a.active{color:#fff;font-weight:500}
-.header-nav .nav-sep{width:1px;height:14px;background:rgba(255,255,255,.15);margin:0 6px}
-.header-philo{max-width:1080px;margin:0 auto;font-size:12px;font-weight:300;opacity:.55;padding:4px 0 2px 30px;letter-spacing:.01em}
-
-/* Resource bar */
-.res-bar{max-width:1080px;margin:0 auto;padding:8px 32px;display:flex;align-items:center;gap:12px;font-size:12px;font-weight:300;color:var(--text-secondary);border-bottom:1px solid var(--border)}
-.res-item{display:inline-flex;align-items:center;gap:4px}
-.res-val{font-weight:400;font-variant-numeric:tabular-nums}
-.res-val.warn{color:#c7902b}
-.res-val.redline{color:#c44e3e}
-.res-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
-.res-dot.g{background:#3b7d4b}.res-dot.y{background:#c7902b}.res-dot.r{background:#c44e3e}
-.res-sep{color:var(--border);margin:0 2px}
-.auto-badge{display:inline-block;font-size:10px;font-weight:400;padding:1px 6px;background:var(--ink);color:var(--paper);margin-left:4px;vertical-align:middle;line-height:1.5;letter-spacing:.03em}
-/* Stats bar */
-.toolbar{max-width:1080px;margin:0 auto;padding:16px 32px;display:flex;align-items:center;gap:16px;border-bottom:1px solid var(--border)}
-.stats-row{display:flex;align-items:center;gap:16px;flex:1}
-.stat-card{display:flex;align-items:baseline;gap:4px;cursor:pointer;padding:4px 0;border:none;background:none;transition:opacity .15s}
-.stat-card:hover{opacity:.7}
-.stat-card .stat-num{font-size:24px;font-weight:200;letter-spacing:-0.02em;color:var(--text);line-height:1}
-.stat-card .stat-label{font-size:11px;color:var(--text-muted);font-weight:300}
-.stat-card.active .stat-num{color:var(--ink);font-weight:400}
-.stat-sep{color:var(--border);font-weight:200;font-size:14px}
-.search-input{border:1px solid var(--border);padding:6px 12px;font-size:13px;font-family:inherit;font-weight:300;background:var(--paper);color:var(--text);width:150px;outline:none;flex-shrink:0}
-.search-input:focus{border-color:var(--ink)}
-.search-input::placeholder{color:var(--text-muted)}
-.btn-refresh{padding:5px 12px;border:1px solid var(--border);background:var(--paper);font-size:12px;font-family:inherit;font-weight:400;cursor:pointer;color:var(--text-secondary);flex-shrink:0}
-.btn-refresh:hover{border-color:var(--ink);color:var(--ink)}
-.btn-refresh.spin{animation:spin .5s linear}
-@keyframes spin{to{transform:rotate(360deg)}}
-
-/* Tool grid */
-.content{flex:1;max-width:1080px;width:100%;margin:0 auto;padding:8px 32px 32px}
-.tool-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;margin-top:4px}
-.tool-card{background:var(--paper);padding:28px 14px 20px;display:flex;flex-direction:column;gap:8px;transition:transform .15s,box-shadow .15s;position:relative;box-shadow:var(--shadow-border),var(--shadow-card);height:230px;overflow:hidden}
-.tool-card:hover{transform:translateY(-1px);box-shadow:var(--shadow-border),var(--shadow-card-hover)}
-.tool-card.self{border-left:3px solid var(--ink)}
-.tool-card.disabled{opacity:.4;filter:grayscale(.5)}
-.tool-card.disabled:hover{opacity:.55;filter:grayscale(.35)}
-
-.card-dot{position:absolute;top:14px;left:14px;width:7px;height:7px;z-index:2}
-.card-dot.on{background:var(--status-on);animation:pulse 2s ease-in-out infinite}
-.card-dot.off{background:var(--status-off)}
-.card-cat-label{font-size:10px;color:var(--text-muted);font-weight:300;letter-spacing:.02em}
-.card-badges{display:flex;gap:4px;margin-left:auto}
-.card-drag-handle{cursor:grab;position:absolute;top:10px;right:14px;width:12px;height:18px;opacity:.28;transition:opacity .15s;z-index:1;user-select:none}
-.card-drag-handle:hover{opacity:.75}
-.card-drag-handle:active{cursor:grabbing}
-.card-drag-handle::after{content:'';position:absolute;width:3px;height:3px;background:currentColor;border-radius:50%;top:0;left:3px;box-shadow:0 6px 0 currentColor,0 12px 0 currentColor,6px 0 0 currentColor,6px 6px 0 currentColor,6px 12px 0 currentColor}
-.tool-card.dragging{opacity:.35;transform:scale(.97)}
-.tool-card.drag-over{border-color:var(--ink);box-shadow:0 0 0 2px rgba(var(--ink-rgb),.25)}
-.form-badge{font-size:9px;font-weight:500;font-family:'Cascadia Code','Consolas','SF Mono',monospace;padding:0 5px;letter-spacing:.04em;line-height:1.6;display:inline-flex;align-items:center}
-.badge-本地{color:var(--status-on);background:rgba(26,138,63,.08)}
-.badge-API{color:#8B5CF6;background:rgba(139,92,246,.08)}
-.badge-CLI{color:#D97706;background:rgba(217,119,6,.08)}
-.badge-Web{color:#3B82F6;background:rgba(59,130,246,.08)}
-.badge-命令{color:#8B5CF6;background:rgba(139,92,246,.08)}
-.badge-文件夹{color:#D97706;background:rgba(217,119,6,.08)}
-.owner-badge{font-size:9px;font-weight:400;color:var(--text-muted);padding:0 5px;border:1px solid var(--border);font-family:'Cascadia Code','Consolas','SF Mono',monospace;letter-spacing:.04em;line-height:1.6;display:inline-flex;align-items:center}
-.runtime-badge{font-size:9px;font-weight:500;font-family:'Cascadia Code','Consolas','SF Mono',monospace;padding:0 5px;letter-spacing:.04em;line-height:1.6;display:inline-flex;align-items:center;gap:3px;border-radius:2px}
-.rt-py{color:#3776AB;background:rgba(55,118,171,.10)}
-.rt-node{color:#27ae60;background:rgba(39,174,96,.10)}
-.rt-go{color:#00ADD8;background:rgba(0,173,216,.10)}
-.rt-rust{color:#DEA584;background:rgba(222,165,132,.12)}
-.rt-cpp{color:#00599C;background:rgba(0,89,156,.10)}
-.rt-csharp{color:#68217A;background:rgba(104,33,122,.10)}
-.rt-shell{color:#6B7280;background:rgba(107,114,128,.10)}
-.rt-other{color:#8B5CF6;background:rgba(139,92,246,.10)}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
-
-.cmd-card{border-left:2px solid #8B5CF6}
-.folder-card{border-left:2px solid #D97706}
-.card-dot.cmd{background:#8B5CF6}
-.card-dot.folder{background:#D97706}
-.card-trigger{font-family:'Cascadia Code','Consolas','SF Mono',monospace;font-size:11px;color:var(--ink);background:var(--paper-tint);padding:1px 6px;white-space:nowrap}
-.cmd-hint{font-size:10px;color:var(--text-muted);font-family:'Cascadia Code','Consolas','SF Mono',monospace;padding:3px 8px;border:1px solid var(--border);white-space:nowrap}
-.group-card{min-height:auto;height:auto;border-left:2px solid var(--ink)}
-
-.gc-section{font-size:10px;font-weight:500;color:var(--text-muted);padding:6px 0 2px;letter-spacing:.04em;border-bottom:1px solid var(--paper-tint);margin-bottom:2px;font-family:'Cascadia Code','Consolas','SF Mono',monospace}
-.gc-status{font-size:10px;font-weight:400;flex-shrink:0;padding:1px 6px;white-space:nowrap}
-.gc-status.success{color:#27ae60}
-.gc-status.error{color:#e67e22}
-.gc-status.fatal_error{color:#c0392b}
-.gc-status.idle,.gc-status.unknown{color:var(--text-muted)}
-.gc-dot{font-size:9px;margin-right:1px}
-.gc-dot.success{color:#27ae60}
-.gc-dot.error{color:#e67e22}
-.gc-dot.fatal_error{color:#c0392b}
-.gc-dot.output_missing{color:#e67e22}
-.gc-dot.idle{color:var(--border)}
-.group-count{font-size:11px;color:var(--text-muted);font-family:'Cascadia Code','Consolas','SF Mono',monospace}
-.badge-命令组{color:var(--ink);background:rgba(var(--ink-rgb),.08)}
-
-.card-body{display:flex;align-items:flex-start;gap:14px;flex:1;padding:0 14px;min-height:0}
-.card-mono{flex-shrink:0;width:44px;height:44px;background:var(--ink);color:var(--paper);display:flex;align-items:center;justify-content:center;font-family:'Cascadia Code','Consolas','SF Mono',monospace;font-size:14px;font-weight:500}
-.card-info{flex:1;min-width:0;min-height:0;overflow:hidden}
-.card-name{font-size:16px;font-weight:300;letter-spacing:-0.01em;line-height:1.4;margin-bottom:2px}
-.card-id{font-size:11px;font-family:'Cascadia Code','Consolas','SF Mono',monospace;color:var(--text-muted);font-weight:400;display:block;margin-top:1px}
-.card-meta{font-size:11px;color:var(--text-muted);font-weight:300;margin-top:6px;display:flex;align-items:center;gap:8px}
-.card-port{font-family:'Cascadia Code','Consolas','SF Mono',monospace;color:var(--text-muted)}
-.card-desc{font-size:11px;color:var(--text-secondary);font-weight:300;line-height:1.5;margin-top:6px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
-
-.card-actions{display:flex;gap:8px}
-.btn{padding:4px 12px;border:1px solid var(--border);background:var(--paper);font-size:12px;font-family:inherit;font-weight:400;cursor:pointer;color:var(--text-secondary);text-decoration:none;display:inline-flex;align-items:center;white-space:nowrap}
-.btn:hover{border-color:var(--ink);color:var(--ink)}
-.btn.go{background:#2D2D2D;border-color:#2D2D2D;color:#fff;font-weight:500}
-.btn.go:hover{background:#1a1a1a;border-color:#1a1a1a;color:#fff}
-.btn.go.starting{opacity:.45;pointer-events:none;cursor:not-allowed}
-.btn.stop{border-color:#C0392B;color:#C0392B}
-.btn.stop:hover{background:#C0392B;border-color:#C0392B;color:#fff}
-.btn.open-done{background:var(--status-on);border-color:var(--status-on);color:#fff;font-weight:500}
-.btn.open-done:hover{background:#157A34;border-color:#157A34;color:#fff}
-.btn.public{background:var(--paper);border-color:var(--ink);color:var(--ink);font-weight:500}
-.btn.public:hover{background:var(--ink);color:var(--paper)}
-
-/* Filter bar */
-.filter-bar{max-width:1080px;margin:0 auto;padding:4px 32px}
-.filter-row{display:flex;align-items:center;gap:4px;margin-bottom:4px}
-.filter-dim{font-size:11px;font-weight:400;color:var(--text-secondary);white-space:nowrap;font-family:'Cascadia Code','Consolas','SF Mono',monospace;letter-spacing:.02em;width:36px;flex-shrink:0;user-select:none}
-.dim-count{font-size:11px;font-weight:600;color:var(--ink);font-family:'Cascadia Code','Consolas','SF Mono',monospace;margin-right:6px;white-space:nowrap;user-select:none}
-.dim-ok{font-size:9px;color:#1A8A3F;margin-left:1px;margin-right:6px;user-select:none}
-.dim-warn{font-size:9px;color:#c0392b;margin-left:1px;margin-right:6px;user-select:none}
-.filter-pill{padding:3px 10px;background:none;font-size:12px;font-family:inherit;font-weight:400;cursor:pointer;color:var(--text-secondary);white-space:nowrap;transition:all .12s;border:none;border-radius:999px}
-.filter-pill:hover{color:var(--ink)}
-.filter-pill.active{background:var(--ink);color:var(--paper)}.filter-pill.active:hover{background:var(--ink);opacity:.7}.pill-cnt{font-size:9px;opacity:.45;margin-left:3px;font-family:'Cascadia Code','Consolas','SF Mono',monospace}.filter-pill.active .pill-cnt{opacity:.55}
-
-/* Principles — above footer */
-.principles-bar{max-width:1080px;margin:0 auto;padding:10px 32px 24px}
-.principles-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border)}
-.principle{background:var(--paper);padding:24px 20px}
-.principle-num{font-family:'Cascadia Code','Consolas','SF Mono',monospace;font-size:10px;font-weight:500;color:var(--ink);opacity:.45;margin-bottom:10px;letter-spacing:.04em}
-.principle-head{font-size:15px;font-weight:500;color:var(--text);margin-bottom:6px;letter-spacing:-0.01em;line-height:1.4}
-.principle-body{font-size:12px;font-weight:300;color:var(--text-secondary);line-height:1.6}
-
-/* Footer */
-.footer{max-width:1080px;width:100%;margin:0 auto;padding:24px 32px;border-top:1px solid var(--border)}
-.footer-bottom{font-size:11px;color:var(--text-muted);display:flex;align-items:center;justify-content:space-between;font-family:'Cascadia Code','Consolas','SF Mono',monospace}
-
-/* Empty */
-.empty{grid-column:1/-1;text-align:center;padding:72px 20px;color:var(--text-muted)}
-.empty p{font-size:14px;margin-top:10px}
-.empty code{font-size:12px;background:var(--paper-tint);padding:2px 8px}
-.empty .reset-link{color:var(--ink);cursor:pointer;text-decoration:underline;font-size:13px;margin-top:12px;display:inline-block}
-
-/* Section grouping */
-.section-label{width:100%;max-width:1080px;margin:0 auto;padding:24px 32px 0;font-size:22px;font-weight:600;color:var(--text);font-family:system-ui,-apple-system,'Microsoft YaHei','PingFang SC',sans-serif;letter-spacing:-.01em;user-select:none}
-.section-divider{max-width:1080px;margin:0 auto;padding:0 32px;height:1px;background:var(--border);opacity:.5}
-
-/* Filter count */
-.filter-count{font-size:11px;color:var(--text-muted);font-weight:300;min-height:22px;padding:0 0 4px 0}
-.filter-count strong{color:var(--text);font-weight:500}
-
-/* Call stats */
-.call-stats-bar{max-width:1080px;margin:0 auto;padding:12px 32px;display:flex;align-items:center;gap:14px;font-size:11px;color:var(--text-muted);font-weight:300;border-top:1px solid var(--border)}
-.call-stats-bar b{color:var(--text);font-weight:400}
-.call-stats-sep{color:var(--border);font-weight:200}
-.call-stats-group{display:flex;gap:10px}
-.call-stats-label{font-size:11px;opacity:.7}
-.call-stats-dot{width:5px;height:5px;display:inline-block;margin-right:3px;flex-shrink:0}
-.call-stats-dot.agent{background:var(--status-on)}
-.call-stats-dot.browser{background:var(--status-off)}
-.call-stats-dot.unknown{background:var(--border)}
-.call-stats-dot.list{background:var(--status-on)}
-.call-stats-dot.control{background:#D97706}
-.call-stats-dot.admin{background:var(--text-muted)}
-
-/* Domain hint */
-.domain-hint{max-width:1080px;margin:0 auto;padding:2px 32px 6px;font-size:10px;color:var(--text-muted);opacity:.45;font-weight:300}
-
-/* Stop confirm */
-.btn.stop.confirming{background:#C0392B;border-color:#C0392B;color:#fff;animation:pulse .4s ease-in-out 3}
-.toggle-disable{display:inline-flex;align-items:center;gap:6px;cursor:pointer;flex-shrink:0;user-select:none}
-.toggle-disable input{display:none}
-.toggle-disable .toggle-track{width:28px;height:16px;border-radius:8px;background:#CCC;position:relative;transition:background .2s;flex-shrink:0}
-.toggle-disable .toggle-track.on{background:#059669}
-.toggle-disable .toggle-track::after{content:"";position:absolute;top:1.5px;left:1.5px;width:13px;height:13px;border-radius:50%;background:#fff;transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.15)}
-.toggle-disable .toggle-track.on::after{transform:translateX(12px)}
-.toggle-disable .toggle-label{font-size:10px;color:var(--text-muted);font-weight:300}
-.toggle-disable .toggle-label.on{color:#059669;font-weight:400}
-</style>
+<link rel="stylesheet" href="/_style.css">
 </head>
 <body>
 <!--
 AI AGENT REFERENCE — 工具架 Agentboard
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-API:     GET /api/tools     → 全部工具清单 JSON {ok, tools:[{id,name,description,category,port,ports,url,running,startCommand,stopCommand,apiBase,projectPath,icon,version,order}]}
+API:     GET /api/tools     → 全部工具清单 JSON {ok, tools:[{id,name,description,category,port,ports,url,running,state,stateDetail,recovery,missingFields,startCommand,stopCommand,apiBase,projectPath,icon,version,order}]}
 ACTION:  POST /api/tools/start/:id   POST /api/tools/stop/:id
-FILTER:  URL search 传 ?q= → 服务端过滤。客户端三层筛选 domain(form=本地|API|CLI|Web) owner(自建|外部) 见 data-* 属性。
+FILTER:  URL search 传 ?q= → 服务端过滤。客户端三层筛选 domain(form=Web|API|命令|文件夹|组) owner(自建|外部) 见 data-* 属性。
 CATS:    模型=AI能力  Agent=自主执行  设施=运维管道  获取=数据入口  查阅=浏览发现  创作=内容生产  职能=生活工具  工作区=文件夹入口
-DOM:     .tool-card[data-id] > .card-head(.card-dot+card-cat-label+card-badges) .card-body(.card-mono+.card-info>.card-name+.card-id+.card-meta+.card-desc) .card-actions(.btn+.btn.go+.btn.stop)
+DOM:     .tool-card.st-{state} > .card-top(点+名+badges) .card-meta-row(id+状态字+端口) .card-desc(3行) .card-actions(按钮+开关)
 RULES:   localhost 用 Bash curl 不用 WebFetch。能力不够先查本地工具。启动/停止后等 500ms poll /api/tools。
 ━═ 你可以访问以下本地能力 ═━
 视觉: MiniCPM-V :8080 (OpenAI兼容 /v1/chat/completions)
@@ -240,7 +37,7 @@ OCR:  Tesseract OCR (pytesseract)
       <span class="header-sub">Agentboard</span>
     </a>
     <div class="header-nav" id="assetBar">
-      <a href="/registry" title="自启动 + 设计规范 + 工程规范" id="assetRegistry" target="_blank">注册表</a>
+      <a href="/registry" title="设计规范 + 工程规范" id="assetRegistry" target="_blank">系统规范</a>
       <span class="nav-sep"></span>
       <a href="/tips" title="操作日志" id="assetTips" target="_blank">操作日志</a>
       <a href="/api" title="API 文档（含 MCP JSON-RPC 接口说明）" id="assetApi" target="_blank">API</a>
@@ -277,6 +74,7 @@ OCR:  Tesseract OCR (pytesseract)
     </div>
   </div>
   <input class="search-input" placeholder="搜索…" oninput="render()" id="searchInput">
+  <button class="btn-new-tool" onclick="openToolForm(null,'new')" title="新建工具：表单生成 manifest.json，不走手写 JSON">＋ 新增工具</button>
   <button class="btn-refresh" onclick="fetchTools()" id="refreshBtn">刷新</button>
 </div>
 
@@ -295,11 +93,11 @@ OCR:  Tesseract OCR (pytesseract)
   </div>
   <div class="filter-row">
     <span class="filter-dim">形态</span><span class="dim-count" id="formCount">—</span><span class="dim-ok" id="formOk">✓</span>
-    <button class="filter-pill" data-form="本地" onclick="setFormFilter('本地')" title="本地运行的服务，有端口号，需手动启动/停止">本地<span class="pill-cnt">0</span></button>
+    <button class="filter-pill" data-form="Web" onclick="setFormFilter('Web')" title="本地运行的服务，有端口号，需手动启动/停止">Web<span class="pill-cnt">0</span></button>
     <button class="filter-pill" data-form="API" onclick="setFormFilter('API')" title="远程API调用，通过 apiBase 配置连接，无需本地运行">API<span class="pill-cnt">0</span></button>
-    <button class="filter-pill" data-form="CLI" onclick="setFormFilter('CLI')" title="命令行工具，有启动命令但无端口，在终端中使用">CLI<span class="pill-cnt">0</span></button>
-    <button class="filter-pill" data-form="Web" onclick="setFormFilter('Web')" title="外部网站或Web服务，通过URL访问，无本地进程">Web<span class="pill-cnt">0</span></button>
-    <button class="filter-pill" data-form="命令" onclick="setFormFilter('命令')" title="在 Claude Code 中通过斜杠命令或自然语言调用的工具，无独立进程">命令<span class="pill-cnt">0</span></button>
+    <button class="filter-pill" data-form="命令" onclick="setFormFilter('命令')" title="命令行工具，有启动命令但无端口，在终端中使用">命令<span class="pill-cnt">0</span></button>
+    <button class="filter-pill" data-form="文件夹" onclick="setFormFilter('文件夹')" title="文件夹入口，指向一个项目/工作区目录">文件夹<span class="pill-cnt">0</span></button>
+    <button class="filter-pill" data-form="组" onclick="setFormFilter('组')" title="命令组，聚合多个子工具（如 cron 任务组）">组<span class="pill-cnt">0</span></button>
   </div>
   <div class="filter-row">
     <span class="filter-dim">归属</span><span class="dim-count" id="ownerCount">—</span><span class="dim-ok" id="ownerOk">✓</span>
@@ -372,766 +170,156 @@ OCR:  Tesseract OCR (pytesseract)
   </div>
 </div>
 
-<script>
-// --- emergency: show runtime errors on page ---
-window.onerror = function(msg, src, line, col, err) {
-  var e = document.getElementById('errBox');
-  if (e) { e.style.display='block'; e.textContent += ' | ' + msg + ' @L' + line; }
-};
-window.addEventListener('unhandledrejection', function(evt) {
-  var e = document.getElementById('errBox');
-  if (e) { e.style.display='block'; e.textContent += ' | Promise: ' + (evt.reason||{}).message; }
-});
-var tools = [];
-var starting = {}; // id → true when waiting for start
-var stopping = {}; // id → true when waiting for stop
-var opened = {};   // id → true when user clicked "打开" this session
-try { opened = JSON.parse(sessionStorage.getItem('opened')||'{}'); } catch(_) {}
-var cronState = null;
-var filter = 'all';
-var domainFilter = 'all';
-var formFilter = 'all';
-var ownerFilter = 'all';
-var publicFilter = false;
-	var disabledFilter = false;
+<!-- S5 工具表单弹窗 v3（新建/编辑/补全/迁移/修复/注册 一套；双栏：表单 + 实时 manifest 预览） -->
+<div class="modal-overlay" id="toolFormModal" style="display:none">
+  <div class="modal modal-lg">
+    <div class="modal-header">
+      <span class="modal-title" id="tfTitle">编辑工具</span>
+      <span class="modal-sub" id="tfSub"></span>
+      <span class="modal-spacer"></span>
+      <span class="mode-toggle">
+        <button class="mode-btn" id="mb-edit" onclick="setMode('edit')">编辑已有</button>
+        <button class="mode-btn" id="mb-new" onclick="setMode('new')">新建工具</button>
+      </span>
+      <button class="modal-close" onclick="closeToolForm()" title="关闭">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-form-wrap">
+        <div class="form-pane">
 
-// 领域映射：category → 领域（用于筛选栏分组）
-var domainMap = {
-  '模型': '模型',
-  '本地模型': '模型',
-  '远程模型': '模型',
-  'Agent': 'Agent',
-  '设施': '设施',
-  '获取': '获取',
-  '查阅': '查阅',
-  '创作': '创作',
-  '职能': '职能',
-  '工作区': '职能',
-  '公开站': '公开站'
-};
+          <div class="sec">
+            <div class="sec-h"><span class="sec-num">1</span><span class="sec-title" title="ID 决定 tools/ 目录名">身份</span></div>
+            <div class="row3">
+              <div class="field"><label for="f-name">名字 <span class="req">*</span></label><input type="text" id="f-name" placeholder="例：MiniCPM-V 4.6"></div>
+              <div class="field"><label for="f-id">ID <span class="req" id="id-req" style="display:none">*</span></label>
+                <input type="text" id="f-id" placeholder="例：minicpm-v" style="display:none">
+                <div class="auto-val" id="id-val" title="编辑已有：ID 锁定 = 当前目录名。改名 = 挪目录，需谨慎。">—</div>
+              </div>
+              <div class="field"><label>版本</label><div class="auto-val" id="f-version" title="自动读取自 manifest 的 version">—</div></div>
+            </div>
+            <div class="field"><label>图标</label>
+              <div class="icon-row">
+                <input type="text" id="f-icon" placeholder="emoji，空 = 用名字首字">
+                <button type="button" class="btn" onclick="toggleIconPanel()">从库选</button>
+                <button type="button" class="btn" onclick="clearIcon()">清空</button>
+              </div>
+              <div id="icon-panel" style="display:none"></div>
+            </div>
+          </div>
 
-// 分类显示名 + 悬停解释。key 匹配 manifest.json 里的 category 字段
-var catMeta = {
-  '模型':     {label:'模型',     tip:'本地+云端 AI 模型能力：视觉理解/语音合成/LLM API — 模型的调用入口'},
-  '本地模型': {label:'本地模型', tip:'本地部署的 AI 模型：MiniCPM视觉/CosyVoice语音/ACE音乐 — 本机 GPU 驱动'},
-  '远程模型': {label:'远程模型', tip:'云端 AI 模型 API：DeepSeek/GLM/GPT/Imagen — 按量调用的远程模型'},
-  'Agent':    {label:'Agent',    tip:'自主 AI Agent：Claude Code/Hermes/Codex CLI/RAG — 能独立执行任务的智能体'},
-  '设施':     {label:'设施',     tip:'透明基础设施：API网关/协议代理/定时调度/联邦巡检 — 管道自己跑，日常不碰'},
-  '获取':     {label:'获取',     tip:'数据采集：网页抓取/社媒下载/OCR/云盘 — 从外部获取信息的工具'},
-  '查阅':     {label:'查阅',     tip:'浏览发现：版式画廊/Skill目录/架构图/人物名录 — 浏览和发现'},
-  '创作':     {label:'创作',     tip:'AIGC内容生产：图像/音乐/语音/视频/排版 — AI 驱动的数字内容创作'},
-  '职能':     {label:'职能',     tip:'生活+效率：税务/社保/保障房/购物/截图 — 个人事务工具'},
-  '工作区':   {label:'工作区',   tip:'文件夹入口：项目目录/产出目录 — 打开即用，无需启动'},
-  '公开站':   {label:'公开站',   tip:'已部署到公网的项目站点：Vercel/EdgeOne/自有域名 — 对外可访问的线上成果'}
-};
+          <div class="sec">
+            <div class="sec-h"><span class="sec-num">2</span><span class="sec-title" title="这工具干嘛">功能</span></div>
+            <div class="field"><label for="f-func">功能一句话 <span class="req">*</span><span class="sec-hint" style="margin-left:6px;font-weight:400">capability，≤30 字</span></label><textarea id="f-func" placeholder="例：本地视觉模型，理解图片内容（OCR / 描述 / 问答）。"></textarea></div>
+            <div class="field"><label for="f-ret">返回（描述尾部，自动拼 【返回】）</label><input type="text" id="f-ret" placeholder="例：Web UI :8080 / JSON"></div>
+            <textarea id="f-extra" style="display:none" aria-hidden="true"></textarea>
+          </div>
 
-function setFilter(f) {
-  if (filter === f && f !== 'all') { filter = 'all'; }
-  else { filter = f; }
-  publicFilter = false; syncPublicUI();
-  document.querySelectorAll('.stat-card').forEach(function(c){ c.classList.remove('active'); });
-  var card = document.querySelector('.stat-card[data-filter="' + filter + '"]');
-  if (card) card.classList.add('active');
-  render();
-}
+          <div class="sec">
+            <div class="sec-h"><span class="sec-num">3</span><span class="sec-title" title="选完自动建议类型，可改">分类</span></div>
+            <div class="row3">
+              <div class="field"><label for="f-category">分类 <span class="req">*</span></label><select id="f-category" onchange="suggestType()"></select></div>
+              <div class="field"><label for="f-owner">归属 <span class="req">*</span></label><select id="f-owner"></select></div>
+              <div class="field"><label for="f-form" title="服务=常驻后台；命令=用完就走；API=外部服务；文件夹=项目目录；组=多工具编排">类型 <span class="req">*</span></label><select id="f-form" onchange="applyFormType()"></select></div>
+            </div>
+          </div>
 
-function setDomainFilter(d) {
-  domainFilter = (domainFilter === d) ? 'all' : d;
-  document.querySelectorAll('.filter-pill[data-domain]').forEach(function(p){ p.classList.remove('active'); });
-  var pill = document.querySelector('.filter-pill[data-domain="' + domainFilter + '"]');
-  if (pill) pill.classList.add('active');
-  render();
-}
+          <div class="sec">
+            <div class="sec-h"><span class="sec-num">4</span><span class="sec-title" title="只显示当前类型该填的">调用方式</span><span class="sec-hint">类型驱动</span></div>
 
-function setFormFilter(f) {
-  formFilter = (formFilter === f) ? 'all' : f;
-  document.querySelectorAll('.filter-pill[data-form]').forEach(function(p){ p.classList.remove('active'); });
-  var pill = document.querySelector('.filter-pill[data-form="' + formFilter + '"]');
-  if (pill) pill.classList.add('active');
-  render();
-}
+            <div class="cg" id="cg-service">
+              <div class="row3">
+                <div class="field"><label for="f-port">端口</label><input type="text" id="f-port" placeholder="例：8080"></div>
+                <div class="field"><label for="f-url">页面 URL</label><input type="text" id="f-url" placeholder="例：http://localhost:8080"></div>
+                <div class="field"><label for="f-api">API 地址</label><input type="text" id="f-api" placeholder="例：…/v1/chat/completions"></div>
+              </div>
+              <div class="row2">
+                <div class="field"><label for="f-start">启动命令 <span class="req">*</span></label><input type="text" id="f-start" placeholder="例：node server.js"></div>
+                <div class="field"><label for="f-stop">停止命令</label><input type="text" id="f-stop" placeholder="例：node stop.js"></div>
+              </div>
+              <div class="field"><label for="f-path" title="进程工作目录">项目路径</label><input type="text" id="f-path" placeholder="例：D:\tools\minicpm-v"></div>
+            </div>
 
-function setOwnerFilter(o) {
-  ownerFilter = (ownerFilter === o) ? 'all' : o;
-  document.querySelectorAll('.filter-pill[data-owner]').forEach(function(p){ p.classList.remove('active'); });
-  var pill = document.querySelector('.filter-pill[data-owner="' + ownerFilter + '"]');
-  if (pill) pill.classList.add('active');
-  render();
-}
+            <div class="cg" id="cg-cli">
+              <div class="row2">
+                <div class="field"><label for="f-trigger">触发词 <span class="req">*</span></label><input type="text" id="f-trigger" placeholder="例：/clip"></div>
+                <div class="field"><label for="f-start-cli">启动命令</label><input type="text" id="f-start-cli" placeholder="例：node run.js"></div>
+              </div>
+              <div class="field"><label for="f-path-cli" title="命令所在目录">项目路径</label><input type="text" id="f-path-cli" placeholder="例：D:\tools\some-cli"></div>
+            </div>
 
-function setPublicFilter(v) {
-  publicFilter = !publicFilter;
-  syncPublicUI();
-  render();
-}
+            <div class="cg" id="cg-api">
+              <div class="row3">
+                <div class="field"><label for="f-api-api">API 地址 <span class="req">*</span></label><input type="text" id="f-api-api" placeholder="例：https://api.openai.com/v1/chat/completions"></div>
+                <div class="field"><label for="f-keyname">密钥名</label><input type="text" id="f-keyname" placeholder="例：OPENAI_API_KEY"></div>
+                <div class="field"><label for="f-url-api">文档 URL</label><input type="text" id="f-url-api" placeholder="例：https://platform.openai.com/docs"></div>
+              </div>
+            </div>
 
-function setDisabledFilter() {
-	  disabledFilter = !disabledFilter;
-	  document.querySelectorAll('.filter-pill[data-disabled]').forEach(function(p){ p.classList.remove('active'); });
-	  if (disabledFilter) {
-	    var pill = document.querySelector('.filter-pill[data-disabled]');
-	    if (pill) pill.classList.add('active');
-	    document.querySelectorAll('.stat-card').forEach(function(c){ c.classList.remove('active'); });
-	  } else {
-	    var allStat = document.querySelector('.stat-card[data-filter="all"]');
-	    if (allStat) allStat.classList.add('active');
-	  }
-	  render();
-	}
+            <div class="cg" id="cg-folder">
+              <div class="field"><label for="f-path-folder" title="文件夹没有端口没有命令，项目路径就是它">项目路径 <span class="req">*</span></label><input type="text" id="f-path-folder" placeholder="例：D:\workspace\gallery"></div>
+            </div>
 
-	function setPublicStatFilter() {
-  publicFilter = !publicFilter;
-  syncPublicUI();
-  // 清除其他 stat card 的 active 状态
-  document.querySelectorAll('.stat-card').forEach(function(c){ c.classList.remove('active'); });
-  if (publicFilter) {
-    var stat = document.getElementById('publicStat');
-    if (stat) stat.classList.add('active');
-  } else {
-    var allStat = document.querySelector('.stat-card[data-filter="all"]');
-    if (allStat) allStat.classList.add('active');
-  }
-  render();
-}
+            <div class="cg" id="cg-group">
+              <div class="field"><label for="f-children" title="组 = 多个工具的编排。每行一个子工具，格式：名字 —— 触发词">子工具 <span class="req">*</span></label><textarea id="f-children" placeholder="📖 认知深读日报 —— cron-认知深读&#10;📡 AI信号日报 —— cron-AI信号" style="min-height:60px"></textarea></div>
+            </div>
+          </div>
 
-function syncPublicUI() {
-  document.querySelectorAll('.filter-pill[data-public]').forEach(function(p){ p.classList.remove('active'); });
-  if (publicFilter) {
-    var pill = document.querySelector('.filter-pill[data-public]');
-    if (pill) pill.classList.add('active');
-  }
-}
+          <div class="sec">
+            <div class="sec-h"><span class="sec-num">5</span><span class="sec-title" title="AI 决定用它不用的依据">何时调用</span></div>
+            <div class="row2">
+              <div class="field"><label for="f-when">何时用</label><textarea id="f-when" placeholder="例：需要理解图片内容（看图说话 / OCR / 图片问答）时。"></textarea></div>
+              <div class="field"><label for="f-whennot">何时不用</label><textarea id="f-whennot" placeholder="例：生成图片 → 用 ComfyUI。语音 → cosyvoice3。"></textarea></div>
+            </div>
+          </div>
 
-function getSearchTerm() {
-  var inp = document.getElementById('searchInput');
-  return (inp && inp.value || '').trim().toLowerCase();
-}
+          <div class="sec">
+            <div class="sec-h"><span class="sec-num">6</span><span class="sec-title">运维</span></div>
+            <div class="cg" id="ops-path">
+              <div class="field"><label for="f-runtime">运行时语言</label><select id="f-runtime"></select></div>
+            </div>
+            <div class="cg" id="ops-none"><div class="cg-note">API / 组 无本地进程：没有项目路径、没有运行时。</div></div>
+            <div class="field" style="margin-top:12px"><label for="f-notes">Agent 操作笔记</label><textarea id="f-notes" placeholder="例：截图任务会误判端口；启动前先看 conflicts。" style="min-height:44px"></textarea></div>
+            <div class="field"><label for="f-conflicts">冲突工具（逗号分隔）</label><input type="text" id="f-conflicts" placeholder="例：comfyui,stable-diffusion（GPU 显存互斥）。留空 = 无冲突，不写入"></div>
+            <div class="check-row" id="autoStart-field"><input type="checkbox" id="f-autostart"><span title="服务类型：开机自动启动。停用时此项隐藏">开机自动启动</span></div>
+            <label class="check-row" id="disabled-row" for="f-disabled"><input type="checkbox" id="f-disabled" onchange="applyFormType()"><span title="勾上后 AI 不可调用，同时强制取消开机自启">停用（AI 不可调用）</span></label>
+          </div>
 
-function monogram(name) {
-  var s = (name||'').trim();
-  var en = s.match(/[A-Za-z][A-Za-z\s]+/);
-  if (en) {
-    var w = en[0].split(/\s+/).filter(Boolean);
-    if (w.length >= 2) return (w[0][0] + w[w.length-1][0]).toUpperCase();
-    if (w.length === 1 && w[0].length >= 2) return w[0].substring(0,2).toUpperCase();
-  }
-  var cn = s.replace(/[^一-鿿]/g,'');
-  if (cn.length >= 2) return cn[0] + cn[cn.length-1];
-  var ascii = s.replace(/[^A-Za-z0-9]/g,'');
-  if (ascii.length >= 2) return ascii.substring(0,2).toUpperCase();
-  return (s.substring(0,2) || '??').toUpperCase();
-}
+          <div class="form-actions">
+            <button class="btn del" id="tfDelete" style="display:none" onclick="confirmDeleteForm()">删除工具</button>
+            <button class="btn" onclick="closeToolForm()">取消</button>
+            <button class="btn go" onclick="submitToolForm()">保存</button>
+            <span class="hint" id="tfHint"></span>
+          </div>
 
-function isVirtual(t) {
-  var hasPorts = (t.ports && t.ports.length > 0) || t.port;
-  return !hasPorts && !t.startCommand && !t.stopCommand;
-}
+        </div>
+        <div class="preview-pane">
+          <div class="preview-h"><span class="dot"></span><span>实时预览 —— 保存时写入的 manifest.json</span></div>
+          <div id="json-out"></div>
+          <div class="hint-row" id="hint-row"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 
-// 形态检测：本地/API/CLI/Web
-function getToolForm(t) {
-	  if (t.type === 'cli' || t.type === 'command') return 'CLI';
-	  if (t.type === 'folder') return '文件夹';
-	  if (t.type === 'group') return '命令组';
-  var hasPorts = (t.ports && t.ports.length > 0) || t.port;
-  var hasCommands = t.startCommand || t.stopCommand;
-  var hasApi = t.apiBase;
-  if (hasPorts) return '本地';
-  if (hasCommands && !hasPorts && !hasApi) return 'CLI';
-  if (hasApi) return 'API';
-  if (t.url && !hasPorts && !hasCommands) return 'Web';
-  return 'API';
-}
+<!-- S5 启动失败日志弹窗（查看日志按钮） -->
+<div class="modal-overlay" id="logModal" style="display:none">
+  <div class="modal modal-lg">
+    <div class="modal-header">
+      <span class="modal-title" id="logTitle">启动失败日志</span>
+      <button class="modal-close" onclick="closeLogModal()" title="关闭">×</button>
+    </div>
+    <div class="modal-body">
+      <pre id="logBody" style="white-space:pre-wrap;font-family:monospace;font-size:12px;line-height:1.6;margin:0;color:var(--text)"></pre>
+    </div>
+    <div class="modal-footer">
+      <span class="tf-hint" id="logHint"></span>
+      <span class="modal-spacer"></span>
+      <button class="btn" onclick="closeLogModal()">关闭</button>
+    </div>
+  </div>
+</div>
 
-// 归属检测：自建/外部
-function getToolOwner(t) {
-  if (t.owner) return t.owner;
-  if (t.startCommand || t.stopCommand) return '自建';
-  return '外部';
-}
-
-// Runtime badge: 语言+版本
-function getRuntimeBadge(t) {
-  if (!t.runtime || !t.runtime.language) return '';
-  var rt = t.runtime;
-  var langMap = {python:'py',node:'node',go:'go',rust:'rs',cpp:'c++',csharp:'c#',shell:'sh',other:'···'};
-  var label = langMap[rt.language] || rt.language;
-  if (rt.version) label += ' ' + rt.version;
-  return '<span class="runtime-badge rt-' + rt.language + '" title="' + rt.language + (rt.version ? ' ' + rt.version : '') + (rt.note ? ' — ' + rt.note : '') + '">' + label + '</span>';
-}
-
-// Pre-populated by server; apply immediately if available
-(function() {
-  if (window.__stats) {
-    var s = window.__stats;
-    var set = function(id, v) { var el = document.getElementById(id); if (el) el.textContent = v; };
-    set('callToday', s.todayCalls);
-    set('callAgent', s.byCaller.agent);
-    set('callBrowser', s.byCaller.browser);
-    set('callList', s.byAction.list);
-    set('callControl', s.byAction.control);
-    if (s.assets) {
-      var setT = function(id, label, count) { var el = document.getElementById(id); if (el) el.title = label + ' · ' + count; };
-      setT('assetRegistry', '自启动 + 设计规范 + 工程规范', '1 页');
-      setT('assetTips', '操作日志', s.assets.tips + ' 条');
-      setT('assetApi', 'API 文档', s.assets.api + ' 个端点');
-
-    }
-  }
-})();
-
-async function fetchStats() {
-  try {
-    var res = await fetch('/api/stats');
-    var data = await res.json();
-    if (data.ok) {
-      document.getElementById('callToday').textContent = data.todayCalls;
-      document.getElementById('callAgent').textContent = (data.byCaller.today.agent || 0);
-      document.getElementById('callBrowser').textContent = (data.byCaller.today.browser || 0);
-      document.getElementById('callList').textContent = (data.byAction.today.list || 0);
-      document.getElementById('callControl').textContent = (data.byAction.today.control || 0);
-    }
-  } catch(e) {
-    console.error('fetchStats:', e);
-  }
-}
-
-var _cronBackoff = 0;
-var _cronTimer = null;
-
-async function fetchCronState() {
-  try {
-    var res = await fetch('/api/cron/state');
-    var data = await res.json();
-    if (data.ok) {
-      cronState = data;
-      _cronBackoff = 0;
-    } else {
-      _cronBackoff = Math.min((_cronBackoff || 60) * 2, 600);
-    }
-  } catch (_) {
-    _cronBackoff = Math.min((_cronBackoff || 60) * 2, 600);
-  }
-  if (_cronTimer) clearTimeout(_cronTimer);
-  _cronTimer = setTimeout(fetchCronState, (_cronBackoff || 60) * 1000);
-}
-
-async function fetchTools() {
-  var btn = document.getElementById('refreshBtn');
-  btn.classList.add('spin');
-  try {
-    var res = await fetch('/api/tools');
-    var data = await res.json();
-    if (data.ok) {
-      tools = data.tools;
-      updatePillCounts();
-      // 清除已生效的 starting / stopping 状态
-      Object.keys(starting).forEach(function(id){
-        var t = tools.find(function(x){return x.id===id;});
-        if (t && t.running !== false) delete starting[id];
-      });
-      Object.keys(stopping).forEach(function(id){
-        var t = tools.find(function(x){return x.id===id;});
-        if (t && t.running !== true) delete stopping[id];
-      });
-      updateCounts();
-      render();
-    }
-  } catch(e) {
-    document.getElementById('totalCount').textContent = '—';
-    document.getElementById('openableCount').textContent = '—';
-    document.getElementById('openedCount').textContent = '—';
-    document.getElementById('stoppedCount').textContent = '—';
-  }
-  btn.classList.remove('spin');
-  fetchStats();
-  fetchCronState();
-}
-
-function getFilterDesc() {
-  var parts = [];
-  if (domainFilter !== 'all') parts.push(domainFilter);
-  if (formFilter !== 'all') parts.push(formFilter);
-  if (ownerFilter !== 'all') parts.push(ownerFilter === '自建' ? '自建工具' : '外部');
-  if (publicFilter) parts.push('已部署公开站');
-  return parts.length ? parts.join(' · ') : '全部工具';
-}
-
-function resetAllFilters() {
-  filter = 'all'; domainFilter = 'all'; formFilter = 'all'; ownerFilter = 'all'; publicFilter = false;
-  document.getElementById('searchInput').value = '';
-  document.querySelectorAll('.stat-card').forEach(function(c){ c.classList.remove('active'); });
-  var allStat = document.querySelector('.stat-card[data-filter="all"]');
-  if (allStat) allStat.classList.add('active');
-  document.querySelectorAll('.filter-pill[data-domain],.filter-pill[data-form],.filter-pill[data-owner],.filter-pill[data-public]').forEach(function(p){ p.classList.remove('active'); });
-  render();
-}
-
-function updatePillCounts() {
-  var domainCounts = {};
-  var formCounts = {};
-  var ownerCounts = {};
-  tools.forEach(function(t) {
-    var c = domainMap[t.category||'其他'] || '职能'; domainCounts[c] = (domainCounts[c] || 0) + 1;
-    var f = getToolForm(t); formCounts[f] = (formCounts[f] || 0) + 1;
-    var o = getToolOwner(t); ownerCounts[o] = (ownerCounts[o] || 0) + 1;
-  });
-  ['模型','Agent','设施','获取','查阅','创作','职能'].forEach(function(c) {
-    var pill = document.querySelector('.filter-pill[data-domain="' + c + '"] .pill-cnt');
-    if (pill) pill.textContent = domainCounts[c] || 0;
-  });
-  ['本地','API','CLI','Web','命令'].forEach(function(f) {
-    var pill = document.querySelector('.filter-pill[data-form="' + f + '"] .pill-cnt');
-    if (pill) pill.textContent = formCounts[f] || 0;
-  });
-  ['自建','外部','AI托管'].forEach(function(o) {
-    var pill = document.querySelector('.filter-pill[data-owner="' + o + '"] .pill-cnt');
-    if (pill) pill.textContent = ownerCounts[o] || 0;
-  });
-  var publicCnt = tools.filter(function(t){ return t.publicUrl; }).length;
-  var publicPill = document.querySelector('.filter-pill[data-public] .pill-cnt');
-  if (publicPill) publicPill.textContent = publicCnt;
-
-  var disabledCnt = tools.filter(function(t){ return t.disabled; }).length;
-  var disabledPill = document.getElementById('disabledCount');
-  if (disabledPill) disabledPill.textContent = disabledCnt;
-
-  // 维度合计（标签后跟总数 + ✓/⚠）
-  var total = tools.length;
-  function setDimSum(countId, okId, sum) {
-    var elC = document.getElementById(countId);
-    var elO = document.getElementById(okId);
-    if (elC) elC.textContent = sum;
-    if (elO) {
-      if (sum === total) { elO.textContent = '✓'; elO.className = 'dim-ok'; }
-      else { elO.textContent = '⚠缺' + (total - sum); elO.className = 'dim-warn'; }
-    }
-  }
-  setDimSum('domainCount', 'domainOk', Object.values(domainCounts).reduce(function(a,b){return a+b;}, 0));
-  setDimSum('formCount', 'formOk', Object.values(formCounts).reduce(function(a,b){return a+b;}, 0));
-  setDimSum('ownerCount', 'ownerOk', Object.values(ownerCounts).reduce(function(a,b){return a+b;}, 0));
-}
-
-function render() {
-  var grid = document.getElementById('toolGrid');
-  if (!tools.length) {
-    grid.innerHTML = '<div class="empty"><p>还没有工具</p><p>Agent 会在 <code>~/.agentboard/tools/</code> 下写入注册文件，自动上架。</p></div>';
-    document.getElementById('filterCount').innerHTML = '';
-    return;
-  }
-
-  // Filter
-  var sorted = tools.slice();
-  if (filter === 'openable') sorted = sorted.filter(function(t){return (t.running || isVirtual(t)) && !opened[t.id] && t.url;});
-  if (filter === 'opened') sorted = sorted.filter(function(t){return (t.running || isVirtual(t)) && opened[t.id] && t.url;});
-  if (filter === 'stopped') sorted = sorted.filter(function(t){return t.running === false;});
-  if (domainFilter !== 'all') sorted = sorted.filter(function(t){return (domainMap[t.category||'其他']||'职能') === domainFilter;});
-  if (formFilter !== 'all') sorted = sorted.filter(function(t){return getToolForm(t) === formFilter;});
-  if (ownerFilter !== 'all') sorted = sorted.filter(function(t){return getToolOwner(t) === ownerFilter;});
-  if (publicFilter) sorted = sorted.filter(function(t){return t.publicUrl;});
-	  if (disabledFilter) sorted = sorted.filter(function(t){return t.disabled;});
-  var search = getSearchTerm();
-  if (search) {
-    sorted = sorted.filter(function(t){
-      return t.name.toLowerCase().indexOf(search) !== -1 || t.id.toLowerCase().indexOf(search) !== -1 || (t.description||'').toLowerCase().indexOf(search) !== -1;
-    });
-  }
-
-  // Sort: category group, then running first, then order
-  var catOrder = {'模型':0, '本地模型':0, '远程模型':0, 'Agent':1, '设施':2, '获取':3, '查阅':4, '创作':5, '职能':6};
-  var cardOrder = [];
-  try { cardOrder = JSON.parse(localStorage.getItem('agentboard-card-order') || '[]'); } catch(_) {}
-  if (!Array.isArray(cardOrder)) cardOrder = [];
-  sorted.sort(function(a,b){
-    var ai = cardOrder.indexOf(a.id);
-    var bi = cardOrder.indexOf(b.id);
-    // both in saved order: preserve user arrangement
-    if (ai !== -1 && bi !== -1) return ai - bi;
-    // one is new (not in saved order): push to end
-    if (ai !== -1) return -1;
-    if (bi !== -1) return 1;
-    // both new: fallback to category -> running -> order
-    var ca = catOrder[a.category] != null ? catOrder[a.category] : 99;
-    var cb = catOrder[b.category] != null ? catOrder[b.category] : 99;
-    if (ca !== cb) return ca - cb;
-    if (a.running && !b.running) return -1;
-    if (!a.running && b.running) return 1;
-    return (a.order||99) - (b.order||99);
-  });
-
-  // Update filter count
-  var countEl = document.getElementById('filterCount');
-  if (countEl) {
-    var desc = getFilterDesc();
-    var isFiltered = domainFilter !== 'all' || formFilter !== 'all' || ownerFilter !== 'all' || search;
-    if (isFiltered) {
-      countEl.innerHTML = desc + ' — <strong>' + sorted.length + '</strong> / ' + tools.length + ' 个工具';
-    } else {
-      countEl.innerHTML = desc + ' — <strong>' + sorted.length + '</strong> 个工具';
-    }
-  }
-
-  if (!sorted.length) {
-    grid.innerHTML = '<div class="empty"><p style="font-size:28px;margin-bottom:4px">(╯°□°)╯</p><p>没有工具匹配当前筛选组合</p><p style="font-size:12px;margin-top:6px">' + getFilterDesc() + '</p><a class="reset-link" onclick="resetAllFilters()" title="清除所有领域/形态/归属/部署/状态筛选条件，恢复显示全部工具">← 重置全部筛选</a></div>';
-    return;
-  }
-
-  grid.innerHTML = sorted.map(function(t){
-    var ports = t.ports || (t.port ? [t.port] : []);
-    var portsText = ports.length ? '端口 ' + ports.map(function(p){return ':'+p;}).join(', ') : '';
-    var v = isVirtual(t);
-    var hasCommands = t.startCommand || t.stopCommand;
-    var cmdType = t.type || 'service';
-		var isCli = cmdType === 'cli' || cmdType === 'command';
-var klass = isCli ? 'cmd' : (cmdType === 'folder' ? 'folder' : (t.running ? 'on' : 'off'));
-    var pending = starting[t.id];
-    var halting = stopping[t.id];
-
-    var isSelf = t.id === 'dashboard';
-    var portCount = (t.ports && t.ports.length) || (t.port ? 1 : 0);
-    var isNoPortCli = portCount === 0 && hasCommands;
-
-    // Group card rendering
-    if (cmdType === 'group') {
-      var children = t.children || [];
-      var tasks = children.filter(function(c){ return c.type !== 'section'; });
-      var statusDots = tasks.map(function(c){
-        var st = getCronChildStatus(c.name);
-        var cls = st ? st.cls : 'idle';
-        return '<span class="gc-dot ' + cls + '" title="' + c.name + ': ' + (st ? st.label : 'idle') + '">●</span>';
-      }).join('');
-      return '<div class="tool-card group-card" data-id="' + t.id + '" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)"' + (t.url ? ' onclick="window.open(\'' + t.url + '\', \'_blank\')" style="cursor:pointer"' : '') + '>'
-        + '<span class="card-dot off"></span>'
-        + '<div class="card-drag-handle" title="拖拽排序" draggable="true" ondragstart="handleDragStart(event)" ondragend="handleDragEnd(event)"></div>'
-        + '<div class="card-body">'
-          + '<div class="card-mono">' + (t.icon||monogram(t.name)) + '</div>'
-          + '<div class="card-info">'
-            + '<div class="card-name">' + t.name + '</div>'
-            + '<div class="card-id">' + t.id + '</div>'
-            + '<div class="card-meta">' + statusDots + '</div>'
-            + (t.description ? '<div class="card-desc">' + t.description + '</div>' : '')
-          + '</div>'
-        + '</div>'
-        + '<div class="card-actions">'
-          + (t.url ? '<a href="' + t.url + '" target="_blank" class="btn" onclick="event.stopPropagation()" style="font-size:11px">打开面板</a>' : '')
-        + '</div>'
-      + '</div>';
-    }
-
-    var actionHtml = '';
-    if (pending) {
-      actionHtml = '<button class="btn go starting">' + (isNoPortCli ? '启动中…' : '启动中…') + '</button>';
-    } else if (halting) {
-      actionHtml = '<button class="btn stop" style="opacity:.6">停止中…</button>';
-    } else if (cmdType === 'folder') {
-      actionHtml = '<button class="btn go" onclick="event.stopPropagation();window.open(\'/workspace/' + t.id + '\', \'_blank\')">查看项目</button>';
-    } else if (hasCommands && !isSelf && !isCli) {
-      if (isNoPortCli) {
-        actionHtml = '<button class="btn go" onclick="event.stopPropagation();startTool(\'' + t.id + '\')">终端</button>';
-      } else if (t.running) {
-        actionHtml = '<button class="btn stop" onclick="event.stopPropagation();stopTool(\'' + t.id + '\')">停止</button>';
-      } else {
-        actionHtml = '<button class="btn go" onclick="event.stopPropagation();startTool(\'' + t.id + '\')">启动</button>';
-      }
-    }
-
-    var toolForm = getToolForm(t);
-    var toolOwner = getToolOwner(t);
-    var formBadge = '<span class="form-badge badge-' + toolForm + '">' + toolForm + '</span>';
-    var runtimeBadge = getRuntimeBadge(t);
-    var ownerBadge = toolOwner === '自建' ? '' : '<span class="owner-badge">' + toolOwner + '</span>';
-
-    var isOpened = opened[t.id];
-    var openLabel = isOpened ? '打开中' : '打开';
-    var openClass = isOpened ? 'btn open-done' : 'btn';
-    var openBtn = (t.url && (t.running || v)) ? '<a href="' + t.url + '" target="_blank" class="' + openClass + '" onclick="event.preventDefault();event.stopPropagation();verifyAndOpen(event.target,\'' + t.id + '\',\'' + t.url + '\')">' + openLabel + '</a>' : '';
-    var publicBtn = t.publicUrl ? '<a href="' + t.publicUrl + '" target="_blank" class="btn public" onclick="event.stopPropagation()" title="公开站: ' + t.publicUrl + '">公开站</a>' : '';
-
-    var extraClass = v ? ' virtual' : ''; if (isSelf) extraClass += ' self'; if (isCli) extraClass += ' cmd-card'; if (cmdType === 'folder') extraClass += ' folder-card'; if (t.disabled) extraClass += ' disabled';
-	return '<div class="tool-card' + extraClass + '" data-id="' + t.id + '" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)"' + (cmdType === 'folder' ? ' onclick="window.open(\'/workspace/' + t.id + '\', \'_blank\')" style="cursor:pointer"' : '') + '>'
-      + '<span class="card-dot ' + klass + '"></span>'
-      + '<div class="card-drag-handle" title="拖拽排序" draggable="true" ondragstart="handleDragStart(event)" ondragend="handleDragEnd(event)"></div>'
-      + '<div class="card-body">'
-        + '<div class="card-mono">' + monogram(t.name) + '</div>'
-        + '<div class="card-info">'
-          + '<div class="card-name">' + (t.icon||'') + ' ' + t.name + (t.autoStart ? '<span class="auto-badge" title="基础设施组，Supervisor 自动启停">常驻</span>' : '') + '</div>'
-          + '<div class="card-id">' + t.id + '</div>'
-          + (isCli && t.trigger ? '<div class="card-meta"><span class="card-trigger">/' + t.trigger + '</span></div>' : (portsText ? '<div class="card-meta">' + portsText + '</div>' : (cmdType === 'folder' ? '<div class="card-meta">文件夹</div>' : '')))
-          + (t.description ? '<div class="card-desc" title="' + t.description.replace(/"/g,'&quot;') + '">' + t.description + '</div>' : '')
-        + '</div>'
-      + '</div>'
-      + '<div class="card-actions">' + (isCli ? '<span class="cmd-hint">在 Claude Code 中输入</span>' : (openBtn||'') + (actionHtml||'') + (publicBtn||'')) + '<span class="card-badges">' + runtimeBadge + formBadge + ownerBadge + '</span>' + '<label class="toggle-disable" onclick="event.stopPropagation();toggleDisabled(\'' + t.id + '\')"><input type="checkbox"' + (t.disabled ? '' : ' checked') + '><span class="toggle-track' + (t.disabled ? '' : ' on') + '"></span><span class="toggle-label' + (t.disabled ? '' : ' on') + '">' + (t.disabled ? '停用' : '启用') + '</span></label></div>'
-    + '</div>';
-  }).join('');
-}
-
-function getCronChildStatus(childName) {
-  if (!cronState || !cronState.jobs) return null;
-  var job = cronState.jobs.find(function(j) { return j.name.indexOf(childName) !== -1; });
-  if (!job) return null;
-  var ts = cronState.state && cronState.state.tasks ? cronState.state.tasks[job.id] : null;
-  if (!ts || !ts.lastStatus) return { cls: 'idle', label: 'idle' };
-  switch (ts.lastStatus) {
-    case 'success': return { cls: 'success', label: '成功' };
-    case 'error': return { cls: 'error', label: '失败(' + (ts.consecutiveErrors || 0) + '次)' };
-    case 'fatal_error': return { cls: 'fatal_error', label: '今日已停止' };
-    case 'output_missing': return { cls: 'output_missing', label: '产出缺失' };
-    default: return { cls: 'unknown', label: ts.lastStatus };
-  }
-}
-
-function markOpened(id) {
-  opened[id] = true;
-  try { sessionStorage.setItem('opened', JSON.stringify(opened)); } catch(_) {}
-  updateCounts();
-}
-
-// Pre-flight HTTP check before opening service panel
-async function verifyAndOpen(btn, id, url) {
-  var origText = btn.textContent;
-  btn.textContent = '探测中…';
-  btn.style.opacity = '0.6';
-  btn.style.pointerEvents = 'none';
-  try {
-    var ctrl = new AbortController();
-    var t = setTimeout(function() { ctrl.abort(); }, 4000);
-    await fetch(url, { method: 'HEAD', mode: 'no-cors', signal: ctrl.signal });
-    clearTimeout(t);
-    // mode:no-cors gives opaque response — can't read status. Only network errors throw.
-    markOpened(id);
-    window.open(url, '_blank');
-  } catch (e) {
-    showToast(id + ' 无法访问 — 服务端口在监听但 HTTP 无响应，可能启动中或已崩溃');
-  }
-  btn.textContent = origText;
-  btn.style.opacity = '';
-  btn.style.pointerEvents = '';
-}
-
-function showToast(msg) {
-  var t = document.getElementById('toast');
-  if (!t) {
-    t = document.createElement('div');
-    t.id = 'toast';
-    t.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#c44e3e;color:#fff;padding:10px 24px;font-size:13px;z-index:9999;border-radius:6px;box-shadow:0 4px 16px rgba(0,0,0,.25);max-width:600px;text-align:center;transition:opacity .3s;pointer-events:none';
-    document.body.appendChild(t);
-  }
-  t.textContent = msg;
-  t.style.opacity = '1';
-  clearTimeout(t._timeout);
-  t._timeout = setTimeout(function() { t.style.opacity = '0'; }, 5000);
-}
-
-function pollUntil(id, wantRunning, maxTries) {
-  maxTries = maxTries || 30;
-  var tries = 0;
-  function check() {
-    fetch('/api/tools').then(function(r){ return r.json(); }).then(function(data){
-      if (!data.ok) return;
-      var t = data.tools.find(function(x){ return x.id === id; });
-      if (t && t.running === wantRunning) {
-        tools = data.tools;
-        if (wantRunning) delete starting[id]; else delete stopping[id];
-        updateCounts();
-        render();
-        return;
-      }
-      tries++;
-      if (tries >= maxTries) {
-        if (wantRunning) delete starting[id]; else delete stopping[id];
-        fetchTools();
-        return;
-      }
-      setTimeout(check, 500);
-    }).catch(function(){
-      tries++;
-      if (tries >= maxTries) {
-        if (wantRunning) delete starting[id]; else delete stopping[id];
-        fetchTools();
-        return;
-      }
-      setTimeout(check, 500);
-    });
-  }
-  setTimeout(check, 500);
-}
-
-async function startTool(id) {
-  starting[id] = true;
-  render();
-  try {
-    var res = await fetch('/api/tools/start/' + id, {method:'POST'});
-    var data = await res.json();
-    if (data.ok) {
-      pollUntil(id, true);
-    } else {
-      delete starting[id];
-      render();
-      alert('启动失败: ' + (data.error||'未知错误'));
-    }
-  } catch(e) {
-    delete starting[id];
-    render();
-    alert('连接失败');
-  }
-}
-
-async function stopTool(id) {
-  // 确认机制：第一次点变"确认停止？"，2秒内再点才执行
-  var stopBtn = document.querySelector('.tool-card[data-id="' + id + '"] .btn.stop');
-  if (stopBtn && !stopBtn.classList.contains('confirming')) {
-    stopBtn.textContent = '确认停止？';
-    stopBtn.classList.add('confirming');
-    setTimeout(function(){
-      if (stopBtn.classList.contains('confirming')) {
-        stopBtn.textContent = '停止';
-        stopBtn.classList.remove('confirming');
-      }
-    }, 2000);
-    return;
-  }
-  stopping[id] = true;
-  render();
-  try {
-    var res = await fetch('/api/tools/stop/' + id, {method:'POST'});
-    var data = await res.json();
-    if (data.ok) {
-      pollUntil(id, false);
-    } else {
-      delete stopping[id];
-      render();
-      alert('停止失败: ' + (data.error||'未知错误'));
-    }
-  } catch(e) {
-    delete stopping[id];
-    render();
-    alert('连接失败');
-  }
-}
-
-async function toggleDisabled(id) {
-	  var t = tools.find(function(x){return x.id===id;});
-	  if (!t) return;
-	  var newVal = !t.disabled;
-	  try {
-	    var res = await fetch('/api/tools/' + id, {method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify({disabled: newVal})});
-	    var data = await res.json();
-	    if (data.ok) { fetchTools(); }
-	  } catch(e) { console.error('toggleDisabled:', e); }
-	}
-
-	async function fetchResources() {
-  try {
-    var r = await fetch('http://127.0.0.1:3097/api/status');
-    var d = await r.json();
-    var res = d.resources || {};
-    var svcs = d.services || [];
-    var autoCount = svcs.filter(function(s){ return s.status === 'running'; }).length;
-    var autoNames = svcs.filter(function(s){ return s.status === 'running'; }).map(function(s){ return s.id; }).join(', ') || '无';
-    var memLevel = res.mem >= 95 ? 'r' : res.mem >= 85 ? 'y' : 'g';
-    var gpuMemPct = res.gpuMemTotal > 0 ? Math.round(res.gpuMemUsed / res.gpuMemTotal * 100) : 0;
-    var gpuLevel = gpuMemPct >= 90 ? 'r' : gpuMemPct >= 80 ? 'y' : 'g';
-    var html = '<span class="res-item"><span class="res-dot ' + memLevel + '"></span>内存 <span class="res-val' + (memLevel === 'r' ? ' redline' : memLevel === 'y' ? ' warn' : '') + '">' + res.mem + '%</span></span>' +
-      '<span class="res-sep">|</span>' +
-      '<span class="res-item">CPU <span class="res-val">' + (res.cpu||0) + '%</span></span>';
-    if (res.gpuMemTotal > 0) {
-      html += '<span class="res-sep">|</span>' +
-        '<span class="res-item"><span class="res-dot ' + gpuLevel + '"></span>GPU <span class="res-val' + (gpuLevel === 'r' ? ' redline' : gpuLevel === 'y' ? ' warn' : '') + '">' + (res.gpuUtil||0) + '%</span> <span style="font-size:10px;color:var(--text-muted)">' + (res.gpuMemUsed/1024).toFixed(1) + '/' + (res.gpuMemTotal/1024).toFixed(1) + 'GB</span></span>';
-    }
-    html += '<span class="res-sep">|</span>' +
-      '<span class="res-item">常驻 <span class="res-val" title="' + autoNames + '">' + autoCount + '</span></span>';
-    document.getElementById('resBar').innerHTML = html;
-  } catch(e) { document.getElementById('resBar').textContent = 'Supervisor 离线'; }
-}
-
-function updateCounts() {
-  document.getElementById('totalCount').textContent = tools.length;
-  document.getElementById('openableCount').textContent = tools.filter(function(t){return (t.running || isVirtual(t)) && !opened[t.id] && t.url;}).length;
-  document.getElementById('openedCount').textContent = tools.filter(function(t){return (t.running || isVirtual(t)) && opened[t.id] && t.url;}).length;
-  document.getElementById('stoppedCount').textContent = tools.filter(function(t){return t.running === false;}).length;
-  document.getElementById('publicCount').textContent = tools.filter(function(t){return t.publicUrl;}).length;
-}
-
-function saveCardOrder() {
-  var cards = document.querySelectorAll('.tool-card');
-  var ids = [];
-  cards.forEach(function(c){ ids.push(c.getAttribute('data-id')); });
-  var saved = [];
-  try { saved = JSON.parse(localStorage.getItem('agentboard-card-order') || '[]'); } catch(_) {}
-  if (!Array.isArray(saved)) saved = [];
-  var existing = {};
-  saved.forEach(function(id, idx){ existing[id] = idx; });
-  ids.forEach(function(id){ delete existing[id]; });
-  var remaining = Object.keys(existing).sort(function(a,b){ return existing[a] - existing[b]; });
-  var cardOrder = ids.concat(remaining);
-  try { localStorage.setItem('agentboard-card-order', JSON.stringify(cardOrder)); } catch(_) {}
-}
-
-var dragSrcId = null;
-
-function handleDragStart(e) {
-  var card = e.target.closest('.tool-card');
-  if (!card) return;
-  dragSrcId = card.getAttribute('data-id');
-  card.classList.add('dragging');
-  e.dataTransfer.effectAllowed = 'move';
-  e.dataTransfer.setData('text/plain', dragSrcId);
-}
-
-function handleDragOver(e) {
-  e.preventDefault();
-  e.dataTransfer.dropEffect = 'move';
-  var card = e.target.closest('.tool-card');
-  if (card && card.getAttribute('data-id') !== dragSrcId) {
-    card.classList.add('drag-over');
-  }
-}
-
-function handleDragLeave(e) {
-  var card = e.target.closest('.tool-card');
-  if (card) card.classList.remove('drag-over');
-}
-
-function handleDrop(e) {
-  e.preventDefault();
-  e.stopPropagation();
-  var target = e.target.closest('.tool-card');
-  if (!target) return;
-  var targetId = target.getAttribute('data-id');
-  if (targetId === dragSrcId) return;
-  var grid = document.getElementById('toolGrid');
-  var cards = grid.querySelectorAll('.tool-card');
-  var srcIdx = -1, tgtIdx = -1, srcCard = null;
-  cards.forEach(function(c, i){
-    if (c.getAttribute('data-id') === dragSrcId) { srcIdx = i; srcCard = c; }
-    if (c.getAttribute('data-id') === targetId) tgtIdx = i;
-  });
-  if (!srcCard) return;
-  if (srcIdx < tgtIdx) {
-    target.parentNode.insertBefore(srcCard, target.nextSibling);
-  } else {
-    target.parentNode.insertBefore(srcCard, target);
-  }
-  saveCardOrder();
-  target.classList.remove('drag-over');
-}
-
-function handleDragEnd(e) {
-  var card = e.target.closest('.tool-card');
-  if (card) card.classList.remove('dragging');
-  document.querySelectorAll('.tool-card.drag-over').forEach(function(c){ c.classList.remove('drag-over'); });
-  dragSrcId = null;
-}
-
-document.addEventListener('DOMContentLoaded', function() {
-  try { var co = JSON.parse(localStorage.getItem('agentboard-card-order') || '[]'); if (!Array.isArray(co)) localStorage.removeItem('agentboard-card-order'); } catch(_) { localStorage.removeItem('agentboard-card-order'); }
-  markOpened('dashboard');
-  fetchTools();
-  fetchStats();
-  fetchCronState();
-  fetchResources();
-  setInterval(fetchStats, 30000);
-  setInterval(fetchResources, 15000);
-});
-</script>
+<script src="/_script.js"></script>
 </body>
 </html>
