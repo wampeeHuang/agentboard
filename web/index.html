@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>工具架 · Agentboard</title>
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='4' fill='%2374A63F'/%3E%3Ctext x='16' y='22' text-anchor='middle' font-family='Inter,sans-serif' font-size='16' font-weight='600' fill='white'%3E工%3C/text%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='5' fill='%2374A63F'/%3E%3Crect x='4' y='4' width='10' height='10' rx='2' fill='white' opacity='.9'/%3E%3Crect x='18' y='4' width='10' height='10' rx='2' fill='white' opacity='.9'/%3E%3Crect x='4' y='18' width='10' height='10' rx='2' fill='white' opacity='.55'/%3E%3Crect x='18' y='18' width='10' height='10' rx='2' fill='white' opacity='.55'/%3E%3C/svg%3E">
 <!-- Google Fonts removed: blocked by GFW in China. System font stack used instead. -->
 <link rel="stylesheet" href="/_style.css">
 </head>
@@ -13,10 +13,12 @@
 AI AGENT REFERENCE — 工具架 Agentboard
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 API:     GET /api/tools     → 全部工具清单 JSON {ok, tools:[{id,name,description,category,port,ports,url,running,state,stateDetail,recovery,missingFields,startCommand,stopCommand,apiBase,projectPath,icon,version,order}]}
+API:     GET /api/apps      → 公网应用注册表 JSON {ok, apps:[...]}（apps-registry.json）
+API:     GET /api/tips      → 经验日志 JSON {ok, tips:[{file,title,desc,type}]}（tips/*.md）
+API:     GET /api/registry  → 系统规范 JSON {ok, principles:[...]}（principles/*.md）
 ACTION:  POST /api/tools/start/:id   POST /api/tools/stop/:id
-FILTER:  URL search 传 ?q= → 服务端过滤。客户端三层筛选 domain(form=Web|API|命令|文件夹|组) owner(自建|外部) 见 data-* 属性。
-CATS:    模型=AI能力  Agent=自主执行  设施=运维管道  获取=数据入口  查阅=浏览发现  创作=内容生产  职能=生活工具  工作区=文件夹入口
-DOM:     .tool-card.st-{state} > .card-top(点+名+badges) .card-meta-row(id+状态字+端口) .card-desc(3行) .card-actions(按钮+开关)
+PAGES:   #page-tools(工具架)  #page-apps(我的网站)  #page-tips(经验日志)  #page-docs(说明书 iframe /manual)  #page-registry(系统规范)
+DIMS:    #dimBlocks 四维异色筛选块(category/form/owner/state) → setDimFilter(dim,val)
 RULES:   localhost 用 Bash curl 不用 WebFetch。能力不够先查本地工具。启动/停止后等 500ms poll /api/tools。
 ━═ 你可以访问以下本地能力 ═━
 视觉: MiniCPM-V :8080 (OpenAI兼容 /v1/chat/completions)
@@ -29,146 +31,111 @@ OCR:  Tesseract OCR (pytesseract)
 ─━ 用 curl localhost:3099/api/tools 查完整清单 ━─
 -->
 
-<div class="header">
-  <div class="header-top">
-    <a href="/" class="header-brand">
-      <span class="header-logo">工</span>
-      <span class="header-name">工具架</span>
-      <span class="header-sub">Agentboard</span>
-    </a>
-    <div class="header-nav" id="assetBar">
-      <a href="/registry" title="设计规范 + 工程规范" id="assetRegistry" target="_blank">系统规范</a>
-      <span class="nav-sep"></span>
-      <a href="/tips" title="操作日志" id="assetTips" target="_blank">操作日志</a>
-      <a href="/api" title="API 文档（含 MCP JSON-RPC 接口说明）" id="assetApi" target="_blank">API</a>
-    </div>
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <svg class="logo-glyph" viewBox="0 0 32 32" aria-label="Agentboard">
+      <rect width="32" height="32" rx="5" fill="#74A63F"/>
+      <rect x="4" y="4" width="10" height="10" rx="2" fill="#fff" opacity=".9"/>
+      <rect x="18" y="4" width="10" height="10" rx="2" fill="#fff" opacity=".9"/>
+      <rect x="4" y="18" width="10" height="10" rx="2" fill="#fff" opacity=".55"/>
+      <rect x="18" y="18" width="10" height="10" rx="2" fill="#fff" opacity=".55"/>
+    </svg>
+    <div class="logo-name">Agentboard</div>
   </div>
-  <div class="header-philo">一个文件一个工具 · 人点按钮，Agent 调接口 · 同一份真相，两个平面</div>
-</div>
+  <nav class="nav" id="nav">
+    <div class="nav-item active" data-page="tools" onclick="showPage('tools')"><span class="ico"><svg viewBox="0 0 20 20" aria-hidden="true"><rect width="20" height="20" rx="3" fill="#74A63F"/><rect x="3.5" y="3.5" width="6" height="6" rx="1.4" fill="#fff" opacity=".9"/><rect x="10.5" y="3.5" width="6" height="6" rx="1.4" fill="#fff" opacity=".9"/><rect x="3.5" y="10.5" width="6" height="6" rx="1.4" fill="#fff" opacity=".55"/><rect x="10.5" y="10.5" width="6" height="6" rx="1.4" fill="#fff" opacity=".55"/></svg></span><span class="nav-label">工具架</span><span class="cnt" id="navToolsCnt">—</span></div>
+    <div class="nav-item" data-page="apps" onclick="showPage('apps')"><span class="ico"><svg viewBox="0 0 20 20" aria-hidden="true"><rect width="20" height="20" rx="3" fill="#74A63F"/><circle cx="10" cy="10" r="5" fill="none" stroke="#fff" stroke-width="1.4"/><path d="M10 3.8 L12.4 6.2 M10 3.8 L7.6 6.2 M10 3.8 V10" fill="none" stroke="#fff" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="nav-label">我的网站</span><span class="cnt" id="navAppsCnt">—</span></div>
+    <div class="nav-item" data-page="tips" onclick="showPage('tips')"><span class="ico"><svg viewBox="0 0 20 20" aria-hidden="true"><rect width="20" height="20" rx="3" fill="#74A63F"/><path d="M10 3.6 C7.5 3.6 6 5.4 6 7.5 C6 9.1 6.8 10 7.6 10.8 C8.2 11.4 8.5 11.8 8.6 12.6 H11.4 C11.5 11.8 11.8 11.4 12.4 10.8 C13.2 10 14 9.1 14 7.5 C14 5.4 12.5 3.6 10 3.6 Z" fill="#fff"/><path d="M8.8 14 H11.2" stroke="#fff" stroke-width="1.2" stroke-linecap="round"/><path d="M8.3 15.6 H11.7" stroke="#fff" stroke-width="1.2" stroke-linecap="round"/></svg></span><span class="nav-label">经验日志</span><span class="cnt" id="navTipsCnt">—</span></div>
+    <div class="nav-item" data-page="registry" onclick="showPage('registry')"><span class="ico"><svg viewBox="0 0 20 20" aria-hidden="true"><rect width="20" height="20" rx="3" fill="#74A63F"/><path d="M10 3.6 V9.6" stroke="#fff" stroke-width="1.6" stroke-linecap="round"/><path d="M6.4 5.8 a5.2 5.2 0 1 0 7.2 0" fill="none" stroke="#fff" stroke-width="1.4" stroke-linecap="round"/></svg></span><span class="nav-label">系统规范</span><span class="cnt" id="navRegCnt">—</span></div>
+    <div class="nav-item" data-page="docs" onclick="showPage('docs')"><span class="ico"><svg viewBox="0 0 20 20" aria-hidden="true"><rect width="20" height="20" rx="3" fill="#74A63F"/><path d="M10 5 C8.6 4.2 6.6 4 4.2 4.3 V14.6 C6.6 14.3 8.6 14.5 10 15.3 C11.4 14.5 13.4 14.3 15.8 14.6 V4.3 C13.4 4 11.4 4.2 10 5 Z" fill="none" stroke="#fff" stroke-width="1.4" stroke-linejoin="round"/><path d="M10 5 V15.3" stroke="#fff" stroke-width="1.4"/></svg></span><span class="nav-label">说明书</span></div>
+  </nav>
+  <div class="sidebar-foot"><span class="foot-txt">双平面 一份真相</span></div>
+</aside>
 
-<div class="toolbar">
-  <div class="stats-row" id="statsRow">
-    <div class="stat-card active" data-filter="all" onclick="setFilter('all')">
-      <span class="stat-num" id="totalCount">—</span>
-      <span class="stat-label">全部</span>
-    </div>
-    <span class="stat-sep">·</span>
-    <div class="stat-card" data-filter="opened" onclick="setFilter('opened')">
-      <span class="stat-num" id="openedCount">—</span>
-      <span class="stat-label">打开中</span>
-    </div>
-    <span class="stat-sep">·</span>
-    <div class="stat-card" data-filter="openable" onclick="setFilter('openable')">
-      <span class="stat-num" id="openableCount">—</span>
-      <span class="stat-label">可打开</span>
-    </div>
-    <span class="stat-sep">·</span>
-    <div class="stat-card" data-filter="stopped" onclick="setFilter('stopped')">
-      <span class="stat-num" id="stoppedCount">—</span>
-      <span class="stat-label">未启动</span>
-    </div>
-    <span class="stat-sep">|</span>
-    <div class="stat-card" data-filter="public" onclick="setPublicStatFilter()" id="publicStat">
-      <span class="stat-num" id="publicCount">—</span>
-      <span class="stat-label">公开站</span>
-    </div>
-  </div>
-  <input class="search-input" placeholder="搜索…" oninput="render()" id="searchInput">
-  <button class="btn-new-tool" onclick="openToolForm(null,'new')" title="新建工具：表单生成 manifest.json，不走手写 JSON">＋ 新增工具</button>
-  <button class="btn-refresh" onclick="fetchTools()" id="refreshBtn">刷新</button>
-</div>
+<main class="main">
 
-<div class="res-bar" id="resBar">加载资源数据…</div>
+  <!-- ── 工具架 ── -->
+  <section class="page show" id="page-tools">
+    <div class="hero-bar">
+      <div class="hero-eyebrow">TOOLS</div>
+      <div class="hero-title">工具架</div>
+      <div class="hero-sub">本机工具架 一份真相，两个平面</div>
+    </div>
+    <div class="search-bar">
+      <button class="btn-add" onclick="openToolForm(null,'new')">+ 新增工具</button>
+      <div class="search-box">
+        <input id="searchInput" placeholder="输入工具名、功能或描述搜索…" oninput="render()">
+        <svg class="search-ico" viewBox="0 0 20 20" aria-hidden="true"><circle cx="9" cy="9" r="6.5" fill="none" stroke="currentColor" stroke-width="2"/><line x1="14.2" y1="14.2" x2="18" y2="18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      </div>
+    </div>
+    <div class="dim-blocks" id="dimBlocks"></div>
+    <div class="tool-grid" id="toolGrid"></div>
+  </section>
 
-<div class="filter-bar">
-  <div class="filter-row">
-    <span class="filter-dim">领域</span><span class="dim-count" id="domainCount">—</span><span class="dim-ok" id="domainOk">✓</span>
-    <button class="filter-pill" data-domain="模型" onclick="setDomainFilter('模型')" title="本地+云端 AI 模型能力：视觉/语音/LLM API — 模型的调用入口">模型<span class="pill-cnt">0</span></button>
-    <button class="filter-pill" data-domain="Agent" onclick="setDomainFilter('Agent')" title="自主 AI Agent：Claude Code/Hermes/Codex CLI/RAG — 能独立执行任务的智能体">Agent<span class="pill-cnt">0</span></button>
-    <button class="filter-pill" data-domain="设施" onclick="setDomainFilter('设施')" title="透明基础设施：网关/代理/定时任务/巡检 — 管道自己跑，日常不碰">设施<span class="pill-cnt">0</span></button>
-    <button class="filter-pill" data-domain="获取" onclick="setDomainFilter('获取')" title="数据采集：网页抓取/社媒下载/OCR/云盘 — 从外部获取信息">获取<span class="pill-cnt">0</span></button>
-    <button class="filter-pill" data-domain="查阅" onclick="setDomainFilter('查阅')" title="浏览发现：画廊/技能目录/架构图/人物名录 — 浏览和发现，不跑模型">查阅<span class="pill-cnt">0</span></button>
-    <button class="filter-pill" data-domain="创作" onclick="setDomainFilter('创作')" title="AIGC内容生产：图像/音乐/语音/视频/排版 — AI 驱动的数字内容创作">创作<span class="pill-cnt">0</span></button>
-    <button class="filter-pill" data-domain="职能" onclick="setDomainFilter('职能')" title="生活+效率：税务/社保/保障房/购物/截图 — 个人事务工具">职能<span class="pill-cnt">0</span></button>
-  </div>
-  <div class="filter-row">
-    <span class="filter-dim">形态</span><span class="dim-count" id="formCount">—</span><span class="dim-ok" id="formOk">✓</span>
-    <button class="filter-pill" data-form="Web" onclick="setFormFilter('Web')" title="本地运行的服务，有端口号，需手动启动/停止">Web<span class="pill-cnt">0</span></button>
-    <button class="filter-pill" data-form="API" onclick="setFormFilter('API')" title="远程API调用，通过 apiBase 配置连接，无需本地运行">API<span class="pill-cnt">0</span></button>
-    <button class="filter-pill" data-form="命令" onclick="setFormFilter('命令')" title="命令行工具，有启动命令但无端口，在终端中使用">命令<span class="pill-cnt">0</span></button>
-    <button class="filter-pill" data-form="文件夹" onclick="setFormFilter('文件夹')" title="文件夹入口，指向一个项目/工作区目录">文件夹<span class="pill-cnt">0</span></button>
-    <button class="filter-pill" data-form="组" onclick="setFormFilter('组')" title="命令组，聚合多个子工具（如 cron 任务组）">组<span class="pill-cnt">0</span></button>
-  </div>
-  <div class="filter-row">
-    <span class="filter-dim">归属</span><span class="dim-count" id="ownerCount">—</span><span class="dim-ok" id="ownerOk">✓</span>
-    <button class="filter-pill" data-owner="自建" onclick="setOwnerFilter('自建')" title="自己部署和运维的工具，有启动/停止命令">自建工具<span class="pill-cnt">0</span></button>
-    <button class="filter-pill" data-owner="外部" onclick="setOwnerFilter('外部')" title="第三方服务或平台，无需自己运维">外部<span class="pill-cnt">0</span></button>
-    <button class="filter-pill" data-owner="AI托管" onclick="setOwnerFilter('AI托管')" title="AI 全权管理的工具，用户不碰 GUI，Agent 自行运维">AI托管<span class="pill-cnt">0</span></button>
-  </div>
-  <div class="filter-row">
-    <span class="filter-dim">部署</span>
-    <button class="filter-pill" data-public="true" onclick="setPublicFilter(true)">公开站<span class="pill-cnt">0</span></button>
-  </div>
-  <div class="filter-row">
-    <span class="filter-dim">状态</span>
-    <button class="filter-pill" data-disabled="true" onclick="setDisabledFilter()">已停用<span class="pill-cnt" id="disabledCount">0</span></button>
-  </div>
-</div>
+  <!-- ── 我的网站 ── -->
+  <section class="page" id="page-apps">
+    <div class="hero-bar">
+      <div class="hero-eyebrow">APPS</div>
+      <div class="hero-title">我的网站</div>
+      <div class="hero-sub">已部署的公网网站 点开直达</div>
+    </div>
+    <div class="apps-bar">
+      <button class="btn-add" onclick="toast('壳阶段：应用编辑下阶段接入')">+ 添加网站</button>
+    </div>
+    <div class="tool-grid" id="appGrid"></div>
+  </section>
+
+  <!-- ── 经验日志 ── -->
+  <section class="page" id="page-tips">
+    <div class="hero-bar">
+      <div class="hero-eyebrow">TIPS</div>
+      <div class="hero-title">经验日志</div>
+      <div class="hero-sub">踩坑沉淀 同一坑不踩第二次</div>
+    </div>
+    <div class="search-bar">
+      <button class="btn-add" onclick="toast('壳阶段：日志编辑下阶段接入')">+ 新增日志</button>
+      <div class="search-box">
+        <input id="tipSearch" placeholder="搜索标题或描述…" oninput="renderTips()">
+        <svg class="search-ico" viewBox="0 0 20 20" aria-hidden="true"><circle cx="9" cy="9" r="6.5" fill="none" stroke="currentColor" stroke-width="2"/><line x1="14.2" y1="14.2" x2="18" y2="18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      </div>
+    </div>
+    <div class="dim-blocks tip-dims" id="tipDimBlocks"></div>
+    <div class="tool-grid" id="tipGrid"></div>
+  </section>
+
+  <!-- ── 说明书（嵌入独立文档，自带 hero，不加外层 hero-bar） ── -->
+  <section class="page" id="page-docs">
+    <div class="docs-shell">
+      <iframe class="doc-frame" src="/manual"></iframe>
+    </div>
+  </section>
+
+  <!-- ── 系统规范 ── -->
+  <section class="page" id="page-registry">
+    <div class="hero-bar">
+      <div class="hero-eyebrow">REPO</div>
+      <div class="hero-title">系统规范</div>
+      <div class="hero-sub">本机的设计原则与工程边界</div>
+    </div>
+    <div class="dim-blocks" id="regDimBlocks"></div>
+    <div class="doc-view std-body" id="regView"></div>
+  </section>
+
+</main>
 
 <!--STATS_SNAPSHOT-->
-<div id="errBox" style="display:none;background:#fff0f0;color:#c00;padding:8px 32px;font-size:12px;font-family:monospace;border-bottom:1px solid #fcc;max-width:1080px;margin:0 auto;word-break:break-all"></div>
+<div id="errBox" style="display:none;background:#fff0f0;color:#c00;padding:6px 20px;font-size:12px;font-family:monospace;border-bottom:1px solid #fcc;max-width:1100px;margin:0 auto;word-break:break-all"></div>
 
-<div class="content">
-  <div class="tool-grid" id="toolGrid"></div>
+<div class="grid-overlay" id="gridOverlay"></div>
+<div class="grid-ctl">
+  <span class="gl">网格</span>
+  <button class="g-toggle active" onclick="setGridOn(!gridOn)"><span class="g-toggle-txt">开</span></button>
+  <span class="g-sep">·</span>
+  <button class="g-layer active" data-v="8" onclick="toggleLayer(8)">8</button>
+  <button class="g-layer active" data-v="32" onclick="toggleLayer(32)">32</button>
+  <button class="g-layer active" data-v="128" onclick="toggleLayer(128)">128</button>
 </div>
-
-<a href="/principles" style="text-decoration:none;color:inherit"><div class="section-label">设计原则 →</div></a>
-<div class="principles-bar">
-  <div class="principles-grid">
-    <div class="principle">
-      <div class="principle-num">01</div>
-      <div class="principle-head">想看状态？打开就有</div>
-      <div class="principle-body">绿色 = 运行中，灰色 = 未启动。"打开中"说明正在用，"打开"说明可点开用。</div>
-    </div>
-    <div class="principle">
-      <div class="principle-num">02</div>
-      <div class="principle-head">想控制？点按钮或走 MCP</div>
-      <div class="principle-body">人点按钮，Agent 走 MCP JSON-RPC 协议。同一套工具，两个平面，共享 manifest 真相源。</div>
-    </div>
-    <div class="principle">
-      <div class="principle-num">03</div>
-      <div class="principle-head">想加工具？告诉 Agent</div>
-      <div class="principle-body">Agent 写入注册文件，工具架自动扫描发现。不需要人碰配置，刷新即出现。</div>
-    </div>
-    <div class="principle">
-      <div class="principle-num">04</div>
-      <div class="principle-head">文件即注册，无数据库</div>
-      <div class="principle-body">一个 manifest.json 就是一个工具。没有中心配置，没有 YAML 编排文件。删掉文件夹即下架。</div>
-    </div>
-  </div>
-</div>
-
-<div class="call-stats-bar" id="callStatsBar">
-  <span class="call-stats-label">操作日志</span>
-  <span>今日 <b id="callToday">—</b></span>
-  <span class="call-stats-sep">·</span>
-  <span class="call-stats-group">
-    <span><span class="call-stats-dot agent"></span>Agent <b id="callAgent">—</b></span>
-    <span><span class="call-stats-dot browser"></span>浏览器 <b id="callBrowser">—</b></span>
-  </span>
-  <span class="call-stats-sep">·</span>
-  <span class="call-stats-group">
-    <span><span class="call-stats-dot list"></span>列表 <b id="callList">—</b></span>
-    <span><span class="call-stats-dot control"></span>管控 <b id="callControl">—</b></span>
-  </span>
-</div>
-
-<div class="footer">
-  <div class="footer-bottom">
-    <span>工具架 · Agentboard</span>
-    <span>文件即注册，状态即界面</span>
-  </div>
-</div>
+<div class="toast" id="toast"></div>
 
 <!-- S5 工具表单弹窗 v3（新建/编辑/补全/迁移/修复/注册 一套；双栏：表单 + 实时 manifest 预览） -->
 <div class="modal-overlay" id="toolFormModal" style="display:none">

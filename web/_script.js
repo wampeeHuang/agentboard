@@ -1,4 +1,3 @@
-
 // --- emergency: show runtime errors on page ---
 window.onerror = function(msg, src, line, col, err) {
   var e = document.getElementById('errBox');
@@ -14,26 +13,21 @@ var stopping = {}; // id → true when waiting for stop
 var opened = {};   // id → true when user clicked "打开" this session
 try { opened = JSON.parse(sessionStorage.getItem('opened')||'{}'); } catch(_) {}
 var cronState = null;
-var filter = 'all';
-var domainFilter = 'all';
-var formFilter = 'all';
-var ownerFilter = 'all';
-var publicFilter = false;
-	var disabledFilter = false;
+var domainFilter = 'all'; // 功能分类
+var locFilter = 'all';    // 运行位置
+var accFilter = 'all';    // 接入形态
+var stateFilter = 'all';  // 状态
+var appsData = null;
+var tipsData = null;
+var regData = null;
+var tipF = 'all';
+var regDoc = 'design';
 
-// 领域映射：category → 领域（用于筛选栏分组）
+// 领域映射：category → 领域（dim 块按此聚合）
 var domainMap = {
-  '模型': '模型',
-  '本地模型': '模型',
-  '远程模型': '模型',
-  'Agent': 'Agent',
-  '设施': '设施',
-  '获取': '获取',
-  '查阅': '查阅',
-  '创作': '创作',
-  '职能': '职能',
-  '工作区': '职能',
-  '公开站': '公开站'
+  '模型': '模型', '本地模型': '模型', '远程模型': '模型',
+  'Agent': 'Agent', '设施': '设施', '获取': '获取',
+  '查阅': '查阅', '创作': '创作', '职能': '职能', '工作区': '职能', '公开站': '公开站'
 };
 
 // 分类显示名 + 悬停解释。key 匹配 manifest.json 里的 category 字段
@@ -51,81 +45,82 @@ var catMeta = {
   '公开站':   {label:'公开站',   tip:'已部署到公网的项目站点：Vercel/EdgeOne/自有域名 — 对外可访问的线上成果'}
 };
 
-function setFilter(f) {
-  if (filter === f && f !== 'all') { filter = 'all'; }
-  else { filter = f; }
-  publicFilter = false; syncPublicUI();
-  document.querySelectorAll('.stat-card').forEach(function(c){ c.classList.remove('active'); });
-  var card = document.querySelector('.stat-card[data-filter="' + filter + '"]');
-  if (card) card.classList.add('active');
-  render();
+// ── 四维异色筛选块（词汇照原型，取值由真实 manifest 推导）──
+var DIMS = [
+  { key:'category', label:'功能分类', cls:'fn',     bg:'#74A63F', values:['模型','Agent','设施','获取','查阅','创作','职能'] },
+  { key:'loc',      label:'运行位置', cls:'loc',    bg:'#E5ECA1', values:['本地','远程'] },
+  { key:'acc',      label:'接入形态', cls:'acc',    bg:'#FFFFFF', values:['网页界面','命令行','API 调用','文件夹'] },
+  { key:'state',    label:'状态',     cls:'status', bg:'#EEF4EF', values:['运行中','已停止','已停用','仅接入'] }
+];
+
+// 是否有本地进程（命令/端口/项目路径）→ 本地/远程 判定
+function hasLocalProcess(t) {
+  return !!(t.startCommand || t.stopCommand || (t.ports && t.ports.length > 0) || t.port || t.projectPath);
+}
+function getToolLoc(t) {
+  return (t.apiBase && !hasLocalProcess(t)) ? '远程' : '本地';
+}
+// 纯远程 API（无本地进程）→ 仅接入
+function isApiOnly(t) {
+  return t.apiBase && !hasLocalProcess(t);
+}
+// 接入形态：真实 type/form → 原型词汇（网页界面/命令行/API调用/文件夹）
+function getToolAcc(t) {
+  if (t.type === 'cli' || t.type === 'command') return '命令行';
+  if (t.type === 'folder') return '文件夹';
+  var hasPorts = (t.ports && t.ports.length > 0) || t.port;
+  var hasCommands = t.startCommand || t.stopCommand;
+  if (hasPorts || t.type === 'group') return '网页界面';
+  if (t.apiBase && !hasCommands) return 'API 调用';
+  if (hasCommands) return '命令行';
+  return '网页界面';
 }
 
-function setDomainFilter(d) {
-  domainFilter = (domainFilter === d) ? 'all' : d;
-  document.querySelectorAll('.filter-pill[data-domain]').forEach(function(p){ p.classList.remove('active'); });
-  var pill = document.querySelector('.filter-pill[data-domain="' + domainFilter + '"]');
-  if (pill) pill.classList.add('active');
+function stateLabelOf(state, t) {
+  if (t && isApiOnly(t)) return '仅接入';
+  if (state === 'running' || state === 'starting') return '运行中';
+  if (state === 'disabled') return '已停用';
+  return '已停止'; // stopped / halting / broken / incomplete / orphan / stale_path / start_failed
+}
+function isDimActive(key, val) {
+  var cur = key === 'category' ? domainFilter : key === 'loc' ? locFilter : key === 'acc' ? accFilter : stateFilter;
+  return cur === val;
+}
+function dimCount(key, val) {
+  var n = 0;
+  tools.forEach(function(t){
+    if (key === 'category') { if ((domainMap[t.category||'其他']||'职能') === val) n++; }
+    else if (key === 'loc') { if (getToolLoc(t) === val) n++; }
+    else if (key === 'acc') { if (getToolAcc(t) === val) n++; }
+    else if (key === 'state') { if (stateLabelOf(classifyState(t), t) === val) n++; }
+  });
+  return n;
+}
+function buildDimBlocks() {
+  var grid = document.getElementById('dimBlocks'); if (!grid) return;
+  var html = '';
+  DIMS.forEach(function(d){
+    html += '<div class="dim-block dim-' + d.cls + '" style="--b:' + d.bg + '"><div class="dim-block-title">' + d.label + '<span class="dim-arr">></span></div><div class="dim-block-opts">';
+    d.values.forEach(function(v){
+      html += '<span class="dim-opt' + (isDimActive(d.key, v) ? ' active' : '') + '" onclick="setDimFilter(\'' + d.key + '\',\'' + v + '\')">' + v + '<span style="font-size:11px;opacity:.55;margin-left:5px;font-family:var(--font-code)">' + dimCount(d.key, v) + '</span></span>';
+    });
+    html += '</div></div>';
+  });
+  grid.innerHTML = html;
+}
+function setDimFilter(key, val) {
+  if (key === 'category') domainFilter = (domainFilter === val ? 'all' : val);
+  else if (key === 'loc') locFilter = (locFilter === val ? 'all' : val);
+  else if (key === 'acc') accFilter = (accFilter === val ? 'all' : val);
+  else stateFilter = (stateFilter === val ? 'all' : val);
+  buildDimBlocks();
   render();
 }
-
-function setFormFilter(f) {
-  formFilter = (formFilter === f) ? 'all' : f;
-  document.querySelectorAll('.filter-pill[data-form]').forEach(function(p){ p.classList.remove('active'); });
-  var pill = document.querySelector('.filter-pill[data-form="' + formFilter + '"]');
-  if (pill) pill.classList.add('active');
+function resetDims() {
+  domainFilter = 'all'; locFilter = 'all'; accFilter = 'all'; stateFilter = 'all';
+  var s = document.getElementById('searchInput'); if (s) s.value = '';
+  buildDimBlocks();
   render();
-}
-
-function setOwnerFilter(o) {
-  ownerFilter = (ownerFilter === o) ? 'all' : o;
-  document.querySelectorAll('.filter-pill[data-owner]').forEach(function(p){ p.classList.remove('active'); });
-  var pill = document.querySelector('.filter-pill[data-owner="' + ownerFilter + '"]');
-  if (pill) pill.classList.add('active');
-  render();
-}
-
-function setPublicFilter(v) {
-  publicFilter = !publicFilter;
-  syncPublicUI();
-  render();
-}
-
-function setDisabledFilter() {
-	  disabledFilter = !disabledFilter;
-	  document.querySelectorAll('.filter-pill[data-disabled]').forEach(function(p){ p.classList.remove('active'); });
-	  if (disabledFilter) {
-	    var pill = document.querySelector('.filter-pill[data-disabled]');
-	    if (pill) pill.classList.add('active');
-	    document.querySelectorAll('.stat-card').forEach(function(c){ c.classList.remove('active'); });
-	  } else {
-	    var allStat = document.querySelector('.stat-card[data-filter="all"]');
-	    if (allStat) allStat.classList.add('active');
-	  }
-	  render();
-	}
-
-	function setPublicStatFilter() {
-  publicFilter = !publicFilter;
-  syncPublicUI();
-  // 清除其他 stat card 的 active 状态
-  document.querySelectorAll('.stat-card').forEach(function(c){ c.classList.remove('active'); });
-  if (publicFilter) {
-    var stat = document.getElementById('publicStat');
-    if (stat) stat.classList.add('active');
-  } else {
-    var allStat = document.querySelector('.stat-card[data-filter="all"]');
-    if (allStat) allStat.classList.add('active');
-  }
-  render();
-}
-
-function syncPublicUI() {
-  document.querySelectorAll('.filter-pill[data-public]').forEach(function(p){ p.classList.remove('active'); });
-  if (publicFilter) {
-    var pill = document.querySelector('.filter-pill[data-public]');
-    if (pill) pill.classList.add('active');
-  }
 }
 
 function getSearchTerm() {
@@ -138,62 +133,19 @@ function isVirtual(t) {
   return !hasPorts && !t.startCommand && !t.stopCommand;
 }
 
-// 形态检测（v3 标签）：Web 本地服务 / 命令 CLI / API 远程 / 文件夹 / 组
-function getToolForm(t) {
-  if (t.type === 'cli' || t.type === 'command') return '命令';
-  if (t.type === 'folder') return '文件夹';
-  if (t.type === 'group') return '组';
-  var hasPorts = (t.ports && t.ports.length > 0) || t.port;
-  var hasCommands = t.startCommand || t.stopCommand;
-  var hasApi = t.apiBase;
-  if (hasPorts) return 'Web';
-  if (hasCommands && !hasPorts && !hasApi) return '命令';
-  if (hasApi) return 'API';
-  if (t.url && !hasPorts && !hasCommands) return 'Web';
-  return 'API';
-}
-
-// 归属检测：自建/外部
-function getToolOwner(t) {
-  if (t.owner) return t.owner;
-  if (t.startCommand || t.stopCommand) return '自建';
-  return '外部';
-}
-
-// Pre-populated by server; apply immediately if available
-(function() {
-  if (window.__stats) {
-    var s = window.__stats;
-    var set = function(id, v) { var el = document.getElementById(id); if (el) el.textContent = v; };
-    set('callToday', s.todayCalls);
-    set('callAgent', s.byCaller.agent);
-    set('callBrowser', s.byCaller.browser);
-    set('callList', s.byAction.list);
-    set('callControl', s.byAction.control);
-    if (s.assets) {
-      var setT = function(id, label, count) { var el = document.getElementById(id); if (el) el.title = label + ' · ' + count; };
-      setT('assetRegistry', '自启动 + 设计规范 + 工程规范', '1 页');
-      setT('assetTips', '操作日志', s.assets.tips + ' 条');
-      setT('assetApi', 'API 文档', s.assets.api + ' 个端点');
-
-    }
+function toast(m) { showToast(m); }
+function showToast(msg) {
+  var t = document.getElementById('toast');
+  if (!t) {
+    t = document.createElement('div');
+    t.id = 'toast';
+    t.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#3E571C;color:#fff;padding:10px 24px;font-size:13px;z-index:9999;border-radius:6px;box-shadow:0 4px 16px rgba(0,0,0,.25);max-width:600px;text-align:center;transition:opacity .3s;pointer-events:none';
+    document.body.appendChild(t);
   }
-})();
-
-async function fetchStats() {
-  try {
-    var res = await fetch('/api/stats');
-    var data = await res.json();
-    if (data.ok) {
-      document.getElementById('callToday').textContent = data.todayCalls;
-      document.getElementById('callAgent').textContent = (data.byCaller.today.agent || 0);
-      document.getElementById('callBrowser').textContent = (data.byCaller.today.browser || 0);
-      document.getElementById('callList').textContent = (data.byAction.today.list || 0);
-      document.getElementById('callControl').textContent = (data.byAction.today.control || 0);
-    }
-  } catch(e) {
-    console.error('fetchStats:', e);
-  }
+  t.textContent = msg;
+  t.style.opacity = '1';
+  clearTimeout(t._timeout);
+  t._timeout = setTimeout(function() { t.style.opacity = '0'; }, 5000);
 }
 
 var _cronBackoff = 0;
@@ -217,14 +169,11 @@ async function fetchCronState() {
 }
 
 async function fetchTools() {
-  var btn = document.getElementById('refreshBtn');
-  btn.classList.add('spin');
   try {
     var res = await fetch('/api/tools');
     var data = await res.json();
     if (data.ok) {
       tools = data.tools;
-      updatePillCounts();
       // 清除已生效的 starting / stopping 状态
       Object.keys(starting).forEach(function(id){
         var t = tools.find(function(x){return x.id===id;});
@@ -235,101 +184,38 @@ async function fetchTools() {
         if (t && t.running !== true) delete stopping[id];
       });
       updateCounts();
+      buildDimBlocks();
       render();
+    } else {
+      toast('工具清单加载失败：' + (data.error || '未知错误'));
     }
   } catch(e) {
-    document.getElementById('totalCount').textContent = '—';
-    document.getElementById('openableCount').textContent = '—';
-    document.getElementById('openedCount').textContent = '—';
-    document.getElementById('stoppedCount').textContent = '—';
+    var eb = document.getElementById('errBox');
+    if (eb) { eb.style.display='block'; eb.textContent += ' | fetchTools: ' + e.message; }
   }
-  btn.classList.remove('spin');
-  fetchStats();
-  fetchCronState();
 }
 
-function getFilterDesc() {
-  var parts = [];
-  if (domainFilter !== 'all') parts.push(domainFilter);
-  if (formFilter !== 'all') parts.push(formFilter);
-  if (ownerFilter !== 'all') parts.push(ownerFilter === '自建' ? '自建工具' : '外部');
-  if (publicFilter) parts.push('已部署公开站');
-  return parts.length ? parts.join(' · ') : '全部工具';
-}
-
-function resetAllFilters() {
-  filter = 'all'; domainFilter = 'all'; formFilter = 'all'; ownerFilter = 'all'; publicFilter = false;
-  document.getElementById('searchInput').value = '';
-  document.querySelectorAll('.stat-card').forEach(function(c){ c.classList.remove('active'); });
-  var allStat = document.querySelector('.stat-card[data-filter="all"]');
-  if (allStat) allStat.classList.add('active');
-  document.querySelectorAll('.filter-pill[data-domain],.filter-pill[data-form],.filter-pill[data-owner],.filter-pill[data-public]').forEach(function(p){ p.classList.remove('active'); });
-  render();
-}
-
-function updatePillCounts() {
-  var domainCounts = {};
-  var formCounts = {};
-  var ownerCounts = {};
-  tools.forEach(function(t) {
-    var c = domainMap[t.category||'其他'] || '职能'; domainCounts[c] = (domainCounts[c] || 0) + 1;
-    var f = getToolForm(t); formCounts[f] = (formCounts[f] || 0) + 1;
-    var o = getToolOwner(t); ownerCounts[o] = (ownerCounts[o] || 0) + 1;
-  });
-  ['模型','Agent','设施','获取','查阅','创作','职能'].forEach(function(c) {
-    var pill = document.querySelector('.filter-pill[data-domain="' + c + '"] .pill-cnt');
-    if (pill) pill.textContent = domainCounts[c] || 0;
-  });
-  ['本地','API','CLI','Web','命令'].forEach(function(f) {
-    var pill = document.querySelector('.filter-pill[data-form="' + f + '"] .pill-cnt');
-    if (pill) pill.textContent = formCounts[f] || 0;
-  });
-  ['自建','外部','AI托管'].forEach(function(o) {
-    var pill = document.querySelector('.filter-pill[data-owner="' + o + '"] .pill-cnt');
-    if (pill) pill.textContent = ownerCounts[o] || 0;
-  });
-  var publicCnt = tools.filter(function(t){ return t.publicUrl; }).length;
-  var publicPill = document.querySelector('.filter-pill[data-public] .pill-cnt');
-  if (publicPill) publicPill.textContent = publicCnt;
-
-  var disabledCnt = tools.filter(function(t){ return t.disabled; }).length;
-  var disabledPill = document.getElementById('disabledCount');
-  if (disabledPill) disabledPill.textContent = disabledCnt;
-
-  // 维度合计（标签后跟总数 + ✓/⚠）
-  var total = tools.length;
-  function setDimSum(countId, okId, sum) {
-    var elC = document.getElementById(countId);
-    var elO = document.getElementById(okId);
-    if (elC) elC.textContent = sum;
-    if (elO) {
-      if (sum === total) { elO.textContent = '✓'; elO.className = 'dim-ok'; }
-      else { elO.textContent = '⚠缺' + (total - sum); elO.className = 'dim-warn'; }
-    }
-  }
-  setDimSum('domainCount', 'domainOk', Object.values(domainCounts).reduce(function(a,b){return a+b;}, 0));
-  setDimSum('formCount', 'formOk', Object.values(formCounts).reduce(function(a,b){return a+b;}, 0));
-  setDimSum('ownerCount', 'ownerOk', Object.values(ownerCounts).reduce(function(a,b){return a+b;}, 0));
+function updateCounts() {
+  var el;
+  el = document.getElementById('navToolsCnt'); if (el) el.textContent = tools.length;
+  el = document.getElementById('navAppsCnt'); if (el && appsData) el.textContent = appsData.length;
+  el = document.getElementById('navTipsCnt'); if (el && tipsData) el.textContent = tipsData.length;
+  el = document.getElementById('navRegCnt'); if (el) el.textContent = 2;
 }
 
 function render() {
   var grid = document.getElementById('toolGrid');
   if (!tools.length) {
-    grid.innerHTML = '<div class="empty"><p>还没有工具</p><p>Agent 会在 <code>~/.agentboard/tools/</code> 下写入注册文件，自动上架。</p></div>';
-    document.getElementById('filterCount').innerHTML = '';
+    grid.innerHTML = '<div class="empty">还没有工具 —— Agent 会在 <code>~/.agentboard/tools/</code> 下写入注册文件，自动上架。</div>';
     return;
   }
 
   // Filter
   var sorted = tools.slice();
-  if (filter === 'openable') sorted = sorted.filter(function(t){return (t.running || isVirtual(t)) && !opened[t.id] && t.url;});
-  if (filter === 'opened') sorted = sorted.filter(function(t){return (t.running || isVirtual(t)) && opened[t.id] && t.url;});
-  if (filter === 'stopped') sorted = sorted.filter(function(t){return t.running === false;});
   if (domainFilter !== 'all') sorted = sorted.filter(function(t){return (domainMap[t.category||'其他']||'职能') === domainFilter;});
-  if (formFilter !== 'all') sorted = sorted.filter(function(t){return getToolForm(t) === formFilter;});
-  if (ownerFilter !== 'all') sorted = sorted.filter(function(t){return getToolOwner(t) === ownerFilter;});
-  if (publicFilter) sorted = sorted.filter(function(t){return t.publicUrl;});
-	  if (disabledFilter) sorted = sorted.filter(function(t){return t.disabled;});
+  if (locFilter !== 'all') sorted = sorted.filter(function(t){return getToolLoc(t) === locFilter;});
+  if (accFilter !== 'all') sorted = sorted.filter(function(t){return getToolAcc(t) === accFilter;});
+  if (stateFilter !== 'all') sorted = sorted.filter(function(t){return stateLabelOf(classifyState(t), t) === stateFilter;});
   var search = getSearchTerm();
   if (search) {
     sorted = sorted.filter(function(t){
@@ -359,27 +245,15 @@ function render() {
     return (a.order||99) - (b.order||99);
   });
 
-  // Update filter count
-  var countEl = document.getElementById('filterCount');
-  if (countEl) {
-    var desc = getFilterDesc();
-    var isFiltered = domainFilter !== 'all' || formFilter !== 'all' || ownerFilter !== 'all' || search;
-    if (isFiltered) {
-      countEl.innerHTML = desc + ' — <strong>' + sorted.length + '</strong> / ' + tools.length + ' 个工具';
-    } else {
-      countEl.innerHTML = desc + ' — <strong>' + sorted.length + '</strong> 个工具';
-    }
-  }
-
   if (!sorted.length) {
-    grid.innerHTML = '<div class="empty"><p style="font-size:28px;margin-bottom:4px">(╯°□°)╯</p><p>没有工具匹配当前筛选组合</p><p style="font-size:12px;margin-top:6px">' + getFilterDesc() + '</p><a class="reset-link" onclick="resetAllFilters()" title="清除所有领域/形态/归属/部署/状态筛选条件，恢复显示全部工具">← 重置全部筛选</a></div>';
+    grid.innerHTML = '<div class="empty"><p>没有工具匹配当前筛选组合</p><p style="font-size:12px;margin-top:8px"><a class="reset-link" onclick="resetDims()" title="清除所有筛选条件">← 重置全部筛选</a></p></div>';
     return;
   }
 
   grid.innerHTML = sorted.map(function(t){ return renderCard(t); }).join('');
 }
 
-// ── 卡片组件：固定 5 槽位 P0-P4（S4）──
+// ── 卡片组件：原型绿头通栏（分类/形态/归属 已剥离进 dim 块与编辑面板） ──
 // state 来自 scanTools 的 t.state，前端不再靠条件分支猜状态
 
 var STATE_META = {
@@ -408,19 +282,12 @@ function classifyState(t) {
 
 function renderCard(t) {
   var state = classifyState(t);
-  var v = isVirtual(t);
-  var isCli = t.type === 'cli' || t.type === 'command';
-  var isGroup = t.type === 'group';
-
-  var extraClass = '';
-  if (v) extraClass += ' virtual';
-  if (t.disabled && state !== 'disabled') extraClass += ' st-disabled';
-
+  var ico = t.icon || (t.name || t.id).trim().charAt(0);
+  var extraClass = (t.disabled && state !== 'disabled') ? ' st-disabled' : '';
   return '<div class="tool-card st-' + state + extraClass + '" data-id="' + t.id + '">'
-    + cardTopHtml(t, state)
-    + metaRowHtml(t, state, isCli, isGroup)
-    + descHtml(t)
-    + actionsHtml(t, state, isCli)
+    + '<div class="card-top"><span class="card-ico">' + escHtml(ico) + '</span><div class="card-name">' + escHtml(t.name || t.id) + '</div></div>'
+    + metaRowHtml(t, state)
+    + actionsHtml(t, state)
     + '</div>';
 }
 
@@ -434,53 +301,26 @@ function statusDots(t) {
   }).join('');
 }
 
-function cardTopHtml(t, state) {
-  var abnormal = state === 'broken' || state === 'incomplete' || state === 'orphan';
-  var badges;
-  if (abnormal) {
-    badges = '<div class="card-badges"><span class="badge badge-cat" style="opacity:.4">—</span></div>';
-  } else {
-    var b = [];
-    if (t.category) b.push('<span class="badge badge-cat" title="' + escAttr(catMeta[t.category] ? catMeta[t.category].tip : '') + '">' + escHtml(t.category) + '</span>');
-    b.push('<span class="badge badge-form">' + escHtml(getToolForm(t)) + '</span>');
-    b.push('<span class="badge badge-owner">' + escHtml(getToolOwner(t)) + '</span>');
-    badges = '<div class="card-badges">' + b.join('') + '</div>';
-  }
-  return '<div class="card-top">'
-    + '<span class="tc-dot ' + state + '"></span>'
-    + '<div class="card-name">' + escHtml(t.name || t.id) + '</div>'
-    + badges + '</div>';
-}
-
-function metaRowHtml(t, state, isCli, isGroup) {
+function metaRowHtml(t, state) {
   var meta = STATE_META[state] || STATE_META.stopped;
-  var abnormal = state === 'broken' || state === 'incomplete' || state === 'orphan';
-  var statusWord = '<span class="status-word ' + state + '">' + escHtml(meta.label) + '</span>';
-  var tail = '';
-  if (!abnormal) {
-    if (isGroup) {
-      tail = statusDots(t);
-    } else if (isCli) {
-      tail = '<span class="card-port">CLI</span>';
-    } else {
-      var ports = t.ports || (t.port ? [t.port] : []);
-      if (ports.length) tail = '<span class="card-port">:' + ports.join(' :') + '</span>';
-    }
-  }
-  return '<div class="card-meta-row"><span class="card-id">' + escHtml(t.id) + '</span>' + statusWord + tail + '</div>';
+  var ports = t.ports || (t.port ? [t.port] : []);
+  var portHtml = ports.length ? escHtml(ports.join(' :')) : '—';
+  var isGroup = t.type === 'group';
+  var desc = t.description || '—';
+  return '<div class="card-meta-row">'
+    + '<span class="cf"><span class="cf-l">ID</span><span class="card-id">' + escHtml(t.id) + '</span></span>'
+    + '<span class="cf"><span class="cf-l">端口</span><span class="card-port">' + portHtml + '</span>' + (isGroup ? statusDots(t) : '') + '</span>'
+    + '<span class="cf"><span class="cf-l">状态</span><span class="st-dot ' + state + '"></span><span class="status-word ' + state + '">' + escHtml(meta.label) + '</span></span>'
+    + '<span class="cf"><span class="cf-l">功能</span><span class="card-desc' + (t.description ? '' : ' placeholder') + '" title="' + escAttr(t.description || '') + '">' + escHtml(desc) + '</span></span>'
+    + '</div>';
 }
 
-function descHtml(t) {
-  return t.description
-    ? '<div class="card-desc" title="' + escAttr(t.description) + '">' + escHtml(t.description) + '</div>'
-    : '<div class="card-desc placeholder">—</div>';
-}
-
-function actionsHtml(t, state, isCli) {
+function actionsHtml(t, state) {
   var v = isVirtual(t);
   var hasCommands = t.startCommand || t.stopCommand;
   var portCount = (t.ports && t.ports.length) || (t.port ? 1 : 0);
   var isNoPortCli = portCount === 0 && hasCommands;
+  var isCli = t.type === 'cli' || t.type === 'command';
   var isFolder = t.type === 'folder';
   var isSelf = t.id === 'dashboard';
   var btns = [];
@@ -522,9 +362,8 @@ function actionsHtml(t, state, isCli) {
   var publicBtn = t.publicUrl ? '<a href="' + escAttr(t.publicUrl) + '" target="_blank" class="btn public" onclick="event.stopPropagation()" title="公开站: ' + escAttr(t.publicUrl) + '">公开站</a>' : '';
   var toggle = '<label class="toggle-sm" onclick="event.stopPropagation();toggleDisabled(\'' + t.id + '\')"><input type="checkbox"' + (t.disabled ? '' : ' checked') + '><span class="toggle-track' + (t.disabled ? '' : ' on') + '"></span><span class="toggle-label' + (t.disabled ? '' : ' on') + '">' + (t.disabled ? '停用' : '启用') + '</span></label>';
 
-  return '<div class="card-actions">' + btns.join('') + publicBtn + '<span class="action-spacer"></span>' + toggle + '</div>';
+  return '<div class="card-actions">' + btns.join('') + publicBtn + '<span class="p4-spacer"></span>' + toggle + '</div>';
 }
-
 
 function getCronChildStatus(childName) {
   if (!cronState || !cronState.jobs) return null;
@@ -545,6 +384,7 @@ function markOpened(id) {
   opened[id] = true;
   try { sessionStorage.setItem('opened', JSON.stringify(opened)); } catch(_) {}
   updateCounts();
+  render();
 }
 
 // Pre-flight HTTP check before opening service panel
@@ -569,20 +409,6 @@ async function verifyAndOpen(btn, id, url) {
   btn.style.pointerEvents = '';
 }
 
-function showToast(msg) {
-  var t = document.getElementById('toast');
-  if (!t) {
-    t = document.createElement('div');
-    t.id = 'toast';
-    t.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#c44e3e;color:#fff;padding:10px 24px;font-size:13px;z-index:9999;border-radius:6px;box-shadow:0 4px 16px rgba(0,0,0,.25);max-width:600px;text-align:center;transition:opacity .3s;pointer-events:none';
-    document.body.appendChild(t);
-  }
-  t.textContent = msg;
-  t.style.opacity = '1';
-  clearTimeout(t._timeout);
-  t._timeout = setTimeout(function() { t.style.opacity = '0'; }, 5000);
-}
-
 function pollUntil(id, wantRunning, maxTries) {
   maxTries = maxTries || 30;
   var tries = 0;
@@ -594,6 +420,7 @@ function pollUntil(id, wantRunning, maxTries) {
         tools = data.tools;
         if (wantRunning) delete starting[id]; else delete stopping[id];
         updateCounts();
+        buildDimBlocks();
         render();
         return;
       }
@@ -671,57 +498,244 @@ async function stopTool(id) {
 }
 
 async function toggleDisabled(id) {
-	  var t = tools.find(function(x){return x.id===id;});
-	  if (!t) return;
-	  var newVal = !t.disabled;
-	  try {
-	    var res = await fetch('/api/tools/' + id, {method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify({disabled: newVal})});
-	    var data = await res.json();
-	    if (data.ok) { fetchTools(); }
-	  } catch(e) { console.error('toggleDisabled:', e); }
-	}
-
-	async function fetchResources() {
+  var t = tools.find(function(x){return x.id===id;});
+  if (!t) return;
+  var newVal = !t.disabled;
   try {
-    var r = await fetch('http://127.0.0.1:3097/api/status');
-    var d = await r.json();
-    var res = d.resources || {};
-    var svcs = d.services || [];
-    var autoCount = svcs.filter(function(s){ return s.status === 'running'; }).length;
-    var autoNames = svcs.filter(function(s){ return s.status === 'running'; }).map(function(s){ return s.id; }).join(', ') || '无';
-    var memLevel = res.mem >= 95 ? 'r' : res.mem >= 85 ? 'y' : 'g';
-    var gpuMemPct = res.gpuMemTotal > 0 ? Math.round(res.gpuMemUsed / res.gpuMemTotal * 100) : 0;
-    var gpuLevel = gpuMemPct >= 90 ? 'r' : gpuMemPct >= 80 ? 'y' : 'g';
-    var html = '<span class="res-item"><span class="res-dot ' + memLevel + '"></span>内存 <span class="res-val' + (memLevel === 'r' ? ' redline' : memLevel === 'y' ? ' warn' : '') + '">' + res.mem + '%</span></span>' +
-      '<span class="res-sep">|</span>' +
-      '<span class="res-item">CPU <span class="res-val">' + (res.cpu||0) + '%</span></span>';
-    if (res.gpuMemTotal > 0) {
-      html += '<span class="res-sep">|</span>' +
-        '<span class="res-item"><span class="res-dot ' + gpuLevel + '"></span>GPU <span class="res-val' + (gpuLevel === 'r' ? ' redline' : gpuLevel === 'y' ? ' warn' : '') + '">' + (res.gpuUtil||0) + '%</span> <span style="font-size:10px;color:var(--text-muted)">' + (res.gpuMemUsed/1024).toFixed(1) + '/' + (res.gpuMemTotal/1024).toFixed(1) + 'GB</span></span>';
+    var res = await fetch('/api/tools/' + id, {method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify({disabled: newVal})});
+    var data = await res.json();
+    if (data.ok) { fetchTools(); }
+  } catch(e) { console.error('toggleDisabled:', e); }
+}
+
+/* ── 我的网站 ── */
+async function renderApps() {
+  try {
+    var res = await fetch('/api/apps');
+    var data = await res.json();
+    if (data.ok) { appsData = data.apps || []; updateCounts(); paintApps(); }
+    else document.getElementById('appGrid').innerHTML = '<div class="empty">应用加载失败：' + escHtml(data.error || '') + '</div>';
+  } catch(e) {
+    document.getElementById('appGrid').innerHTML = '<div class="empty">应用加载失败</div>';
+  }
+}
+function paintApps() {
+  var grid = document.getElementById('appGrid'); if (!grid) return;
+  if (!appsData.length) { grid.innerHTML = '<div class="empty">还没有网站 —— 壳阶段只读展示。</div>'; return; }
+  grid.innerHTML = appsData.map(appCard).join('');
+}
+function appDomainOf(a) {
+  return (a.url || '').replace(/^https?:\/\//, '').replace(/\/$/, '');
+}
+function appCard(a) {
+  var ico = a.name ? a.name.trim().charAt(0) : '站';
+  var desc = a.description || '—';
+  return '<div class="tool-card">'
+    + '<div class="card-top"><span class="card-ico">' + escHtml(ico) + '</span><div class="card-name">' + escHtml(a.name) + '</div></div>'
+    + '<div class="card-meta-row">'
+    + '<span class="cf"><span class="cf-l">域名</span><a class="card-domain" href="' + escAttr(a.url || '#') + '" target="_blank" title="' + escAttr(a.url || '') + '">' + escHtml(appDomainOf(a)) + ' ↗</a></span>'
+    + '<span class="cf"><span class="cf-l">托管</span><span class="card-val">' + escHtml(a.host || '—') + '</span></span>'
+    + '<span class="cf"><span class="cf-l">描述</span><span class="card-desc' + (a.description ? '' : ' placeholder') + '" title="' + escAttr(a.description || '') + '">' + escHtml(desc) + '</span></span>'
+    + '</div>'
+    + '<div class="card-actions">'
+    + (a.url ? '<a class="btn open" href="' + escAttr(a.url) + '" target="_blank">打开</a>' : '')
+    + '<button class="btn edit" onclick="toast(\'壳阶段：网站编辑下阶段接入\')">编辑</button>'
+    + '<span class="p4-spacer"></span>'
+    + '</div>'
+    + '</div>';
+}
+
+/* ── 经验日志 ── */
+var TIP_DEFS=[['all','全部'],['diagnosis','诊断'],['method','方法'],['fact','事实'],['capability','能力'],['feedback','反馈']];
+var TIP_CHAR={'diagnosis':'诊','method':'方','fact':'事','capability':'能','feedback':'反'};
+var TIP_GEO={'diagnosis':'<svg viewBox="0 0 12 12" aria-hidden="true"><circle cx="6" cy="6" r="4.4" fill="none" stroke="currentColor" stroke-width="1.3"/></svg>','method':'<svg viewBox="0 0 12 12" aria-hidden="true"><rect x="1.6" y="1.6" width="8.8" height="8.8" rx="1" fill="none" stroke="currentColor" stroke-width="1.3"/></svg>','fact':'<svg viewBox="0 0 12 12" aria-hidden="true"><path d="M6 1.4 L10.6 6 L6 10.6 L1.4 6 Z" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg>','capability':'<svg viewBox="0 0 12 12" aria-hidden="true"><path d="M1.6 6 H10.4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><path d="M6 1.6 V10.4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>','feedback':'<svg viewBox="0 0 12 12" aria-hidden="true"><path d="M6 1.4 A4.6 4.6 0 0 1 6 10.6" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>'};
+var TIP_LABEL={'diagnosis':'诊断','method':'方法','fact':'事实','capability':'能力','feedback':'反馈'};
+
+async function renderTips() {
+  if (!tipsData) {
+    try {
+      var res = await fetch('/api/tips');
+      var data = await res.json();
+      if (!data.ok) { document.getElementById('tipGrid').innerHTML = '<div class="empty">日志加载失败</div>'; return; }
+      tipsData = data.tips || [];
+      updateCounts();
+    } catch(e) { document.getElementById('tipGrid').innerHTML = '<div class="empty">日志加载失败</div>'; return; }
+  }
+  renderTipDims();
+  var q = (document.getElementById('tipSearch') ? document.getElementById('tipSearch').value : '').trim().toLowerCase();
+  var list = tipsData.filter(function(x){
+    if (tipF !== 'all' && x.type !== tipF) return false;
+    if (q && (x.title + ' ' + x.desc + ' ' + x.file).toLowerCase().indexOf(q) === -1) return false;
+    return true;
+  });
+  document.getElementById('tipGrid').innerHTML = list.length ? list.map(tipCard).join('') : '<div class="empty">没有匹配的日志</div>';
+}
+function renderTipDims() {
+  var el = document.getElementById('tipDimBlocks'); if (!el) return;
+  var counts = {};
+  (tipsData || []).forEach(function(x){ counts[x.type] = (counts[x.type] || 0) + 1; });
+  var html = '<div class="dim-block" style="--b:#EEF4EF"><div class="dim-block-title">类型<span class="dim-arr">></span></div><div class="dim-block-opts">';
+  TIP_DEFS.forEach(function(d){
+    var cnt = d[0] === 'all' ? (tipsData || []).length : (counts[d[0]] || 0);
+    html += '<span class="dim-opt' + (tipF === d[0] ? ' active' : '') + '" onclick="setTipF(\'' + d[0] + '\')">' + d[1] + '<span style="font-size:11px;opacity:.55;margin-left:5px;font-family:var(--font-code)">' + cnt + '</span></span>';
+  });
+  html += '</div></div>';
+  el.innerHTML = html;
+}
+function setTipF(f) { tipF = f; renderTips(); }
+function tipCard(x) {
+  var t = TIP_LABEL[x.type] || '日志';
+  return '<div class="tool-card tip-card">'
+    + '<div class="card-top"><span class="card-ico">' + (TIP_CHAR[x.type] || '记') + '</span><div class="card-name">' + escHtml(x.title) + '</div></div>'
+    + '<div class="card-meta-row">'
+    + '<span class="cf"><span class="cf-l">类型</span><span class="tip-type">' + (TIP_GEO[x.type] || '') + escHtml(t) + '</span></span>'
+    + '<span class="cf"><span class="cf-l">文件</span><span class="card-id">' + escHtml(x.file) + '</span></span>'
+    + '<span class="cf top"><span class="cf-l">内容</span><span class="tip-desc-cell">' + escHtml(x.desc || '—') + '</span></span>'
+    + '</div>'
+    + '<div class="card-actions"><button class="btn edit" onclick="toast(\'壳阶段：日志编辑下阶段接入\')">编辑</button><span class="p4-spacer"></span></div>'
+    + '</div>';
+}
+
+/* ── 系统规范：设计规范 + 工程规范 ── */
+var REG_DEFS=[['design','设计规范'],['repo','工程规范']];
+async function renderRegView() {
+  if (!regData) {
+    try {
+      var res = await fetch('/api/registry');
+      var data = await res.json();
+      if (!data.ok) { document.getElementById('regView').innerHTML = '<div class="empty">规范文档加载失败</div>'; return; }
+      regData = data.docs || [];
+    } catch(e) { document.getElementById('regView').innerHTML = '<div class="empty">规范文档加载失败</div>'; return; }
+  }
+  renderRegDims();
+  var el = document.getElementById('regView'); if (!el) return;
+  var doc = null;
+  regData.forEach(function(x){ if (x.key === regDoc) doc = x; });
+  el.innerHTML = doc ? md2html(doc.markdown || '') : '<div class="empty">文档缺失：' + escHtml(regDoc) + '</div>';
+}
+function renderRegDims() {
+  var el = document.getElementById('regDimBlocks'); if (!el) return;
+  var html = '<div class="dim-block" style="--b:#EEF4EF"><div class="dim-block-title">文档<span class="dim-arr">></span></div><div class="dim-block-opts">';
+  REG_DEFS.forEach(function(d){
+    html += '<span class="dim-opt' + (regDoc === d[0] ? ' active' : '') + '" onclick="setRegDoc(\'' + d[0] + '\')">' + d[1] + '</span>';
+  });
+  html += '</div></div>';
+  el.innerHTML = html;
+}
+function setRegDoc(d) { regDoc = d; renderRegView(); }
+
+function mdInline(s){
+  s = escHtml(s);
+  s = s.replace(/`([^`]+)`/g,'<code>$1</code>');
+  s = s.replace(/\*\*([^*]+)\*\*/g,'<b>$1</b>');
+  s = s.replace(/\*([^*]+)\*/g,'<i>$1</i>');
+  return s;
+}
+function mdTableRow(l,tag){
+  var cells = l.replace(/^\s*\|/,'').replace(/\|\s*$/,'').split('|');
+  var h = '';
+  cells.forEach(function(c){
+    c = c.trim();
+    h += (tag==='th'?'<th>':'<td>') + mdInline(c) + (tag==='th'?'</th>':'</td>');
+  });
+  return '<tr>'+h+'</tr>';
+}
+function md2html(src){
+  var lines = src.split('\n');
+  var out = [], inCode = false, codeBuf = [], listBuf = [];
+  function flushList(){
+    if (listBuf.length){ out.push('<ul>'+listBuf.map(function(x){return '<li>'+x+'</li>';}).join('')+'</ul>'); listBuf = []; }
+  }
+  for (var i = 0; i < lines.length; i++){
+    var L = lines[i];
+    if (inCode){
+      if (/^```/.test(L)){ out.push('<pre><code>'+codeBuf.join('\n')+'</code></pre>'); inCode = false; codeBuf = []; }
+      else codeBuf.push(escHtml(L));
+      continue;
     }
-    html += '<span class="res-sep">|</span>' +
-      '<span class="res-item">常驻 <span class="res-val" title="' + autoNames + '">' + autoCount + '</span></span>';
-    document.getElementById('resBar').innerHTML = html;
-  } catch(e) { document.getElementById('resBar').textContent = 'Supervisor 离线'; }
+    if (/^```/.test(L)){ flushList(); inCode = true; codeBuf = []; continue; }
+    var m;
+    if (m = L.match(/^\s*(#{1,6})\s+(.*)$/)){ flushList(); var n = m[1].length; out.push('<h'+n+'>'+mdInline(m[2])+'</h'+n+'>'); continue; }
+    if (/^\s*[-*]\s+/.test(L)){ var li = L.replace(/^\s*[-*]\s+/,''); listBuf.push(mdInline(li)); continue; }
+    if (/^\s*>\s?/.test(L)){ flushList(); out.push('<blockquote>'+mdInline(L.replace(/^\s*>\s?/,''))+'</blockquote>'); continue; }
+    if (/^\s*\|/.test(L)){
+      flushList();
+      var rows = [];
+      while (i < lines.length && /^\s*\|/.test(lines[i])){ rows.push(lines[i]); i++; }
+      i--;
+      if (rows.length){
+        var tbl = '<table><thead>'+mdTableRow(rows[0],'th')+'</thead><tbody>';
+        for (var r = 1; r < rows.length; r++){
+          if (/^\s*\|?[\s:|-]+\|?\s*$/.test(rows[r].replace(/[^|\s:-]/g,''))) continue;
+          tbl += mdTableRow(rows[r],'td');
+        }
+        tbl += '</tbody></table>';
+        out.push(tbl);
+      }
+      continue;
+    }
+    if (/^\s*-{3,}\s*$/.test(L)){ flushList(); out.push('<hr>'); continue; }
+    if (/^\s*$/.test(L)){ flushList(); continue; }
+    flushList();
+    out.push('<p>'+mdInline(L)+'</p>');
+  }
+  flushList();
+  if (inCode) out.push('<pre><code>'+codeBuf.join('\n')+'</code></pre>');
+  return out.join('');
 }
 
-function updateCounts() {
-  document.getElementById('totalCount').textContent = tools.length;
-  document.getElementById('openableCount').textContent = tools.filter(function(t){return (t.running || isVirtual(t)) && !opened[t.id] && t.url;}).length;
-  document.getElementById('openedCount').textContent = tools.filter(function(t){return (t.running || isVirtual(t)) && opened[t.id] && t.url;}).length;
-  document.getElementById('stoppedCount').textContent = tools.filter(function(t){return t.running === false;}).length;
-  document.getElementById('publicCount').textContent = tools.filter(function(t){return t.publicUrl;}).length;
+/* ── 网格参考层：8/32/128 三层，颜色深浅+线宽区分，选层制，左上角为零线 ── */
+var gridOn = true, gridLayers = {128:true, 32:true, 8:true};
+var GRID_TIERS = [[128,'rgba(51,51,51,1)',1],[32,'rgba(51,51,51,0.45)',1],[8,'rgba(51,51,51,0.2)',1]];
+function gridStyle(){
+  var o = document.getElementById('gridOverlay'); if (!o) return;
+  var imgs = [], szs = [];
+  if (gridOn){
+    GRID_TIERS.forEach(function(t){
+      if (!gridLayers[t[0]]) return;
+      imgs.push('linear-gradient(' + t[1] + ' ' + t[2] + 'px,transparent ' + t[2] + 'px)');
+      imgs.push('linear-gradient(90deg,' + t[1] + ' ' + t[2] + 'px,transparent ' + t[2] + 'px)');
+      szs.push(t[0] + 'px ' + t[0] + 'px');
+      szs.push(t[0] + 'px ' + t[0] + 'px');
+    });
+  }
+  o.style.backgroundImage = imgs.length ? imgs.join(',') : 'none';
+  o.style.backgroundSize = szs.length ? szs.join(',') : 'auto';
+}
+function setGridOn(v){
+  gridOn = !!v;
+  var b = document.querySelector('.g-toggle');
+  if (b){
+    b.classList.toggle('active', gridOn);
+    var t = b.querySelector('.g-toggle-txt'); if (t) t.textContent = gridOn ? '开' : '关';
+  }
+  gridStyle();
+}
+function toggleLayer(v){
+  gridLayers[v] = !gridLayers[v];
+  document.querySelectorAll('.g-layer').forEach(function(b){
+    if (+b.getAttribute('data-v') === v) b.classList.toggle('active', gridLayers[v]);
+  });
+  gridStyle();
 }
 
+/* ── 导航 ── */
+function showPage(p){
+  document.querySelectorAll('.page').forEach(function(s){ s.classList.remove('show'); });
+  var pg = document.getElementById('page-' + p); if (pg) pg.classList.add('show');
+  document.querySelectorAll('.nav-item').forEach(function(n){ n.classList.toggle('active', n.getAttribute('data-page') === p); });
+}
+
+/* ── 初始化 ── */
 document.addEventListener('DOMContentLoaded', function() {
+  initToolForm();
   markOpened('dashboard');
   fetchTools();
-  fetchStats();
+  renderApps();
+  renderTips();
+  renderRegView();
   fetchCronState();
-  fetchResources();
-  setInterval(fetchStats, 30000);
-  setInterval(fetchResources, 15000);
-  initToolForm();
+  gridStyle();
 });
 
 // ══ S5 人写面板：工具表单弹窗（新建/编辑/补全/迁移/修复/注册 一套）══

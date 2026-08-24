@@ -1,0 +1,83 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><title>FIDELITY</title></head>
+<body style="background:#fff;font:12px Consolas,monospace;white-space:pre-wrap;padding:12px">
+<iframe id="p" src="/_proto/dashboard-leftnav.html" style="width:1px;height:1px;border:0;position:absolute;left:-9999px"></iframe>
+<iframe id="r" src="/" style="width:1px;height:1px;border:0;position:absolute;left:-9999px"></iframe>
+<pre id="out">running...</pre>
+<script>
+function fp(doc){
+  var out={nav:[],pages:{}};
+  doc.querySelectorAll('.nav-item').forEach(function(n){
+    var lbl=n.querySelector('.nav-label')||n;
+    var cnt=n.querySelector('.cnt');
+    out.nav.push({page:n.getAttribute('data-page')||'?',label:lbl.textContent.trim(),cnt:cnt?cnt.textContent.trim():''});
+  });
+  doc.querySelectorAll('.page').forEach(function(sec){
+    var id=sec.id||'?';
+    var p={hero:[],search:[],dims:[],adds:[],classes:[]};
+    sec.querySelectorAll('.hero-eyebrow,.hero-title,.hero-sub').forEach(function(h){ p.hero.push(h.className.replace('hero-','')+':'+h.textContent.trim()); });
+    sec.querySelectorAll('input').forEach(function(i){ if(i.placeholder) p.search.push(i.placeholder); });
+    sec.querySelectorAll('.dim-block').forEach(function(b){
+      var t=b.querySelector('.dim-block-title');
+      var opts=[];
+      b.querySelectorAll('.dim-block-opts *').forEach(function(o){ var x=o.textContent.trim(); if(x) opts.push(x); });
+      p.dims.push({title:t?t.textContent.replace('>','').trim():'',opts:opts});
+    });
+    sec.querySelectorAll('.btn-add,.apps-bar button,.search-bar button').forEach(function(b){ var x=b.textContent.trim(); if(x) p.adds.push(x); });
+    sec.querySelectorAll('.tool-card,.app-card,.tip-card').forEach(function(){});
+    out.pages[id]=p;
+  });
+  // card skeleton per grid
+  out.card={};
+  [['page-tools','toolGrid'],['page-apps','appGrid'],['page-tips','tipGrid']].forEach(function(pair){
+    var sec=doc.getElementById(pair[0]); if(!sec) return;
+    var grid=sec.querySelector('#'+pair[1]); if(!grid) return;
+    var c=grid.querySelector('.tool-card'); if(!c){ out.card[pair[1]]='EMPTY'; return; }
+    out.card[pair[1]]=skel(c,2);
+  });
+  // sidebar pieces
+  var logo=doc.querySelector('.logo-name'); out.logo=logo?logo.textContent.trim():'';
+  var foot=doc.querySelector('.sidebar-foot'); out.sidebarFoot=foot?foot.textContent.trim():'';
+  return out;
+}
+function skel(el,max){
+  var kids=[];
+  for(var i=0;i<el.children.length;i++){
+    var k=el.children[i];
+    var cn=typeof k.className==='string'?k.className:(k.className.baseVal||'');
+    kids.push(cn+skel(k,max-1));
+  }
+  return (typeof el.className==='string'?el.className:(el.className.baseVal||''))+'['+kids.join(' ')+']';
+}
+function waitGrid(d, cb){
+  var t0=Date.now();
+  var iv=setInterval(function(){
+    if((d.querySelector('#toolGrid .tool-card')||d.querySelector('#appGrid .tool-card')||d.querySelector('#tipGrid .tip-card'))&&Date.now()-t0>1200){ clearInterval(iv); cb(); return; }
+    if(Date.now()-t0>9000){ clearInterval(iv); cb(); return; }
+  },200);
+}
+function driveAll(frame, after){
+  var d=frame.contentDocument, w=frame.contentWindow;
+  waitGrid(d,function(){
+    var pages=['tools','apps','tips','docs','registry'];
+    var i=0;
+    (function next(){
+      if(i>=pages.length){ after(); return; }
+      var p=pages[i++];
+      try{ w.showPage(p); }catch(e){}
+      setTimeout(function(){ if(frame.contentDocument.getElementById('page-'+p)){ /* page exists */ } next(); },120);
+    })();
+  });
+}
+var res={};
+window.addEventListener('load',function(){
+  driveAll(document.getElementById('p'),function(){
+    res.proto=fp(document.getElementById('p').contentDocument);
+    driveAll(document.getElementById('r'),function(){
+      res.real=fp(document.getElementById('r').contentDocument);
+      document.getElementById('out').textContent=JSON.stringify(res);
+      document.title='FIDELITY-DONE';
+    });
+  });
+});
+</script>
+</body></html>
