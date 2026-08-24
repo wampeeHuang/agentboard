@@ -200,16 +200,8 @@
   @media(max-width:900px){.doc-grid{grid-template-columns:1fr}}
   .doc-view{background:#fff;border:1px solid var(--border);border-radius:12px;padding:28px 36px;max-width:1584px;margin-left:32px;margin-right:32px;box-shadow:0 1px 4px rgba(0,0,0,.08)}
   .doc-view iframe.doc-frame{width:100%;height:calc(100vh - 324px);min-height:420px;border:1px solid var(--border);border-radius:8px;background:#fff;display:block}
-  .docs-layout{max-width:1584px;margin-left:32px;margin-right:32px;display:grid;grid-template-columns:240px minmax(0,1fr);gap:24px;align-items:start}
-  @media(max-width:900px){.docs-layout{grid-template-columns:1fr}}
-  .docs-nav{position:sticky;top:24px;display:flex;flex-direction:column;gap:2px;padding:12px 8px;background:var(--paper);border:1px solid var(--border);border-radius:12px}
-  .docs-nav-item{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:8px;font-size:14px;color:var(--text-secondary);cursor:pointer;user-select:none;font-family:var(--mono);line-height:1.4}
-  .docs-nav-item:hover{background:var(--paper-tint)}
-  .docs-nav-item.active{background:var(--green-soft);color:var(--green-deep);font-weight:600}
-  .dn-geo{width:8px;height:8px;transform:rotate(45deg);border:1.5px solid var(--green);flex-shrink:0}
-  .docs-nav-item.active .dn-geo{background:var(--green);border-color:var(--green)}
-  .docs-main{min-width:0}
-  .docs-main iframe.doc-frame{width:100%;height:calc(100vh - 216px);min-height:520px;border:1px solid var(--border);border-radius:12px;background:#fff;display:block}
+  .docs-shell{width:100%}
+  .docs-shell iframe.doc-frame{width:100%;height:calc(100vh - 216px);min-height:520px;border:none;display:block;background:#fff}
   .doc-card{background:#fff;border:1px solid var(--border);border-radius:var(--radius-md);padding:16px;min-width:0}
   .doc-title{font-size:14px;font-weight:600;color:var(--ink);font-family:var(--font-head);margin-bottom:12px;display:flex;align-items:center;gap:8px}
   .doc-title .dot{width:8px;height:8px;border-radius:50%;background:var(--green)}
@@ -379,13 +371,10 @@
     <div class="hero-bar">
       <div class="hero-eyebrow">DOCS</div>
       <div class="hero-title">说明书</div>
-      <div class="hero-sub">一份清单，两面读 —— Agentboard 设计系统使用说明</div>
+      <div class="hero-sub">工具架使用说明 —— 一份清单，两面读</div>
     </div>
-    <div class="docs-layout">
-      <aside class="docs-nav" id="docsNav"></aside>
-      <div class="docs-main">
-        <iframe class="doc-frame" id="docFrame" src="../../skills/agentboard-design-system/assets/manual.html"></iframe>
-      </div>
+    <div class="docs-shell">
+      <iframe class="doc-frame" src="../../docs/使用说明书.html"></iframe>
     </div>
   </section>
 
@@ -1111,20 +1100,6 @@ function renderRegView(){
   if(regDoc==='design')v.innerHTML=md2html(DESIGN_SRC);
   else v.innerHTML=md2html(REPO_SRC);
 }
-
-/* ── 说明书页：左侧文档导航 → iframe 锚点跳转（内容直指 skill 内 manual.html，唯一真相源） ── */
-var DOC_BASE='../../skills/agentboard-design-system/assets/manual.html';
-var DOC_SECTIONS=[['logic','核心逻辑'],['scenes','支持场景'],['structure','文件结构'],['workflow','工作流'],['brand','品牌基因'],['forbidden','禁忌清单'],['checklist','质量检查'],['use','Fork 指南']];
-function renderDocsNav(){
-  document.getElementById('docsNav').innerHTML=DOC_SECTIONS.map(function(s,i){
-    return '<div class="docs-nav-item'+(i===0?' active':'')+'" data-i="'+i+'" onclick="goDoc('+i+')"><span class="dn-geo"></span><span class="dn-label">'+esc(s[1])+'</span></div>';
-  }).join('');
-}
-function goDoc(i){
-  var f=document.getElementById('docFrame');
-  f.src=DOC_BASE+'#'+DOC_SECTIONS[i][0];
-  document.querySelectorAll('.docs-nav-item').forEach(function(n){n.classList.toggle('active',+n.getAttribute('data-i')===i)});
-}
 var tipEditIdx=-1;
 function openNewTip(){
   tipEditIdx=-1;
@@ -1390,7 +1365,7 @@ document.getElementById('navToolsCnt').textContent=TOOLS.length;
 document.getElementById('navAppsCnt').textContent=APPS.length;
 document.getElementById('navTipsCnt').textContent=TIPS.length;
 buildBlocks(); renderTools();
-renderApps(); renderTips(); renderRegView(); renderDocsNav();
+renderApps(); renderTips(); renderRegView();
 setGridOn(true);
 </script>
 </body>
