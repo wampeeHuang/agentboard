@@ -1,6 +1,6 @@
 {
   "description": "公网部署应用注册表。每个应用的唯一真相源。AI Agent 启动时读此文件发现所有可用应用。工具架面板展示同一份数据。",
-  "updated": "2026-07-23T00:22",
+  "updated": "2026-08-24T18:10",
   "apps": [
     {
       "id": "vivihuang.evopearl.com",
@@ -66,7 +66,9 @@
       "host": "腾讯云 DNSPod → Vercel (nuwa-perspective-catalog)",
       "localDev": "http://localhost:3090",
       "logo": "https://minds.evopearl.com/logo.svg",
-      "altUrls": ["https://nuwa-perspective-catalog.vercel.app"],
+      "altUrls": [
+        "https://nuwa-perspective-catalog.vercel.app"
+      ],
       "agentNote": "目录页每张卡片含人物摘要和思维框架。GitHub: https://github.com/wampeeHuang/nuwa-perspective-catalog"
     },
     {
@@ -91,7 +93,9 @@
       "status": "live",
       "host": "腾讯云 DNSPod → Vercel (tax-wuyou)",
       "localDev": "http://localhost:3457",
-      "altUrls": ["https://tax.evopearl.com"],
+      "altUrls": [
+        "https://tax.evopearl.com"
+      ],
       "endpoints": {
         "manifest": "https://shuiwuyou.evopearl.com/api/manifest",
         "status": "https://shuiwuyou.evopearl.com/api/status",

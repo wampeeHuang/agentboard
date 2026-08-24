@@ -544,6 +544,7 @@
 </div>
 <!--#/SYNC#-->
 
+<!--#SYNC:app-modal#-->
 <!-- ── 添加网站 modal（原型：mock 态，保存推入 APPS） ── -->
 <div class="modal-mask" id="appModal" onclick="if(event.target===this)closeAppModal()">
   <div class="modal modal-sm">
@@ -573,7 +574,9 @@
     </div>
   </div>
 </div>
+<!--#/SYNC#-->
 
+<!--#SYNC:tip-modal#-->
 <!-- ── 新增日志 modal ── -->
 <div class="modal-mask" id="tipModal" onclick="if(event.target===this)closeTipModal()">
   <div class="modal modal-sm">
@@ -601,7 +604,9 @@
     </div>
   </div>
 </div>
+<!--#/SYNC#-->
 
+<!--#SYNC:std-modal#-->
 <!-- ── 写入标准 A4 modal（渲染后 markdown） ── -->
 <div class="modal-mask" id="stdModal" onclick="if(event.target===this)closeStd()">
   <div class="std-sheet">
@@ -613,6 +618,7 @@
     <div class="std-body" id="stdBody"></div>
   </div>
 </div>
+<!--#/SYNC#-->
 
 <script>
 function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]}); }

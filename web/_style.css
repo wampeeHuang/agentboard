@@ -169,6 +169,8 @@ a{text-decoration:none;color:inherit}
 .card-actions .btn.public{background:var(--paper);border-color:var(--ink);color:var(--ink);font-weight:500}
 .card-actions .btn.public:hover{background:var(--ink);color:var(--paper)}
 .card-actions .btn.edit{color:var(--text-secondary);border-color:var(--border)}
+.card-actions .btn.del{color:var(--status-error);border-color:var(--status-error)}
+.card-actions .btn.del:hover{background:var(--status-error);color:#fff}
 .card-actions .btn.edit:hover{border-color:var(--green);color:var(--green)}
 
 /* 启停开关（toggle-sm） */
@@ -220,6 +222,19 @@ a{text-decoration:none;color:inherit}
 .std-body ul{margin:8px 0 8px 20px}
 .std-body li{margin:4px 0}
 .std-body hr{border:none;border-top:1px solid var(--border);margin:22px 0}
+.std-body h1{font-size:24px;font-weight:600;margin-bottom:8px}
+.std-body h3{font-size:15px;font-weight:600;margin:18px 0 8px}
+.std-body p{margin:8px 0}
+
+/* ── 写入标准 A4 卡（stdModal，自原型移植） ── */
+.std-sheet{width:720px;max-width:94vw;max-height:96vh;background:#fff;border-radius:8px;box-shadow:0 12px 48px rgba(0,0,0,.35);display:flex;flex-direction:column;overflow:hidden}
+.std-head{display:flex;align-items:center;gap:10px;padding:16px 28px;border-bottom:1px solid var(--border);background:#fff;flex-shrink:0}
+.std-t{font-size:15px;font-weight:600;color:var(--text);font-family:var(--font-head);white-space:nowrap}
+.std-s{font-size:12px;color:var(--text-muted);font-family:var(--font-code);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.std-close{margin-left:auto;cursor:pointer;font-size:18px;color:var(--text-muted);line-height:1}
+.std-close:hover{color:var(--ink)}
+.std-link{margin-left:auto;font-size:14px;color:var(--green);text-decoration:none;flex-shrink:0;font-family:var(--font-code);cursor:pointer}
+.std-link:hover{text-decoration:underline}
 
 /* ── 说明书 ── */
 .docs-shell{width:100%}
@@ -244,6 +259,7 @@ a{text-decoration:none;color:inherit}
 /* ── 工具表单弹窗（真实 S5 结构：modal-overlay + modal-lg + modal-header 绿头） ── */
 .modal-overlay{position:fixed;inset:0;background:rgba(38,43,39,.4);z-index:100;display:flex;align-items:flex-start;justify-content:center;overflow-y:auto;padding:40px 16px}
 .modal{width:720px;max-width:96vw;background:var(--paper);border-radius:12px;box-shadow:0 8px 40px rgba(0,0,0,.35);display:flex;flex-direction:column;max-height:92vh;overflow:hidden}
+.modal-sm{width:520px}
 .modal-lg{width:1100px;max-width:98vw}
 .modal-header{display:flex;align-items:center;gap:10px;padding:12px 20px;background:var(--green);flex-shrink:0}
 .modal-header .modal-title{font-size:15px;font-weight:600;color:#fff;font-family:var(--font-head);white-space:nowrap}

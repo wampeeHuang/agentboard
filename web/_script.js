@@ -521,7 +521,7 @@ async function renderApps() {
 }
 function paintApps() {
   var grid = document.getElementById('appGrid'); if (!grid) return;
-  if (!appsData.length) { grid.innerHTML = '<div class="empty">还没有网站 —— 壳阶段只读展示。</div>'; return; }
+  if (!appsData.length) { grid.innerHTML = '<div class="empty">还没有网站 —— 点上方 + 添加网站。</div>'; return; }
   grid.innerHTML = appsData.map(appCard).join('');
 }
 function appDomainOf(a) {
@@ -539,7 +539,8 @@ function appCard(a) {
     + '</div>'
     + '<div class="card-actions">'
     + (a.url ? '<a class="btn open" href="' + escAttr(a.url) + '" target="_blank">打开</a>' : '')
-    + '<button class="btn edit" onclick="toast(\'壳阶段：网站编辑下阶段接入\')">编辑</button>'
+    + '<button class="btn edit" onclick="openEditApp(\'' + escAttr(a.id) + '\')">编辑</button>'
+    + '<button class="btn del" onclick="deleteApp(\'' + escAttr(a.id) + '\')">删除</button>'
     + '<span class="p4-spacer"></span>'
     + '</div>'
     + '</div>';
@@ -592,9 +593,159 @@ function tipCard(x) {
     + '<span class="cf"><span class="cf-l">文件</span><span class="card-id">' + escHtml(x.file) + '</span></span>'
     + '<span class="cf top"><span class="cf-l">内容</span><span class="tip-desc-cell">' + escHtml(x.desc || '—') + '</span></span>'
     + '</div>'
-    + '<div class="card-actions"><button class="btn edit" onclick="toast(\'壳阶段：日志编辑下阶段接入\')">编辑</button><span class="p4-spacer"></span></div>'
+    + '<div class="card-actions"><button class="btn edit" onclick="openEditTip(\'' + escAttr(x.file) + '\')">编辑</button><button class="btn del" onclick="deleteTip(\'' + escAttr(x.file) + '\')">删除</button><span class="p4-spacer"></span></div>'
     + '</div>';
 }
+
+/* ── 我的网站 增/改/删 ── */
+var appModalState = 'new';  // new | edit
+var appEditingId = null;
+function openAppModal() {
+  appModalState = 'new'; appEditingId = null;
+  document.getElementById('appModalTitle').textContent = '添加网站';
+  document.getElementById('ap-name').value = '';
+  document.getElementById('ap-domain').value = '';
+  document.getElementById('ap-desc').value = '';
+  document.getElementById('ap-host').value = '腾讯云 DNSPod → Vercel';
+  document.getElementById('ap-host-custom').style.display = 'none';
+  document.getElementById('appModal').style.display = 'flex';
+}
+function openEditApp(id) {
+  var a = null;
+  (appsData || []).forEach(function(x){ if (x.id === id) a = x; });
+  if (!a) return;
+  appModalState = 'edit'; appEditingId = id;
+  document.getElementById('appModalTitle').textContent = '编辑网站';
+  document.getElementById('ap-name').value = a.name || '';
+  document.getElementById('ap-domain').value = (a.url || a.id || '').replace(/^https?:\/\//, '').replace(/\/$/, '');
+  document.getElementById('ap-desc').value = a.description || '';
+  var host = a.host || '';
+  var sel = document.getElementById('ap-host');
+  var known = false;
+  for (var i = 0; i < sel.options.length; i++) { if (sel.options[i].value === host) { known = true; break; } }
+  if (known) { sel.value = host; document.getElementById('ap-host-custom').style.display = 'none'; }
+  else { sel.value = '__custom__'; var hc = document.getElementById('ap-host-custom'); hc.value = host; hc.style.display = 'block'; }
+  document.getElementById('appModal').style.display = 'flex';
+}
+function appHostChange() {
+  document.getElementById('ap-host-custom').style.display = document.getElementById('ap-host').value === '__custom__' ? 'block' : 'none';
+}
+function closeAppModal() { document.getElementById('appModal').style.display = 'none'; }
+async function saveApp() {
+  var name = document.getElementById('ap-name').value.trim();
+  var domain = document.getElementById('ap-domain').value.trim();
+  if (!name) return toast('名称必填');
+  if (!domain) return toast('域名必填');
+  var host = document.getElementById('ap-host').value;
+  if (host === '__custom__') host = document.getElementById('ap-host-custom').value.trim();
+  var body = { name: name, domain: domain, description: document.getElementById('ap-desc').value.trim(), host: host };
+  try {
+    var res = await fetch(appModalState === 'edit' ? '/api/apps/' + encodeURIComponent(appEditingId) : '/api/apps', {
+      method: appModalState === 'edit' ? 'PUT' : 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    var data = await res.json();
+    if (!data.ok) return toast('保存失败：' + (data.error || res.status));
+    closeAppModal();
+    appsData = null;
+    renderApps();
+  } catch(e) { toast('保存失败：' + e.message); }
+}
+function deleteApp(id) {
+  var a = null;
+  (appsData || []).forEach(function(x){ if (x.id === id) a = x; });
+  if (!a) return;
+  if (!confirm('删除网站「' + (a.name || id) + '」？')) return;
+  fetch('/api/apps/' + encodeURIComponent(id), { method: 'DELETE' })
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if (d.ok) { appsData = null; renderApps(); toast('已删除'); }
+      else toast('删除失败：' + (d.error || ''));
+    })
+    .catch(function(e){ toast('删除失败：' + e.message); });
+}
+
+/* ── 经验日志 增/改/删 + 写入标准 ── */
+var tipModalState = 'new';  // new | edit
+var tipEditingFile = null;
+function openNewTip() {
+  tipModalState = 'new'; tipEditingFile = null;
+  document.getElementById('tipModalTitle').textContent = '新增日志';
+  document.getElementById('tp-type').value = 'diagnosis';
+  document.getElementById('tp-title').value = '';
+  document.getElementById('tp-desc').value = '';
+  document.getElementById('tipModal').style.display = 'flex';
+}
+async function openEditTip(file) {
+  tipModalState = 'edit'; tipEditingFile = file;
+  document.getElementById('tipModalTitle').textContent = '编辑日志';
+  document.getElementById('tipModal').style.display = 'flex';
+  document.getElementById('tp-desc').value = '加载中…';
+  try {
+    var res = await fetch('/api/tips/' + encodeURIComponent(file));
+    if (!res.ok) { toast('读取失败：' + res.status); return; }
+    var md = (await res.text()).replace(/\r\n/g, '\n');
+    var type = 'diagnosis', title = '', desc = md;
+    var fm = md.match(/^---\n([\s\S]*?)\n---\n?/);
+    if (fm) {
+      var t = fm[1].match(/^type:\s*(.+)$/m);
+      if (t) type = t[1].trim();
+      desc = md.slice(fm[0].length);
+    }
+    var h1 = desc.match(/^#\s+(.+)$/m);
+    if (h1) { title = h1[1].trim(); desc = desc.replace(h1[0], '').replace(/^\n+/, ''); }
+    document.getElementById('tp-type').value = type;
+    document.getElementById('tp-title').value = title;
+    document.getElementById('tp-desc').value = desc.trim();
+  } catch(e) { document.getElementById('tp-desc').value = ''; toast('读取失败：' + e.message); }
+}
+function tipTypeChange() {}
+function closeTipModal() { document.getElementById('tipModal').style.display = 'none'; }
+async function saveTip() {
+  var title = document.getElementById('tp-title').value.trim();
+  var type = document.getElementById('tp-type').value;
+  var desc = document.getElementById('tp-desc').value.trim();
+  if (!title) return toast('标题必填');
+  var body = { title: title, type: type, desc: desc };
+  try {
+    var res = await fetch(tipModalState === 'edit' ? '/api/tips/' + encodeURIComponent(tipEditingFile) : '/api/tips', {
+      method: tipModalState === 'edit' ? 'PUT' : 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    var data = await res.json();
+    if (!data.ok) return toast('保存失败：' + (data.error || res.status));
+    closeTipModal();
+    tipsData = null;
+    renderTips();
+  } catch(e) { toast('保存失败：' + e.message); }
+}
+function deleteTip(file) {
+  var x = null;
+  (tipsData || []).forEach(function(t){ if (t.file === file) x = t; });
+  if (!x) return;
+  if (!confirm('删除日志「' + (x.title || file) + '」？此操作不可恢复。')) return;
+  fetch('/api/tips/' + encodeURIComponent(file), { method: 'DELETE' })
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if (d.ok) { tipsData = null; renderTips(); toast('已删除'); }
+      else toast('删除失败：' + (d.error || ''));
+    })
+    .catch(function(e){ toast('删除失败：' + e.message); });
+}
+async function openStd() {
+  var body = document.getElementById('stdBody'); if (!body) return;
+  document.getElementById('stdModal').style.display = 'flex';
+  body.innerHTML = '<div class="empty">加载中…</div>';
+  try {
+    var res = await fetch('/api/tips/const');
+    if (!res.ok) { body.innerHTML = '<div class="empty">CONSTITUTION.md 读取失败</div>'; return; }
+    var md = await res.text();
+    body.innerHTML = md2html(md);
+  } catch(e) { body.innerHTML = '<div class="empty">加载失败：' + escHtml(e.message) + '</div>'; }
+}
+function closeStd() { document.getElementById('stdModal').style.display = 'none'; }
 
 /* ── 系统规范：设计规范 + 工程规范 ── */
 var REG_DEFS=[['design','设计规范'],['repo','工程规范']];
@@ -755,6 +906,7 @@ var ICON_LIB = ['🤖','🧠','🦙','🐱','🦞','🐙','💭','☁️','🆓'
 
 var tfId = null;      // 当前编辑的 id（新建为 null）
 var tfMode = 'new';   // new | edit | fix | complete | migrate | register
+var tfTool = null;    // 当前编辑的工具对象（buildManifest 保真 runtime 用）
 var tfMissing = [];   // complete 模式：缺的字段
 
 function initToolForm() {
@@ -799,6 +951,7 @@ function openToolForm(id, mode) {
   var isNew = (tfMode === 'new' || tfMode === 'register');
   var t = null;
   if (id) t = tools.find(function(x){ return x.id === id; });
+  tfTool = t;
 
   document.getElementById('editTitle').textContent =
     tfMode === 'new' ? '新增工具' :
@@ -991,12 +1144,12 @@ function buildManifest() {
     mf.startCommand = v('f-start') || undefined;
     mf.stopCommand = v('f-stop') || undefined;
     if (v('f-path')) mf.projectPath = v('f-path');
-    if (v('f-runtime')) mf.runtime = { language: v('f-runtime'), version: '', manager: '', note: '' };
+    if (v('f-runtime')) { var _rt = (tfTool && tfTool.runtime) || {}; mf.runtime = { language: v('f-runtime'), version: _rt.version || '', manager: _rt.manager || '', note: _rt.note || '' }; }
   } else if (f === 'cli') {
     if (v('f-trigger')) mf.trigger = v('f-trigger');
     if (v('f-start-cli')) mf.startCommand = v('f-start-cli');
     if (v('f-path-cli')) mf.projectPath = v('f-path-cli');
-    if (v('f-runtime')) mf.runtime = { language: v('f-runtime'), version: '', manager: '', note: '' };
+    if (v('f-runtime')) { var _rt = (tfTool && tfTool.runtime) || {}; mf.runtime = { language: v('f-runtime'), version: _rt.version || '', manager: _rt.manager || '', note: _rt.note || '' }; }
   } else if (f === 'api') {
     if (v('f-api-api')) mf.apiBase = v('f-api-api');
     if (v('f-keyname')) mf.apiKeyName = v('f-keyname');

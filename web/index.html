@@ -80,7 +80,7 @@ OCR:  Tesseract OCR (pytesseract)
       <div class="hero-sub">已部署的公网网站 点开直达</div>
     </div>
     <div class="apps-bar">
-      <button class="btn-add" onclick="toast('壳阶段：应用编辑下阶段接入')">+ 添加网站</button>
+      <button class="btn-add" onclick="openAppModal()">+ 添加网站</button>
     </div>
     <div class="tool-grid" id="appGrid"></div>
   </section>
@@ -93,7 +93,7 @@ OCR:  Tesseract OCR (pytesseract)
       <div class="hero-sub">踩坑沉淀 同一坑不踩第二次</div>
     </div>
     <div class="search-bar">
-      <button class="btn-add" onclick="toast('壳阶段：日志编辑下阶段接入')">+ 新增日志</button>
+      <button class="btn-add" onclick="openNewTip()">+ 新增日志</button>
       <div class="search-box">
         <input id="tipSearch" placeholder="搜索标题或描述…" oninput="renderTips()">
         <svg class="search-ico" viewBox="0 0 20 20" aria-hidden="true"><circle cx="9" cy="9" r="6.5" fill="none" stroke="currentColor" stroke-width="2"/><line x1="14.2" y1="14.2" x2="18" y2="18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
@@ -280,6 +280,80 @@ OCR:  Tesseract OCR (pytesseract)
         <div class="hint-row" id="hint-row"></div>
       </div>
     </div>
+  </div>
+</div>
+<!--#/SYNC#-->
+
+<!--#SYNC:app-modal#-->
+<!-- ── 添加网站 modal（原型：mock 态，保存推入 APPS） ── -->
+<div class="modal-mask" id="appModal" onclick="if(event.target===this)closeAppModal()">
+  <div class="modal modal-sm">
+    <div class="modal-head">
+      <span class="modal-title" id="appModalTitle">添加网站</span>
+      <span class="modal-close" onclick="closeAppModal()">✕</span>
+    </div>
+    <div class="modal-body">
+      <div class="form-pane">
+        <div class="field"><label>名称 <span class="req">*</span></label><input id="ap-name" type="text" placeholder="例：版式画廊"></div>
+        <div class="field"><label>域名 <span class="req">*</span></label><input id="ap-domain" type="text" placeholder="例：gallery.evopearl.com"></div>
+        <div class="field"><label>描述</label><textarea id="ap-desc" rows="2" placeholder="一句话说明这个站"></textarea></div>
+        <div class="field"><label>托管</label>
+          <select id="ap-host" onchange="appHostChange()">
+            <option value="腾讯云 DNSPod → Vercel">腾讯云 DNSPod → Vercel</option>
+            <option value="Cloudflare → Vercel">Cloudflare → Vercel</option>
+            <option value="Vercel（直连）">Vercel（直连）</option>
+            <option value="__custom__">自定义…</option>
+          </select>
+          <input id="ap-host-custom" type="text" placeholder="输入托管链路（如：阿里云 → Netlify）" style="display:none;margin-top:6px">
+        </div>
+        <div class="form-actions">
+          <button class="btn go" onclick="saveApp()">保存</button>
+          <button class="btn" onclick="closeAppModal()">取消</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<!--#/SYNC#-->
+<!--#SYNC:tip-modal#-->
+<!-- ── 新增日志 modal ── -->
+<div class="modal-mask" id="tipModal" onclick="if(event.target===this)closeTipModal()">
+  <div class="modal modal-sm">
+    <div class="modal-head">
+      <span class="modal-title" id="tipModalTitle">新增日志</span>
+      <span class="modal-close" onclick="closeTipModal()">✕</span>
+    </div>
+    <div class="modal-body">
+      <div class="form-pane">
+        <div class="field"><label>类型</label><select id="tp-type" onchange="tipTypeChange()">
+          <option value="diagnosis">诊断</option>
+          <option value="method">方法</option>
+          <option value="fact">事实</option>
+          <option value="capability">能力</option>
+          <option value="feedback">反馈</option>
+        </select></div>
+        <div class="field"><label>标题 <span class="req">*</span></label><input id="tp-title" type="text" placeholder="一句话说明踩的坑"></div>
+        <div class="field"><label>描述</label><textarea id="tp-desc" rows="6" placeholder="现象 / 根因 / 修复 / 预防"></textarea></div>
+        <div class="form-actions">
+          <button class="btn go" onclick="saveTip()">保存</button>
+          <button class="btn" onclick="closeTipModal()">取消</button>
+          <span class="std-link" onclick="openStd()">写入标准 ↗</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<!--#/SYNC#-->
+<!--#SYNC:std-modal#-->
+<!-- ── 写入标准 A4 modal（渲染后 markdown） ── -->
+<div class="modal-mask" id="stdModal" onclick="if(event.target===this)closeStd()">
+  <div class="std-sheet">
+    <div class="std-head">
+      <span class="std-t">操作日志宪法</span>
+      <span class="std-s">tips/CONSTITUTION.md · 渲染</span>
+      <span class="std-close" onclick="closeStd()">✕</span>
+    </div>
+    <div class="std-body" id="stdBody"></div>
   </div>
 </div>
 <!--#/SYNC#-->
