@@ -758,17 +758,18 @@ var tfMode = 'new';   // new | edit | fix | complete | migrate | register
 var tfMissing = [];   // complete 模式：缺的字段
 
 function initToolForm() {
+  // 原型提供静态 option（真相），只在 select 为空时才动态补
   var catSel = document.getElementById('f-category');
-  CATEGORY_LIST.forEach(function(c){ var o = document.createElement('option'); o.value = c; o.textContent = c; catSel.appendChild(o); });
+  if (catSel && !catSel.options.length) CATEGORY_LIST.forEach(function(c){ var o = document.createElement('option'); o.value = c; o.textContent = c; catSel.appendChild(o); });
   var ownSel = document.getElementById('f-owner');
-  OWNER_LIST.forEach(function(o){ var op = document.createElement('option'); op.value = o; op.textContent = o; ownSel.appendChild(op); });
+  if (ownSel && !ownSel.options.length) OWNER_LIST.forEach(function(o){ var op = document.createElement('option'); op.value = o; op.textContent = o; ownSel.appendChild(op); });
   var formSel = document.getElementById('f-form');
-  TYPE_LIST.forEach(function(t){ var op = document.createElement('option'); op.value = t.v; op.textContent = t.l; formSel.appendChild(op); });
+  if (formSel && !formSel.options.length) TYPE_LIST.forEach(function(t){ var op = document.createElement('option'); op.value = t.v; op.textContent = t.l; formSel.appendChild(op); });
   var rtSel = document.getElementById('f-runtime');
-  RUNTIME_LIST.forEach(function(r){ var op = document.createElement('option'); op.value = r; op.textContent = r; rtSel.appendChild(op); });
+  if (rtSel && !rtSel.options.length) RUNTIME_LIST.forEach(function(r){ var op = document.createElement('option'); op.value = r; op.textContent = r; rtSel.appendChild(op); });
   var icPanel = document.getElementById('icon-panel');
   icPanel.innerHTML = ICON_LIB.map(function(e){ return '<button type="button" class="icon-opt" title="选 '+e+'" onclick="pickIcon(\''+e+'\')">'+e+'</button>'; }).join('');
-  document.querySelectorAll('#toolFormModal input,#toolFormModal select,#toolFormModal textarea').forEach(function(el){
+  document.querySelectorAll('#editModal input,#editModal select,#editModal textarea').forEach(function(el){
     el.addEventListener('input', tfRender);
   });
   document.getElementById('f-name').addEventListener('input', function(){
@@ -783,26 +784,11 @@ function slugify(name) {
   return /^[a-z]/.test(s) ? s : ('tool-' + (s || '')).replace(/^tool-[-_]+/, 'tool-');
 }
 
-function setModeBtn(m) {
-  var edit = m === 'edit';
-  var e = document.getElementById('mb-edit'), n = document.getElementById('mb-new');
-  if (!e || !n) return;
-  e.classList.toggle('active', edit);
-  n.classList.toggle('active', !edit);
-  document.getElementById('f-id').style.display = edit ? 'none' : 'block';
-  document.getElementById('id-val').style.display = edit ? 'block' : 'none';
-  document.getElementById('id-req').style.display = edit ? 'none' : 'inline';
-}
-
-function setMode(m) {
-  var isNew = m === 'new';
-  tfMode = isNew ? 'new' : 'edit';
-  setModeBtn(m);
-  document.getElementById('tfTitle').textContent = isNew ? '新建工具' : '编辑工具';
-  document.getElementById('tfSub').textContent = isNew ? '将创建 tools/{id}/ 目录' : (tfId ? '正在编辑 ' + tfId : '');
-  if (isNew && !idTouched) { var s = slugify(document.getElementById('f-name').value); if (s) document.getElementById('f-id').value = s; }
-  applyFormType();
-  tfRender();
+function setIdLocked(editing) {
+  var idIn = document.getElementById('f-id'), idVal = document.getElementById('id-val'), idReq = document.getElementById('id-req');
+  if (idIn) idIn.style.display = editing ? 'none' : 'block';
+  if (idVal) idVal.style.display = editing ? 'block' : 'none';
+  if (idReq) idReq.style.display = editing ? 'none' : 'inline';
 }
 
 function openToolForm(id, mode) {
@@ -814,7 +800,7 @@ function openToolForm(id, mode) {
   var t = null;
   if (id) t = tools.find(function(x){ return x.id === id; });
 
-  document.getElementById('tfTitle').textContent =
+  document.getElementById('editTitle').textContent =
     tfMode === 'new' ? '新增工具' :
     tfMode === 'register' ? '注册为工具' :
     tfMode === 'fix' ? '修复 manifest' :
@@ -845,8 +831,6 @@ function openToolForm(id, mode) {
   setv('f-func', isNew ? '' : func);
   setv('f-when', isNew ? '' : when);
   setv('f-whennot', isNew ? '' : whennot);
-  setv('f-ret', isNew ? '' : ret);
-  setv('f-extra', extra);
   if (!isNew && t) {
     if (!func) func = t.capability || '';
     setv('f-func', func);
@@ -874,16 +858,19 @@ function openToolForm(id, mode) {
   document.getElementById('f-disabled').checked = !isNew && t && t.disabled;
 
   // id 锁定：新建显示输入框，编辑/修复/迁移锁定为 auto-val
-  setModeBtn(isNew ? 'new' : 'edit');
+  setIdLocked(!isNew);
+  var idVal = document.getElementById('id-val');
+  if (idVal) idVal.textContent = id || '—';
   // 删除按钮：仅编辑已有 manifest 显示
-  document.getElementById('tfDelete').style.display = (isNew || tfMode === 'fix') ? 'none' : '';
-  document.getElementById('tfSub').textContent =
+  var delBtn = document.getElementById('delBtn');
+  if (delBtn) delBtn.style.display = (isNew || tfMode === 'fix') ? 'none' : '';
+  document.getElementById('editSub').textContent =
     isNew ? (tfMode === 'register' ? '将写入 tools/' + (id || '') + '/manifest.json' : '将创建 tools/{id}/ 目录') :
     '正在编辑 ' + id;
 
   tfMissing = (t && t.missingFields) ? t.missingFields : [];
   applyFormType();
-  document.getElementById('toolFormModal').style.display = 'flex';
+  document.getElementById('editModal').style.display = 'flex';
   tfRender();
 }
 
@@ -920,13 +907,30 @@ function applyFormType() {
   var hasOps = (f === 'service' || f === 'cli');
   document.getElementById('ops-path').classList.toggle('show', hasOps);
   document.getElementById('ops-none').classList.toggle('show', (f === 'api' || f === 'group'));
-  var autoField = document.getElementById('autoStart-field');
+  var autoRow = document.getElementById('autoStart-row');
   var showAuto = (f === 'service' && !disabled);
-  autoField.style.display = showAuto ? '' : 'none';
+  if (autoRow) autoRow.style.display = showAuto ? '' : 'none';
   if (!showAuto) document.getElementById('f-autostart').checked = false;
   tfRender();
 }
+function typeOf() {
+  var f = document.getElementById('f-form').value;
+  function v(fid){ var el = document.getElementById(fid); return el ? el.value.trim() : ''; }
+  return {
+    loc: (f === 'api') ? '远程' : '本地',
+    acc: (function(){
+      if (f === 'cli' || f === 'group') return ['命令行'];
+      if (f === 'folder') return ['文件夹'];
+      if (f === 'api') return v('f-api-api') ? ['API 调用'] : ['网页界面'];
+      var a = []; if (v('f-port') || v('f-url')) a.push('网页界面'); if (v('f-api')) a.push('API 调用');
+      return a.length ? a : ['网页界面'];
+    })()
+  };
+}
 function tfRender() {
+  var d = typeOf();
+  var dl = document.getElementById('f-dims-loc'); if (dl) dl.textContent = '运行位置：' + d.loc;
+  var da = document.getElementById('f-dims-acc'); if (da) da.textContent = '接入形态：' + (d.acc.join(' / ') || '—');
   var missing = [];
   function v(fid){ var el = document.getElementById(fid); return el ? el.value.trim() : ''; }
   if (v('f-name').length < 1) missing.push('名字');
@@ -940,11 +944,6 @@ function tfRender() {
   if (f === 'folder' && v('f-path-folder') === '') missing.push('项目路径');
   if (f === 'group' && v('f-children') === '') missing.push('子工具');
   tfMissing.forEach(function(mf){ if (missing.indexOf(mf) === -1) missing.push(mf); });
-  var hint = document.getElementById('tfHint');
-  if (hint) {
-    if (missing.length) { hint.textContent = '✗ 缺：' + missing.join('、'); hint.className = 'hint err'; }
-    else { hint.textContent = '✓ 校验通过 — 保存将写入 manifest.json'; hint.className = 'hint'; }
-  }
 
   // 实时 manifest JSON 预览（v3 右侧暗色面板）
   var out = document.getElementById('json-out');
@@ -966,7 +965,7 @@ function tfRender() {
 }
 
 function buildManifest() {
-  function v(fid){ return document.getElementById(fid).value.trim(); }
+  function v(fid){ var el = document.getElementById(fid); return el ? el.value.trim() : ''; }
   var f = document.getElementById('f-form').value;
   var mf = { name: v('f-name'), id: v('f-id'), category: v('f-category'), owner: v('f-owner'), type: f };
   var ver = (document.getElementById('f-version').textContent || '').trim();
@@ -979,7 +978,8 @@ function buildManifest() {
   var retMap = { service: '调 ' + (v('f-api') || v('f-url') || (port ? ':' + port : '本地服务')), cli: '在 Claude Code 输入 /' + v('f-trigger'), api: '调 ' + v('f-api-api'), folder: '打开项目目录', group: '运行组编排' };
   if (v('f-ret')) parts.push('【返回】' + v('f-ret'));
   else parts.push('【返回】' + retMap[f]);
-  var extra = document.getElementById('f-extra').value;
+  var extraEl = document.getElementById('f-extra');
+  var extra = extraEl ? extraEl.value : '';
   if (extra) parts.push(extra);
   mf.description = parts.join('。');
   mf.capability = func.slice(0, 30);
@@ -1025,7 +1025,7 @@ async function submitToolForm() {
   var mf = buildManifest();
   var id = mf.id;
   if (!isNew) id = tfId;
-  if (!id) { document.getElementById('tfHint').textContent = '✗ 需要 id'; document.getElementById('tfHint').className = 'hint err'; return; }
+  if (!id) { setFormError('需要 id'); return; }
   mf.id = id;
   try {
     var res = await fetch(isNew ? '/api/tools' : '/api/tools/' + id, {
@@ -1035,21 +1035,26 @@ async function submitToolForm() {
     });
     var data = await res.json();
     if (!data.ok) {
-      document.getElementById('tfHint').textContent = '✗ ' + (data.error || '保存失败');
-      document.getElementById('tfHint').className = 'hint err';
+      setFormError(data.error || '保存失败');
       return;
     }
-    closeToolForm();
+    closeModal();
     fetchTools();
   } catch(e) {
-    document.getElementById('tfHint').textContent = '✗ ' + e.message;
-    document.getElementById('tfHint').className = 'hint err';
+    setFormError(e.message);
   }
 }
-
-function closeToolForm() {
-  document.getElementById('toolFormModal').style.display = 'none';
+function setFormError(msg) {
+  var hr = document.getElementById('hint-row');
+  if (hr) hr.innerHTML = '<span class="invalid">✗ ' + String(msg).replace(/&/g, '&amp;').replace(/</g, '&lt;') + '</span>';
 }
+
+function closeModal() {
+  document.getElementById('editModal').style.display = 'none';
+}
+// 原型标记 onclick 调 saveTool/deleteTool，接到真实保存/删除
+function saveTool() { submitToolForm(); }
+function deleteTool() { confirmDeleteForm(); }
 function closeLogModal() {
   document.getElementById('logModal').style.display = 'none';
 }
@@ -1081,7 +1086,7 @@ async function doDelete(id) {
   try {
     var res = await fetch('/api/tools/' + id + '?confirm=true', { method: 'DELETE' });
     var data = await res.json();
-    closeToolForm();
+    closeModal();
     fetchTools();
     if (!data.ok) alert('删除失败：' + (data.error || '未知错误'));
   } catch(e) { alert('删除失败：' + e.message); }
