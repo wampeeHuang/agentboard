@@ -78,11 +78,7 @@
       "status": "local",
       "localDev": "http://localhost:3099",
       "endpoints": {
-        "api": "http://localhost:3099/api/routes",
-        "tools": "http://localhost:3099/tools",
-        "skills": "http://localhost:3099/skills",
-        "projects": "http://localhost:3099/projects",
-        "apps": "http://localhost:3099/apps"
+        "tools": "http://localhost:3099/api/tools"
       },
       "agentNote": "本地服务，仅本机可访问。AI 通过读取 apps-registry.json 和 manifest.json 直接获取注册信息。"
     },
@@ -118,16 +114,6 @@
         "design-styles": "https://gallery.evopearl.com/api/design-styles"
       },
       "agentNote": "Vercel 部署。/api/registry 返回43模板完整索引。模板HTML通过 /templates/ 静态路径直接访问。本地 dev :3080。"
-    },
-    {
-      "id": "agentboard-cloudflare",
-      "name": "工具架 Agentboard（公网）",
-      "url": "https://lived-scan-afternoon-logging.trycloudflare.com",
-      "description": "工具架 Cloudflare Tunnel 公网临时通道。域名固定后更新。",
-      "category": "基础设施",
-      "status": "live",
-      "host": "Cloudflare Tunnel → localhost:3099",
-      "agentNote": "临时公网地址，Cloudflare Tunnel 每次重启会变。固定域名后续替换。"
     },
     {
       "id": "forma-local",

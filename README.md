@@ -4,8 +4,6 @@
 
 Agentboard is a local tool control plane. Drop a `manifest.json` in the `tools/` directory and it auto-discovers the tool, detects port status, and provides one-click start/stop. Same registry serves both the browser dashboard and the MCP protocol AI agents use.
 
-![screenshot](screenshot.png)
-
 ## What is this?
 
 你机器上跑着十几个本地服务——ComfyUI、Ollama、Stable Diffusion、各种 Web UI。记不住端口号，不知道哪个在跑，想停一个找不到进程。Agentboard 解决这件事。
@@ -45,7 +43,7 @@ cd ~/.agentboard
 npm install
 ```
 
-Only one dependency: `express`. Installs in seconds.
+Two dependencies: `express` (web server) and `@modelcontextprotocol/sdk` (MCP protocol). Installs in seconds.
 
 ### 4. Start
 
@@ -113,8 +111,8 @@ Agentboard stops when you close the terminal. To keep it alive:
 | Platform | Method |
 |----------|--------|
 | Windows | Task Scheduler or `Start-Process -WindowStyle Hidden node server.js` |
-| macOS | `launchctl` or `pm2 start server.js` |
-| Linux | `systemd --user` or `pm2` |
+| macOS | `launchctl` |
+| Linux | `systemd --user` |
 
 ---
 
@@ -131,7 +129,7 @@ Both planes share one truth source: `tools/{id}/manifest.json`. Change a file, b
 ~/.agentboard/
 ├── server.js              ← REST API + Dashboard (humans)
 ├── lib/mcp-http.js        ← MCP JSON-RPC over Streamable HTTP (AI agents, POST /mcp)
-├── index.html             ← Dashboard frontend (zero-framework HTML/CSS/JS)
+├── web/                   ← Dashboard frontend (index.html, zero-framework HTML/CSS/JS)
 ├── lib/
 │   ├── tool-registry.js   ← Core logic (shared by both planes)
 │   ├── manifest-schema.js ← Manifest validation
@@ -143,9 +141,8 @@ Both planes share one truth source: `tools/{id}/manifest.json`. Change a file, b
 ├── tools/                 ← Your tool registry (gitignored — personal)
 │   └── your-tool/
 │       └── manifest.json
-├── runtime/               ← Process identity files (PID tracking)
-├── tips/                  ← Operational tips (optional)
-└── _runtime/              ← Runtime data (event logs, sort state)
+├── _runtime/              ← Runtime data (pids/, event logs, sort state)
+└── tips/                  ← Operational tips (optional)
 ```
 
 ---

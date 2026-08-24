@@ -1,5 +1,5 @@
 // Pre-start guard: kill orphan processes on agentboard port before starting.
-// Prevents node -e "require('./server.js')" orphans from blocking pm2 restarts.
+// 防止 node -e "require('./server.js')" 残留进程占端口，阻塞重启。
 const { execSync } = require('child_process');
 const PORT = 3099;
 

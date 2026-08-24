@@ -12,3 +12,4 @@ cron/scheduler-state.json
 cron/stderr.log
 tools/
 !examples/
+tips/

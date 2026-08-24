@@ -40,7 +40,7 @@ MCP 工具: `agentboard_list_tools`, `agentboard_get_tool`, `agentboard_start_to
                                   ↘ PID 死 → 清过期文件 → 进程名兜底验证
 ```
 
-端口活跃 ≠ 工具在运行。PID 文件是 agentboard 启动工具时写入的身份凭证。无 PID 文件的工具（PM2 托管、外部启动）退回到进程名检测。
+端口活跃 ≠ 工具在运行。PID 文件是 agentboard 启动工具时写入的身份凭证。无 PID 文件的工具（外部启动）退回到进程名检测。
 
 **启动**：`spawn` → 写 `_runtime/pids/{id}.pid` → 轮询端口 + PID 存活双重确认（15s）→ 清 scan 缓存
 **停止**：读 PID 文件 → `taskkill /PID {pid} /T /F` 精确杀进程树 → 失败回退 `stopCommand` → 清 PID 文件 + 缓存

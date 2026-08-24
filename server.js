@@ -1,22 +1,4 @@
-﻿// Safety: PM2 io-bpm NotifyFeature calls process.exit(1) when it's the only
-// uncaughtException listener ("listeners.length === 1" check in notify.js:128).
-// This pre-handler ensures there are always ≥2 listeners, so PM2 never kills
-// the process silently. It also logs the error before PM2's handler runs,
-// since PM2's handler (registered during process bootstrap) fires first and
-// would otherwise exit before our server.js handler gets a chance to log.
-// Root cause: 2026-07-18 crash storm — 32 restarts/40min, exit code 1,
-// no error in logs. Tracked to notify.js:129 via crash-forensics.log.
-process.prependListener('uncaughtException', function(err) {
-  try {
-    var opslog_pre = require('./lib/ops-log');
-    opslog_pre.error('uncaughtException-pre', (err && err.message) || String(err), {
-      code: err && err.code,
-      stack: (err && err.stack || '').split('\n').slice(0, 3).join('\n')
-    });
-  } catch(_) {}
-});
-
-const express = require('express');
+﻿const express = require('express');
 const fs = require('fs');
 const path = require('path');
 const { exec, execSync, spawn } = require('child_process');
@@ -279,11 +261,11 @@ function classifySkill(name, desc) {
   };
   if (MAP[name]) return MAP[name];
   var s = (name + ' ' + (desc || '')).toLowerCase();
-  if (/(design|art|theme|visual|brand|canvas|illustrat|gif|animation|whiteboard|feishu)/i.test(s)) return '视觉与设计';
-  if (/(writ|doc|article|internal.comm|report|blog|memo|faq)/i.test(s)) return '写作与文档';
-  if (/(pdf|docx|xlsx|pptx?|excel|word|powerpoint|format|convert|markdown|csv|spreadsheet)/i.test(s)) return '文件与格式';
-  if (/(api|mcp|sdk|server|code|test|debug|build|deploy|playwright|browser|automation|cli|git|npm|node|react|tailwind|component)/i.test(s)) return '开发与工具';
-  if (/(perspective|mindset|framework|think|mentor|philosophy|methodology|distill)/i.test(s)) return '思维与方法';
+  if (/\b(design|art|theme|visual|brand|canvas|illustrat|gif|animation|whiteboard|feishu)\b/i.test(s)) return '视觉与设计';
+  if (/\b(writ|doc|article|internal.comm|report|blog|memo|faq)\b/i.test(s)) return '写作与文档';
+  if (/\b(pdf|docx|xlsx|pptx?|excel|word|powerpoint|format|convert|markdown|csv|spreadsheet)\b/i.test(s)) return '文件与格式';
+  if (/\b(api|mcp|sdk|server|code|test|debug|build|deploy|playwright|browser|automation|cli|git|npm|node|react|tailwind|component)\b/i.test(s)) return '开发与工具';
+  if (/\b(perspective|mindset|framework|think|mentor|philosophy|methodology|distill)\b/i.test(s)) return '思维与方法';
   return '其他';
 }
 
@@ -652,7 +634,7 @@ function startServer() {
   process.on('uncaughtException', function(err) {
     opslog.error('uncaughtException', (err && err.message) || String(err), { stack: err && err.stack });
     console.error('[agentboard] uncaughtException:', err && err.stack || err);
-    // EADDRINUSE is fatal — exit so PM2 can restart cleanly instead of going zombie
+    // EADDRINUSE 致命——退出，让守护者（Supervisor）重启，避免僵尸进程占端口
     if (err && (err.code === 'EADDRINUSE' || err.code === 'EACCES')) {
       process.exit(1);
     }

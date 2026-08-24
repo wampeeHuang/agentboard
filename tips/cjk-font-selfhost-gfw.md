@@ -28,7 +28,7 @@ Google Fonts **css2 API 按 `unicode-range` 把 CJK 切成 ~120 块**，浏览�
 5. 生成 `fonts.css`：每个子集一个 `@font-face`，`src` 指向本地 woff2，保留原 `unicode-range`
 6. 自托管到 `site/assets/fonts/`，HTML 只 `<link>` 本地 `fonts.css`
 
-参考脚本：`D:\workspace\_lab\2026-08-17-vivi-harness\scripts\fetch-cjk-fonts.js`。
+参考脚本：`D:\workspace\vivi-harness\scripts\fetch-cjk-fonts.js`。
 
 ## 预防
 
