@@ -201,7 +201,7 @@
   .doc-view{background:#fff;border:1px solid var(--border);border-radius:12px;padding:28px 36px;max-width:1584px;margin-left:32px;margin-right:32px;box-shadow:0 1px 4px rgba(0,0,0,.08)}
   .doc-view iframe.doc-frame{width:100%;height:calc(100vh - 324px);min-height:420px;border:1px solid var(--border);border-radius:8px;background:#fff;display:block}
   .docs-shell{width:100%}
-  .docs-shell iframe.doc-frame{width:100%;height:calc(100vh - 216px);min-height:520px;border:none;display:block;background:#fff}
+  .docs-shell iframe.doc-frame{width:100%;height:calc(100vh - 64px);min-height:520px;border:none;display:block;background:#fff}
   .doc-card{background:#fff;border:1px solid var(--border);border-radius:var(--radius-md);padding:16px;min-width:0}
   .doc-title{font-size:14px;font-weight:600;color:var(--ink);font-family:var(--font-head);margin-bottom:12px;display:flex;align-items:center;gap:8px}
   .doc-title .dot{width:8px;height:8px;border-radius:50%;background:var(--green)}
@@ -366,13 +366,8 @@
     <div class="tool-grid" id="tipGrid"></div>
   </section>
 
-  <!-- ── 说明书 ── -->
+  <!-- ── 说明书（嵌入独立文档，自带 hero，不加外层 hero-bar） ── -->
   <section class="page" id="page-docs">
-    <div class="hero-bar">
-      <div class="hero-eyebrow">DOCS</div>
-      <div class="hero-title">说明书</div>
-      <div class="hero-sub">工具架使用说明 —— 一份清单，两面读</div>
-    </div>
     <div class="docs-shell">
       <iframe class="doc-frame" src="../../docs/使用说明书.html"></iframe>
     </div>
