@@ -26,6 +26,10 @@ body{font-family:var(--font-body);font-size:16.5px;line-height:1.7;color:var(--i
 a{color:var(--green);text-decoration:none}
 a:hover{background:var(--soft);text-decoration:none}
 code{font-family:var(--font-code);font-size:.88em;background:var(--soft);color:var(--deep);padding:.08em .35em;border-radius:5px}
+.tip{position:relative;display:inline-block;cursor:help;border-bottom:1px dotted var(--line)}
+.tip::after{content:attr(data-tip);position:absolute;bottom:calc(100% + 10px);left:50%;transform:translateX(-50%);background:var(--deep);color:#E8EFE2;font-family:var(--font-body);font-size:12px;line-height:1.55;padding:9px 13px;border-radius:8px;white-space:nowrap;max-width:320px;z-index:40;opacity:0;pointer-events:none;transition:opacity .15s ease;box-shadow:0 6px 18px rgba(38,43,39,.22)}
+.tip::before{content:"";position:absolute;bottom:calc(100% + 4px);left:50%;transform:translateX(-50%);border:6px solid transparent;border-top-color:var(--deep);z-index:40;opacity:0;pointer-events:none;transition:opacity .15s ease}
+.tip:hover::after,.tip:hover::before{opacity:1}
 
 /* ══ 进度条 + 顶栏 ══ */
 #progress-bar{position:fixed;top:0;left:0;height:3px;background:var(--green);width:0;z-index:60}
@@ -251,7 +255,7 @@ code{font-family:var(--font-code);font-size:.88em;background:var(--soft);color:v
     <div class="quad"><i></i></div>
     <div>
       <b>工具可以有一百个，清单只有一份。</b>
-      <p>人看面板、AI 调工具，读的都是 <code>tools/*/manifest.json</code>。清单是唯一真相源，面板和 MCP 只是两种读法。</p>
+      <p>人看面板、AI 调工具，读的都是 <code class="tip" data-tip="清单文件：登记每个工具的位置，AI 和面板都读它">tools/*/manifest.json</code>。清单是唯一真相源，面板和 MCP 只是两种读法。</p>
     </div>
   </div>
 </section>
@@ -268,7 +272,7 @@ code{font-family:var(--font-code);font-size:.88em;background:var(--soft);color:v
     <div class="icon-rows">
       <div class="icon-row reveal">
         <span class="ic g"><svg viewBox="0 0 20 20" width="20" height="20" aria-hidden="true"><rect x="2.5" y="2.5" width="15" height="15" rx="3" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M6.5 6.5h7M6.5 10h7M6.5 13.5h4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></span>
-        <div><strong>一份清单，唯一真相</strong><p>工具都登记在 <code>tools/*/manifest.json</code>。AI 读它、面板读它，不建第二本账。</p></div>
+        <div><strong>一份清单，唯一真相</strong><p>工具都登记在 <code class="tip" data-tip="清单文件：登记每个工具的位置，AI 和面板都读它">tools/*/manifest.json</code>。AI 读它、面板读它，不建第二本账。</p></div>
       </div>
       <div class="icon-row reveal">
         <span class="ic y"><svg viewBox="0 0 20 20" width="20" height="20" aria-hidden="true"><path d="M10 3.4a6.6 6.6 0 1 1-4.7 2" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M3.4 3.4v3.4h3.4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
@@ -312,23 +316,23 @@ code{font-family:var(--font-code);font-size:.88em;background:var(--soft);color:v
     <div class="mod-head reveal">
       <span class="mod-tag"><span class="sq"></span>Open</span>
       <h2 class="mod-title">打开工具架</h2>
-      <p class="mod-sub">浏览器开 <code>localhost:3099</code>。左侧一根导航，五个页面。每页都是一个「读出来的视图」，数据活在文件里。</p>
+      <p class="mod-sub">浏览器开本机端口。左侧一根导航，五个页面。每页都是一个「读出来的视图」，数据活在文件里。</p>
     </div>
     <div class="navgrid">
       <div class="navmock reveal">
-        <div class="nm-brand"><span class="mark"></span>Agentboard<small>localhost:3099</small></div>
-        <div class="nm-item on"><span class="geo"><svg viewBox="0 0 20 20" width="17" height="17" aria-hidden="true"><rect x="2.5" y="2.5" width="15" height="15" rx="3" fill="none" stroke="currentColor" stroke-width="1.5"/><rect x="5.5" y="5.5" width="3.6" height="3.6" fill="currentColor"/><rect x="10.9" y="5.5" width="3.6" height="3.6" fill="currentColor" opacity=".55"/><rect x="5.5" y="10.9" width="3.6" height="3.6" fill="currentColor" opacity=".55"/><rect x="10.9" y="10.9" width="3.6" height="3.6" fill="currentColor" opacity=".55"/></svg></span>工具架<span class="cnt">10</span></div>
-        <div class="nm-item"><span class="geo"><svg viewBox="0 0 20 20" width="17" height="17" aria-hidden="true"><circle cx="10" cy="10" r="6" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M10 4.2a7.4 7.4 0 0 1 0 11.6M10 4.2a7.4 7.4 0 0 0 0 11.6M4.2 10h11.6" fill="none" stroke="currentColor" stroke-width="1.2"/></svg></span>我的网站<span class="cnt">7</span></div>
-        <div class="nm-item"><span class="geo"><svg viewBox="0 0 20 20" width="17" height="17" aria-hidden="true"><rect x="3" y="4" width="14" height="12" rx="2" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M6 8h8M6 11h5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></span>经验日志<span class="cnt">6</span></div>
+        <div class="nm-brand"><span class="mark"></span>Agentboard<small>本机端口</small></div>
+        <div class="nm-item on"><span class="geo"><svg viewBox="0 0 20 20" width="17" height="17" aria-hidden="true"><rect x="2.5" y="2.5" width="15" height="15" rx="3" fill="none" stroke="currentColor" stroke-width="1.5"/><rect x="5.5" y="5.5" width="3.6" height="3.6" fill="currentColor"/><rect x="10.9" y="5.5" width="3.6" height="3.6" fill="currentColor" opacity=".55"/><rect x="5.5" y="10.9" width="3.6" height="3.6" fill="currentColor" opacity=".55"/><rect x="10.9" y="10.9" width="3.6" height="3.6" fill="currentColor" opacity=".55"/></svg></span>工具架<span class="cnt">n</span></div>
+        <div class="nm-item"><span class="geo"><svg viewBox="0 0 20 20" width="17" height="17" aria-hidden="true"><circle cx="10" cy="10" r="6" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M10 4.2a7.4 7.4 0 0 1 0 11.6M10 4.2a7.4 7.4 0 0 0 0 11.6M4.2 10h11.6" fill="none" stroke="currentColor" stroke-width="1.2"/></svg></span>我的网站<span class="cnt">n</span></div>
+        <div class="nm-item"><span class="geo"><svg viewBox="0 0 20 20" width="17" height="17" aria-hidden="true"><rect x="3" y="4" width="14" height="12" rx="2" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M6 8h8M6 11h5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></span>经验日志<span class="cnt">n</span></div>
         <div class="nm-item"><span class="geo"><svg viewBox="0 0 20 20" width="17" height="17" aria-hidden="true"><path d="M10 4.6C8.6 3.9 6.7 3.7 4.4 4v12c2.3-.3 4.2-.1 5.6.6 1.4-.7 3.3-.9 5.6-.6V4c-2.3-.3-4.2-.1-5.6.6z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M10 4.6v12" stroke="currentColor" stroke-width="1.5"/></svg></span>说明书<span class="cnt">你在这</span></div>
-        <div class="nm-item"><span class="geo"><svg viewBox="0 0 20 20" width="17" height="17" aria-hidden="true"><path d="M4.5 5h11v11h-11z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M4.5 8h11M7 8v8M13 11h4M13 14h4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg></span>系统规范<span class="cnt">2</span></div>
+        <div class="nm-item"><span class="geo"><svg viewBox="0 0 20 20" width="17" height="17" aria-hidden="true"><path d="M4.5 5h11v11h-11z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M4.5 8h11M7 8v8M13 11h4M13 14h4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg></span>系统规范<span class="cnt">n</span></div>
       </div>
       <div class="pages">
-        <div class="pg reveal"><span class="pg-no">01</span><div><b>工具架<span class="c">10 个本地工具</span></b><p>全部本地工具，一张卡片一个。状态、冲突、盲区全写在卡片上。</p></div></div>
-        <div class="pg reveal"><span class="pg-no">02</span><div><b>我的网站<span class="c">7 个公网应用</span></b><p>公网应用注册表。哪些应用对外、入口在哪，一张表看全。</p></div></div>
+        <div class="pg reveal"><span class="pg-no">01</span><div><b>工具架<span class="c">全部本地工具</span></b><p>全部本地工具，一张卡片一个。状态、冲突、盲区全写在卡片上。</p></div></div>
+        <div class="pg reveal"><span class="pg-no">02</span><div><b>我的网站<span class="c">公网应用注册</span></b><p>公网应用注册表。哪些应用对外、入口在哪，一张表看全。</p></div></div>
         <div class="pg reveal"><span class="pg-no">03</span><div><b>经验日志<span class="c">踩坑沉淀</span></b><p>把踩过的坑固化成五类条目，下次不再踩第二遍。</p></div></div>
         <div class="pg reveal"><span class="pg-no">04</span><div><b>说明书<span class="c">就是这份</span></b><p>工具架的使用说明，AI 和人同读。</p></div></div>
-        <div class="pg reveal"><span class="pg-no">05</span><div><b>系统规范<span class="c">2 份文档</span></b><p>设计规范 + 工程规范。规矩写在文档里，不在人嘴里。</p></div></div>
+        <div class="pg reveal"><span class="pg-no">05</span><div><b>系统规范<span class="c">设计 + 工程规范</span></b><p>设计规范 + 工程规范。规矩写在文档里，不在人嘴里。</p></div></div>
       </div>
     </div>
   </div>
@@ -388,13 +392,13 @@ code{font-family:var(--font-code);font-size:.88em;background:var(--soft);color:v
       <div class="tcard g reveal">
         <span class="tk">Websites</span>
         <b>我的网站</b>
-        <p>公网应用注册表，数据活在 <code>apps-registry.json</code>。哪些应用对外、入口在哪、干什么用，一张表看全。</p>
-        <div class="tags"><span>apps-registry.json</span><span>7 个应用</span></div>
+        <p>公网应用注册表，数据活在 <code class="tip" data-tip="公网应用注册表：记录对外应用、入口和用途的文件">apps-registry.json</code>。哪些应用对外、入口在哪、干什么用，一张表看全。</p>
+        <div class="tags"><span>apps-registry.json</span></div>
       </div>
       <div class="tcard l reveal">
         <span class="tk">Tips</span>
         <b>经验日志</b>
-        <p>踩过的坑，固化成 <code>tips/*.md</code>。五类各管一种：诊断 / 方法 / 事实 / 能力 / 反馈。格式统一：现象 → 根因 → 修复 → 预防。</p>
+        <p>踩过的坑，固化成 <code class="tip" data-tip="经验日志：踩坑条目，格式统一——现象→根因→修复→预防">tips/*.md</code>。五类各管一种：诊断 / 方法 / 事实 / 能力 / 反馈。格式统一：现象 → 根因 → 修复 → 预防。</p>
         <div class="tags"><span>诊断</span><span>方法</span><span>事实</span><span>能力</span><span>反馈</span></div>
       </div>
       <div class="tcard d reveal">
@@ -455,7 +459,7 @@ code{font-family:var(--font-code);font-size:.88em;background:var(--soft);color:v
     <div class="reds">
       <div class="red reveal"><span class="rk">!</span><div><b>禁止删除清单目录</b><p>清单是唯一真相源，删了工具就从世界消失，不可逆。除非用户逐文件确认。</p></div></div>
       <div class="red reveal"><span class="rk">!</span><div><b>「删卡片」≠ 授权删文件</b><p>删卡片删的是视图，删文件删的是真相。先问：隐藏还是删除？要删则列清单等确认。</p></div></div>
-      <div class="red reveal"><span class="rk">!</span><div><b>改动前先看现状</b><p>动手前先查 <code>/api/tools</code>，不凭记忆。</p></div></div>
+      <div class="red reveal"><span class="rk">!</span><div><b>改动前先看现状</b><p>动手前先查 <code class="tip" data-tip="管理面接口：面板从这里读工具列表，AI 走 MCP 读同一份清单">/api/tools</code>，不凭记忆。</p></div></div>
     </div>
     <div class="never reveal">
       <div class="nt">永不</div>
@@ -481,7 +485,7 @@ code{font-family:var(--font-code);font-size:.88em;background:var(--soft);color:v
         <div class="steps">
           <div class="step"><span class="step-no">1</span><div><b>能跑</b><p>启动命令执行，服务正常起来。</p></div></div>
           <div class="step"><span class="step-no">2</span><div><b>有清单</b><p>manifest 写全：是什么、怎么启停、跟谁冲突。</p></div></div>
-          <div class="step"><span class="step-no">3</span><div><b>架上可见</b><p>面板 /api/tools 能看到，状态对。</p></div></div>
+          <div class="step"><span class="step-no">3</span><div><b>架上可见</b><p>面板 <code class="tip" data-tip="管理面接口：面板从这里读工具列表，AI 走 MCP 读同一份清单">/api/tools</code> 能看到，状态对。</p></div></div>
           <div class="step"><span class="step-no">4</span><div><b>AI 能调</b><p>MCP 侧能发现、能调用。</p></div></div>
         </div>
       </div>
