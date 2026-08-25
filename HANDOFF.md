@@ -29,7 +29,6 @@
 - 换皮 `defed06`（黄绿白 token 换肤）+ 写回收官 `ee016a7`（应用/日志增改删、写入标准、工具编辑保真）已提交。计划文件 `~/.claude/plans/calm-singing-engelbart.md`（若未收官，Phase 4 浏览器 golden path 验证待跑）
 
 ## 待办
-- **tools/ 45 处 manifest 变更未提交**（用户指示不动，留专项）——下次动 tools/ 前先确认是否要提交
 - **身份素材替换**（用户授权"换成我的"）：等头像图 + 名字/handle + 社交链接 → 替换 `avatar-placeholder.svg`、`scene-wechat.md` 签名、SKILL.md author、README 署名
 - **真实工具架 vs 原型一致性终审**（task #59）
 - 空状态、响应式 900/600 断点（原型已有，真实页未全对齐）
