@@ -127,22 +127,36 @@ Both planes share one truth source: `tools/{id}/manifest.json`. Change a file, b
 
 ```
 ~/.agentboard/
+├── agent.md               ← Governance constitution (architecture, principles, boundaries)
 ├── server.js              ← REST API + Dashboard (humans)
-├── lib/mcp-http.js        ← MCP JSON-RPC over Streamable HTTP (AI agents, POST /mcp)
-├── web/                   ← Dashboard frontend (index.html, zero-framework HTML/CSS/JS)
+├── start.js               ← Launch entry (kill-port → server.js)
 ├── lib/
+│   ├── routes.js          ← REST routes (/api/*, pages, mounts /mcp)
 │   ├── tool-registry.js   ← Core logic (shared by both planes)
-│   ├── manifest-schema.js ← Manifest validation
+│   ├── manifest-schema.js ← Manifest standard — single source of truth (fields/categories/validation)
+│   ├── mcp-http.js        ← MCP JSON-RPC over Streamable HTTP (AI agents, POST /mcp)
+│   ├── mcp-handlers.js    ← 6 agentboard_* MCP tools
+│   ├── static.js          ← Static file serving
+│   ├── api-page.js        ← /api discovery page
+│   ├── self-check.js      ← Self-check
 │   ├── ops-log.js         ← Operational event log
-│   └── crash-guard.js     ← Crash protection for spawned Node tools
+│   ├── crash-guard.js     ← Crash protection for spawned Node tools
+│   └── tip-schema.js      ← Tips type validation
+├── web/                   ← Dashboard frontend (5 pages, zero-framework HTML/CSS/JS)
 ├── examples/              ← Manifest templates (committed — copy to tools/)
 │   ├── hello-server/
 │   └── nextjs-app/
-├── tools/                 ← Your tool registry (gitignored — personal)
+├── tools/                 ← Tool registry (gitignored — personal)
 │   └── your-tool/
 │       └── manifest.json
-├── _runtime/              ← Runtime data (pids/, event logs, sort state)
-└── tips/                  ← Operational tips (optional)
+├── tips/                  ← Operational tips (gitignored)
+├── principles/            ← Principles
+├── mechanisms/            ← Mechanism docs
+├── apps-registry.json     ← Public app registry
+├── docs/                  ← Docs (archive/ holds retired)
+├── skills/                ← Design-system skill (read-only reference)
+├── state/                 ← Runtime state (api-calls)
+└── _runtime/              ← Runtime data (pids/, logs; gitignored)
 ```
 
 ---

@@ -3,19 +3,41 @@
 ## 架构
 
 ```
-~/.agentboard/
-  server.js          ← 装配骨架 (建 app → 挂 lib/ 模块 → listen；REST + Dashboard + /mcp + 自检)
-  mcp-server.js      ← [遗留] 旧 stdio 入口，已被 lib/mcp-http.js 取代（Streamable HTTP，无引用）
-  start.js           ← 启动入口 (kill-port → require server.js)
-  lib/               ← 后端模块 (routes, static, mcp-http, self-check, tool-registry, manifest-schema, api-page, mcp-handlers, ops-log, crash-guard)
-  web/               ← 工具架前端 (index.html, _style.css, _script.js, logo)
-  docs/              ← 文档 (GLOBAL.md, PATROL.md, CHANGELOG.md, ...; 治理宪法在 agent.md 本文件)
-  tools/*/manifest.json  ← 工具注册（唯一真相源）
-  tips/*.md           ← 踩坑沉淀（唯一真相源）
-  mechanisms/*.md     ← 系统机制说明（唯一真相源）
-  principles/*.md     ← 原则
-  _runtime/           ← 运行产物 (events.jsonl, logs, crash, pids/; git 忽略)
-  apps-registry.json  ← 公网应用注册表
+~/.agentboard/                ← 治理宪法在本文件（agent.md）
+│
+├─ 装配层
+│   server.js          装配骨架：建 app → 挂 lib/ → listen（REST + Dashboard + /mcp）
+│   start.js           启动入口（kill-port → require server.js）
+│   mcp-server.js      [遗留] 旧 stdio 入口，无引用
+│
+├─ 后端 lib/            ← 双平面共享的核心
+│   routes.js          REST 路由（/api/*、5 页、挂载 /mcp）→ 系统规范页从真源生成
+│   tool-registry.js   核心逻辑：scanTools 三段验证 / 启停 / 端口查重
+│   manifest-schema.js Manifest 契约唯一真相源（字段 / 分类 / 校验）
+│   mcp-http.js        MCP Streamable HTTP（POST /mcp，JSON-RPC 2.0）
+│   mcp-handlers.js    6 个 agentboard_* 工具实现
+│   static.js / api-page.js / self-check.js / ops-log.js / crash-guard.js / tip-schema.js
+│
+├─ 前端 web/
+│   index.html         Dashboard 5 页（工具架 / 我的网站 / 经验日志 / 说明书 / 系统规范）
+│   _style.css         设计系统 token + 组件
+│   _script.js         渲染 / 交互
+│
+├─ 数据真相源          ← 内容文件（git 忽略的标 *）
+│   tools/*/manifest.json  工具注册 *
+│   tips/*.md              踩坑沉淀 *
+│   principles/*.md        原则
+│   mechanisms/*.md        系统机制说明
+│   apps-registry.json     公网应用注册表
+│
+├─ 只读索引
+│   skills/            设计系统 skill（视觉约束唯一真相源，只读）
+│
+├─ 文档 / 运行
+│   docs/              文档（archive/ 退场归档）
+│   examples/          manifest 模板（提交，copy 到 tools/）
+│   state/             运行态（api-calls）
+│   _runtime/          运行产物（pids / events.jsonl / logs）*
 ```
 
 **双平面架构**: MCP (AI plane) + REST (human plane)，共享同一真相源 `tools/*/manifest.json`。
