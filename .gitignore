@@ -14,3 +14,10 @@ tools/
 !examples/
 tips/
 skills/
+
+# Claude Code 项目级配置
+.claude/
+# c8 测试覆盖率产物
+coverage/
+# web 原型工作区
+web/_proto/
