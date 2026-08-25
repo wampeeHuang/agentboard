@@ -836,7 +836,7 @@ function md2html(src){
       if (rows.length){
         var tbl = '<table><thead>'+mdTableRow(rows[0],'th')+'</thead><tbody>';
         for (var r = 1; r < rows.length; r++){
-          if (/^\s*\|?[\s:|-]+\|?\s*$/.test(rows[r].replace(/[^|\s:-]/g,''))) continue;
+          if (/^[\s:|-]+$/.test(rows[r].trim())) continue;
           tbl += mdTableRow(rows[r],'td');
         }
         tbl += '</tbody></table>';
