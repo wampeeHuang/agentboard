@@ -15,7 +15,7 @@ AI AGENT REFERENCE — 工具架 Agentboard
 API:     GET /api/tools     → 全部工具清单 JSON {ok, tools:[{id,name,description,category,port,ports,url,running,state,stateDetail,recovery,missingFields,startCommand,stopCommand,apiBase,projectPath,icon,version,order}]}
 API:     GET /api/apps      → 公网应用注册表 JSON {ok, apps:[...]}（apps-registry.json）
 API:     GET /api/tips      → 经验日志 JSON {ok, tips:[{file,title,desc,type}]}（tips/*.md）
-API:     GET /api/registry  → 系统规范 JSON {ok, principles:[...]}（principles/*.md）
+API:     GET /api/registry  → 系统规范 JSON {ok, docs:[{key,title,file,markdown}]}（治理宪法/Manifest Schema/真相源索引，从真源生成）
 ACTION:  POST /api/tools/start/:id   POST /api/tools/stop/:id
 PAGES:   #page-tools(工具架)  #page-apps(我的网站)  #page-tips(经验日志)  #page-docs(说明书 iframe /manual)  #page-registry(系统规范)
 DIMS:    #dimBlocks 四维异色筛选块(category/form/owner/state) → setDimFilter(dim,val)
@@ -126,15 +126,6 @@ OCR:  Tesseract OCR (pytesseract)
 <!--STATS_SNAPSHOT-->
 <div id="errBox" style="display:none;background:#fff0f0;color:#c00;padding:6px 20px;font-size:12px;font-family:monospace;border-bottom:1px solid #fcc;max-width:1100px;margin:0 auto;word-break:break-all"></div>
 
-<div class="grid-overlay" id="gridOverlay"></div>
-<div class="grid-ctl">
-  <span class="gl">网格</span>
-  <button class="g-toggle active" onclick="setGridOn(!gridOn)"><span class="g-toggle-txt">开</span></button>
-  <span class="g-sep">·</span>
-  <button class="g-layer active" data-v="8" onclick="toggleLayer(8)">8</button>
-  <button class="g-layer active" data-v="32" onclick="toggleLayer(32)">32</button>
-  <button class="g-layer active" data-v="128" onclick="toggleLayer(128)">128</button>
-</div>
 <div class="toast" id="toast"></div>
 
 <!--#SYNC:tool-modal#-->
@@ -222,7 +213,7 @@ OCR:  Tesseract OCR (pytesseract)
 
           <div class="cg" id="cg-cli">
             <div class="row2">
-              <div class="field"><label>触发词 <span class="req">*</span></label><input id="f-trigger" type="text" placeholder="例：/clip"></div>
+              <div class="field"><label>触发词</label><input id="f-trigger" type="text" placeholder="例：/clip（无触发词的 CLI 可留空）"></div>
               <div class="field"><label>启动命令</label><input id="f-start-cli" type="text" placeholder="例：node run.js"></div>
             </div>
             <div class="field"><label title="命令所在目录">项目路径</label><input id="f-path-cli" type="text" placeholder="例：D:\tools\some-cli"></div>

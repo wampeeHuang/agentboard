@@ -1,39 +1,39 @@
 # HANDOFF · 2026-08-25
 
-## 本次完成（会话：真实工具架 · 改造为原型板式，壳阶段）
+## 本次完成（会话：治理层收敛 + manifest 灾难恢复 + UI 修复 + 收官沉淀）
 
-**计划**: `~/.claude/plans/calm-singing-engelbart.md` — 真实工具架吸收原型 `web/_proto/dashboard-leftnav.html` 骨架（左导航 5 页），"先壳后肉"。
+**背景**: 上会话（写回收官 ee016a7）交付应用/日志写回。本会话聚焦治理层——回答"设计规范/工程规范还有存在的必要吗"，按唯一真相源收敛。
 
-**壳阶段 4 文件改动**（全部验证通过）:
-- `web/index.html` — 重写为原型骨架：`.sidebar`（logo SVG + 5 nav-item + cnt）+ `.main` + 5 个 `.page`（工具架/我的网站/经验日志/说明书/系统规范）。保留 `<!--STATS_SNAPSHOT-->`、toolFormModal/logModal/grid-ctl/toast。删顶部 header/统计条/5 行 filter-bar/footer
-- `web/_style.css` — 原型皮肤：`.sidebar/.hero-bar/.dim-blocks/.tool-card(绿头通栏)/.tip-type/.doc-view/.modal-header(绿)`，保留设计系统 token 与启停/表单样式
-- `web/_script.js` — 适配新 DOM + 新页渲染：`showPage(p)` 切页；四维异色 dim-blocks（category/form/owner/state）点击过滤；renderApps/renderTips/renderRegView（懒拉 JSON）；grid JS；绿头卡 renderCard/actionsHtml。S5 工具表单弹窗逻辑原样保留
-- `lib/routes.js` — 3 个轻量 JSON 端点：`/api/apps`(apps-registry.json)、`/api/tips`(复用 parseTipFile)、`/api/registry`(docs/design-spec.md+repo-spec.md 原文)、`/manual`(docs/使用说明书.html)。旧 HTML 路由保留
+**本次改动**:
+- `agent.md` — 新增三节：治理原则（第一性/永不）、骨件边界（scheduler/supervisor/密钥）、资产边界
+- `docs/design-spec.md` + `docs/repo-spec.md` → **归档退场** `docs/archive/`（不物理删，git 保留历史）
+- `lib/routes.js` — `/api/registry` 改从真源生成三篇：治理宪法(agent.md) + Manifest Schema(manifest-schema.js 实时字段表) + 真相源索引(指针)；修复 APPS_REG 自引用 bug（env 空→undefined→/api/apps 500）
+- `lib/manifest-schema.js` — description 三段式校验（【用途】+【何时用】必填）；描述含【端口】与端口槽位重复→warning（写两处必漂移）
+- `web/` — 系统规范页改 3 tab（governance/schema/sources）；**网格辅助层剥除**（8/32/128）；index.html:18 注释改新 API 格式；Supervisor 卡片按钮贴底修复（内容区 flex:1;min-height:0;overflow:hidden + 头尾 flex-shrink:0）
+- `docs/使用说明书.html` — 系统规范两处描述改"治理宪法 + 契约 + 索引"
+- `tips/*.md` ×4 — backup-restore-path-must-be-verified / node-startjs-killport-silent-exit / ps-match-chinese-false-negative / var-self-reference-init-undefined
+- `principles/docs-retire-when-superseded.md` — 被真源覆盖的文档退场不重写
+- `D:\workspace\_output\retrospectives\entries\2026-08-25-agentboard-governance-recovery.md` — 复盘：恢复管线 / 治理收敛 / 浏览器实测 / 四坑
 
-## 验证结果（Edge headless dump-dom）
-- 5 页全渲染真实数据：工具 66 卡 / 网站 9 卡 / 日志 404 卡 / 说明书 iframe 渲染(标题"Agent 工具架 · 使用说明书") / 规范页 7 个 h1/h2
-- 四维块 4 块，功能分类 7 选项；nav 计数 66/9/404/2
-- Golden path：13 张运行卡带"停止"钮、27 张停止卡带"启动"钮（ComfyUI/SD/Ollama 等）、66 编辑钮；编辑弹窗填真实名"工具架 · Agentboard"、新建弹窗空白、关闭 display=none
-- 禁色扫描 0（#8B5CF6/#D97706/#3B82F6/#002FA7/#0E1120 仅存于 _proto 原型文件，不在范围）
-- server 重启：kill dashboard pid → Supervisor watchdog 30s 内复活，:3099 200
-
-## 已知小问题（预存在，非本次回归，未修）
-- 编辑弹窗 ID 锁定行 `#id-val` 恒显"—"（HTML 静态初始值，JS 只切 display 不填值）。ID 在卡片 meta 与 tfSub 均可见，影响轻微。修：openToolForm 里 `id-val.textContent = t.id`
+## 验证结果
+- 系统规范页：API 返回 3 docs、浏览器 3 tab 渲染、无 console 错误（schema 页从代码生成，改字段自动变）
+- 网格剥除：DOM 无残留元素、函数未定义、无 console 错误
+- 卡片贴底：Supervisor 无溢出、按钮在底、全网格 476 卡零溢出（Chrome DevTools 实测几何）
+- manifest 校验：18 个 manifest 恢复后全过三段式校验
 
 ## 仓库状态
-- 换皮备份已提交并打 tag `pre-nav`（commit `defed06`）
-- 未提交：lib/routes.js、web/index.html、web/_style.css、web/_script.js（本次壳阶段 4 文件）
-- 未跟踪：skills/agentboard-design-system/、principles/user-selected-direction-no-resale.md、.claude/
+- 本会话改动待提交（治理收敛 + tips/principle），见 git status
+- 未提交（其他工作流）：测试基建 #50（package.json scripts + lib/__tests__/ + coverage/）、`.claude/`、`skills/agentboard-design-system/`、`web/_proto/dashboard-leftnav.backup-preinteraction.html`
 
-## 待办（里程碑 B，"肉"）
-- 统计条（全部/打开中/可打开/未启动/公开站）落位工具页
-- publicUrl/已停用(disabled) 筛选并入 dim 块
-- 应用/日志/规范页编辑弹窗（写回 apps-registry.json / tips/*.md）
-- 排序拖拽、cron 组卡子状态、资源条/操作日志条
-- 空状态、响应式 900/600 断点
-- 修 `#id-val` 显示
+## 待办
+- **测试基建 #50-55**（node:test + c8 覆盖率管线）— in_progress，独立工作流
+- **端口 3080 `/grow` 页**（用户提过"与英雄区拖开 32px"，被重定向未实施，未确认）
+- 空状态、响应式 900/600 断点（原型已有，真实页未全对齐）
+- 工具架 vs 原型一致性终审（task #59）
 
 ## 关键风险
-- tips/ 在 `.gitignore`，新 tips 提交需 `git add -f`
-- 原型 `web/_proto/` 不在 `.gitignore`，commit 前 `git diff --cached` 防 staged 残留
+- `tips/` 在 `.gitignore`，新 tips 提交需 `git add -f`
 - 本机 bash 工具引号解析坏（`unexpected EOF`），命令用 PowerShell
+- **PowerShell 5.1 `-match` 中文假阴性** — 中文检查以 node/UTF-8 为权威（见新 tip）
+- `node start.js` 的 npx kill-port 会静默退出 — 启动直接 `node server.js`
+- `coverage/` 未 gitignore（c8 输出），提交前注意别误加

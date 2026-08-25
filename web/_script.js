@@ -21,7 +21,7 @@ var appsData = null;
 var tipsData = null;
 var regData = null;
 var tipF = 'all';
-var regDoc = 'design';
+var regDoc = 'governance';
 
 // 领域映射：category → 领域（dim 块按此聚合）
 var domainMap = {
@@ -86,23 +86,13 @@ function isDimActive(key, val) {
   var cur = key === 'category' ? domainFilter : key === 'loc' ? locFilter : key === 'acc' ? accFilter : stateFilter;
   return cur === val;
 }
-function dimCount(key, val) {
-  var n = 0;
-  tools.forEach(function(t){
-    if (key === 'category') { if ((domainMap[t.category||'其他']||'职能') === val) n++; }
-    else if (key === 'loc') { if (getToolLoc(t) === val) n++; }
-    else if (key === 'acc') { if (getToolAcc(t) === val) n++; }
-    else if (key === 'state') { if (stateLabelOf(classifyState(t), t) === val) n++; }
-  });
-  return n;
-}
 function buildDimBlocks() {
   var grid = document.getElementById('dimBlocks'); if (!grid) return;
   var html = '';
   DIMS.forEach(function(d){
     html += '<div class="dim-block dim-' + d.cls + '" style="--b:' + d.bg + '"><div class="dim-block-title">' + d.label + '<span class="dim-arr">></span></div><div class="dim-block-opts">';
     d.values.forEach(function(v){
-      html += '<span class="dim-opt' + (isDimActive(d.key, v) ? ' active' : '') + '" onclick="setDimFilter(\'' + d.key + '\',\'' + v + '\')">' + v + '<span style="font-size:11px;opacity:.55;margin-left:5px;font-family:var(--font-code)">' + dimCount(d.key, v) + '</span></span>';
+      html += '<span class="dim-opt' + (isDimActive(d.key, v) ? ' active' : '') + '" onclick="setDimFilter(\'' + d.key + '\',\'' + v + '\')">' + v + '</span>';
     });
     html += '</div></div>';
   });
@@ -147,6 +137,34 @@ function showToast(msg) {
   clearTimeout(t._timeout);
   t._timeout = setTimeout(function() { t.style.opacity = '0'; }, 5000);
 }
+
+/* ── 设计气泡 tooltip：替代默认 title ── */
+var _tipEl = null;
+function tipBubble() {
+  if (_tipEl) return _tipEl;
+  _tipEl = document.createElement('div');
+  _tipEl.className = 'tip-bubble';
+  document.body.appendChild(_tipEl);
+  return _tipEl;
+}
+document.addEventListener('mouseover', function (e) {
+  var t = e.target.closest('[data-tip]');
+  if (!t) return;
+  var b = tipBubble();
+  b.textContent = t.getAttribute('data-tip') || '';
+  b.style.display = 'block';
+  var r = t.getBoundingClientRect();
+  var bw = b.offsetWidth, bh = b.offsetHeight;
+  var x = r.left + r.width / 2 - bw / 2;
+  x = Math.max(8, Math.min(x, window.innerWidth - bw - 8));
+  var y = r.top - bh - 8;
+  if (y < 8) y = r.bottom + 8;
+  b.style.left = x + 'px';
+  b.style.top = y + 'px';
+});
+document.addEventListener('mouseout', function (e) {
+  if (e.target.closest('[data-tip]')) { if (_tipEl) _tipEl.style.display = 'none'; }
+});
 
 var _cronBackoff = 0;
 var _cronTimer = null;
@@ -229,6 +247,10 @@ function render() {
   try { cardOrder = JSON.parse(localStorage.getItem('agentboard-card-order') || '[]'); } catch(_) {}
   if (!Array.isArray(cardOrder)) cardOrder = [];
   sorted.sort(function(a,b){
+    // 已停用沉底（照原型 dashboard-leftnav.html:758）
+    var da = a.disabled ? 1 : 0;
+    var db = b.disabled ? 1 : 0;
+    if (da !== db) return da - db;
     var ai = cardOrder.indexOf(a.id);
     var bi = cardOrder.indexOf(b.id);
     // both in saved order: preserve user arrangement
@@ -302,16 +324,14 @@ function statusDots(t) {
 }
 
 function metaRowHtml(t, state) {
-  var meta = STATE_META[state] || STATE_META.stopped;
   var ports = t.ports || (t.port ? [t.port] : []);
   var portHtml = ports.length ? escHtml(ports.join(' :')) : '—';
   var isGroup = t.type === 'group';
-  var desc = t.description || '—';
+  var desc = (t.description || '—').replace(/(【)/g, '\n$1').replace(/^\n/, '');
   return '<div class="card-meta-row">'
     + '<span class="cf"><span class="cf-l">ID</span><span class="card-id">' + escHtml(t.id) + '</span></span>'
     + '<span class="cf"><span class="cf-l">端口</span><span class="card-port">' + portHtml + '</span>' + (isGroup ? statusDots(t) : '') + '</span>'
-    + '<span class="cf"><span class="cf-l">状态</span><span class="st-dot ' + state + '"></span><span class="status-word ' + state + '">' + escHtml(meta.label) + '</span></span>'
-    + '<span class="cf"><span class="cf-l">功能</span><span class="card-desc' + (t.description ? '' : ' placeholder') + '" title="' + escAttr(t.description || '') + '">' + escHtml(desc) + '</span></span>'
+    + '<span class="cf"><span class="cf-l">功能</span><span class="card-desc' + (t.description ? '' : ' placeholder') + '" data-tip="' + escAttr(t.description || '') + '">' + escHtml(desc) + '</span></span>'
     + '</div>';
 }
 
@@ -359,10 +379,9 @@ function actionsHtml(t, state) {
   }
   btns.push('<button class="btn edit" onclick="event.stopPropagation();openToolForm(\'' + t.id + '\',\'edit\')">编辑</button>');
 
-  var publicBtn = t.publicUrl ? '<a href="' + escAttr(t.publicUrl) + '" target="_blank" class="btn public" onclick="event.stopPropagation()" title="公开站: ' + escAttr(t.publicUrl) + '">公开站</a>' : '';
-  var toggle = '<label class="toggle-sm" onclick="event.stopPropagation();toggleDisabled(\'' + t.id + '\')"><input type="checkbox"' + (t.disabled ? '' : ' checked') + '><span class="toggle-track' + (t.disabled ? '' : ' on') + '"></span><span class="toggle-label' + (t.disabled ? '' : ' on') + '">' + (t.disabled ? '停用' : '启用') + '</span></label>';
+  var toggle = '<label class="toggle-sm" onclick="event.stopPropagation();toggleDisabled(\'' + t.id + '\')"><input type="checkbox"' + (t.disabled ? '' : ' checked') + '><span class="toggle-track' + (t.disabled ? '' : ' on') + '"></span><span class="toggle-label' + (t.disabled ? '' : ' on') + '">' + (v ? '接入' : (t.disabled ? '停用' : '启用')) + '</span></label>';
 
-  return '<div class="card-actions">' + btns.join('') + publicBtn + '<span class="p4-spacer"></span>' + toggle + '</div>';
+  return '<div class="card-actions">' + btns.join('') + '<span class="p4-spacer"></span>' + toggle + '</div>';
 }
 
 function getCronChildStatus(childName) {
@@ -533,9 +552,9 @@ function appCard(a) {
   return '<div class="tool-card">'
     + '<div class="card-top"><span class="card-ico">' + escHtml(ico) + '</span><div class="card-name">' + escHtml(a.name) + '</div></div>'
     + '<div class="card-meta-row">'
-    + '<span class="cf"><span class="cf-l">域名</span><a class="card-domain" href="' + escAttr(a.url || '#') + '" target="_blank" title="' + escAttr(a.url || '') + '">' + escHtml(appDomainOf(a)) + ' ↗</a></span>'
+    + '<span class="cf"><span class="cf-l">域名</span><a class="card-domain" href="' + escAttr(a.url || '#') + '" target="_blank" data-tip="' + escAttr(a.url || '') + '">' + escHtml(appDomainOf(a)) + ' ↗</a></span>'
     + '<span class="cf"><span class="cf-l">托管</span><span class="card-val">' + escHtml(a.host || '—') + '</span></span>'
-    + '<span class="cf"><span class="cf-l">描述</span><span class="card-desc' + (a.description ? '' : ' placeholder') + '" title="' + escAttr(a.description || '') + '">' + escHtml(desc) + '</span></span>'
+    + '<span class="cf"><span class="cf-l">描述</span><span class="card-desc' + (a.description ? '' : ' placeholder') + '" data-tip="' + escAttr(a.description || '') + '">' + escHtml(desc) + '</span></span>'
     + '</div>'
     + '<div class="card-actions">'
     + (a.url ? '<a class="btn open" href="' + escAttr(a.url) + '" target="_blank">打开</a>' : '')
@@ -748,7 +767,7 @@ async function openStd() {
 function closeStd() { document.getElementById('stdModal').style.display = 'none'; }
 
 /* ── 系统规范：设计规范 + 工程规范 ── */
-var REG_DEFS=[['design','设计规范'],['repo','工程规范']];
+var REG_DEFS=[['governance','治理宪法'],['schema','Manifest'],['sources','真相源']];
 async function renderRegView() {
   if (!regData) {
     try {
@@ -835,41 +854,6 @@ function md2html(src){
   return out.join('');
 }
 
-/* ── 网格参考层：8/32/128 三层，颜色深浅+线宽区分，选层制，左上角为零线 ── */
-var gridOn = true, gridLayers = {128:true, 32:true, 8:true};
-var GRID_TIERS = [[128,'rgba(51,51,51,1)',1],[32,'rgba(51,51,51,0.45)',1],[8,'rgba(51,51,51,0.2)',1]];
-function gridStyle(){
-  var o = document.getElementById('gridOverlay'); if (!o) return;
-  var imgs = [], szs = [];
-  if (gridOn){
-    GRID_TIERS.forEach(function(t){
-      if (!gridLayers[t[0]]) return;
-      imgs.push('linear-gradient(' + t[1] + ' ' + t[2] + 'px,transparent ' + t[2] + 'px)');
-      imgs.push('linear-gradient(90deg,' + t[1] + ' ' + t[2] + 'px,transparent ' + t[2] + 'px)');
-      szs.push(t[0] + 'px ' + t[0] + 'px');
-      szs.push(t[0] + 'px ' + t[0] + 'px');
-    });
-  }
-  o.style.backgroundImage = imgs.length ? imgs.join(',') : 'none';
-  o.style.backgroundSize = szs.length ? szs.join(',') : 'auto';
-}
-function setGridOn(v){
-  gridOn = !!v;
-  var b = document.querySelector('.g-toggle');
-  if (b){
-    b.classList.toggle('active', gridOn);
-    var t = b.querySelector('.g-toggle-txt'); if (t) t.textContent = gridOn ? '开' : '关';
-  }
-  gridStyle();
-}
-function toggleLayer(v){
-  gridLayers[v] = !gridLayers[v];
-  document.querySelectorAll('.g-layer').forEach(function(b){
-    if (+b.getAttribute('data-v') === v) b.classList.toggle('active', gridLayers[v]);
-  });
-  gridStyle();
-}
-
 /* ── 导航 ── */
 function showPage(p){
   document.querySelectorAll('.page').forEach(function(s){ s.classList.remove('show'); });
@@ -886,7 +870,6 @@ document.addEventListener('DOMContentLoaded', function() {
   renderTips();
   renderRegView();
   fetchCronState();
-  gridStyle();
 });
 
 // ══ S5 人写面板：工具表单弹窗（新建/编辑/补全/迁移/修复/注册 一套）══
@@ -1092,7 +1075,6 @@ function tfRender() {
   if (!v('f-owner')) missing.push('归属');
   var f = document.getElementById('f-form').value;
   if (f === 'service' && (v('f-start') === '' || v('f-stop') === '')) missing.push('启动/停止命令');
-  if (f === 'cli' && v('f-trigger') === '') missing.push('触发词');
   if (f === 'api' && v('f-api-api') === '') missing.push('API 地址');
   if (f === 'folder' && v('f-path-folder') === '') missing.push('项目路径');
   if (f === 'group' && v('f-children') === '') missing.push('子工具');

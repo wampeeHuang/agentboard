@@ -9,7 +9,7 @@
   start.js           ← 启动入口 (kill-port → require server.js)
   lib/               ← 后端模块 (routes, static, mcp-http, self-check, tool-registry, manifest-schema, api-page, mcp-handlers, ops-log, crash-guard)
   web/               ← 工具架前端 (index.html, _style.css, _script.js, logo)
-  docs/              ← 文档 (design-spec.md, repo-spec.md, ...)
+  docs/              ← 文档 (GLOBAL.md, PATROL.md, CHANGELOG.md, ...; 治理宪法在 agent.md 本文件)
   tools/*/manifest.json  ← 工具注册（唯一真相源）
   tips/*.md           ← 踩坑沉淀（唯一真相源）
   mechanisms/*.md     ← 系统机制说明（唯一真相源）
@@ -110,6 +110,32 @@ AI agent 通过 **MCP** 调工具（`lib/mcp-http.js`，Streamable HTTP，`POST 
 ```
 
 工具定义不进 memory。架子是唯一真相源。
+
+## 治理原则
+
+**第一性**（一切设计决策的判据）：
+- **Agent-first** — 功能先有 API 端点，UI 是 API 的渲染
+- **File-first** — 文件系统是数据库。manifest.json 是注册表。不引入 SQLite/MongoDB
+- **Local-first** — 不依赖云服务。不要求登录。不连外网
+- **Protocol over implementation** — 先定义 schema 再写代码，字段变更先改 schema 再改实践
+
+**永不**：数据库、Docker 依赖、前端框架（React/Vue/Svelte）、用户认证、云端同步、SaaS、替代 MCP。本机工具架 ≤500 工具、单用户，不设计分布式/RBAC。
+
+## 骨件边界
+
+agentboard 是骨件，不是全部。兄弟骨件各管一段，本骨件只代理/只读，不越界：
+
+| 边界 | 归属 | agentboard 的动作 |
+|------|------|------------------|
+| 定时任务 | `~/.scheduler` 骨件（:3100） | 只读 scheduler-state.json 做面板展示；不存 SQLite、不写 jobs.json |
+| 进程守护 | `~/.supervisor` 骨件（:3097） | 不守护自己。agentboard 唯一守护 = supervisor |
+| 模型/密钥 | `tools/*/manifest.json` | 只读 apiKeyName 指向的环境变量，不存密钥副本 |
+
+## 资产边界
+
+- Agentboard 自身资产全部在 `~/.agentboard/`，不分裂
+- `~/.claude/` 只保留 Claude Code 原生文件（宪法、skills、memory）。Agentboard 可以读、展示、索引，但不写入、不修改、不复制
+- Skills、全局宪法对 Agentboard 是只读索引
 
 ## 红线
 

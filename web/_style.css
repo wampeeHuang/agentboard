@@ -114,13 +114,13 @@ a{text-decoration:none;color:inherit}
 .tool-card.st-disabled:hover{opacity:.6;filter:grayscale(.25)}
 
 /* 顶部色块：占满卡片顶部通栏，32px，绿底白字 */
-.card-top{display:flex;align-items:center;gap:8px;background:var(--green);margin:-14px -16px 0;padding:0 16px;height:32px;border-radius:12px 12px 0 0;box-sizing:border-box}
+.card-top{display:flex;align-items:center;gap:8px;background:var(--green);margin:-14px -16px 0;padding:0 16px;height:32px;border-radius:12px 12px 0 0;box-sizing:border-box;flex-shrink:0}
 .card-ico{width:20px;height:20px;flex-shrink:0;font-size:13px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.2);color:#fff;border-radius:6px}
 .card-name{flex:1;min-width:0;font-size:20px;font-weight:600;letter-spacing:-0.01em;line-height:1.3;color:#fff;font-family:var(--font-head);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
 /* 第二区：ID/端口/状态/功能，每字段一行「标签+值」，行距统一，无端口显 — */
-.card-meta-row{display:flex;flex-direction:column;gap:4px;font-size:12px;line-height:1.5;min-width:0}
-.cf{display:flex;align-items:center;gap:6px;min-width:0}
+.card-meta-row{display:flex;flex-direction:column;gap:4px;font-size:12px;line-height:1.5;min-width:0;flex:1;min-height:0;overflow:hidden}
+.cf{display:flex;align-items:flex-start;gap:6px;min-width:0}
 .cf-l{font-size:12px;line-height:1.5;color:var(--text-muted);flex-shrink:0}
 .card-id{font-family:var(--font-code);line-height:1.5;color:var(--text-secondary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .card-val{font-family:var(--font-code);line-height:1.5;color:var(--text-secondary);min-width:0}
@@ -145,11 +145,13 @@ a{text-decoration:none;color:inherit}
 .status-word.orphan{color:var(--status-orphan)}
 .status-word.stale_path{color:var(--status-stale)}
 
-.card-desc{font-size:12px;line-height:1.5;color:var(--text-secondary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.card-desc{font-size:12px;line-height:1.5;color:var(--text-secondary);white-space:pre-line;min-width:0;overflow-wrap:anywhere}
 .card-desc.placeholder{color:var(--text-muted);opacity:.6}
+.card-val{font-family:var(--font-code);line-height:1.5;color:var(--text-secondary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.tip-bubble{position:fixed;z-index:9990;display:none;max-width:320px;padding:8px 12px;background:var(--paper);border:1px solid var(--border);border-radius:8px;box-shadow:0 6px 20px rgba(0,0,0,.18);font-size:12px;line-height:1.5;color:var(--text);font-family:inherit;pointer-events:none;white-space:pre-line;overflow-wrap:anywhere}
 
 /* 底部动作行：贯穿卡片的整宽横线 + 小按钮 + 启停开关，线下方高 40px */
-.card-actions{margin-top:auto;margin-left:-16px;margin-right:-16px;padding:0 16px;border-top:1px dashed var(--border);height:40px;box-sizing:border-box;display:flex;align-items:center;gap:6px;flex-wrap:nowrap}
+.card-actions{margin-top:auto;margin-left:-16px;margin-right:-16px;padding:0 16px;border-top:1px dashed var(--border);height:40px;box-sizing:border-box;display:flex;align-items:center;gap:6px;flex-wrap:nowrap;flex-shrink:0}
 .p4-spacer{flex:1}
 /* 卡片按钮：作用域在 card-actions 内，不动 modal 按钮 */
 .card-actions .btn{height:24px;box-sizing:border-box;padding:0 11px;border:1px solid var(--border);border-radius:7px;background:var(--paper);font-size:12px;line-height:1;font-family:inherit;font-weight:400;color:var(--text-secondary);text-decoration:none;display:inline-flex;align-items:center;white-space:nowrap;cursor:pointer}
@@ -166,8 +168,6 @@ a{text-decoration:none;color:inherit}
 .card-actions .btn.open:hover{background:var(--ink);color:var(--paper)}
 .card-actions .btn.open-done{background:var(--status-on);border-color:var(--status-on);color:#fff;font-weight:500}
 .card-actions .btn.open-done:hover{background:var(--action-success-hover);border-color:var(--action-success-hover);color:#fff}
-.card-actions .btn.public{background:var(--paper);border-color:var(--ink);color:var(--ink);font-weight:500}
-.card-actions .btn.public:hover{background:var(--ink);color:var(--paper)}
 .card-actions .btn.edit{color:var(--text-secondary);border-color:var(--border)}
 .card-actions .btn.del{color:var(--status-error);border-color:var(--status-error)}
 .card-actions .btn.del:hover{background:var(--status-error);color:#fff}
@@ -239,18 +239,6 @@ a{text-decoration:none;color:inherit}
 /* ── 说明书 ── */
 .docs-shell{width:100%}
 .docs-shell iframe.doc-frame{width:100%;height:calc(100vh - 64px);min-height:520px;border:none;display:block;background:#fff}
-
-/* ── 网格参考层 ── */
-.grid-overlay{position:fixed;inset:0;pointer-events:none;z-index:-1;background-position:0 0}
-.grid-ctl{position:fixed;right:16px;bottom:16px;display:flex;align-items:center;gap:2px;height:32px;min-width:56px;background:#fff;border:1px solid var(--border);border-radius:8px;padding:0 4px;box-shadow:0 2px 10px rgba(0,0,0,.12);z-index:80;font-weight:300}
-.grid-ctl .gl{font-size:12px;color:var(--text-muted);padding:0 8px;font-weight:300}
-.grid-ctl button{height:24px;border:none;background:transparent;padding:0 8px;border-radius:8px;font-size:12px;cursor:pointer;color:var(--text-secondary);font-weight:300}
-.grid-ctl button:hover{background:var(--paper-tint)}
-.grid-ctl button.active{background:var(--green);color:#fff}
-.grid-ctl .g-sep{color:var(--border);padding:0 2px;font-weight:300}
-.grid-ctl .g-toggle:not(.active){color:var(--text-muted);background:var(--paper-tint)}
-.grid-ctl .g-layer{width:24px;height:24px;padding:0;border-radius:50%;border:1px solid var(--border);background:#fff;display:inline-flex;align-items:center;justify-content:center}
-.grid-ctl .g-layer:not(.active){color:var(--text-muted);background:var(--paper-tint)}
 
 /* ── toast ── */
 .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--green-deep);color:#fff;padding:12px 16px;border-radius:var(--radius-md);font-size:12px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:99;box-shadow:0 4px 16px rgba(0,0,0,.25)}
