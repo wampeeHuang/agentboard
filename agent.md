@@ -3,40 +3,43 @@
 ## 架构
 
 ```
-~/.agentboard/                ← 治理宪法在本文件（agent.md）
-│
-├─ 装配层
-│   server.js          装配骨架：建 app → 挂 lib/ → listen（REST + Dashboard + /mcp）
-│   start.js           启动入口（kill-port → require server.js）
-│
-├─ 后端 lib/            ← 双平面共享的核心
-│   routes.js          REST 路由（/api/*、4 页、挂载 /mcp）→ /api/registry 从真源生成（AI 面）
-│   tool-registry.js   核心逻辑：scanTools 三段验证 / 启停 / 端口查重
-│   manifest-schema.js Manifest 契约唯一真相源（字段 / 分类 / 校验）
-│   mcp-http.js        MCP Streamable HTTP（POST /mcp，JSON-RPC 2.0）
-│   mcp-handlers.js    6 个 agentboard_* 工具实现
-│   static.js / api-page.js / self-check.js / ops-log.js / crash-guard.js / tip-schema.js
-│
-├─ 前端 web/
-│   index.html         Dashboard 4 页（工具架 / 我的网站 / 经验日志 / 说明书）
-│   _style.css         设计系统 token + 组件
-│   _script.js         渲染 / 交互
-│
-├─ 数据真相源          ← 内容文件（git 忽略的标 *）
-│   tools/*/manifest.json  工具注册 *
-│   tips/*.md              踩坑沉淀 *
-│   principles/*.md        原则
-│   mechanisms/*.md        系统机制说明
-│   apps-registry.json     公网应用注册表
-│
-├─ 只读索引
-│   ~/.claude/skills/vivi-design-system/   设计系统 skill（全局唯一真相源，只读引用）
-│
-├─ 文档 / 运行
-│   docs/              文档（archive/ 退场归档）
-│   examples/          manifest 模板（提交，copy 到 tools/）
-│   state/             运行态（api-calls）
-│   _runtime/          运行产物（pids / events.jsonl / logs）*
+~/.agentboard/
+├── agent.md              治理宪法（本文件）
+├── CLAUDE.md             Claude 适配层（@agent.md）
+├── README.md             项目入口（人读，Quick Start / 治理入口）
+├── LICENSE               许可
+├── .gitignore            忽略规则
+├── package.json          依赖（express + MCP SDK）
+├── package-lock.json
+├── inspection.json       巡检检查项
+├── server.js             REST + Dashboard 装配（:3099）
+├── start.js              启动入口（kill-port → server.js）
+├── apps-registry.json    公网应用注册表
+├── lib/                  后端核心（双平面共享）
+│   ├── routes.js         REST 路由（/api/*、4 页、挂载 /mcp）→ /api/registry 从真源生成（AI 面）
+│   ├── tool-registry.js  核心逻辑：scanTools 三段验证 / 启停 / 端口查重
+│   ├── manifest-schema.js Manifest 契约唯一真相源（字段 / 分类 / 校验）
+│   ├── mcp-http.js       MCP Streamable HTTP（POST /mcp，JSON-RPC 2.0）
+│   ├── mcp-handlers.js   6 个 agentboard_* MCP 工具
+│   ├── static.js / api-page.js / self-check.js / ops-log.js / crash-guard.js / tip-schema.js
+│   └── __tests__/        冒烟测试（node:test）
+├── web/                  Dashboard 前端
+│   ├── index.html        4 页（工具架 / 我的网站 / 经验日志 / 说明书）
+│   ├── _style.css        设计 token + 组件
+│   ├── _script.js        渲染 / 交互
+│   ├── tokens.json / logo.svg / logo.ico
+│   └── _proto/           原型工作区
+├── docs/                 文档（archive/ 退场归档）
+├── examples/             manifest 模板（copy 到 tools/）
+├── mechanisms/           系统机制说明
+├── principles/           原则
+├── tools/                工具注册（独立 git 仓库，主仓只 ignore 不追踪；一个目录一个 manifest.json）
+├── tips/                 踩坑沉淀
+├── state/                运行态（api-calls）
+├── _runtime/             运行产物（pids / events.jsonl / logs）
+└── .claude/              Claude Code 项目级配置（settings.local.json，仅权限放行，不进版本库）
+
+（省略 .git/、node_modules/、coverage/ 等非架构目录。全局 skills 是外部只读资源，不在本目录树内。）
 ```
 
 **双平面架构**: MCP (AI plane) + REST (human plane)，共享同一真相源 `tools/*/manifest.json`。

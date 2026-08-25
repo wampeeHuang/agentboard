@@ -4,12 +4,6 @@ _runtime/
 patrol-result.json
 .env
 state/
-cron/tasks.db
-cron/tasks.db-shm
-cron/tasks.db-wal
-cron/runtime-events.jsonl
-cron/scheduler-state.json
-cron/stderr.log
 tools/
 !examples/
 tips/

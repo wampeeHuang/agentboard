@@ -66,6 +66,19 @@
         "timeout_sec": 10,
         "expect_exit_code": 0
       }
+    },
+    {
+      "id": "runtime_hygiene",
+      "label": "运行产物受控",
+      "what": "_runtime/ 文件数 ≤ 300 且 ≤ 100MB，防运行目录失控堆积（巡检覆盖仓库卫生面）",
+      "job": "inspector-b-daily",
+      "severity": "error",
+      "declarative": "shell",
+      "spec": {
+        "command": "node -e \"const fs=require('fs');const p='C:/Users/Administrator/.agentboard/_runtime';let n=0,s=0;(function w(d){for(const f of fs.readdirSync(d)){const fp=d+'/'+f;if(fs.statSync(fp).isDirectory())w(fp);else{n++;s+=fs.statSync(fp).size}}})(p);console.log('runtime files='+n+' size='+(s/1048576).toFixed(1)+'MB');if(n>300||s>100*1048576){console.log('FAIL: runtime dir bloated');process.exit(1)}console.log('OK')\"",
+        "timeout_sec": 10,
+        "expect_exit_code": 0
+      }
     }
   ]
 }

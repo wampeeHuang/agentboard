@@ -127,36 +127,41 @@ Both planes share one truth source: `tools/{id}/manifest.json`. Change a file, b
 
 ```
 ~/.agentboard/
-├── agent.md               ← Governance constitution (architecture, principles, boundaries)
-├── server.js              ← REST API + Dashboard (humans)
-├── start.js               ← Launch entry (kill-port → server.js)
-├── lib/
-│   ├── routes.js          ← REST routes (/api/*, pages, mounts /mcp)
-│   ├── tool-registry.js   ← Core logic (shared by both planes)
-│   ├── manifest-schema.js ← Manifest standard — single source of truth (fields/categories/validation)
-│   ├── mcp-http.js        ← MCP JSON-RPC over Streamable HTTP (AI agents, POST /mcp)
-│   ├── mcp-handlers.js    ← 6 agentboard_* MCP tools
-│   ├── static.js          ← Static file serving
-│   ├── api-page.js        ← /api discovery page
-│   ├── self-check.js      ← Self-check
-│   ├── ops-log.js         ← Operational event log
-│   ├── crash-guard.js     ← Crash protection for spawned Node tools
-│   └── tip-schema.js      ← Tips type validation
-├── web/                   ← Dashboard frontend (4 pages, zero-framework HTML/CSS/JS)
-├── examples/              ← Manifest templates (committed — copy to tools/)
-│   ├── hello-server/
-│   └── nextjs-app/
-├── tools/                 ← Tool registry (gitignored — personal)
-│   └── your-tool/
-│       └── manifest.json
-├── tips/                  ← Operational tips (gitignored)
-├── principles/            ← Principles
-├── mechanisms/            ← Mechanism docs
-├── apps-registry.json     ← Public app registry
-├── docs/                  ← Docs (archive/ holds retired)
-├── ~/.claude/skills/vivi-design-system/  ← Design-system skill (global, project reads only)
-├── state/                 ← Runtime state (api-calls)
-└── _runtime/              ← Runtime data (pids/, logs; gitignored)
+├── agent.md               治理宪法（架构 / 原则 / 边界）
+├── CLAUDE.md              Claude 适配层（@agent.md）
+├── README.md              项目入口（人读，Quick Start / 治理入口）
+├── LICENSE                许可
+├── .gitignore             忽略规则
+├── package.json           依赖（express + MCP SDK）
+├── package-lock.json
+├── inspection.json        巡检检查项
+├── server.js              REST + Dashboard 装配（:3099）
+├── start.js               启动入口（kill-port → server.js）
+├── apps-registry.json     公网应用注册表
+├── lib/                   后端核心（双平面共享）
+│   ├── routes.js          REST 路由（/api/*、4 页、挂载 /mcp）→ /api/registry 从真源生成（AI 面）
+│   ├── tool-registry.js   核心逻辑：scanTools 三段验证 / 启停 / 端口查重
+│   ├── manifest-schema.js Manifest 契约唯一真相源（字段 / 分类 / 校验）
+│   ├── mcp-http.js        MCP Streamable HTTP（POST /mcp，JSON-RPC 2.0）
+│   ├── mcp-handlers.js    6 个 agentboard_* MCP 工具
+│   ├── static.js / api-page.js / self-check.js / ops-log.js / crash-guard.js / tip-schema.js
+│   └── __tests__/         冒烟测试（node:test）
+├── web/                   Dashboard 前端
+│   ├── index.html         4 页（工具架 / 我的网站 / 经验日志 / 说明书）
+│   ├── _style.css         设计 token + 组件
+│   ├── _script.js         渲染 / 交互
+│   ├── tokens.json / logo.svg / logo.ico
+│   └── _proto/            原型工作区
+├── docs/                  文档（archive/ 退场归档）
+├── examples/              manifest 模板（copy 到 tools/）
+├── mechanisms/            系统机制说明
+├── principles/            原则
+├── tools/                 工具注册（独立 git 仓库，主仓只 ignore 不追踪）
+├── tips/                  踩坑沉淀（gitignored）
+├── state/                 运行态（api-calls）
+└── _runtime/              运行产物（pids / events.jsonl / logs; gitignored）
+
+（省略 .git/、node_modules/、coverage/ 等非架构目录。全局 skills 是外部只读资源，不在本目录树内。）
 ```
 
 ---
@@ -168,7 +173,7 @@ Both planes share one truth source: `tools/{id}/manifest.json`. Change a file, b
 - **人** — 治理宪法在 [`agent.md`](agent.md)：架构 / 治理原则（第一性）/ 骨件边界 / 资产边界 / 工具调用协议。README 只做入口不抄内容，`agent.md` 是唯一真相源，改文件即改文档。
 - **AI** — `GET /api/registry` 从真源生成三篇：治理宪法（agent.md）+ Manifest Schema（lib/manifest-schema.js 实时字段表）+ 真相源索引（指针直指各数据家）。
 
-每条治理主题只有一个家：`agent.md`（宪法）、`lib/manifest-schema.js`（契约）、`~/.claude/skills/vivi-design-system/`（设计语言）、`tips/CONSTITUTION.md`（日志格式）、`~/.claude/CLAUDE.md`（落盘规则）。要改规矩，改真源文件，视图自动变。
+每条治理主题只有一个家：`agent.md`（宪法）、`lib/manifest-schema.js`（契约）、`web/tokens.json`（设计 token 契约）、`tips/CONSTITUTION.md`（日志格式）、`~/.claude/CLAUDE.md`（落盘规则）。要改规矩，改真源文件，视图自动变。
 
 ---
 
