@@ -13,3 +13,4 @@ cron/stderr.log
 tools/
 !examples/
 tips/
+skills/
