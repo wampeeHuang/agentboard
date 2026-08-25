@@ -15,9 +15,8 @@ AI AGENT REFERENCE — 工具架 Agentboard
 API:     GET /api/tools     → 全部工具清单 JSON {ok, tools:[{id,name,description,category,port,ports,url,running,state,stateDetail,recovery,missingFields,startCommand,stopCommand,apiBase,projectPath,icon,version,order}]}
 API:     GET /api/apps      → 公网应用注册表 JSON {ok, apps:[...]}（apps-registry.json）
 API:     GET /api/tips      → 经验日志 JSON {ok, tips:[{file,title,desc,type}]}（tips/*.md）
-API:     GET /api/registry  → 系统规范 JSON {ok, docs:[{key,title,file,markdown}]}（治理宪法/Manifest Schema/真相源索引，从真源生成）
 ACTION:  POST /api/tools/start/:id   POST /api/tools/stop/:id
-PAGES:   #page-tools(工具架)  #page-apps(我的网站)  #page-tips(经验日志)  #page-docs(说明书 iframe /manual)  #page-registry(系统规范)
+PAGES:   #page-tools(工具架)  #page-apps(我的网站)  #page-tips(经验日志)  #page-docs(说明书 iframe /manual)
 DIMS:    #dimBlocks 四维异色筛选块(category/form/owner/state) → setDimFilter(dim,val)
 RULES:   localhost 用 Bash curl 不用 WebFetch。能力不够先查本地工具。启动/停止后等 500ms poll /api/tools。
 ━═ 你可以访问以下本地能力 ═━
@@ -46,7 +45,6 @@ OCR:  Tesseract OCR (pytesseract)
     <div class="nav-item active" data-page="tools" onclick="showPage('tools')"><span class="ico"><svg viewBox="0 0 20 20" aria-hidden="true"><rect width="20" height="20" rx="3" fill="#74A63F"/><rect x="3.5" y="3.5" width="6" height="6" rx="1.4" fill="#fff" opacity=".9"/><rect x="10.5" y="3.5" width="6" height="6" rx="1.4" fill="#fff" opacity=".9"/><rect x="3.5" y="10.5" width="6" height="6" rx="1.4" fill="#fff" opacity=".55"/><rect x="10.5" y="10.5" width="6" height="6" rx="1.4" fill="#fff" opacity=".55"/></svg></span><span class="nav-label">工具架</span><span class="cnt" id="navToolsCnt">—</span></div>
     <div class="nav-item" data-page="apps" onclick="showPage('apps')"><span class="ico"><svg viewBox="0 0 20 20" aria-hidden="true"><rect width="20" height="20" rx="3" fill="#74A63F"/><circle cx="10" cy="10" r="5" fill="none" stroke="#fff" stroke-width="1.4"/><path d="M10 3.8 L12.4 6.2 M10 3.8 L7.6 6.2 M10 3.8 V10" fill="none" stroke="#fff" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="nav-label">我的网站</span><span class="cnt" id="navAppsCnt">—</span></div>
     <div class="nav-item" data-page="tips" onclick="showPage('tips')"><span class="ico"><svg viewBox="0 0 20 20" aria-hidden="true"><rect width="20" height="20" rx="3" fill="#74A63F"/><path d="M10 3.6 C7.5 3.6 6 5.4 6 7.5 C6 9.1 6.8 10 7.6 10.8 C8.2 11.4 8.5 11.8 8.6 12.6 H11.4 C11.5 11.8 11.8 11.4 12.4 10.8 C13.2 10 14 9.1 14 7.5 C14 5.4 12.5 3.6 10 3.6 Z" fill="#fff"/><path d="M8.8 14 H11.2" stroke="#fff" stroke-width="1.2" stroke-linecap="round"/><path d="M8.3 15.6 H11.7" stroke="#fff" stroke-width="1.2" stroke-linecap="round"/></svg></span><span class="nav-label">经验日志</span><span class="cnt" id="navTipsCnt">—</span></div>
-    <div class="nav-item" data-page="registry" onclick="showPage('registry')"><span class="ico"><svg viewBox="0 0 20 20" aria-hidden="true"><rect width="20" height="20" rx="3" fill="#74A63F"/><path d="M10 3.6 V9.6" stroke="#fff" stroke-width="1.6" stroke-linecap="round"/><path d="M6.4 5.8 a5.2 5.2 0 1 0 7.2 0" fill="none" stroke="#fff" stroke-width="1.4" stroke-linecap="round"/></svg></span><span class="nav-label">系统规范</span><span class="cnt" id="navRegCnt">—</span></div>
     <div class="nav-item" data-page="docs" onclick="showPage('docs')"><span class="ico"><svg viewBox="0 0 20 20" aria-hidden="true"><rect width="20" height="20" rx="3" fill="#74A63F"/><path d="M10 5 C8.6 4.2 6.6 4 4.2 4.3 V14.6 C6.6 14.3 8.6 14.5 10 15.3 C11.4 14.5 13.4 14.3 15.8 14.6 V4.3 C13.4 4 11.4 4.2 10 5 Z" fill="none" stroke="#fff" stroke-width="1.4" stroke-linejoin="round"/><path d="M10 5 V15.3" stroke="#fff" stroke-width="1.4"/></svg></span><span class="nav-label">说明书</span></div>
   </nav>
   <div class="sidebar-foot"><span class="foot-txt">双平面 一份真相</span></div>
@@ -108,17 +106,6 @@ OCR:  Tesseract OCR (pytesseract)
     <div class="docs-shell">
       <iframe class="doc-frame" src="/manual"></iframe>
     </div>
-  </section>
-
-  <!-- ── 系统规范 ── -->
-  <section class="page" id="page-registry">
-    <div class="hero-bar">
-      <div class="hero-eyebrow">REPO</div>
-      <div class="hero-title">系统规范</div>
-      <div class="hero-sub">本机的设计原则与工程边界</div>
-    </div>
-    <div class="dim-blocks" id="regDimBlocks"></div>
-    <div class="doc-view std-body" id="regView"></div>
   </section>
 
 </main>

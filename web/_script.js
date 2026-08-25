@@ -19,9 +19,7 @@ var accFilter = 'all';    // 接入形态
 var stateFilter = 'all';  // 状态
 var appsData = null;
 var tipsData = null;
-var regData = null;
 var tipF = 'all';
-var regDoc = 'governance';
 
 // 领域映射：category → 领域（dim 块按此聚合）
 var domainMap = {
@@ -218,7 +216,6 @@ function updateCounts() {
   el = document.getElementById('navToolsCnt'); if (el) el.textContent = tools.length;
   el = document.getElementById('navAppsCnt'); if (el && appsData) el.textContent = appsData.length;
   el = document.getElementById('navTipsCnt'); if (el && tipsData) el.textContent = tipsData.length;
-  el = document.getElementById('navRegCnt'); if (el) el.textContent = 2;
 }
 
 function render() {
@@ -766,34 +763,6 @@ async function openStd() {
 }
 function closeStd() { document.getElementById('stdModal').style.display = 'none'; }
 
-/* ── 系统规范：设计规范 + 工程规范 ── */
-var REG_DEFS=[['governance','治理宪法'],['schema','Manifest'],['sources','真相源']];
-async function renderRegView() {
-  if (!regData) {
-    try {
-      var res = await fetch('/api/registry');
-      var data = await res.json();
-      if (!data.ok) { document.getElementById('regView').innerHTML = '<div class="empty">规范文档加载失败</div>'; return; }
-      regData = data.docs || [];
-    } catch(e) { document.getElementById('regView').innerHTML = '<div class="empty">规范文档加载失败</div>'; return; }
-  }
-  renderRegDims();
-  var el = document.getElementById('regView'); if (!el) return;
-  var doc = null;
-  regData.forEach(function(x){ if (x.key === regDoc) doc = x; });
-  el.innerHTML = doc ? md2html(doc.markdown || '') : '<div class="empty">文档缺失：' + escHtml(regDoc) + '</div>';
-}
-function renderRegDims() {
-  var el = document.getElementById('regDimBlocks'); if (!el) return;
-  var html = '<div class="dim-block" style="--b:#EEF4EF"><div class="dim-block-title">文档<span class="dim-arr">></span></div><div class="dim-block-opts">';
-  REG_DEFS.forEach(function(d){
-    html += '<span class="dim-opt' + (regDoc === d[0] ? ' active' : '') + '" onclick="setRegDoc(\'' + d[0] + '\')">' + d[1] + '</span>';
-  });
-  html += '</div></div>';
-  el.innerHTML = html;
-}
-function setRegDoc(d) { regDoc = d; renderRegView(); }
-
 function mdInline(s){
   s = escHtml(s);
   s = s.replace(/`([^`]+)`/g,'<code>$1</code>');
@@ -868,7 +837,6 @@ document.addEventListener('DOMContentLoaded', function() {
   fetchTools();
   renderApps();
   renderTips();
-  renderRegView();
   fetchCronState();
 });
 

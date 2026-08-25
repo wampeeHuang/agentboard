@@ -8,10 +8,9 @@
 ├─ 装配层
 │   server.js          装配骨架：建 app → 挂 lib/ → listen（REST + Dashboard + /mcp）
 │   start.js           启动入口（kill-port → require server.js）
-│   mcp-server.js      [遗留] 旧 stdio 入口，无引用
 │
 ├─ 后端 lib/            ← 双平面共享的核心
-│   routes.js          REST 路由（/api/*、5 页、挂载 /mcp）→ 系统规范页从真源生成
+│   routes.js          REST 路由（/api/*、4 页、挂载 /mcp）→ /api/registry 从真源生成（AI 面）
 │   tool-registry.js   核心逻辑：scanTools 三段验证 / 启停 / 端口查重
 │   manifest-schema.js Manifest 契约唯一真相源（字段 / 分类 / 校验）
 │   mcp-http.js        MCP Streamable HTTP（POST /mcp，JSON-RPC 2.0）
@@ -19,7 +18,7 @@
 │   static.js / api-page.js / self-check.js / ops-log.js / crash-guard.js / tip-schema.js
 │
 ├─ 前端 web/
-│   index.html         Dashboard 5 页（工具架 / 我的网站 / 经验日志 / 说明书 / 系统规范）
+│   index.html         Dashboard 4 页（工具架 / 我的网站 / 经验日志 / 说明书）
 │   _style.css         设计系统 token + 组件
 │   _script.js         渲染 / 交互
 │
@@ -31,7 +30,7 @@
 │   apps-registry.json     公网应用注册表
 │
 ├─ 只读索引
-│   skills/            设计系统 skill（视觉约束唯一真相源，只读）
+│   ~/.claude/skills/vivi-design-system/   设计系统 skill（全局唯一真相源，只读引用）
 │
 ├─ 文档 / 运行
 │   docs/              文档（archive/ 退场归档）
@@ -141,7 +140,7 @@ AI agent 通过 **MCP** 调工具（`lib/mcp-http.js`，Streamable HTTP，`POST 
 - **Local-first** — 不依赖云服务。不要求登录。不连外网
 - **Protocol over implementation** — 先定义 schema 再写代码，字段变更先改 schema 再改实践
 
-**永不**：数据库、Docker 依赖、前端框架（React/Vue/Svelte）、用户认证、云端同步、SaaS、替代 MCP。本机工具架 ≤500 工具、单用户，不设计分布式/RBAC。
+**本机定位**：工具架 ≤500 工具、单用户。不设技术禁用清单——出现真实硬需求就引入，重大技术决策写进 agent.md。
 
 ## 骨件边界
 

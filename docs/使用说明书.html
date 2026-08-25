@@ -98,7 +98,7 @@ code{font-family:var(--font-code);font-size:.88em;background:var(--soft);color:v
 .flow-arrow{color:var(--ink-faint);font-family:var(--font-code);font-size:14px}
 .flow-note{font-size:13px;color:var(--ink-faint);margin-top:14px;font-family:var(--font-code)}
 
-/* ══ 02 五页导航 ══ */
+/* ══ 02 四页导航 ══ */
 .navgrid{display:grid;grid-template-columns:minmax(260px,340px) 1fr;gap:clamp(24px,4vw,56px);align-items:start}
 @media(max-width:900px){.navgrid{grid-template-columns:1fr}}
 .navmock{border:1px solid var(--line);border-radius:var(--radius-lg);background:var(--paper);box-shadow:var(--shadow-card);padding:14px;position:sticky;top:90px}
@@ -154,26 +154,15 @@ code{font-family:var(--font-code);font-size:.88em;background:var(--soft);color:v
 .cb-row.ok .v{color:var(--ink)}
 
 /* ══ 04 三页卡 ══ */
-.trio{display:grid;grid-template-columns:1fr 1fr 1fr;gap:clamp(18px,2.5vw,28px)}
-@media(max-width:900px){.trio{grid-template-columns:1fr}}
-.tcard{border-radius:var(--radius-md);padding:clamp(24px,3vw,34px);display:flex;flex-direction:column;gap:12px;box-shadow:var(--shadow-card)}
-.tcard .tk{font-size:12px;letter-spacing:.16em;text-transform:uppercase;font-family:var(--font-code);font-weight:600}
-.tcard b{font-family:var(--font-head);font-size:1.35rem;font-weight:700;letter-spacing:.01em}
-.tcard p{font-size:14.5px;line-height:1.75}
-.tcard .tags{display:flex;gap:7px;flex-wrap:wrap;margin-top:6px}
-.tcard .tags span{font-size:11.5px;font-family:var(--font-code);padding:2px 9px;border-radius:var(--radius-pill)}
-.tcard.g{background:var(--green);color:#fff}
-.tcard.g .tk{color:rgba(255,255,255,.82)}
-.tcard.g p{color:rgba(255,255,255,.88)}
-.tcard.g .tags span{background:rgba(255,255,255,.2);color:#fff}
-.tcard.l{background:var(--paper);border:1px solid var(--line)}
-.tcard.l .tk{color:var(--green)}
-.tcard.l .tags span{background:var(--soft);color:var(--deep)}
-.tcard.d{background:var(--deep);color:#E8EFE2}
-.tcard.d .tk{color:var(--yellow)}
-.tcard.d b{color:var(--soft)}
-.tcard.d p{color:#C7D8C0}
-.tcard.d .tags span{background:rgba(255,255,255,.14);color:#E8EFE2}
+/* ══ 目录 ══ */
+.toc{display:grid;grid-template-columns:repeat(3,1fr);gap:clamp(14px,2vw,20px)}
+@media(max-width:900px){.toc{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:600px){.toc{grid-template-columns:1fr}}
+.toc-item{display:flex;align-items:center;gap:14px;border:1px solid var(--line);border-radius:var(--radius-md);background:var(--paper);padding:clamp(16px,2vw,20px);box-shadow:var(--shadow-card);transition:transform .15s,border-color .15s;text-decoration:none}
+.toc-item:hover{transform:translateY(-2px);border-color:var(--green);background:var(--soft)}
+.toc-no{font-family:var(--font-code);font-size:13px;font-weight:600;color:var(--deep);background:var(--soft);width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.toc-item b{font-family:var(--font-head);font-size:1.02rem;font-weight:700;color:var(--ink);display:block}
+.toc-item .toc-sub{font-size:12.5px;color:var(--ink-faint);display:block;margin-top:2px}
 
 /* ══ 05 双 step 组 ══ */
 .stepgrid{display:grid;grid-template-columns:1fr 1fr;gap:clamp(20px,3vw,32px)}
@@ -187,25 +176,11 @@ code{font-family:var(--font-code);font-size:.88em;background:var(--soft);color:v
 .step b{font-size:15px;color:var(--ink);display:block;margin-bottom:2px;font-weight:600}
 .step p{font-size:14px;color:var(--ink-light);line-height:1.7}
 
-/* ══ 06 红线 ══ */
-.reds{display:grid;grid-template-columns:1fr;gap:14px;max-width:920px}
-.red{border:1px solid var(--line);border-left:3px solid var(--warn);background:var(--paper);border-radius:var(--radius-sm);padding:clamp(16px,2vw,22px) clamp(18px,2.5vw,26px);display:flex;gap:14px;align-items:flex-start;box-shadow:var(--shadow-card)}
-.red .rk{width:30px;height:30px;border-radius:8px;background:var(--warn);color:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:var(--font-code);font-size:12px;font-weight:700}
-.red b{font-size:15.5px;color:var(--ink);display:block;margin-bottom:3px;font-weight:600}
-.red p{font-size:14px;color:var(--ink-light);line-height:1.7}
-.never{margin-top:clamp(28px,4vw,44px);background:var(--deep);color:#fff;border-radius:var(--radius-lg);padding:clamp(26px,4vw,44px);display:flex;gap:clamp(18px,3vw,36px);align-items:center;flex-wrap:wrap}
-.never .nt{font-family:var(--font-head);font-size:clamp(1.4rem,3vw,2rem);font-weight:700;color:var(--yellow);letter-spacing:.06em;flex-shrink:0}
-.never .nlist{display:flex;gap:10px;flex-wrap:wrap}
-.never .nlist span{font-family:var(--font-code);font-size:14px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18);color:#E8EFE2;padding:6px 15px;border-radius:var(--radius-pill)}
-
-/* ══ 07 P0/P1 ══ */
-.verify{display:grid;grid-template-columns:1.4fr 1fr;gap:clamp(20px,3vw,32px)}
-@media(max-width:900px){.verify{grid-template-columns:1fr}}
-.verify .vbox{background:var(--paper);border:1px solid var(--line);border-radius:var(--radius-lg);padding:clamp(22px,3vw,32px);box-shadow:var(--shadow-card)}
-.verify .vbox.d{background:var(--soft);border:none}
-.vbox-t{font-family:var(--font-head);font-size:1.15rem;font-weight:700;color:var(--deep);margin-bottom:16px;display:flex;align-items:center;gap:9px}
-.vbox-t .n{width:24px;height:24px;border-radius:7px;background:var(--green);color:#fff;font-family:var(--font-code);font-size:11.5px;font-weight:600;display:flex;align-items:center;justify-content:center}
-.vbox.d .vbox-t{color:var(--deep)}
+/* ══ 文件结构树 ══ */
+.tree{font-family:var(--font-code);font-size:13.5px;line-height:1.9;background:var(--soft);border:1px solid var(--line);border-radius:var(--radius-md);padding:clamp(18px,2.5vw,26px) clamp(20px,3vw,30px);overflow-x:auto;color:var(--deep);margin-top:clamp(24px,3vw,32px)}
+.tree .tn{color:var(--ink-faint)}
+.tree .ta{color:var(--ink-light)}
+.tree .tv{color:var(--green);font-weight:600}
 
 /* ══ callout 通用 ══ */
 .callout{display:flex;gap:14px;align-items:flex-start;background:var(--soft);border:1px solid var(--line);border-radius:var(--radius-md);padding:clamp(16px,2vw,22px) clamp(18px,2.5vw,26px);margin-top:clamp(24px,3vw,32px)}
@@ -236,7 +211,7 @@ code{font-family:var(--font-code);font-size:.88em;background:var(--soft);color:v
   <div class="topbar-in">
     <div class="brand"><span class="mark"><i></i></span>Agentboard<small>· 工具架说明书</small></div>
     <nav class="topnav" id="topnav">
-      <a href="#m01">01</a><a href="#m02">02</a><a href="#m03">03</a><a href="#m04">04</a><a href="#m05">05</a><a href="#m06">06</a><a href="#m07">07</a>
+      <a href="#m01">01</a><a href="#m02">02</a><a href="#m03">03</a><a href="#m04">04</a>
     </nav>
   </div>
 </header>
@@ -256,6 +231,23 @@ code{font-family:var(--font-code);font-size:.88em;background:var(--soft);color:v
     <div>
       <b>工具可以有一百个，清单只有一份。</b>
       <p>人看面板、AI 调工具，读的都是 <code class="tip" data-tip="清单文件：登记每个工具的位置，AI 和面板都读它">tools/*/manifest.json</code>。清单是唯一真相源，面板和 MCP 只是两种读法。</p>
+    </div>
+  </div>
+</section>
+
+<!-- ══ 目录 ══ -->
+<section class="module alt" id="m-toc">
+  <div class="module-in">
+    <div class="mod-head reveal">
+      <span class="mod-tag"><span class="sq"></span>Contents</span>
+      <h2 class="mod-title">目录</h2>
+      <p class="mod-sub">四节，从「这是什么」到「你看着，AI 调」。一屏看全架子的架构。</p>
+    </div>
+    <div class="toc">
+      <a class="toc-item reveal" href="#m01"><span class="toc-no">01</span><div><b>这是什么</b><span class="toc-sub">一份清单，两个平面</span></div></a>
+      <a class="toc-item reveal" href="#m02"><span class="toc-no">02</span><div><b>打开工具架</b><span class="toc-sub">四页导航，数据活在文件里</span></div></a>
+      <a class="toc-item reveal" href="#m03"><span class="toc-no">03</span><div><b>工具架页：一张卡片一个工具</b><span class="toc-sub">状态 / 冲突 / 盲区写在卡片上</span></div></a>
+      <a class="toc-item reveal" href="#m04"><span class="toc-no">04</span><div><b>你看着，AI 调</b><span class="toc-sub">人点按钮，AI 走接口</span></div></a>
     </div>
   </div>
 </section>
@@ -316,7 +308,7 @@ code{font-family:var(--font-code);font-size:.88em;background:var(--soft);color:v
     <div class="mod-head reveal">
       <span class="mod-tag"><span class="sq"></span>Open</span>
       <h2 class="mod-title">打开工具架</h2>
-      <p class="mod-sub">浏览器开本机端口。左侧一根导航，五个页面。每页都是一个「读出来的视图」，数据活在文件里。</p>
+      <p class="mod-sub">浏览器开本机端口。左侧一根导航，四个页面。每页都是一个「读出来的视图」，数据活在文件里。</p>
     </div>
     <div class="navgrid">
       <div class="navmock reveal">
@@ -325,16 +317,95 @@ code{font-family:var(--font-code);font-size:.88em;background:var(--soft);color:v
         <div class="nm-item"><span class="geo"><svg viewBox="0 0 20 20" width="17" height="17" aria-hidden="true"><circle cx="10" cy="10" r="6" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M10 4.2a7.4 7.4 0 0 1 0 11.6M10 4.2a7.4 7.4 0 0 0 0 11.6M4.2 10h11.6" fill="none" stroke="currentColor" stroke-width="1.2"/></svg></span>我的网站<span class="cnt">n</span></div>
         <div class="nm-item"><span class="geo"><svg viewBox="0 0 20 20" width="17" height="17" aria-hidden="true"><rect x="3" y="4" width="14" height="12" rx="2" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M6 8h8M6 11h5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></span>经验日志<span class="cnt">n</span></div>
         <div class="nm-item"><span class="geo"><svg viewBox="0 0 20 20" width="17" height="17" aria-hidden="true"><path d="M10 4.6C8.6 3.9 6.7 3.7 4.4 4v12c2.3-.3 4.2-.1 5.6.6 1.4-.7 3.3-.9 5.6-.6V4c-2.3-.3-4.2-.1-5.6.6z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M10 4.6v12" stroke="currentColor" stroke-width="1.5"/></svg></span>说明书<span class="cnt">你在这</span></div>
-        <div class="nm-item"><span class="geo"><svg viewBox="0 0 20 20" width="17" height="17" aria-hidden="true"><path d="M4.5 5h11v11h-11z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M4.5 8h11M7 8v8M13 11h4M13 14h4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg></span>系统规范<span class="cnt">n</span></div>
       </div>
       <div class="pages">
         <div class="pg reveal"><span class="pg-no">01</span><div><b>工具架<span class="c">全部本地工具</span></b><p>全部本地工具，一张卡片一个。状态、冲突、盲区全写在卡片上。</p></div></div>
         <div class="pg reveal"><span class="pg-no">02</span><div><b>我的网站<span class="c">公网应用注册</span></b><p>公网应用注册表。哪些应用对外、入口在哪，一张表看全。</p></div></div>
         <div class="pg reveal"><span class="pg-no">03</span><div><b>经验日志<span class="c">踩坑沉淀</span></b><p>把踩过的坑固化成五类条目，下次不再踩第二遍。</p></div></div>
         <div class="pg reveal"><span class="pg-no">04</span><div><b>说明书<span class="c">就是这份</span></b><p>工具架的使用说明，AI 和人同读。</p></div></div>
-        <div class="pg reveal"><span class="pg-no">05</span><div><b>系统规范<span class="c">治理宪法 + 契约 + 索引</span></b><p>治理宪法、Manifest 契约、真相源索引。规矩从真源生成，不写第二份。</p></div></div>
       </div>
     </div>
+    <div class="sub-head reveal">架子长这样 · 文件结构</div>
+    <pre class="tree reveal">~/.agentboard/<span class="tn">                        ← 一切都在这一个目录里</span>
+├── <span class="tv">server.js</span><span class="ta">                ← 装配骨架：建 app → 挂 lib → 起服务</span>
+├── <span class="tv">start.js</span><span class="ta">                 ← 启动入口</span>
+├── <span class="tv">agent.md</span><span class="ta">                 ← 治理宪法：架构 / 协议 / 边界</span>
+├── <span class="tv">CLAUDE.md</span><span class="ta">                ← 项目指令（@agent.md）</span>
+├── <span class="tv">README.md</span><span class="ta">                ← 入口</span>
+├── <span class="tv">LICENSE</span><span class="ta">                  ← MIT</span>
+├── <span class="tv">package.json</span><span class="ta">             ← 依赖：express + MCP SDK</span>
+├── <span class="tv">package-lock.json</span><span class="ta">          ← 锁版本（npm 生成）</span>
+├── <span class="tv">apps-registry.json</span><span class="ta">         ← 我的网站：公网应用注册表</span>
+├── <span class="tv">HANDOFF.md</span><span class="ta">                ← 会话交接日志</span>
+├── <span class="tv">inspection.json</span><span class="ta">            ← 巡检检查项</span>
+├── <span class="tn">.claude/</span><span class="ta">                  ← 本机 Claude 设置</span>
+│   └── <span class="tv">settings.local.json</span><span class="ta">        ← 本机设置（不入库）</span>
+├── <span class="tn">lib/</span><span class="ta">                     ← 双平面共享核心</span>
+│   ├── <span class="tv">routes.js</span><span class="ta">              ← REST 路由 / 4 页 / 挂 MCP</span>
+│   ├── <span class="tv">tool-registry.js</span><span class="ta">         ← 三段验证 / 启停 / 端口查重</span>
+│   ├── <span class="tv">manifest-schema.js</span><span class="ta">       ← 卡片契约唯一真相源</span>
+│   ├── <span class="tv">mcp-http.js</span><span class="ta">             ← MCP Streamable HTTP</span>
+│   ├── <span class="tv">mcp-handlers.js</span><span class="ta">         ← 6 个 agentboard_* 工具</span>
+│   ├── <span class="tv">static.js</span><span class="ta">               ← 静态文件服务</span>
+│   ├── <span class="tv">api-page.js</span><span class="ta">             ← /api 发现页</span>
+│   ├── <span class="tv">self-check.js</span><span class="ta">           ← 自检</span>
+│   ├── <span class="tv">ops-log.js</span><span class="ta">              ← 操作事件日志</span>
+│   ├── <span class="tv">crash-guard.js</span><span class="ta">          ← 子进程崩溃防护</span>
+│   ├── <span class="tv">tip-schema.js</span><span class="ta">            ← 踩坑类型校验</span>
+│   └── <span class="tv">sync-proto.mjs</span><span class="ta">           ← 原型 SYNC 回灌脚本</span>
+├── <span class="tn">web/</span><span class="ta">                     ← 前端面板</span>
+│   ├── <span class="tv">index.html</span><span class="ta">              ← 4 页面板</span>
+│   ├── <span class="tv">_style.css</span><span class="ta">              ← 设计系统样式</span>
+│   ├── <span class="tv">_script.js</span><span class="ta">              ← 渲染 / 交互</span>
+│   ├── <span class="tv">tokens.json</span><span class="ta">             ← 设计令牌</span>
+│   ├── <span class="tv">logo.svg</span><span class="ta">                  ← 图标</span>
+│   ├── <span class="tv">logo.ico</span><span class="ta">                  ← 图标（favicon）</span>
+│   └── <span class="tv">_verify-fidelity.html</span><span class="ta">     ← 保真验证页</span>
+├── <span class="tn">docs/</span><span class="ta">                     ← 文档</span>
+│   ├── <span class="tv">使用说明书.html</span><span class="ta">          ← 说明书（就是本页）</span>
+│   ├── <span class="tv">CHECKPOINT.md</span><span class="ta">           ← 检查点</span>
+│   ├── <span class="tv">CHANGELOG.md</span><span class="ta">            ← 变更记录</span>
+│   ├── <span class="tv">card-component-施工方案.md</span><span class="ta">  ← 卡片施工方案</span>
+│   ├── <span class="tv">card-data-contract.md</span><span class="ta">      ← 卡片数据契约</span>
+│   ├── <span class="tv">card-form-constraints.md</span><span class="ta">   ← 表单约束</span>
+│   ├── <span class="tv">css-token-contract.md</span><span class="ta">      ← 样式令牌契约</span>
+│   ├── <span class="tv">fonts.md</span><span class="ta">                    ← 字体决策</span>
+│   ├── <span class="tv">GLOBAL.md</span><span class="ta">                   ← 全局宪法</span>
+│   ├── <span class="tv">grid-control-prompt.md</span><span class="ta">         ← 网格控制 prompt</span>
+│   ├── <span class="tv">PATROL.md</span><span class="ta">                   ← 定期巡检</span>
+│   ├── <span class="tv">RECOVERY.md</span><span class="ta">                  ← 灾难恢复</span>
+│   ├── <span class="tv">tasks.md</span><span class="ta">                    ← 任务记录</span>
+│   ├── <span class="tv">对外表达-人设.md</span><span class="ta">           ← 对外表达</span>
+│   ├── <span class="tn">archive/</span><span class="ta">               ← 退场归档（design-spec / repo-spec）</span>
+│   └── <span class="tn">_runtime/</span><span class="ta">               ← 运行产物</span>
+├── <span class="tn">examples/</span><span class="ta">                 ← manifest 模板（copy 到 tools/）</span>
+│   ├── <span class="tn">hello-server/</span><span class="ta">               ← 最小示例</span>
+│   └── <span class="tn">nextjs-app/</span><span class="ta">                ← Next.js 示例</span>
+├── <span class="tn">tools/</span><span class="ta">                     ← 工具注册表（66 张卡）</span>
+│   └── <span class="tv">{id}/manifest.json</span><span class="ta">      ← 一张卡一个</span>
+├── <span class="tn">tips/</span><span class="ta">                      ← 踩坑沉淀（411 条）</span>
+│   └── <span class="tv">*.md</span><span class="ta">                        ← 一条一个坑</span>
+├── <span class="tn">principles/</span><span class="ta">                ← 原则</span>
+│   ├── <span class="tv">CONSTITUTION.md</span><span class="ta">               ← 原则库宪法</span>
+│   ├── <span class="tv">adversarial-review.md</span><span class="ta">         ← 竞品视角审查</span>
+│   ├── <span class="tv">curation-community-quality.md</span><span class="ta">   ← 策展+社区质量</span>
+│   ├── <span class="tv">docs-retire-when-superseded.md</span><span class="ta">  ← 文档退场</span>
+│   ├── <span class="tv">first-principles-review.md</span><span class="ta">    ← 第一性审查</span>
+│   ├── <span class="tv">inverse-review.md</span><span class="ta">            ← 逆向审查</span>
+│   ├── <span class="tv">line-break-is-design.md</span><span class="ta">       ← 换行即设计</span>
+│   ├── <span class="tv">one-source-multi-end.md</span><span class="ta">       ← 一源多端</span>
+│   ├── <span class="tv">scrape-boundary-field-contract.md</span><span class="ta"> ← 抓取边界契约</span>
+│   └── <span class="tv">user-selected-direction-no-resale.md</span><span class="ta"> ← 不拉回被否线程</span>
+├── <span class="tn">mechanisms/</span><span class="ta">               ← 机制说明</span>
+│   └── <span class="tv">session-guard.md</span><span class="ta">            ← 会话守卫</span>
+├── <span class="tn">state/</span><span class="ta">                     ← API 调用统计</span>
+│   └── <span class="tv">*.jsonl</span><span class="ta">                     ← 每次 API 调用一条</span>
+├── <span class="tn">_runtime/</span><span class="ta">                  ← 运行态（不入库）</span>
+│   ├── <span class="tn">pids/</span><span class="ta">                  ← 进程身份凭证</span>
+│   └── <span class="tv">*.log / events.jsonl</span><span class="ta">     ← 运行日志 / 操作事件</span>
+├── <span class="tn">coverage/</span><span class="ta">                  ← 测试覆盖率（生成）</span>
+└── <span class="tn">node_modules/</span><span class="ta">              ← 依赖（npm install 生成）</span></pre>
+    <p class="flow-note">设计系统的说明书属于 design-system skill，在 <code>~/.claude/skills/vivi-design-system/docs/设计系统说明书.html</code>。<br><a href="file:///C:/Users/Administrator/.claude/skills/vivi-design-system/docs/设计系统说明书.html" style="color:var(--ink);text-decoration:underline;">打开设计系统说明书</a></p>
   </div>
 </section>
 
@@ -379,42 +450,10 @@ code{font-family:var(--font-code);font-size:.88em;background:var(--soft);color:v
   </div>
 </section>
 
-<!-- ══ 04 另外三页 ══ -->
-<section class="module alt" id="m04">
+<!-- ══ 04 你看着，AI 调 ══ -->
+<section class="module" id="m04">
   <div class="module-in">
     <span class="big-num">04</span>
-    <div class="mod-head reveal">
-      <span class="mod-tag"><span class="sq"></span>Pages</span>
-      <h2 class="mod-title">另外三页</h2>
-      <p class="mod-sub">我的网站 / 经验日志 / 系统规范 —— 三页各管一件事，都从文件读出来。</p>
-    </div>
-    <div class="trio">
-      <div class="tcard g reveal">
-        <span class="tk">Websites</span>
-        <b>我的网站</b>
-        <p>公网应用注册表，数据活在 <code class="tip" data-tip="公网应用注册表：记录对外应用、入口和用途的文件">apps-registry.json</code>。哪些应用对外、入口在哪、干什么用，一张表看全。</p>
-        <div class="tags"><span>apps-registry.json</span></div>
-      </div>
-      <div class="tcard l reveal">
-        <span class="tk">Tips</span>
-        <b>经验日志</b>
-        <p>踩过的坑，固化成 <code class="tip" data-tip="经验日志：踩坑条目，格式统一——现象→根因→修复→预防">tips/*.md</code>。五类各管一种：诊断 / 方法 / 事实 / 能力 / 反馈。格式统一：现象 → 根因 → 修复 → 预防。</p>
-        <div class="tags"><span>诊断</span><span>方法</span><span>事实</span><span>能力</span><span>反馈</span></div>
-      </div>
-      <div class="tcard d reveal">
-        <span class="tk">Specs</span>
-        <b>系统规范</b>
-        <p>三个 tab 从真源生成：治理宪法（<code class="tip" data-tip="治理宪法：架构、治理原则、骨件边界、资产边界">agent.md</code>）、Manifest 契约（<code class="tip" data-tip="Manifest Schema：契约字段表，从代码实时生成">lib/manifest-schema.js</code>）、真相源索引（指针直指各数据家）。改真源页面自动变，永不漂移。</p>
-        <div class="tags"><span>治理宪法</span><span>Manifest Schema</span><span>真相源索引</span></div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ══ 05 你看着，AI 调 ══ -->
-<section class="module" id="m05">
-  <div class="module-in">
-    <span class="big-num">05</span>
     <div class="mod-head reveal">
       <span class="mod-tag"><span class="sq"></span>Operate</span>
       <h2 class="mod-title">你看着，AI 调</h2>
@@ -431,12 +470,10 @@ code{font-family:var(--font-code);font-size:.88em;background:var(--soft);color:v
         </div>
       </div>
       <div class="stepgrp reveal">
-        <div class="stepgrp-t"><span class="n">你</span>装完新工具，第一件事写清单</div>
+        <div class="stepgrp-t"><span class="n">你</span>装完新工具，写清单即注册</div>
         <div class="steps">
-          <div class="step"><span class="step-no">1</span><div><b>确认能用</b><p>工具已装好、配好、能正常跑。</p></div></div>
-          <div class="step"><span class="step-no">2</span><div><b>写清单</b><p>写 manifest：是什么、怎么启停、跟谁冲突、模型盲区。</p></div></div>
-          <div class="step"><span class="step-no">3</span><div><b>确认可见</b><p>回面板看一眼，这条已经出现。</p></div></div>
-          <div class="step"><span class="step-no">4</span><div><b>留指针</b><p>之后才在记忆里留指向——不是工具定义本身。</p></div></div>
+          <div class="step"><span class="step-no">1</span><div><b>写清单</b><p>写 manifest：是什么、怎么启停、跟谁冲突。写进去就校验——字段不合规、端口被占，当场拒绝。</p></div></div>
+          <div class="step"><span class="step-no">2</span><div><b>上架即见</b><p>写完就上架，下次请求自动重扫，不用手动确认。</p></div></div>
         </div>
       </div>
     </div>
@@ -447,63 +484,10 @@ code{font-family:var(--font-code);font-size:.88em;background:var(--soft);color:v
   </div>
 </section>
 
-<!-- ══ 06 这些别碰 ══ -->
-<section class="module alt" id="m06">
-  <div class="module-in">
-    <span class="big-num">06</span>
-    <div class="mod-head reveal">
-      <span class="mod-tag"><span class="sq"></span>Limits</span>
-      <h2 class="mod-title">这些别碰</h2>
-      <p class="mod-sub">碰了直接停。红线之外，还有该做什么 —— AVOID / PREFER。</p>
-    </div>
-    <div class="reds">
-      <div class="red reveal"><span class="rk">!</span><div><b>禁止删除清单目录</b><p>清单是唯一真相源，删了工具就从世界消失，不可逆。除非用户逐文件确认。</p></div></div>
-      <div class="red reveal"><span class="rk">!</span><div><b>「删卡片」≠ 授权删文件</b><p>删卡片删的是视图，删文件删的是真相。先问：隐藏还是删除？要删则列清单等确认。</p></div></div>
-      <div class="red reveal"><span class="rk">!</span><div><b>改动前先看现状</b><p>动手前先查 <code class="tip" data-tip="管理面接口：面板从这里读工具列表，AI 走 MCP 读同一份清单">/api/tools</code>，不凭记忆。</p></div></div>
-    </div>
-    <div class="never reveal">
-      <div class="nt">永不</div>
-      <div class="nlist">
-        <span>数据库</span><span>前端框架</span><span>用户认证</span><span>云同步</span><span>替代标准接口</span>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ══ 07 装完怎么验 ══ -->
-<section class="module" id="m07">
-  <div class="module-in">
-    <span class="big-num">07</span>
-    <div class="mod-head reveal">
-      <span class="mod-tag"><span class="sq"></span>Verify</span>
-      <h2 class="mod-title">装完怎么验</h2>
-      <p class="mod-sub">装完新工具，别急着走。过 P0，才算装好。</p>
-    </div>
-    <div class="verify">
-      <div class="vbox reveal">
-        <div class="vbox-t"><span class="n">P0</span>必须全过</div>
-        <div class="steps">
-          <div class="step"><span class="step-no">1</span><div><b>能跑</b><p>启动命令执行，服务正常起来。</p></div></div>
-          <div class="step"><span class="step-no">2</span><div><b>有清单</b><p>manifest 写全：是什么、怎么启停、跟谁冲突。</p></div></div>
-          <div class="step"><span class="step-no">3</span><div><b>架上可见</b><p>面板 <code class="tip" data-tip="管理面接口：面板从这里读工具列表，AI 走 MCP 读同一份清单">/api/tools</code> 能看到，状态对。</p></div></div>
-          <div class="step"><span class="step-no">4</span><div><b>AI 能调</b><p>MCP 侧能发现、能调用。</p></div></div>
-        </div>
-      </div>
-      <div class="vbox d reveal">
-        <div class="vbox-t"><span class="n">P1</span>应过</div>
-        <div class="steps">
-          <div class="step"><span class="step-no">i</span><div><b>留指针</b><p>在记忆里留指向，不是工具定义本身。</p></div></div>
-          <div class="step"><span class="step-no">i</span><div><b>P0 不过就打回</b><p>任何一条不过，回到上一步修，不验收。</p></div></div>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
 <footer class="footer">
   <div class="footer-in reveal">
     <div class="fline">一份清单，两面读。</div>
-    <div class="fsub">Agentboard · 本机自托管 · 零 CDN · 状态靠验证，不靠灯</div>
+    <div class="fsub">Agentboard · 本机自托管 · 零 CDN · 状态靠验证，不靠灯 · Vivi（进化猫）</div>
   </div>
 </footer>
 
