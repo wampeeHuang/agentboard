@@ -1,52 +1,45 @@
-# HANDOFF · 2026-08-26（治理层整治 + 内容层清理 + 复盘）
+# HANDOFF · 2026-08-26（vivi-design-system 黄绿白规范化收官）
 
-## 本次完成（会话：workspace-governor 治理层 + 内容层整治）
+## 本次完成（会话：workspace-governor 对抗性审查 vivi-design-system → 黄绿白规范化）
 
-**背景**: 用 workspace-governor 对抗性审查 `~/.agentboard`，治理层声明 vs 现实完全不对（README 树残留虚构 vivi-design-system 条目、tools/ 独立 git 根未声明、巡检不验卫生面）。本轮：治理层对齐现实 + 内容层清理 + 复盘沉淀。
+**背景**: 用 workspace-governor 对抗性审查 `~/.claude/skills/vivi-design-system`，识别出换皮系统性 bug——模板从 esther 时代换皮到 Vivi 品牌时，类名/变量名保留旧色名（`--blue/--yellow/--red`），只改值不改名 → 名实脱钩。实渲染"绿墨白"与品牌契约"黄绿白"冲突。用户纠正：品牌色是黄绿白，改实现不改契约。
 
-**治理层改动**:
-- **`agent.md` / `README.md`** — 目录树改为真实结构镜像；tools/ 标注"独立 git 仓库，主仓只 ignore 不追踪"；补 `.claude/` 声明；README 设计语言真源从 vivi-design-system 改为 `web/tokens.json`；树内 vivi 残留删除。**先 `survey_workspace.py --json` 拿真源再对齐，一处对齐多处漂移**
-- **`inspection.json`** — 新增 `runtime_hygiene` 检查项（_runtime ≤300 文件 / ≤100MB），落实"巡检必须验证执行"原则（principle `inspection-must-verify-execution.md` 落地）——实测 PASS（24 文件 1.5MB）
-- **`.gitignore`** — 删 cron/ 残留 5 条（cron 数据归 `~/.scheduler` 骨件）
-- **提交**: `24bdb05` governance 治理层对齐现实
-
-**内容层清理**:
-- 删除 12 项残留：7 个 fix_*.py + rollback_yellow.py + vivi-manual.png + docs/_runtime/ + 嵌套 _runtime/_runtime/ + coverage/ 空壳
-- **保留 CHECKPOINT.md** — 先 `ls` 核查发现是 `~/.claude/hooks/checkpoint.js` PreToolUse 钩子每次 Bash/Write/Edit 自动写入的防崩溃产物，删了立刻重生——活文件不是垃圾，识别"活文件 vs 死残留"
+**黄绿白规范化改动**:
+- **4 模板 ×4**（app/landing/cards/tutorial）— `--yellow` 从墨 `#262B27` 改真黄 `#D9E26B`；荧光笔 ×3（components.md `.hl-yellow`、template-wechat.html、scene-wechat.md）墨底改黄调 `rgba(217,226,107,0.4)` 对齐品牌规范"荧光笔黄色 40%"
+- **全库变量改名 ×9 文件** — `--blue→--green`、`--blue-deep→--green-deep`、`--red→--ink`（119→325 处），先长后短防前缀残留，脚本化（`_runtime/rename_vars.py`）
+- **死资产** — `assets/fonts/Fanwood Text.otf` 删除（无 @font-face 引用；Fanwood.otf + Fanwood Italic.otf 保留，说明书在用）
+- **文档对齐** — references 全库 `--yellow` 真黄 8 处替换，scene-tutorial 顶部注改"已改品牌语义"
 
 **沉淀**:
-- tips `governor-hook-misparses-powershell-erroraction.md`（hook 把 PowerShell `-ErrorAction SilentlyContinue` 当路径触发迁移拦截，裸删规避）——commit `a6f8658`（tips/ gitignored，`git add -f`）
-- 复盘 `D:\workspace\_output\retrospectives\entries\2026-08-26-agentboard-治理层整治.md` + INDEX.md 更新
-
-## 上会话（对抗性审查 + 治理规范化整改）
-
-- **_runtime 清理**：892 文件 / 26MB+ → 19 项 / 839KB。删 headless Chrome profile + 30+ 脚本 + 40+ 截图 + 备份；保留 pids/、events.jsonl、ops-log.jsonl、logs/、inbox/、start-failed/、arch.svg
-- **`lib/manifest-schema.js`** — `SYSTEM_DIRS=['_runtime']`，audit 三处统一排除——commit `25e4e9c`；**smoke.test.js** 文档数断言对齐真源——commit `42abefe` / `3663648`；**`.gitignore`** 追加 `.claude/`、`coverage/`、`web/_proto/`——commit `d9702e7`
-- tips `workspace-governor-hook-blocks-rm-rf.md`、`headless-chrome-profile-leak.md`；principles `inspection-must-verify-execution.md`
-- 复盘 `2026-08-25-agentboard-治理规范化.md`
-
-## 上上会话（skills 治理 — 设计系统移全局 + 脱敏 + 指针收敛）
-
-- `~/.claude/skills/agentboard-design-system/`（新全局家）：从项目 `skills/` 迁出，bootstrap + 脱敏 → 重写 README/AGENTS 为 Agentboard 品牌 + 黄绿白三色；项目指针全改 `lib/routes.js` SOURCES_MD / README / agent.md / principles；删项目内旧拷贝 `skills/evolution-cat` + `skills/agentboard-design-system`——commit `0d04bdb`
+- tips `reskin-audit-by-value-not-name.md` — 换皮后审计颜色按值不按名（5 处脱钩案例 + 5 步审计流程）
+- principles `name-value-drift.md` — 名实脱钩是腐化信号，审计按值不按名（已补 CONSTITUTION 清单）
+- memory `feedback_vivi_brand_yellow_green_white.md` — 品牌黄绿白，改实现不改契约
+- 复盘 `D:\workspace\_output\retrospectives\entries\2026-08-26-vivi-design-system-黄绿白规范化.md` + INDEX.md 更新
 
 ## 验证结果
-- inspection.json JSON 有效；runtime_hygiene 实测 PASS（24 文件 1.5MB）
-- 残留全清（5 类 grep 全 No such file）
-- 服务 /api/tools ok，端口 3099 LISTENING
-- git status 干净（tools/ 45 处除外，见待办）
+- 全库 `--blue/--red` 残留 grep 命中 = 0
+- 4 模板浏览器 getComputedStyle：`--green=#74A63F`、`--yellow=#D9E26B`、`--ink=#262B27`、白底 — 黄绿白实呈现
+- 荧光笔渲染 `rgba(217,226,107,0.4)` 确认黄调
+- 5 页模板截图已存档 `_runtime/screenshots/`（临时，待清理）
+
+## 上会话（治理层整治 + 内容层清理 + 复盘）
+- `agent.md`/`README.md` 目录树对齐真实结构、inspection.json 补 runtime_hygiene、.gitignore 删 cron 残留、12 项内容层残留删除、tips governor-hook-misparses-powershell-erroraction——commits `24bdb05` `a6f8658` `a5c747e`
+
+## 上上会话（真实工具架改版，"肉"阶段）
+- 换皮 `defed06`（黄绿白 token 换肤）+ 写回收官 `ee016a7`（应用/日志增改删、写入标准、工具编辑保真）已提交。计划文件 `~/.claude/plans/calm-singing-engelbart.md`（若未收官，Phase 4 浏览器 golden path 验证待跑）
 
 ## 待办
 - **tools/ 45 处 manifest 变更未提交**（用户指示不动，留专项）——下次动 tools/ 前先确认是否要提交
-- **身份素材替换**（用户授权"换成我的"）：等头像图 + 名字/handle + 社交链接 → 替换 `avatar-placeholder.svg`、`scene-wechat.md:205` 签名、SKILL.md author、README 署名、manual.html hero 头像
-- **端口 3080 `/grow` 页**（用户提过"与英雄区拖开 32px"，被重定向未实施，未确认）
+- **身份素材替换**（用户授权"换成我的"）：等头像图 + 名字/handle + 社交链接 → 替换 `avatar-placeholder.svg`、`scene-wechat.md` 签名、SKILL.md author、README 署名
+- **真实工具架 vs 原型一致性终审**（task #59）
 - 空状态、响应式 900/600 断点（原型已有，真实页未全对齐）
-- 工具架 vs 原型一致性终审（task #59）
+- `_runtime/rename_vars.py`、`fix_yellow_docs.py`、`screenshots/` 临时产物清理
 
 ## 关键风险
 - `tips/`、`skills/` 在 `.gitignore`，新 tips 提交需 `git add -f`
-- 本机 bash 工具引号解析坏（`unexpected EOF`），命令用 PowerShell
-- **PowerShell 5.1 `-match` 中文假阴性** — 中文检查以 node/UTF-8 为权威（见 tip）
+- 本机 bash 工具引号解析坏（`unexpected EOF`），命令用 PowerShell / Python（UTF-8）
+- **PowerShell 5.1 `-match` 中文假阴性** — 中文检查以 node/UTF-8 为权威
 - `node start.js` 的 npx kill-port 会静默退出 — 启动直接 `node server.js`
-- 清理运行产物目录用 `find -delete` 文件级删除，`rm -rf` 会被 workspace-governor hook 拦截（见 tips）
-- **PowerShell 删除命令不带 `-ErrorAction SilentlyContinue`**（hook 把参数值当路径触发迁移拦截），文件存在就裸删，判断删没删掉用 `Test-Path`（见新 tip）
-- **rm 链式命令被 hook 中断**：`rm -f a b && rm -f c` 中一段失败 `&&` 链断后续全不执行——同一批删除逐项验证，不靠链式隐式串行
+- 清理运行产物目录用 `find -delete` 文件级删除，`rm -rf` 会被 workspace-governor hook 拦截
+- **PowerShell 删除命令不带 `-ErrorAction SilentlyContinue`**（hook 把参数值当路径触发迁移拦截），文件存在就裸删，判断删没删掉用 `Test-Path`
+- **rm 链式命令被 hook 中断**：`rm -f a b && rm -f c` 中一段失败 `&&` 链断后续全不执行——同一批删除逐项验证

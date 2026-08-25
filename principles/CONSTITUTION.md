@@ -120,3 +120,4 @@ source: 触发提炼的事件/任务
 | `line-break-is-design.md` | design | ✅ |
 | `one-source-multi-end.md` | architecture | ✅ |
 | `curation-community-quality.md` | architecture | ✅ |
+| `name-value-drift.md` | review | ✅ |
