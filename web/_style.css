@@ -299,6 +299,7 @@ a{text-decoration:none;color:inherit}
 .modal input[type=text],.modal select,.modal textarea{width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:6px;font-size:12px;font-family:inherit;font-weight:400;background:var(--paper);outline:none;color:var(--text);box-sizing:border-box}
 .modal input:focus,.modal select:focus,.modal textarea:focus{border-color:var(--green)}
 .modal textarea{min-height:44px;resize:vertical;line-height:1.5}
+.form-pane textarea.sec-ta{height:256px;min-height:256px}
 .modal input::placeholder,.modal textarea::placeholder{color:var(--text-muted)}
 .cg{display:none}
 .cg.show{display:block}

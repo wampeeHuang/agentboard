@@ -1,8 +1,10 @@
-# 用户选定方向后，不主动拉回被否线程
-
+---
 type: communication
 date: 2026-08-25
 source: Obsidian 工作台 — 用户选定 Claudian「不要混淆视听」，后续仍反复对比 dashboard
+---
+
+# 用户选定方向后，不主动拉回被否线程
 
 ## 是什么
 

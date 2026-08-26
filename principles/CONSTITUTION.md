@@ -46,9 +46,9 @@ Tip 是踩坑日志。原则是决策框架。Tip 告诉你"别踩这个坑"，�
 
 ```markdown
 # 一句话标题（洞察/方法，不是主题名）
-type: review | design | architecture
-date: YYYY-MM-DD
-source: 触发提炼的事件/任务
+type: review | design | architecture | governance | engineering | communication
+date: YYYY-MM-DD（可选，不写就不落盘）
+source: 触发提炼的事件/任务（可选，可长可短，不写就不落盘）
 
 ## 是什么
 （一句话说清楚这个原则）
@@ -61,22 +61,22 @@ source: 触发提炼的事件/任务
 
 ## 边界
 （什么时候不适用——和原则本身一样重要）
-
-## 来源
-（首次提炼的上下文）
 ```
 
 ### 分类标准
 
-三类，同一维度：**这条原则指导哪一种决策**。
+六类，同一维度：**这条原则指导哪一种决策**。
 
 | 分类 | 回答什么 | 判定 | 示例 |
 |------|---------|------|------|
 | `review` | 怎么审查一个方案？ | 提供系统性多角度审查框架 | 第一性原理审查、对抗性审查 |
 | `design` | 怎么做一个设计决策？ | 指导具体设计选择的原则 | 换行即设计 |
 | `architecture` | 怎么做一个架构决策？ | 系统级结构选择的原则 | 一源多端、策展+社区 |
+| `governance` | 怎么定治理制度？ | 治理机制/巡检门禁的边界设计 | 制度必须有执行验证 |
+| `engineering` | 怎么做工程决策？ | 工程接口/契约的边界设定 | 爬取边界字段契约 |
+| `communication` | 怎么协作沟通？ | 协作/沟通中的行为边界 | 用户选的方向不转卖 |
 
-互斥检验：一条原则不可能同时主要回答"怎么审查方案"又主要回答"怎么做设计决策"。
+互斥检验：一条原则不可能同时主要回答两种决策——归入最能指导的那一类。
 
 ### 格式约束
 
@@ -121,3 +121,7 @@ source: 触发提炼的事件/任务
 | `one-source-multi-end.md` | architecture | ✅ |
 | `curation-community-quality.md` | architecture | ✅ |
 | `name-value-drift.md` | review | ✅ |
+| `docs-retire-when-superseded.md` | architecture | ✅ |
+| `inspection-must-verify-execution.md` | governance | ✅ |
+| `scrape-boundary-field-contract.md` | engineering | ✅ |
+| `user-selected-direction-no-resale.md` | communication | ✅ |

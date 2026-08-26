@@ -619,9 +619,9 @@ function tipCard(x) {
 }
 
 /* ── 原则库（决策框架，经验日志同款呈现） ── */
-var PRINC_DEFS=[['all','全部'],['review','审查'],['design','设计'],['architecture','架构']];
-var PRINC_CHAR={'review':'审','design':'设','architecture':'构'};
-var PRINC_LABEL={'review':'审查方法','design':'设计原则','architecture':'架构决策'};
+var PRINC_DEFS=[['all','全部'],['review','审查'],['design','设计'],['architecture','架构'],['governance','治理'],['engineering','工程'],['communication','沟通']];
+var PRINC_CHAR={'review':'审','design':'设','architecture':'构','governance':'治','engineering':'工','communication':'沟'};
+var PRINC_LABEL={'review':'审查方法','design':'设计原则','architecture':'架构决策','governance':'治理','engineering':'工程','communication':'沟通'};
 
 async function renderPrinciples() {
   if (!princData) {
@@ -637,7 +637,7 @@ async function renderPrinciples() {
   var q = (document.getElementById('princSearch') ? document.getElementById('princSearch').value : '').trim().toLowerCase();
   var list = princData.filter(function(x){
     if (princF !== 'all' && x.type !== princF) return false;
-    if (q && (x.title + ' ' + x.desc + ' ' + x.file).toLowerCase().indexOf(q) === -1) return false;
+    if (q && (x.title + ' ' + x.what + ' ' + x.desc + ' ' + x.file).toLowerCase().indexOf(q) === -1) return false;
     return true;
   });
   document.getElementById('princGrid').innerHTML = list.length ? list.map(princCard).join('') : '<div class="empty">没有匹配的原则</div>';
@@ -661,10 +661,115 @@ function princCard(x) {
     + '<div class="card-meta-row">'
     + '<span class="cf"><span class="cf-l">类型</span><span class="tip-type">' + escHtml(PRINC_LABEL[x.type] || x.type || '原则') + '</span></span>'
     + '<span class="cf"><span class="cf-l">文件</span><span class="card-id">' + escHtml(x.file) + '</span></span>'
-    + '<span class="cf top"><span class="cf-l">内容</span><span class="tip-desc-cell">' + escHtml(x.desc || '—') + '</span></span>'
+    + '<span class="cf top"><span class="cf-l">内容</span><span class="tip-desc-cell">' + escHtml(x.what || x.desc || '—') + '</span></span>'
     + '</div>'
-    + '<div class="card-actions"><a class="btn edit" href="/principles/' + escAttr(encodeURIComponent(x.file)) + '" target="_blank">打开</a><span class="p4-spacer"></span></div>'
+    + '<div class="card-actions"><button class="btn edit" onclick="openEditPrinc(\'' + escAttr(x.file) + '\')">编辑</button><button class="btn del" onclick="deletePrinc(\'' + escAttr(x.file) + '\')">删除</button><span class="p4-spacer"></span></div>'
     + '</div>';
+}
+
+/* ── 原则库 新增/编辑/删除（与日志同款） ── */
+var princModalState = 'new';  // new | edit
+var princEditingFile = null;
+var PRINC_SEC_NAMES = { '是什么': 'what', '怎么用': 'how', '案例': 'case', '边界': 'edge' };
+function parsePrincSections(body) {
+  var sec = { what: '', how: '', case: '', edge: '' };
+  var cur = null;
+  body.split('\n').forEach(function(line) {
+    var m = line.match(/^## (?![\s#])(.+)$/);
+    if (m) { cur = PRINC_SEC_NAMES[m[1].trim()] || cur; return; }
+    if (!cur) cur = 'what';
+    if (sec[cur] !== undefined) sec[cur] += line + '\n';
+  });
+  ['what', 'how', 'case', 'edge'].forEach(function(k) { sec[k] = sec[k].trim(); });
+  return sec;
+}
+function princToday() {
+  var d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+}
+function openNewPrinc() {
+  princModalState = 'new'; princEditingFile = null;
+  document.getElementById('princModalTitle').textContent = '新增原则';
+  document.getElementById('pp-type').value = 'review';
+  document.getElementById('pp-title').value = '';
+  document.getElementById('pp-date').value = princToday();
+  document.getElementById('pp-source').value = '';
+  ['pp-what', 'pp-how', 'pp-case', 'pp-edge'].forEach(function(id) { document.getElementById(id).value = ''; });
+  document.getElementById('princModal').style.display = 'flex';
+}
+async function openEditPrinc(file) {
+  princModalState = 'edit'; princEditingFile = file;
+  document.getElementById('princModalTitle').textContent = '编辑原则';
+  document.getElementById('princModal').style.display = 'flex';
+  try {
+    var res = await fetch('/api/principles/' + encodeURIComponent(file));
+    if (!res.ok) { toast('读取失败：' + res.status); return; }
+    var md = (await res.text()).replace(/\r\n/g, '\n');
+    var type = 'review', date = '', source = '', title = '', rest = md;
+    var fm = md.match(/^---\n([\s\S]*?)\n---\n?/);
+    if (fm) {
+      var t = fm[1].match(/^type:\s*(.+)$/m); if (t) type = t[1].trim();
+      var d = fm[1].match(/^date:\s*(.+)$/m); if (d) date = d[1].trim();
+      var s = fm[1].match(/^source:\s*(.+)$/m); if (s) source = s[1].trim();
+      rest = md.slice(fm[0].length);
+    }
+    var h1 = rest.match(/^#\s+(.+)$/m);
+    if (h1) { title = h1[1].trim(); rest = rest.slice(h1.index + h1[0].length).replace(/^\n+/, ''); }
+    var sec = parsePrincSections(rest);
+    document.getElementById('pp-type').value = type;
+    document.getElementById('pp-date').value = date;
+    document.getElementById('pp-source').value = source;
+    document.getElementById('pp-title').value = title;
+    document.getElementById('pp-what').value = sec.what;
+    document.getElementById('pp-how').value = sec.how;
+    document.getElementById('pp-case').value = sec.case;
+    document.getElementById('pp-edge').value = sec.edge;
+  } catch(e) { toast('读取失败：' + e.message); }
+}
+function closePrincModal() { document.getElementById('princModal').style.display = 'none'; }
+async function savePrinc() {
+  var title = document.getElementById('pp-title').value.trim();
+  var type = document.getElementById('pp-type').value;
+  var date = document.getElementById('pp-date').value.trim();
+  var source = document.getElementById('pp-source').value.trim();
+  var sec = {
+    what: document.getElementById('pp-what').value.trim(),
+    how: document.getElementById('pp-how').value.trim(),
+    case: document.getElementById('pp-case').value.trim(),
+    edge: document.getElementById('pp-edge').value.trim()
+  };
+  if (!title) return toast('标题必填');
+  if (!sec.what || !sec.how) return toast('是什么 / 怎么用 必填');
+  var missing = [];
+  if (!sec.case) missing.push('案例');
+  if (!sec.edge) missing.push('边界');
+  if (missing.length && !confirm('「' + title + '」缺 ' + missing.join('、') + '，保存后对应段落会被跳过。继续？')) return;
+  var body = { title: title, type: type, date: date, source: source, what: sec.what, how: sec.how, case: sec.case, edge: sec.edge };
+  try {
+    var res = await fetch(princModalState === 'edit' ? '/api/principles/' + encodeURIComponent(princEditingFile) : '/api/principles', {
+      method: princModalState === 'edit' ? 'PUT' : 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    var data = await res.json();
+    if (!data.ok) return toast('保存失败：' + (data.error || res.status));
+    closePrincModal();
+    princData = null;
+    renderPrinciples();
+  } catch(e) { toast('保存失败：' + e.message); }
+}
+function deletePrinc(file) {
+  var x = null;
+  (princData || []).forEach(function(p){ if (p.file === file) x = p; });
+  if (!x) return;
+  if (!confirm('删除原则「' + (x.title || file) + '」？此操作不可恢复。')) return;
+  fetch('/api/principles/' + encodeURIComponent(file), { method: 'DELETE' })
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if (d.ok) { princData = null; renderPrinciples(); toast('已删除'); }
+      else toast('删除失败：' + (d.error || ''));
+    })
+    .catch(function(e){ toast('删除失败：' + e.message); });
 }
 
 /* ── 我的网站 增/改/删 ── */

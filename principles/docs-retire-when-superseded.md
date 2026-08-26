@@ -1,8 +1,10 @@
-# 被真源覆盖的文档退场，不重写
-
+---
 type: architecture
 date: 2026-08-25
-source: 治理层收敛——design-spec/repo-spec 被 skill、manifest-schema.js、AGENT.md 覆盖后归档
+source: 治理层收敛——design-spec/repo-spec 被 skill、manifest-schema.js、AGENT.md 覆盖后归档。用户问"设计规范已被 design skill 覆盖还需要吗" → 唯一真相源逐节审计 → 一份宪法 + 从真源生成 + 指针索引的收敛方案。是 one-source-multi-end 在文档治理层的延伸。
+---
+
+# 被真源覆盖的文档退场，不重写
 
 ## 是什么
 
@@ -39,7 +41,3 @@ source: 治理层收敛——design-spec/repo-spec 被 skill、manifest-schema.j
 - 归档 ≠ 删除：真源未完全成型前，归档件仍是可查历史，不是垃圾
 - 内容独立（真相源没有）时不能退场——"被覆盖"判断错误会把活内容埋掉
 - 覆盖者必须是**会持续更新**的真源；若覆盖者也是死文档，退场只是把问题转移
-
-## 来源
-
-用户问"设计规范已被 design skill 覆盖还需要吗" → 唯一真相源逐节审计 → 一份宪法 + 从真源生成 + 指针索引的收敛方案。是 one-source-multi-end 在文档治理层的延伸。

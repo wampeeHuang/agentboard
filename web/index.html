@@ -19,6 +19,7 @@ API:     GET /api/tips      → 经验日志 JSON {ok, tips:[{file,title,desc,ty
 ACTION:  POST /api/tools/start/:id   POST /api/tools/stop/:id
 PAGES:   #page-tools(工具架)  #page-apps(我的网站)  #page-tips(经验日志)  #page-principles(原则库)  #page-docs(说明书 iframe /manual)  #page-audit(治理审计)
 API:     GET /api/principles → 原则库 JSON {ok, principles:[{file,title,desc,type}]}（principles/*.md）
+API:     POST/PUT/DELETE /api/principles[/:file] → 新增/编辑/删除原则（CONSTITUTION.md 受保护）
 DIMS:    #dimBlocks 四维异色筛选块(category/form/owner/state) → setDimFilter(dim,val)
 RULES:   localhost 用 Bash curl 不用 WebFetch。能力不够先查本地工具。启动/停止后等 500ms poll /api/tools。
 ━═ 你可以访问以下本地能力 ═━
@@ -107,9 +108,9 @@ OCR:  Tesseract OCR (pytesseract)
       <div class="hero-sub">决策框架，不是踩坑记录。做决定前主动调用，不是出问题后查阅</div>
     </div>
     <div class="search-bar">
-      <a class="btn-add" href="/principles" target="_blank" style="text-decoration:none;display:inline-flex;align-items:center">开放访问页 ↗</a>
+      <button class="btn-add" onclick="openNewPrinc()">+ 新增原则</button>
       <div class="search-box">
-        <input id="princSearch" placeholder="搜索标题或描述…" oninput="renderPrinciples()">
+        <input id="princSearch" placeholder="搜索标题或内容…" oninput="renderPrinciples()">
         <svg class="search-ico" viewBox="0 0 20 20" aria-hidden="true"><circle cx="9" cy="9" r="6.5" fill="none" stroke="currentColor" stroke-width="2"/><line x1="14.2" y1="14.2" x2="18" y2="18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
       </div>
     </div>
@@ -271,7 +272,7 @@ OCR:  Tesseract OCR (pytesseract)
           </div></div>
           <div class="cg" id="ops-none"><div class="cg-note">API / 组 无本地进程：没有项目路径、没有运行时。</div></div>
           <div class="field" style="margin-top:12px"><label title="选填，记录模型在此工具上易犯的错">Agent 操作笔记</label><textarea id="f-notes" rows="2" placeholder="例：截图任务会误判端口；启动前先看 conflicts。"></textarea></div>
-          <div class="field"><label title="互斥工具 id，逗号分隔。AI 启动本工具前会检查这些工具是否在跑">冲突工具</label><input id="f-conflicts" type="text" placeholder="例：comfyui,stable-diffusion（GPU 显存互斥）。留空 = 无冲突，不写入"></div>
+          <div class="field"><label title="互斥工具 id，逗号分隔。AI 启动本工具前会检查这些工具是否在跑">冲突工具</label><input id="f-conflicts" type="text" placeholder="例：comfyui,stable-diffusion（GPU 显存互斥）。留空 = 无冲突（落盘空数组）"></div>
           <div class="check-row" id="autoStart-row"><input type="checkbox" id="f-autostart" checked><span title="服务类型：开机自动启动。停用时此项隐藏">开机自动启动</span></div>
           <div class="check-row" id="disabled-row"><input type="checkbox" id="f-disabled" onchange="applyFormType()"><span title="勾上后 AI 不可调用，同时强制取消开机自启">停用</span></div>
         </div>
@@ -343,11 +344,46 @@ OCR:  Tesseract OCR (pytesseract)
           <option value="feedback">反馈</option>
         </select></div>
         <div class="field"><label>标题 <span class="req">*</span></label><input id="tp-title" type="text" placeholder="一句话说明踩的坑"></div>
-        <div class="field"><label>描述</label><textarea id="tp-desc" rows="6" placeholder="现象 / 根因 / 修复 / 预防"></textarea></div>
+        <div class="field"><label>内容</label><textarea id="tp-desc" rows="6" placeholder="现象 / 根因 / 修复 / 预防"></textarea></div>
         <div class="form-actions">
           <button class="btn go" onclick="saveTip()">保存</button>
           <button class="btn" onclick="closeTipModal()">取消</button>
           <span class="std-link" onclick="openStd()">写入标准 ↗</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<!--#/SYNC#-->
+<!--#SYNC:princ-modal#-->
+<!-- ── 原则 modal（五段结构化，CONSTITUTION 格式即面板） ── -->
+<div class="modal-mask" id="princModal" onclick="if(event.target===this)closePrincModal()">
+  <div class="modal">
+    <div class="modal-head">
+      <span class="modal-title" id="princModalTitle">新增原则</span>
+      <span class="modal-close" onclick="closePrincModal()">✕</span>
+    </div>
+    <div class="modal-body">
+      <div class="form-pane">
+        <div class="field"><label>类型</label><select id="pp-type">
+          <option value="review">审查</option>
+          <option value="design">设计</option>
+          <option value="architecture">架构</option>
+          <option value="governance">治理</option>
+          <option value="engineering">工程</option>
+          <option value="communication">沟通</option>
+        </select></div>
+        <div class="field"><label>日期（可选）</label><input id="pp-date" type="date"></div>
+        <div class="field"><label>来源（可选）</label><input id="pp-source" type="text" placeholder="触发提炼的事件/任务"></div>
+        <div class="field"><label>标题 <span class="req">*</span></label><input id="pp-title" type="text" placeholder="一句话洞察/方法，不是主题名"></div>
+        <div class="field"><label>是什么 <span class="req">*</span></label><textarea id="pp-what" class="sec-ta" placeholder="一句话说清楚这个原则"></textarea></div>
+        <div class="field"><label>怎么用 <span class="req">*</span></label><textarea id="pp-how" class="sec-ta" placeholder="具体步骤/检查清单，可操作"></textarea></div>
+        <div class="field"><label>案例</label><textarea id="pp-case" class="sec-ta" placeholder="至少一个真实案例，最好有前后对比（可留空）"></textarea></div>
+        <div class="field"><label>边界</label><textarea id="pp-edge" class="sec-ta" placeholder="什么时候不适用（可留空）"></textarea></div>
+        <div class="form-actions">
+          <button class="btn go" onclick="savePrinc()">保存</button>
+          <button class="btn" onclick="closePrincModal()">取消</button>
+          <a class="std-link" href="/principles/CONSTITUTION.md" target="_blank">写入标准 ↗</a>
         </div>
       </div>
     </div>

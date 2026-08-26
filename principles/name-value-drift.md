@@ -1,7 +1,10 @@
-# 名实脱钩是腐化信号：标识符名≠真实值，审计按值不按名
+---
 type: review
 date: 2026-08-26
-source: vivi-design-system 换皮后 5 处类名/变量名与颜色值脱钩，一次按值扫描全数暴露
+source: vivi-design-system 换皮后 5 处类名/变量名与颜色值脱钩，一次按值扫描全数暴露。2026-08-26 vivi-design-system 黄绿白规范化。关联 tip：`reskin-audit-by-value-not-name.md`（操作步骤）、`delete-css-token-grep-all-files.md`（grep 归零闭环）。
+---
+
+# 名实脱钩是腐化信号：标识符名≠真实值，审计按值不按名
 
 ## 是什么
 
@@ -29,7 +32,3 @@ vivi-design-system 换皮后按类名排查"黄色为什么没出现"——每�
 - 名旧值新如果值正确且渲染正常，改名是低优先清理项——先修值错的，改名放最后
 - 纯命名风格偏好（camelCase vs snake_case）不属此类，那是风格不是脱钩
 - 契约/真相源本身要可信：按值审计的前提是"值"有唯一真相源（brand-dna、schema、manifest），没有就先把真相源立起来
-
-## 来源
-
-2026-08-26 vivi-design-system 黄绿白规范化。关联 tip：`reskin-audit-by-value-not-name.md`（操作步骤）、`delete-css-token-grep-all-files.md`（grep 归零闭环）。
