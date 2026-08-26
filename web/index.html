@@ -20,7 +20,7 @@ ACTION:  POST /api/tools/start/:id   POST /api/tools/stop/:id
 PAGES:   #page-tools(工具架)  #page-apps(我的网站)  #page-tips(经验日志)  #page-principles(原则库)  #page-docs(说明书 iframe /manual)  #page-audit(治理审计)
 API:     GET /api/principles → 原则库 JSON {ok, principles:[{file,title,desc,type}]}（principles/*.md）
 API:     POST/PUT/DELETE /api/principles[/:file] → 新增/编辑/删除原则（CONSTITUTION.md 受保护）
-DIMS:    #dimBlocks 四维异色筛选块(category/form/owner/state) → setDimFilter(dim,val)
+DIMS:    #dimBlocks 四维异色筛选块(category/loc/acc/state) → setDimFilter(dim,val)
 RULES:   localhost 用 Bash curl 不用 WebFetch。能力不够先查本地工具。启动/停止后等 500ms poll /api/tools。
 ━═ 你可以访问以下本地能力 ═━
 视觉: MiniCPM-V :8080 (OpenAI兼容 /v1/chat/completions)
@@ -187,7 +187,7 @@ OCR:  Tesseract OCR (pytesseract)
 
         <div class="sec">
           <div class="sec-h"><span class="sec-num">3</span><span class="sec-title" title="选完自动建议类型，可改">分类</span></div>
-          <div class="row3">
+          <div class="row2">
             <div class="field"><label>分类 <span class="req">*</span></label>
               <select id="f-category" onchange="suggestType()">
                 <option title="本地运行的 AI 模型、GPU 推理进程、可启动的模型服务端点">本地模型</option>
@@ -199,8 +199,6 @@ OCR:  Tesseract OCR (pytesseract)
                 <option title="内容创作、生成、设计、编辑工具">创作</option>
                 <option title="业务职能工具、领域专用（财务/人事/行政/运营）">职能</option>
               </select></div>
-            <div class="field"><label>归属</label>
-              <select id="f-owner"><option>自建</option><option>外部</option><option>AI托管</option></select></div>
             <div class="field"><label title="悬停选项看定义">类型 <span class="req">*</span></label>
               <select id="f-form" onchange="applyFormType()" title="服务=常驻后台进程；命令=用完就走；API=外部服务；文件夹=项目目录；组=多工具编排">
                 <option value="service" title="常驻后台进程，可启动停止。含本地 API 服务。">服务 — 常驻后台</option>

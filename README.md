@@ -255,7 +255,7 @@ Restart your editor after adding the config. The agent gains 6 tools:
 | `name` | string | Display name |
 | `description` | string | Tool description. Recommended format: 【用途】【何时用】【何时不用】【返回】 |
 | `capability` | string | One-line task description (≤30 chars). Agents use this to decide which tool fits the task |
-| `owner` | string | `自建` (self-hosted) / `外部` (external service) / `AI托管` (AI-managed) |
+| `owner` | string | `自建` (self-hosted) / `外部` (external service) — 可选 |
 
 ### All fields
 
@@ -264,7 +264,7 @@ Restart your editor after adding the config. The agent gains 6 tools:
 | `name` | string | — | Display name. `id` is auto-derived from the directory name |
 | `description` | string | — | Tool description |
 | `capability` | string | — | One-line task description (≤30 chars) |
-| `owner` | string | — | 自建 / 外部 / AI托管 |
+| `owner` | string | — | 自建 / 外部（可选，旧字段不显示不筛选） |
 | `icon` | string | `""` | Emoji icon |
 | `version` | string | `""` | Version number |
 | `category` | string | `""` | 模型 / Agent / 设施 / 获取 / 查阅 / 创作 / 职能 |

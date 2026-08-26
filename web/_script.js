@@ -1155,7 +1155,6 @@ document.addEventListener('DOMContentLoaded', function() {
 // ══ S5 人写面板：工具表单弹窗（新建/编辑/补全/迁移/修复/注册 一套）══
 
 var CATEGORY_LIST = ['本地模型','远程模型','Agent','设施','获取','查阅','创作','职能','工作区','公开站'];
-var OWNER_LIST = ['自建','外部','AI托管'];
 var TYPE_LIST = [
   { v:'service', l:'服务 — 常驻后台' },
   { v:'cli',     l:'命令 — 用完就走' },
@@ -1176,8 +1175,6 @@ function initToolForm() {
   // 原型提供静态 option（真相），只在 select 为空时才动态补
   var catSel = document.getElementById('f-category');
   if (catSel && !catSel.options.length) CATEGORY_LIST.forEach(function(c){ var o = document.createElement('option'); o.value = c; o.textContent = c; catSel.appendChild(o); });
-  var ownSel = document.getElementById('f-owner');
-  if (ownSel && !ownSel.options.length) OWNER_LIST.forEach(function(o){ var op = document.createElement('option'); op.value = o; op.textContent = o; ownSel.appendChild(op); });
   var formSel = document.getElementById('f-form');
   if (formSel && !formSel.options.length) TYPE_LIST.forEach(function(t){ var op = document.createElement('option'); op.value = t.v; op.textContent = t.l; formSel.appendChild(op); });
   var rtSel = document.getElementById('f-runtime');
@@ -1231,7 +1228,6 @@ function openToolForm(id, mode) {
   document.getElementById('f-version').textContent = ver || '—';
   setv('f-icon', isNew ? '' : (t && t.icon || ''));
   setv('f-category', isNew ? '本地模型' : (t && t.category ? t.category : '本地模型'));
-  setv('f-owner', isNew ? '外部' : (t && t.owner ? t.owner : '外部'));
   var typeVal = isNew ? 'service' : (t && t.type ? t.type : 'service');
   document.getElementById('f-form').value = typeVal;
 
@@ -1352,7 +1348,6 @@ function tfRender() {
   if (v('f-name').length < 1) missing.push('名字');
   if (v('f-func').length < 2) missing.push('功能一句话');
   if (!v('f-category')) missing.push('分类');
-  if (!v('f-owner')) missing.push('归属');
   var f = document.getElementById('f-form').value;
   if (f === 'service' && (v('f-start') === '' || v('f-stop') === '')) missing.push('启动/停止命令');
   if (f === 'api' && v('f-api-api') === '') missing.push('API 地址');
@@ -1382,7 +1377,9 @@ function tfRender() {
 function buildManifest() {
   function v(fid){ var el = document.getElementById(fid); return el ? el.value.trim() : ''; }
   var f = document.getElementById('f-form').value;
-  var mf = { name: v('f-name'), id: v('f-id'), category: v('f-category'), owner: v('f-owner'), type: f };
+  var mf = { name: v('f-name'), id: v('f-id'), category: v('f-category'), type: f };
+  var ownerVal = (tfMode === 'new' || tfMode === 'register') ? '外部' : ((tfTool && tfTool.owner) || '外部');
+  if (ownerVal) mf.owner = ownerVal;
   var ver = (document.getElementById('f-version').textContent || '').trim();
   if (ver && ver !== '—') mf.version = ver;
   var func = v('f-func');
