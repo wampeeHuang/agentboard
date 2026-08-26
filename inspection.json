@@ -2,7 +2,7 @@
   "$schema": "urn:inspector:inspection:v1",
   "project": "agentboard",
   "bone": true,
-  "updated": "2026-06-22",
+  "updated": "2026-08-26",
   "checks": [
     {
       "id": "manifest_schema",
@@ -77,6 +77,19 @@
       "spec": {
         "module": "lib/brand-drift.js",
         "function": "auditBrand",
+        "passWhen": "errors === 0"
+      }
+    },
+    {
+      "id": "tree_drift",
+      "label": "目录树未漂移",
+      "what": "agent.md / README / 说明书三棵树列出的文件真实存在，且 lib/ + web/ 真实文件全部入树",
+      "job": "inspector-b-daily",
+      "severity": "error",
+      "declarative": "node_module",
+      "spec": {
+        "module": "lib/tree-drift.js",
+        "function": "auditTree",
         "passWhen": "errors === 0"
       }
     },

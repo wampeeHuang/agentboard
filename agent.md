@@ -21,14 +21,15 @@
 │   ├── manifest-schema.js Manifest 契约唯一真相源（字段 / 分类 / 校验）
 │   ├── mcp-http.js       MCP Streamable HTTP（POST /mcp，JSON-RPC 2.0）
 │   ├── mcp-handlers.js   6 个 agentboard_* MCP 工具
-│   ├── static.js / api-page.js / self-check.js / ops-log.js / crash-guard.js / tip-schema.js / brand-drift.js / sync-proto.mjs
+│   ├── static.js / api-page.js / self-check.js / ops-log.js / crash-guard.js / tip-schema.js / brand-drift.js / tree-drift.js / sync-proto.mjs
 │   └── __tests__/        冒烟测试（node:test）
 ├── web/                  Dashboard 前端
 │   ├── index.html        4 页（工具架 / 我的网站 / 经验日志 / 说明书）
 │   ├── _style.css        设计 token + 组件
 │   ├── _script.js        渲染 / 交互
 │   ├── logo.svg / logo.ico
-│   └── _proto/           原型工作区
+│   ├── _proto/           原型工作区
+│   └── _verify-fidelity.html  保真验证页
 ├── docs/                 文档（archive/ 退场归档）
 ├── examples/             manifest 模板（copy 到 tools/）
 ├── mechanisms/           系统机制说明

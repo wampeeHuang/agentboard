@@ -353,6 +353,8 @@ code{font-family:var(--font-code);font-size:.88em;background:var(--soft);color:v
 │   ├── <span class="tv">crash-guard.js</span><span class="ta">          ← 子进程崩溃防护</span>
 │   ├── <span class="tv">tip-schema.js</span><span class="ta">            ← 踩坑类型校验</span>
 │   ├── <span class="tv">brand-drift.js</span><span class="ta">          ← 品牌漂移审计</span>
+│   ├── <span class="tv">tree-drift.js</span><span class="ta">            ← 目录树漂移审计</span>
+│   ├── <span class="tv">__tests__/</span><span class="ta">                ← 冒烟测试（node:test）</span>
 │   └── <span class="tv">sync-proto.mjs</span><span class="ta">           ← 原型 SYNC 回灌脚本</span>
 ├── <span class="tn">web/</span><span class="ta">                     ← 前端面板</span>
 │   ├── <span class="tv">index.html</span><span class="ta">              ← 4 页面板</span>
@@ -360,6 +362,7 @@ code{font-family:var(--font-code);font-size:.88em;background:var(--soft);color:v
 │   ├── <span class="tv">_script.js</span><span class="ta">              ← 渲染 / 交互</span>
 │   ├── <span class="tv">logo.svg</span><span class="ta">                  ← 图标</span>
 │   ├── <span class="tv">logo.ico</span><span class="ta">                  ← 图标（favicon）</span>
+│   ├── <span class="tv">_proto/</span><span class="ta">                   ← 原型工作区</span>
 │   └── <span class="tv">_verify-fidelity.html</span><span class="ta">     ← 保真验证页</span>
 ├── <span class="tn">docs/</span><span class="ta">                     ← 文档</span>
 │   ├── <span class="tv">使用说明书.html</span><span class="ta">          ← 说明书（就是本页）</span>
@@ -373,14 +376,13 @@ code{font-family:var(--font-code);font-size:.88em;background:var(--soft);color:v
 │   ├── <span class="tv">RECOVERY.md</span><span class="ta">                  ← 灾难恢复</span>
 │   ├── <span class="tv">tasks.md</span><span class="ta">                    ← 任务记录</span>
 │   ├── <span class="tv">对外表达-人设.md</span><span class="ta">           ← 对外表达</span>
-│   ├── <span class="tn">archive/</span><span class="ta">               ← 退场归档（design-spec / repo-spec）</span>
-│   └── <span class="tn">_runtime/</span><span class="ta">               ← 运行产物</span>
+│   └── <span class="tn">archive/</span><span class="ta">               ← 退场归档（被真源覆盖的过期文档）</span>
 ├── <span class="tn">examples/</span><span class="ta">                 ← manifest 模板（copy 到 tools/）</span>
 │   ├── <span class="tn">hello-server/</span><span class="ta">               ← 最小示例</span>
 │   └── <span class="tn">nextjs-app/</span><span class="ta">                ← Next.js 示例</span>
-├── <span class="tn">tools/</span><span class="ta">                     ← 工具注册表（66 张卡）</span>
+├── <span class="tn">tools/</span><span class="ta">                     ← 工具注册表（65 张卡）</span>
 │   └── <span class="tv">{id}/manifest.json</span><span class="ta">      ← 一张卡一个</span>
-├── <span class="tn">tips/</span><span class="ta">                      ← 踩坑沉淀（411 条）</span>
+├── <span class="tn">tips/</span><span class="ta">                      ← 踩坑沉淀（417 条）</span>
 │   └── <span class="tv">*.md</span><span class="ta">                        ← 一条一个坑</span>
 ├── <span class="tn">principles/</span><span class="ta">                ← 原则</span>
 │   ├── <span class="tv">CONSTITUTION.md</span><span class="ta">               ← 原则库宪法</span>
@@ -388,8 +390,10 @@ code{font-family:var(--font-code);font-size:.88em;background:var(--soft);color:v
 │   ├── <span class="tv">curation-community-quality.md</span><span class="ta">   ← 策展+社区质量</span>
 │   ├── <span class="tv">docs-retire-when-superseded.md</span><span class="ta">  ← 文档退场</span>
 │   ├── <span class="tv">first-principles-review.md</span><span class="ta">    ← 第一性审查</span>
+│   ├── <span class="tv">inspection-must-verify-execution.md</span><span class="ta"> ← 巡检须验证执行</span>
 │   ├── <span class="tv">inverse-review.md</span><span class="ta">            ← 逆向审查</span>
 │   ├── <span class="tv">line-break-is-design.md</span><span class="ta">       ← 换行即设计</span>
+│   ├── <span class="tv">name-value-drift.md</span><span class="ta">            ← 名实脱钩</span>
 │   ├── <span class="tv">one-source-multi-end.md</span><span class="ta">       ← 一源多端</span>
 │   ├── <span class="tv">scrape-boundary-field-contract.md</span><span class="ta"> ← 抓取边界契约</span>
 │   └── <span class="tv">user-selected-direction-no-resale.md</span><span class="ta"> ← 不拉回被否线程</span>
@@ -399,10 +403,9 @@ code{font-family:var(--font-code);font-size:.88em;background:var(--soft);color:v
 │   └── <span class="tv">*.jsonl</span><span class="ta">                     ← 每次 API 调用一条</span>
 ├── <span class="tn">_runtime/</span><span class="ta">                  ← 运行态（不入库）</span>
 │   ├── <span class="tn">pids/</span><span class="ta">                  ← 进程身份凭证</span>
-│   └── <span class="tv">*.log / events.jsonl</span><span class="ta">     ← 运行日志 / 操作事件</span>
-├── <span class="tn">coverage/</span><span class="ta">                  ← 测试覆盖率（生成）</span>
-└── <span class="tn">node_modules/</span><span class="ta">              ← 依赖（npm install 生成）</span></pre>
-    <p class="flow-note">设计系统的说明书属于 design-system skill，在 <code>~/.claude/skills/vivi-design-system/docs/设计系统说明书.html</code>。<br><a href="file:///C:/Users/Administrator/.claude/skills/vivi-design-system/docs/设计系统说明书.html" style="color:var(--ink);text-decoration:underline;">打开设计系统说明书</a></p>
+│   └── <span class="tv">*.log / events.jsonl</span><span class="ta">     ← 运行日志 / 操作事件</span></pre>
+    <p class="flow-note">省略 <code>.git/</code>、<code>node_modules/</code>、<code>coverage/</code> 等非架构目录。全局 skills 是外部只读资源，不在本目录树内。</p>
+    <p class="flow-note">设计系统说明书属 design-system skill，源文件在 <code>~/.claude/skills/vivi-design-system/docs/设计系统说明书.html</code>，面板经 <code>/skill-docs/vivi</code> 只读代理（http 页面直跳 file:// 会被浏览器拦截）。<br><a href="/skill-docs/vivi/docs/设计系统说明书.html" target="_blank" rel="noopener" style="color:var(--ink);text-decoration:underline;">打开设计系统说明书</a></p>
   </div>
 </section>
 
