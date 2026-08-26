@@ -3,6 +3,7 @@ _runtime/
 *.log
 patrol-result.json
 .env
+HANDOFF.md
 state/
 tools/
 !examples/

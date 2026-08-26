@@ -331,7 +331,7 @@ function skillIndexHTML(skills) {
 '.skill-card{background:var(--paper);padding:20px;display:flex;flex-direction:column;gap:10px;transition:transform .15s,box-shadow .15s;position:relative;box-shadow:var(--shadow-border),var(--shadow-card);cursor:default}\n' +
 '.skill-card:hover{transform:translateY(-1px);box-shadow:var(--shadow-border),var(--shadow-card-hover)}\n' +
 '.card-body{display:flex;align-items:flex-start;gap:12px;flex:1}\n' +
-'.card-mono{flex-shrink:0;width:40px;height:40px;background:var(--ink);color:var(--paper);display:flex;align-items:center;justify-content:center;font-family:"Cascadia Code","Consolas","SF Mono",monospace;font-size:13px;font-weight:500}\n' +
+'.card-mono{flex-shrink:0;width:40px;height:40px;background:var(--green);color:var(--paper);display:flex;align-items:center;justify-content:center;font-family:"Cascadia Code","Consolas","SF Mono",monospace;font-size:13px;font-weight:500}\n' +
 '.card-info{flex:1;min-width:0}\n' +
 '.card-name{font-size:16px;font-weight:300;letter-spacing:-0.01em;line-height:1.35}\n' +
 '.card-sub{font-size:12px;color:var(--text-muted);font-weight:300;line-height:1.35;margin-top:2px}\n' +
@@ -339,21 +339,21 @@ function skillIndexHTML(skills) {
 '.card-desc b{font-weight:500;color:var(--text)}\n' +
 '.skill-card:hover .card-desc{-webkit-line-clamp:unset;overflow:visible}\n' +
 '.skill-trigger{font-size:11px;color:var(--text-muted);margin-top:4px}\n' +
-'.skill-trigger span{font-size:9px;font-weight:500;color:var(--ink);border:1px solid var(--ink);padding:0 4px;margin-right:4px}\n' +
+'.skill-trigger span{font-size:9px;font-weight:500;color:var(--green);border:1px solid var(--green);padding:0 4px;margin-right:4px}\n' +
 '.skill-folder{font-size:11px;font-family:"Cascadia Code","Consolas","SF Mono",monospace;color:var(--text-muted);margin-top:6px;display:flex;align-items:center;gap:4px;cursor:pointer;padding:2px 6px;background:var(--paper-tint);transition:background .12s}\n' +
-'.skill-folder:hover{background:rgba(0,47,167,0.06)}\n' +
+'.skill-folder:hover{background:rgba(var(--green-rgb),0.08)}\n' +
 '.skill-folder .folder-path{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:10px}\n' +
 '.skill-folder .folder-open{background:none;border:1px solid var(--border);color:var(--text-muted);cursor:pointer;font-size:12px;padding:1px 4px;line-height:1;flex-shrink:0}\n' +
-'.skill-folder .folder-open:hover{background:var(--ink);color:var(--paper)}\n' +
-'.folder-toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--paper);padding:8px 20px;font-family:"Cascadia Code","Consolas","SF Mono",monospace;font-size:12px;z-index:999;opacity:0;transition:opacity .2s;pointer-events:none}\n' +
+'.skill-folder .folder-open:hover{background:var(--green);color:var(--paper)}\n' +
+'.folder-toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--green);color:var(--paper);padding:8px 20px;font-family:"Cascadia Code","Consolas","SF Mono",monospace;font-size:12px;z-index:999;opacity:0;transition:opacity .2s;pointer-events:none}\n' +
 '.folder-toast.show{opacity:1}\n' +
 '.cat-bar{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px}\n' +
 '.cat-pill{padding:5px 12px;font-size:12px;font-weight:400;font-family:"Cascadia Code","Consolas","SF Mono",monospace;letter-spacing:.03em;background:var(--paper-tint, #F2F2F0);border:1px solid var(--border);color:var(--text-secondary);cursor:pointer;transition:all .12s;display:inline-flex;align-items:center;gap:5px}\n' +
 '.cat-pill:hover{background:#E4E4DE;color:var(--text)}\n' +
-'.cat-pill.active{background:var(--ink);border-color:var(--ink);color:var(--paper)}\n' +
+'.cat-pill.active{background:var(--green);border-color:var(--green);color:var(--paper)}\n' +
 '.cat-pill .count{font-size:10px;opacity:.7}\n' +
 '.back-link{display:inline-block;margin-bottom:20px;font-size:13px;font-weight:300;color:var(--text-secondary);text-decoration:none;border:1px solid var(--border);padding:6px 16px;transition:all .15s}\n' +
-'.back-link:hover{border-color:var(--ink);color:var(--ink)}\n' +
+'.back-link:hover{border-color:var(--green);color:var(--green)}\n' +
 '</style>\n' +
     '<a class="back-link" href="/">← 返回工具架</a>' + bar + '<div class="skill-grid">' + cards + '</div>' +
     '<div class="folder-toast" id="folderToast"></div>' +
@@ -461,18 +461,18 @@ function commandsIndexHTML() {
     '.cat-bar{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:24px}\n' +
     '.cat-pill{padding:5px 12px;font-size:12px;font-weight:400;font-family:"Cascadia Code","Consolas","SF Mono",monospace;letter-spacing:.03em;background:var(--paper-tint);border:1px solid var(--border);color:var(--text-secondary);cursor:pointer;transition:all .12s;display:inline-flex;align-items:center;gap:5px}\n' +
     '.cat-pill:hover{background:#E4E4DE;color:var(--text)}\n' +
-    '.cat-pill.active{background:var(--ink);border-color:var(--ink);color:var(--paper)}\n' +
+    '.cat-pill.active{background:var(--green);border-color:var(--green);color:var(--paper)}\n' +
     '.cat-pill .count{font-size:10px;opacity:.7}\n' +
     '.cmd-section h2{font-size:18px;font-weight:500;color:var(--text);margin:36px 0 12px;padding-top:16px;border-top:1px solid var(--border)}\n' +
     '.cmd-table-wrap{overflow-x:auto}\n' +
     '.cmd-table{width:100%;border-collapse:collapse;font-size:13px;margin-bottom:8px}\n' +
     '.cmd-table th{background:var(--paper-tint);font-weight:500;font-size:12px;padding:8px 12px;border:1px solid var(--border);text-align:left;white-space:nowrap}\n' +
     '.cmd-table td{padding:8px 12px;border:1px solid var(--border);font-size:13px;line-height:1.5}\n' +
-    '.cmd-code{font-family:"Cascadia Code","Consolas","SF Mono","SF Mono","Consolas",monospace;font-size:12px;background:var(--paper-tint);padding:2px 6px;color:var(--ink);white-space:nowrap}\n' +
+    '.cmd-code{font-family:"Cascadia Code","Consolas","SF Mono","SF Mono","Consolas",monospace;font-size:12px;background:var(--paper-tint);padding:2px 6px;color:var(--green);white-space:nowrap}\n' +
     '.cmd-desc{color:var(--text-secondary);font-size:12px}\n' +
     '.back-link{display:inline-block;margin-bottom:20px;font-size:13px;font-weight:300;color:var(--text-secondary);text-decoration:none;border:1px solid var(--border);padding:6px 16px;transition:all .15s}\n' +
-    '.back-link:hover{border-color:var(--ink);color:var(--ink)}\n' +
-    '.page h1{font-size:28px;font-weight:200;letter-spacing:-0.02em;color:var(--ink);margin-bottom:8px}\n' +
+    '.back-link:hover{border-color:var(--green);color:var(--green)}\n' +
+    '.page h1{font-size:28px;font-weight:200;letter-spacing:-0.02em;color:var(--green);margin-bottom:8px}\n' +
     '.page .subtitle{font-size:13px;color:var(--text-muted);font-weight:300;margin-bottom:24px}\n' +
   '</style>\n' +
   '<h1>Claude Code 命令</h1>\n' +
@@ -646,8 +646,9 @@ function startServer() {
   });
 
   var PORT = process.env.PORT || 3099;
-  app.listen(PORT, function() {
-    opslog.info('server-start', 'server started', { port: PORT, pid: process.pid });
+  // 绑定回环：不绑 0.0.0.0，局域网不可达（Local-first）
+  app.listen(PORT, '127.0.0.1', function() {
+    opslog.info('server-start', 'server started', { port: PORT, host: '127.0.0.1', pid: process.pid });
     console.log('Agentboard http://localhost:' + PORT);
   });
 

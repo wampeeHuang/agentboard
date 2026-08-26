@@ -1,0 +1,34 @@
+:root{
+  /* 设计系统：白60 · 绿30 · 黄10 */
+  --green:#74A63F; --deep:#3E571C; --yellow:#D9E26B; --soft:#E5ECA1;
+  --green-deep:#3E571C; --green-soft:#E5ECA1;
+  --green-rgb:116,166,63;   /* 半透明用 rgba(var(--green-rgb),.08) */
+  --on-brand:#F9FBF9;       /* 绿底前景（替代散落的 #fff / #FAFAF8） */
+  --paper-rgb:249,251,249;  /* 白色半透明用 rgba(var(--paper-rgb),.2) */
+  /* color/surface 面 */
+  --paper:#F9FBF9; --paper-tint:#EEF4EF; --border:#DDE4B8; --line:#DDE4B8;
+  /* color/ink 品牌（墨，不走深蓝） */
+  --ink:#262B27; --ink-rgb:38,43,39;
+  /* color/text 文字 */
+  --text:#262B27; --text-secondary:#6B7470; --text-muted:#9AA39E; --text-inverse:#F9FBF9;
+  /* color/action 按钮态 */
+  --action-go:#3E571C; --action-go-hover:#2F4716; --action-danger:#C0392B; --action-danger-hover:#A93226; --action-success-hover:#157A34;
+  /* color/status 状态（scanTools 驱动；状态色仅卡片内用，不做装饰） */
+  --status-on:#1A8A3F; --status-off:#C7CDC9;
+  --status-starting:#D9E26B; --status-halting:#C7902B; --status-error:#C0392B;
+  --status-warn:#C7902B; --status-orphan:#3E571C; --status-stale:#C7902B; --status-disabled:#C7CDC9;
+  --success:#1A8A3F;
+  /* color/gc 组卡子状态（cron） */
+  --gc-success:#27AE60; --gc-error:#E67E22; --gc-fatal:#C0392B;
+  /* radius */
+  --radius-sm:8px; --radius-md:12px; --radius-pill:999px;
+  --shadow-border:0 0 0 1px rgba(38,43,39,.08);
+  --shadow-card:0 1px 2px rgba(38,43,39,.06);
+  --shadow-card-hover:0 2px 8px rgba(38,43,39,.1);
+  /* 字体基因：标题意宋 · 正文黑体 · 英文 Inter · 代码 Consolas */
+  --font-head:'Noto Serif SC',SimSun,serif;
+  --font-body:Inter,'Noto Sans SC','Microsoft YaHei','PingFang SC',sans-serif;
+  --font-code:Consolas,ui-monospace,'Cascadia Code','SF Mono',monospace;
+  font-family:var(--font-body); color:var(--text); background:var(--paper);
+  font-weight:400; font-size:16px;
+}

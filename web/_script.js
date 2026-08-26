@@ -20,6 +20,8 @@ var stateFilter = 'all';  // 状态
 var appsData = null;
 var tipsData = null;
 var tipF = 'all';
+var princData = null;
+var princF = 'all';
 
 // 领域映射：category → 领域（dim 块按此聚合）
 var domainMap = {
@@ -218,6 +220,7 @@ function updateCounts() {
   el = document.getElementById('navToolsCnt'); if (el) el.textContent = tools.length;
   el = document.getElementById('navAppsCnt'); if (el && appsData) el.textContent = appsData.length;
   el = document.getElementById('navTipsCnt'); if (el && tipsData) el.textContent = tipsData.length;
+  el = document.getElementById('navPrincCnt'); if (el && princData) el.textContent = princData.length;
 }
 
 function render() {
@@ -615,6 +618,55 @@ function tipCard(x) {
     + '</div>';
 }
 
+/* ── 原则库（决策框架，经验日志同款呈现） ── */
+var PRINC_DEFS=[['all','全部'],['review','审查'],['design','设计'],['architecture','架构']];
+var PRINC_CHAR={'review':'审','design':'设','architecture':'构'};
+var PRINC_LABEL={'review':'审查方法','design':'设计原则','architecture':'架构决策'};
+
+async function renderPrinciples() {
+  if (!princData) {
+    try {
+      var res = await fetch('/api/principles');
+      var data = await res.json();
+      if (!data.ok) { document.getElementById('princGrid').innerHTML = '<div class="empty">原则加载失败</div>'; return; }
+      princData = data.principles || [];
+      updateCounts();
+    } catch(e) { document.getElementById('princGrid').innerHTML = '<div class="empty">原则加载失败</div>'; return; }
+  }
+  renderPrincDims();
+  var q = (document.getElementById('princSearch') ? document.getElementById('princSearch').value : '').trim().toLowerCase();
+  var list = princData.filter(function(x){
+    if (princF !== 'all' && x.type !== princF) return false;
+    if (q && (x.title + ' ' + x.desc + ' ' + x.file).toLowerCase().indexOf(q) === -1) return false;
+    return true;
+  });
+  document.getElementById('princGrid').innerHTML = list.length ? list.map(princCard).join('') : '<div class="empty">没有匹配的原则</div>';
+}
+function renderPrincDims() {
+  var el = document.getElementById('princDimBlocks'); if (!el) return;
+  var counts = {};
+  (princData || []).forEach(function(x){ counts[x.type] = (counts[x.type] || 0) + 1; });
+  var html = '<div class="dim-block" style="--b:#EEF4EF"><div class="dim-block-title">类型<span class="dim-arr">></span></div><div class="dim-block-opts">';
+  PRINC_DEFS.forEach(function(d){
+    var cnt = d[0] === 'all' ? (princData || []).length : (counts[d[0]] || 0);
+    html += '<span class="dim-opt' + (princF === d[0] ? ' active' : '') + '" onclick="setPrincF(\'' + d[0] + '\')">' + d[1] + '<span style="font-size:11px;opacity:.55;margin-left:5px;font-family:var(--font-code)">' + cnt + '</span></span>';
+  });
+  html += '</div></div>';
+  el.innerHTML = html;
+}
+function setPrincF(f) { princF = f; renderPrinciples(); }
+function princCard(x) {
+  return '<div class="tool-card tip-card">'
+    + '<div class="card-top"><span class="card-ico">' + (PRINC_CHAR[x.type] || '则') + '</span><div class="card-name">' + escHtml(x.title) + '</div></div>'
+    + '<div class="card-meta-row">'
+    + '<span class="cf"><span class="cf-l">类型</span><span class="tip-type">' + escHtml(PRINC_LABEL[x.type] || x.type || '原则') + '</span></span>'
+    + '<span class="cf"><span class="cf-l">文件</span><span class="card-id">' + escHtml(x.file) + '</span></span>'
+    + '<span class="cf top"><span class="cf-l">内容</span><span class="tip-desc-cell">' + escHtml(x.desc || '—') + '</span></span>'
+    + '</div>'
+    + '<div class="card-actions"><a class="btn edit" href="/principles/' + escAttr(encodeURIComponent(x.file)) + '" target="_blank">打开</a><span class="p4-spacer"></span></div>'
+    + '</div>';
+}
+
 /* ── 我的网站 增/改/删 ── */
 var appModalState = 'new';  // new | edit
 var appEditingId = null;
@@ -875,6 +927,113 @@ function showPage(p){
   }
 }
 
+/* ── 治理审计：仿 #tips 三段式——按钮巡检 → 分类组件 → 三类全出明细，点分类可筛，不自动轮询 ── */
+var auditData = null;
+var auditF = 'all'; // schema / brand / tree / all
+function auditInitial() {
+  renderAuditDims();
+  renderAudit();
+}
+function renderAuditDims() {
+  var el = document.getElementById('auditDims');
+  if (!el) return;
+  var defs = [
+    { key: 'schema', label: 'Manifest 契约' },
+    { key: 'brand',  label: '品牌漂移' },
+    { key: 'tree',   label: '三树一致性' }
+  ];
+  var html = '<div class="dim-block" style="--b:#EEF4EF"><div class="dim-block-title">检查项<span class="dim-arr">></span></div><div class="dim-block-opts">';
+  defs.forEach(function(d){
+    html += '<span class="dim-opt' + (auditF === d.key ? ' active' : '') + '" onclick="setAuditF(\'' + d.key + '\')">' + d.label + '</span>';
+  });
+  html += '</div></div>';
+  el.innerHTML = html;
+}
+function setAuditF(f) {
+  auditF = (auditF === f ? 'all' : f);
+  renderAuditDims();
+  renderAudit();
+}
+function runAudit() {
+  var st = document.getElementById('auditStatus');
+  var ts = document.getElementById('auditTs');
+  if (st) st.textContent = '检查中…';
+  if (ts) ts.textContent = '';
+  fetch('/api/audit').then(function(r){ return r.json(); }).then(function(a){
+    auditData = a;
+    if (st) st.textContent = '巡检完成';
+    if (ts) ts.textContent = '检查于 ' + new Date(a.updated).toLocaleString();
+    renderAuditDims();
+    renderAudit();
+  }).catch(function(){
+    if (st) st.textContent = '检查失败，请重试';
+    renderAuditDims();
+  });
+}
+function renderAudit() {
+  var el = document.getElementById('auditGrid');
+  if (!el) return;
+  if (!auditData) {
+    el.innerHTML = '<div class="audit-idle">点上方「开始巡检」按钮，手动跑一遍三处检查；每处结果可逐条核验</div>';
+    return;
+  }
+  var html = auditSummaryHtml();
+  if (auditF === 'all' || auditF === 'schema') html += auditSection('schema', 'Manifest 契约', '工具注册表格式——每份 manifest.json 必须符合固定字段，格式错了工具上架会缺信息、agent 定位不到；删了 manifest 或启动文件的孤儿目录也在这里报', auditData.schema, 'schema');
+  if (auditF === 'all' || auditF === 'brand') html += auditSection('brand', '品牌漂移', '页面配色——token 色值必须与 vivi 设计系统一致，跑偏了换肤时颜色会错乱', auditData.brand, 'brand');
+  if (auditF === 'all' || auditF === 'tree') html += auditSection('tree', '三树一致性', '文档目录——AGENT.md / README / 说明书三份目录树必须跟真实文件对得上，对不上就是文档和代码脱节', auditData.tree, 'tree');
+  el.innerHTML = html;
+}
+// 三类统一明细格式：项目名 → 错误(红) → 警告(黄) → 正常(绿)；列表先错误、再警告、正常垫底
+function auditNormItems(s, kind) {
+  if (!s || !s.items) return [];
+  if (kind === 'schema') {
+    return s.items.map(function(it){ return { name: it.name || it.id, errors: it.errors || [], warnings: it.warnings || [] }; });
+  }
+  return s.items.map(function(it){
+    return { name: kind === 'tree' ? it.doc + ' / ' + it.entry : it.file + ' · ' + it.check, errors: it.pass ? [] : [it.detail], warnings: [] };
+  });
+}
+function auditStatus(it) {
+  if (it.errors && it.errors.length) return 'err';
+  if (it.warnings && it.warnings.length) return 'warn';
+  return 'ok';
+}
+function auditSection(key, name, desc, s, kind) {
+  var items = auditNormItems(s, kind).map(function(it){ return { name: it.name, errors: it.errors, warnings: it.warnings, st: auditStatus(it) }; });
+  var st = items.some(function(it){ return it.st === 'err'; }) ? 'err' : (items.some(function(it){ return it.st === 'warn'; }) ? 'warn' : 'ok');
+  var errs = 0, warns = 0;
+  items.forEach(function(it){ errs += it.errors.length; warns += it.warnings.length; });
+  var meta = kind === 'schema' ? s.total + ' 项 · ' + errs + ' 错误 · ' + warns + ' 警告' : s.total + ' 项 · ' + errs + ' 错误';
+  items.sort(function(a, b){ return (a.st === 'err' ? 0 : a.st === 'warn' ? 1 : 2) - (b.st === 'err' ? 0 : b.st === 'warn' ? 1 : 2); });
+  var list = items.map(auditItemHtml).join('');
+  var html = '<div class="audit-section ' + st + '">'
+    + '<div class="audit-section-head"><span class="audit-section-name">' + name + '</span><span class="audit-section-meta">' + meta + '</span></div>'
+    + '<div class="audit-section-desc">' + desc + '</div>'
+    + '<div class="audit-items">' + list + '</div>'
+    + '</div>';
+  return html;
+}
+function auditItemHtml(it) {
+  var html = '<div class="audit-item ' + it.st + '"><span class="dot"></span><span class="audit-item-name">' + escHtml(it.name) + '</span>';
+  it.errors.forEach(function(e){ html += '<span class="audit-item-err">' + escHtml(e) + '</span>'; });
+  it.warnings.forEach(function(w){ html += '<span class="audit-item-warn">' + escHtml(w) + '</span>'; });
+  if (it.st === 'ok') html += '<span class="audit-item-ok">正常</span>';
+  return html + '</div>';
+}
+function auditSummaryHtml() {
+  var c = { err: 0, warn: 0, ok: 0 };
+  var secs = [];
+  if (auditF === 'all' || auditF === 'schema') secs.push(['schema', auditData.schema]);
+  if (auditF === 'all' || auditF === 'brand') secs.push(['brand', auditData.brand]);
+  if (auditF === 'all' || auditF === 'tree') secs.push(['tree', auditData.tree]);
+  secs.forEach(function(pair){ auditNormItems(pair[1], pair[0]).forEach(function(it){ c[auditStatus(it)]++; }); });
+  return '<div class="audit-summary">'
+    + '<span class="audit-summary-item ok"><span class="dot"></span>正常 <b>' + c.ok + '</b></span>'
+    + '<span class="audit-summary-item warn"><span class="dot"></span>警告 <b>' + c.warn + '</b></span>'
+    + '<span class="audit-summary-item err"><span class="dot"></span>错误 <b>' + c.err + '</b></span>'
+    + '</div>';
+}
+
 /* ── 初始化 ── */
 document.addEventListener('DOMContentLoaded', function() {
   initToolForm();
@@ -883,7 +1042,9 @@ document.addEventListener('DOMContentLoaded', function() {
   fetchTools();
   renderApps();
   renderTips();
+  renderPrinciples();
   fetchCronState();
+  auditInitial();
 });
 
 // ══ S5 人写面板：工具表单弹窗（新建/编辑/补全/迁移/修复/注册 一套）══

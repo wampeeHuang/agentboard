@@ -329,8 +329,8 @@ code{font-family:var(--font-code);font-size:.88em;background:var(--soft);color:v
     <pre class="tree reveal">~/.agentboard/<span class="tn">                        ← 一切都在这一个目录里</span>
 ├── <span class="tv">server.js</span><span class="ta">                ← 装配骨架：建 app → 挂 lib → 起服务</span>
 ├── <span class="tv">start.js</span><span class="ta">                 ← 启动入口</span>
-├── <span class="tv">agent.md</span><span class="ta">                 ← 治理宪法：架构 / 协议 / 边界</span>
-├── <span class="tv">CLAUDE.md</span><span class="ta">                ← 项目指令（@agent.md）</span>
+├── <span class="tv">AGENT.md</span><span class="ta">                 ← 治理宪法：架构 / 协议 / 边界</span>
+├── <span class="tv">CLAUDE.md</span><span class="ta">                ← 项目指令（@AGENT.md）</span>
 ├── <span class="tv">README.md</span><span class="ta">                ← 入口</span>
 ├── <span class="tv">LICENSE</span><span class="ta">                  ← MIT</span>
 ├── <span class="tv">package.json</span><span class="ta">             ← 依赖：express + MCP SDK</span>
@@ -357,21 +357,19 @@ code{font-family:var(--font-code);font-size:.88em;background:var(--soft);color:v
 │   ├── <span class="tv">__tests__/</span><span class="ta">                ← 冒烟测试（node:test）</span>
 │   └── <span class="tv">sync-proto.mjs</span><span class="ta">           ← 原型 SYNC 回灌脚本</span>
 ├── <span class="tn">web/</span><span class="ta">                     ← 前端面板</span>
-│   ├── <span class="tv">index.html</span><span class="ta">              ← 4 页面板</span>
-│   ├── <span class="tv">_style.css</span><span class="ta">              ← 设计系统样式</span>
+│   ├── <span class="tv">index.html</span><span class="ta">              ← 6 页面板</span>
+│   ├── <span class="tv">_tokens.css</span><span class="ta">            ← 品牌 token 唯一银行（换肤改此文件）</span>
+│   ├── <span class="tv">_style.css</span><span class="ta">              ← 组件样式（引用 _tokens.css 变量）</span>
 │   ├── <span class="tv">_script.js</span><span class="ta">              ← 渲染 / 交互</span>
-│   ├── <span class="tv">logo.svg</span><span class="ta">                  ← 图标</span>
-│   ├── <span class="tv">logo.ico</span><span class="ta">                  ← 图标（favicon）</span>
-│   ├── <span class="tv">_proto/</span><span class="ta">                   ← 原型工作区</span>
-│   └── <span class="tv">_verify-fidelity.html</span><span class="ta">     ← 保真验证页</span>
+│   └── <span class="tv">logo.svg</span><span class="ta">                  ← 图标（favicon 唯一真源）</span>
 ├── <span class="tn">docs/</span><span class="ta">                     ← 文档</span>
 │   ├── <span class="tv">使用说明书.html</span><span class="ta">          ← 说明书（就是本页）</span>
 │   ├── <span class="tv">card-data-contract.md</span><span class="ta">      ← 卡片数据契约</span>
 │   ├── <span class="tv">card-form-constraints.md</span><span class="ta">   ← 表单约束</span>
 │   ├── <span class="tv">grid-control-prompt.md</span><span class="ta">         ← 网格控制 prompt</span>
 │   ├── <span class="tv">RECOVERY.md</span><span class="ta">                  ← 灾难恢复</span>
-│   ├── <span class="tv">tasks.md</span><span class="ta">                    ← 任务记录</span>
-│   └── <span class="tn">archive/</span><span class="ta">               ← 退场归档（被真源覆盖的过期文档）</span>
+│   └── <span class="tv">tasks.md</span><span class="ta">                    ← 任务记录</span>
+├── <span class="tn">archive/</span><span class="ta">                  ← 退场归档（可删的留存区，担心删早了先留；唯一一处）</span>
 ├── <span class="tn">examples/</span><span class="ta">                 ← manifest 模板（copy 到 tools/）</span>
 │   ├── <span class="tn">hello-server/</span><span class="ta">               ← 最小示例</span>
 │   └── <span class="tn">nextjs-app/</span><span class="ta">                ← Next.js 示例</span>
@@ -419,6 +417,7 @@ code{font-family:var(--font-code);font-size:.88em;background:var(--soft);color:v
       <div class="dim w reveal"><span class="dim-k">Filter · 3</span><span class="dim-t">访问方式</span><span class="dim-arr">MCP / API / 网页</span></div>
       <div class="dim w2 reveal"><span class="dim-k">Filter · 4</span><span class="dim-t">状态</span><span class="dim-arr">运行 / 停止 / 出错 / 警告</span></div>
     </div>
+    <p class="flow-note reveal">「治理审计」是独立一页（导航最后一项），三合一巡检：manifest 契约 / 品牌漂移 / 三树一致性。总面板直接给数——正常、警告、错误各多少。黄是警告，红是错误，绿是正常；异常项就是该修的地方。</p>
     <div class="sub-head reveal">卡片怎么读</div>
     <div class="dim-list">
       <div class="card-big reveal">
@@ -475,6 +474,40 @@ code{font-family:var(--font-code);font-size:.88em;background:var(--soft);color:v
     <div class="callout reveal">
       <span class="ck"><svg viewBox="0 0 20 20" width="17" height="17" aria-hidden="true"><path d="M10 3.4 17 6.8v3.4c0 3.8-2.9 6.1-7 6.4-4.1-.3-7-2.6-7-6.4V6.8z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M10 10V5.8M10 10l3 1.6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></span>
       <div><b>装了不写 = 白装</b><p>不注册，工具在架上不可见，AI 发现不了、调不了。清单是唯一真相源，架子只看它。</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ 05 治理审计 ══ -->
+<section class="module" id="m05">
+  <div class="module-in">
+    <span class="big-num">05</span>
+    <div class="mod-head reveal">
+      <span class="mod-tag"><span class="sq"></span>Audit</span>
+      <h2 class="mod-title">治理审计：三态巡检，一眼看清</h2>
+      <p class="mod-sub">manifest 契约 / 品牌漂移 / 三树一致性，三项各一块。块内先项目后结论：错误红、警告黄、正常绿。总面板先给数——正常、警告、错误各多少。</p>
+    </div>
+    <div class="dims">
+      <div class="dim g reveal"><span class="dim-k">Check · 1</span><span class="dim-t">Manifest 契约</span><span class="dim-arr">一张卡一个 manifest · 字段 / 端口 / 冲突 / 孤儿目录</span></div>
+      <div class="dim s reveal"><span class="dim-k">Check · 2</span><span class="dim-t">品牌漂移</span><span class="dim-arr">黄绿白 / 标题字体 / token 契约值集</span></div>
+      <div class="dim w reveal"><span class="dim-k">Check · 3</span><span class="dim-t">三树一致性</span><span class="dim-arr">AGENT.md / README / 说明书 声明树 vs 磁盘</span></div>
+    </div>
+    <div class="stepgrid">
+      <div class="stepgrp reveal">
+        <div class="stepgrp-t"><span class="n">看</span>三项怎么读</div>
+        <div class="steps">
+          <div class="step reveal"><span class="step-no">1</span><div><b>总面板</b><p>正常、警告、错误三条数——先看有没有红。</p></div></div>
+          <div class="step reveal"><span class="step-no">2</span><div><b>分块</b><p>每项一块，块头显示该项 N 项 · X 错误 · Y 警告。</p></div></div>
+          <div class="step reveal"><span class="step-no">3</span><div><b>条目</b><p>先项目名，再错误，再警告，最后正常。黄是警告，红是错误，绿是正常。</p></div></div>
+        </div>
+      </div>
+      <div class="stepgrp reveal">
+        <div class="stepgrp-t"><span class="n">修</span>异常即清单</div>
+        <div class="steps">
+          <div class="step reveal"><span class="step-no">1</span><div><b>有黄有红</b><p>异常项就是该修的地方——红必须修，黄看情况。</p></div></div>
+          <div class="step reveal"><span class="step-no">2</span><div><b>全绿</b><p>三块全绿 = 契约、品牌、声明树都对得上，可以放心改。</p></div></div>
+        </div>
+      </div>
     </div>
   </div>
 </section>

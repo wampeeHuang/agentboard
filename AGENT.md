@@ -4,8 +4,8 @@
 
 ```
 ~/.agentboard/
-├── agent.md              治理宪法（本文件）
-├── CLAUDE.md             Claude 适配层（@agent.md）
+├── AGENT.md              治理宪法（本文件）
+├── CLAUDE.md             Claude 适配层（@AGENT.md）
 ├── README.md             项目入口（人读，Quick Start / 治理入口）
 ├── LICENSE               许可
 ├── .gitignore            忽略规则
@@ -24,13 +24,13 @@
 │   ├── static.js / api-page.js / self-check.js / ops-log.js / crash-guard.js / tip-schema.js / brand-drift.js / tree-drift.js / sync-proto.mjs
 │   └── __tests__/        冒烟测试（node:test）
 ├── web/                  Dashboard 前端
-│   ├── index.html        4 页（工具架 / 我的网站 / 经验日志 / 说明书）
-│   ├── _style.css        设计 token + 组件
+│   ├── index.html        6 页（工具架 / 我的网站 / 经验日志 / 说明书 / 治理审计 / 原则库）
+│   ├── _tokens.css       品牌 token 唯一银行（换肤改这一个文件）
+│   ├── _style.css        组件 + 页面级样式（引用 _tokens.css 变量）
 │   ├── _script.js        渲染 / 交互
-│   ├── logo.svg / logo.ico
-│   ├── _proto/           原型工作区
-│   └── _verify-fidelity.html  保真验证页
-├── docs/                 文档（archive/ 退场归档）
+│   └── logo.svg
+├── archive/              退场归档（可删的留存区，担心删早了先留；唯一一处）
+├── docs/                 文档（不带 archive）
 ├── examples/             manifest 模板（copy 到 tools/）
 ├── mechanisms/           系统机制说明
 ├── principles/           原则
@@ -144,7 +144,7 @@ AI agent 通过 **MCP** 调工具（`lib/mcp-http.js`，Streamable HTTP，`POST 
 - **Local-first** — 不依赖云服务。不要求登录。不连外网
 - **Protocol over implementation** — 先定义 schema 再写代码，字段变更先改 schema 再改实践
 
-**本机定位**：工具架 ≤500 工具、单用户。不设技术禁用清单——出现真实硬需求就引入，重大技术决策写进 agent.md。
+**本机定位**：工具架 ≤500 工具、单用户。不设技术禁用清单——出现真实硬需求就引入，重大技术决策写进 AGENT.md。
 
 ## 骨件边界
 

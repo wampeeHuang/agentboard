@@ -2,7 +2,7 @@
 
 type: architecture
 date: 2026-08-25
-source: 治理层收敛——design-spec/repo-spec 被 skill、manifest-schema.js、agent.md 覆盖后归档
+source: 治理层收敛——design-spec/repo-spec 被 skill、manifest-schema.js、AGENT.md 覆盖后归档
 
 ## 是什么
 
@@ -17,7 +17,7 @@ source: 治理层收敛——design-spec/repo-spec 被 skill、manifest-schema.j
    - 全被覆盖 → 整份退场，内容归档保留历史
    - 部分被覆盖 → 独立内容并入真相源，其余退场
    - 无覆盖者 → 保留，这就是真相源
-3. **选择退场姿势**：物理删（触发不可逆删除红线）不如归档——移 `docs/archive/`，git 保留历史，从活跃真相源面移除
+3. **选择退场姿势**：物理删（触发不可逆删除红线）不如归档——移 `archive/`，git 保留历史，从活跃真相源面移除
 4. **改指针**：所有指向旧文档的引用改指向真相源（API、页面 tab、导航）
 
 ### 关键追问
@@ -29,10 +29,10 @@ source: 治理层收敛——design-spec/repo-spec 被 skill、manifest-schema.j
 
 ## 案例
 
-**agentboard 治理层收敛**：design-spec 三块内容——视觉约束被 `~/.claude/skills/vivi-design-system/` 覆盖、契约 schema 被 `lib/manifest-schema.js` 覆盖、架构被 `agent.md` 覆盖。repo-spec 的落盘规则/日志分类/备份各有真源。
+**agentboard 治理层收敛**：design-spec 三块内容——视觉约束被 `~/.claude/skills/vivi-design-system/` 覆盖、契约 schema 被 `lib/manifest-schema.js` 覆盖、架构被 `AGENT.md` 覆盖。repo-spec 的落盘规则/日志分类/备份各有真源。
 
 **不用这个原则之前**：想着"逐节更新两份 spec 对齐现状"——等于维护第三份拷贝。
-**用了之后**：两份 spec 归档 `docs/archive/`；独立治理内容（第一性/永不/骨件边界）并入 agent.md；面板系统规范页退场——人看 README 治理入口节、AI 读 `/api/registry`，都从真源生成（agent.md + manifest-schema.js 实时字段表 + 指针索引）。schema 内容自动变，永不漂移。
+**用了之后**：两份 spec 归档 `archive/`；独立治理内容（第一性/永不/骨件边界）并入 AGENT.md；面板系统规范页退场——人看 README 治理入口节、AI 读 `/api/registry`，都从真源生成（AGENT.md + manifest-schema.js 实时字段表 + 指针索引）。schema 内容自动变，永不漂移。
 
 ## 边界
 

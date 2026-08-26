@@ -127,8 +127,8 @@ Both planes share one truth source: `tools/{id}/manifest.json`. Change a file, b
 
 ```
 ~/.agentboard/
-├── agent.md               治理宪法（架构 / 原则 / 边界）
-├── CLAUDE.md              Claude 适配层（@agent.md）
+├── AGENT.md               治理宪法（架构 / 原则 / 边界）
+├── CLAUDE.md              Claude 适配层（@AGENT.md）
 ├── README.md              项目入口（人读，Quick Start / 治理入口）
 ├── LICENSE                许可
 ├── .gitignore             忽略规则
@@ -147,13 +147,13 @@ Both planes share one truth source: `tools/{id}/manifest.json`. Change a file, b
 │   ├── static.js / api-page.js / self-check.js / ops-log.js / crash-guard.js / tip-schema.js / brand-drift.js / tree-drift.js / sync-proto.mjs
 │   └── __tests__/         冒烟测试（node:test）
 ├── web/                   Dashboard 前端
-│   ├── index.html         4 页（工具架 / 我的网站 / 经验日志 / 说明书）
-│   ├── _style.css         设计 token + 组件
+│   ├── index.html         6 页（工具架 / 我的网站 / 经验日志 / 说明书 / 治理审计 / 原则库）
+│   ├── _tokens.css        品牌 token 唯一银行（换肤改这一个文件）
+│   ├── _style.css         组件 + 页面级样式（引用 _tokens.css 变量）
 │   ├── _script.js         渲染 / 交互
-│   ├── logo.svg / logo.ico
-│   ├── _proto/            原型工作区
-│   └── _verify-fidelity.html  保真验证页
-├── docs/                  文档（archive/ 退场归档）
+│   └── logo.svg
+├── archive/               退场归档（可删的留存区，担心删早了先留；唯一一处）
+├── docs/                  文档（不带 archive）
 ├── examples/              manifest 模板（copy 到 tools/）
 ├── mechanisms/            系统机制说明
 ├── principles/            原则
@@ -171,10 +171,10 @@ Both planes share one truth source: `tools/{id}/manifest.json`. Change a file, b
 
 治理层一份真相，人 AI 各走一扇门，同源不漂移：
 
-- **人** — 治理宪法在 [`agent.md`](agent.md)：架构 / 治理原则（第一性）/ 骨件边界 / 资产边界 / 工具调用协议。README 只做入口不抄内容，`agent.md` 是唯一真相源，改文件即改文档。
-- **AI** — `GET /api/registry` 从真源生成三篇：治理宪法（agent.md）+ Manifest Schema（lib/manifest-schema.js 实时字段表）+ 真相源索引（指针直指各数据家）。
+- **人** — 治理宪法在 [`AGENT.md`](AGENT.md)：架构 / 治理原则（第一性）/ 骨件边界 / 资产边界 / 工具调用协议。README 只做入口不抄内容，`AGENT.md` 是唯一真相源，改文件即改文档。
+- **AI** — `GET /api/registry` 从真源生成三篇：治理宪法（AGENT.md）+ Manifest Schema（lib/manifest-schema.js 实时字段表）+ 真相源索引（指针直指各数据家）。
 
-每条治理主题只有一个家：`agent.md`（宪法）、`lib/manifest-schema.js`（契约）、`web/_style.css :root`（设计 token，品牌基因契约在 `~/.claude/skills/vivi-design-system/brand-dna.md`）、`tips/CONSTITUTION.md`（日志格式）、`~/.claude/CLAUDE.md`（落盘规则）。要改规矩，改真源文件，视图自动变。
+每条治理主题只有一个家：`AGENT.md`（宪法）、`lib/manifest-schema.js`（契约）、`web/_tokens.css`（设计 token，品牌基因契约在 `~/.claude/skills/vivi-design-system/brand-dna.md`）、`tips/CONSTITUTION.md`（日志格式）、`~/.claude/CLAUDE.md`（落盘规则）。要改规矩，改真源文件，视图自动变。
 
 ---
 
