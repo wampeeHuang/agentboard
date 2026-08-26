@@ -103,12 +103,14 @@ function setDimFilter(key, val) {
   else stateFilter = (stateFilter === val ? 'all' : val);
   buildDimBlocks();
   render();
+  syncDimHash();
 }
 function resetDims() {
   domainFilter = 'all'; locFilter = 'all'; accFilter = 'all'; stateFilter = 'all';
   var s = document.getElementById('searchInput'); if (s) s.value = '';
   buildDimBlocks();
   render();
+  syncDimHash();
 }
 
 function getSearchTerm() {
@@ -823,17 +825,61 @@ function md2html(src){
   return out.join('');
 }
 
-/* ── 导航 ── */
+/* ── 导航 + hash 路由（#page 或 #tools/key=val&key=val） ── */
+var applyingHash = false;
+function currentDimHash() {
+  var parts = [];
+  if (domainFilter !== 'all') parts.push('category=' + encodeURIComponent(domainFilter));
+  if (locFilter !== 'all') parts.push('loc=' + encodeURIComponent(locFilter));
+  if (accFilter !== 'all') parts.push('acc=' + encodeURIComponent(accFilter));
+  if (stateFilter !== 'all') parts.push('state=' + encodeURIComponent(stateFilter));
+  return parts.join('&');
+}
+function syncDimHash() {
+  if (applyingHash) return;
+  var kv = currentDimHash();
+  var h = 'tools' + (kv ? '/' + kv : '');
+  if (location.hash !== '#' + h) location.hash = h;
+}
+function applyHash() {
+  var h = location.hash.slice(1);
+  if (!h) return;
+  var seg = h.split('/');
+  var page = seg[0];
+  var pg = document.getElementById('page-' + page);
+  applyingHash = true;
+  try { if (pg) showPage(page); } finally { applyingHash = false; }
+  if (page !== 'tools' || !seg[1]) return;
+  var dimMap = { category: 'domainFilter', loc: 'locFilter', acc: 'accFilter', state: 'stateFilter' };
+  var touched = false;
+  seg[1].split('&').forEach(function(pair) {
+    var kv = pair.split('=');
+    var varName = dimMap[kv[0]];
+    var val = kv.length > 1 ? decodeURIComponent(kv[1]) : '';
+    if (varName && val) { window[varName] = val; touched = true; }
+  });
+  if (touched) { buildDimBlocks(); render(); }
+}
+window.addEventListener('hashchange', function() {
+  applyingHash = true;
+  try { applyHash(); } finally { applyingHash = false; }
+});
+
 function showPage(p){
   document.querySelectorAll('.page').forEach(function(s){ s.classList.remove('show'); });
   var pg = document.getElementById('page-' + p); if (pg) pg.classList.add('show');
   document.querySelectorAll('.nav-item').forEach(function(n){ n.classList.toggle('active', n.getAttribute('data-page') === p); });
+  if (!applyingHash) {
+    var target = p === 'tools' ? 'tools' + (currentDimHash() ? '/' + currentDimHash() : '') : p;
+    if (location.hash !== '#' + target) location.hash = target;
+  }
 }
 
 /* ── 初始化 ── */
 document.addEventListener('DOMContentLoaded', function() {
   initToolForm();
   markOpened('dashboard');
+  applyHash();
   fetchTools();
   renderApps();
   renderTips();

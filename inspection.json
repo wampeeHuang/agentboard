@@ -68,6 +68,19 @@
       }
     },
     {
+      "id": "brand_drift",
+      "label": "品牌值未漂移",
+      "what": "web/_style.css :root 品牌承载值（绿/深绿/黄/淡黄绿/墨/标题字体首族）⊆ vivi brand-dna.md 契约值集",
+      "job": "inspector-b-daily",
+      "severity": "error",
+      "declarative": "node_module",
+      "spec": {
+        "module": "lib/brand-drift.js",
+        "function": "auditBrand",
+        "passWhen": "errors === 0"
+      }
+    },
+    {
       "id": "runtime_hygiene",
       "label": "运行产物受控",
       "what": "_runtime/ 文件数 ≤ 300 且 ≤ 100MB，防运行目录失控堆积（巡检覆盖仓库卫生面）",

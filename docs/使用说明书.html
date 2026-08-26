@@ -12,7 +12,7 @@
   --ink:#262B27; --ink-light:#6B7470; --ink-faint:#9AA39E;
   --green:#74A63F; --deep:#3E571C; --soft:#E5ECA1; --yellow:#D9E26B;
   --run:#1A8A3F; --err:#C0392B; --warn:#C7902B;
-  --font-head:'又又意宋','润植家刻本简体','Noto Serif SC',SimSun,serif;
+  --font-head:'Noto Serif SC',SimSun,serif;
   --font-body:Inter,'Noto Sans SC','Microsoft YaHei',sans-serif;
   --font-code:Consolas,ui-monospace,'Noto Sans SC',sans-serif;
   --radius-sm:8px; --radius-md:12px; --radius-lg:20px; --radius-pill:999px;
@@ -352,12 +352,12 @@ code{font-family:var(--font-code);font-size:.88em;background:var(--soft);color:v
 │   ├── <span class="tv">ops-log.js</span><span class="ta">              ← 操作事件日志</span>
 │   ├── <span class="tv">crash-guard.js</span><span class="ta">          ← 子进程崩溃防护</span>
 │   ├── <span class="tv">tip-schema.js</span><span class="ta">            ← 踩坑类型校验</span>
+│   ├── <span class="tv">brand-drift.js</span><span class="ta">          ← 品牌漂移审计</span>
 │   └── <span class="tv">sync-proto.mjs</span><span class="ta">           ← 原型 SYNC 回灌脚本</span>
 ├── <span class="tn">web/</span><span class="ta">                     ← 前端面板</span>
 │   ├── <span class="tv">index.html</span><span class="ta">              ← 4 页面板</span>
 │   ├── <span class="tv">_style.css</span><span class="ta">              ← 设计系统样式</span>
 │   ├── <span class="tv">_script.js</span><span class="ta">              ← 渲染 / 交互</span>
-│   ├── <span class="tv">tokens.json</span><span class="ta">             ← 设计令牌</span>
 │   ├── <span class="tv">logo.svg</span><span class="ta">                  ← 图标</span>
 │   ├── <span class="tv">logo.ico</span><span class="ta">                  ← 图标（favicon）</span>
 │   └── <span class="tv">_verify-fidelity.html</span><span class="ta">     ← 保真验证页</span>
@@ -365,11 +365,8 @@ code{font-family:var(--font-code);font-size:.88em;background:var(--soft);color:v
 │   ├── <span class="tv">使用说明书.html</span><span class="ta">          ← 说明书（就是本页）</span>
 │   ├── <span class="tv">CHECKPOINT.md</span><span class="ta">           ← 检查点</span>
 │   ├── <span class="tv">CHANGELOG.md</span><span class="ta">            ← 变更记录</span>
-│   ├── <span class="tv">card-component-施工方案.md</span><span class="ta">  ← 卡片施工方案</span>
 │   ├── <span class="tv">card-data-contract.md</span><span class="ta">      ← 卡片数据契约</span>
 │   ├── <span class="tv">card-form-constraints.md</span><span class="ta">   ← 表单约束</span>
-│   ├── <span class="tv">css-token-contract.md</span><span class="ta">      ← 样式令牌契约</span>
-│   ├── <span class="tv">fonts.md</span><span class="ta">                    ← 字体决策</span>
 │   ├── <span class="tv">GLOBAL.md</span><span class="ta">                   ← 全局宪法</span>
 │   ├── <span class="tv">grid-control-prompt.md</span><span class="ta">         ← 网格控制 prompt</span>
 │   ├── <span class="tv">PATROL.md</span><span class="ta">                   ← 定期巡检</span>

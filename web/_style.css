@@ -24,7 +24,7 @@
   --shadow-card:0 1px 2px rgba(38,43,39,.06);
   --shadow-card-hover:0 2px 8px rgba(38,43,39,.1);
   /* 字体基因：标题意宋 · 正文黑体 · 英文 Inter · 代码 Consolas */
-  --font-head:'又又意宋','润植家刻本简体','Noto Serif SC',SimSun,serif;
+  --font-head:'Noto Serif SC',SimSun,serif;
   --font-body:Inter,'Noto Sans SC','Microsoft YaHei','PingFang SC',sans-serif;
   --font-code:Consolas,ui-monospace,'Cascadia Code','SF Mono',monospace;
   font-family:var(--font-body); color:var(--text); background:var(--paper);

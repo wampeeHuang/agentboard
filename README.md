@@ -144,13 +144,13 @@ Both planes share one truth source: `tools/{id}/manifest.json`. Change a file, b
 │   ├── manifest-schema.js Manifest 契约唯一真相源（字段 / 分类 / 校验）
 │   ├── mcp-http.js        MCP Streamable HTTP（POST /mcp，JSON-RPC 2.0）
 │   ├── mcp-handlers.js    6 个 agentboard_* MCP 工具
-│   ├── static.js / api-page.js / self-check.js / ops-log.js / crash-guard.js / tip-schema.js
+│   ├── static.js / api-page.js / self-check.js / ops-log.js / crash-guard.js / tip-schema.js / brand-drift.js
 │   └── __tests__/         冒烟测试（node:test）
 ├── web/                   Dashboard 前端
 │   ├── index.html         4 页（工具架 / 我的网站 / 经验日志 / 说明书）
 │   ├── _style.css         设计 token + 组件
 │   ├── _script.js         渲染 / 交互
-│   ├── tokens.json / logo.svg / logo.ico
+│   ├── logo.svg / logo.ico
 │   └── _proto/            原型工作区
 ├── docs/                  文档（archive/ 退场归档）
 ├── examples/              manifest 模板（copy 到 tools/）
@@ -173,7 +173,7 @@ Both planes share one truth source: `tools/{id}/manifest.json`. Change a file, b
 - **人** — 治理宪法在 [`agent.md`](agent.md)：架构 / 治理原则（第一性）/ 骨件边界 / 资产边界 / 工具调用协议。README 只做入口不抄内容，`agent.md` 是唯一真相源，改文件即改文档。
 - **AI** — `GET /api/registry` 从真源生成三篇：治理宪法（agent.md）+ Manifest Schema（lib/manifest-schema.js 实时字段表）+ 真相源索引（指针直指各数据家）。
 
-每条治理主题只有一个家：`agent.md`（宪法）、`lib/manifest-schema.js`（契约）、`web/tokens.json`（设计 token 契约）、`tips/CONSTITUTION.md`（日志格式）、`~/.claude/CLAUDE.md`（落盘规则）。要改规矩，改真源文件，视图自动变。
+每条治理主题只有一个家：`agent.md`（宪法）、`lib/manifest-schema.js`（契约）、`web/_style.css :root`（设计 token，品牌基因契约在 `~/.claude/skills/vivi-design-system/brand-dna.md`）、`tips/CONSTITUTION.md`（日志格式）、`~/.claude/CLAUDE.md`（落盘规则）。要改规矩，改真源文件，视图自动变。
 
 ---
 
