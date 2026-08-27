@@ -1,0 +1,112 @@
+/* ═══════════════════════════════════════════════════════════
+   tips-panel.css — 经验日志面板规范样式（与 tips-panel.js 配套）
+   一源多端：调度中心 :3100 与 工具架 :3099 共用，两站逐像素一致。
+   面板内样式以 .tips-panel-root 为命名空间（组件注入到宿主 section）；
+   弹窗样式独立（组件注入到 body）。
+   值全部固定 px/hex，不依赖任一站点 token——保证两站渲染一致。
+   响应式栅格（grid-template-columns / max-width / 外边距）交给宿主页，
+   本文件只归一化视觉，避免特异性压过站点媒体查询。
+   ═══════════════════════════════════════════════════════════ */
+
+/* ── 面板：hero / 搜索 / 筛选 / 网格 视觉归一 ── */
+.tips-panel-root .hero-bar{height:128px;background:#fff;color:#262B27;display:flex;flex-direction:column;justify-content:center;padding:0 32px;border-bottom:1px solid #DDE4B8;margin-bottom:0;position:relative;overflow:hidden;box-sizing:border-box}
+.tips-panel-root .hero-eyebrow{font-size:12px;letter-spacing:.22em;text-transform:uppercase;color:#74A63F;margin-bottom:6px}
+.tips-panel-root .hero-title{font-size:30px;font-weight:600;letter-spacing:.01em;color:#74A63F;font-family:'Noto Serif SC',SimSun,'STSong','Songti SC',serif;line-height:1.2;margin:0}
+.tips-panel-root .hero-sub{font-size:15px;font-weight:400;color:#6B7470;margin:8px 0 0;line-height:1.6}
+.tips-panel-root .search-bar{padding:32px 0 16px;display:flex;align-items:center;gap:8px}
+.tips-panel-root .search-box{position:relative;width:280px;height:32px;background:#EEF4EF;border-radius:8px;box-sizing:border-box}
+.tips-panel-root .search-box input{width:100%;height:100%;padding:0 40px 0 16px;background:transparent;border:none;outline:none;font-size:14px;color:#6B7470;box-sizing:border-box}
+.tips-panel-root .search-box input::placeholder{color:#9AA39E}
+.tips-panel-root .search-ico{position:absolute;right:12px;top:50%;transform:translateY(-50%);width:18px;height:18px;color:#6B7470}
+.tips-panel-root .btn-add{padding:8px 16px;background:#74A63F;color:#F9FBF9;border:none;border-radius:20px;font-size:13px;cursor:pointer;display:inline-flex;align-items:center;gap:4px;white-space:nowrap;font-weight:500;box-sizing:border-box}
+.tips-panel-root .btn-add:hover{background:#5D8A35}
+.tips-panel-root .dim-blocks{margin-bottom:24px}
+.tips-panel-root .dim-block{border-radius:8px;padding:16px;min-height:96px;display:flex;flex-direction:column;background:#fff;border:1px solid #DDE4B8;box-sizing:border-box}
+.tips-panel-root .dim-block:hover{background:#fff;box-shadow:0 2px 12px rgba(38,43,39,.08)}
+.tips-panel-root .dim-block-title{font-size:17px;font-weight:700;color:#262B27;font-family:'Noto Serif SC',SimSun,'STSong','Songti SC',serif;margin-bottom:12px;display:flex;align-items:center}
+.tips-panel-root .dim-block-opts{display:flex;flex-wrap:wrap;gap:14px;align-content:flex-start}
+.tips-panel-root .dim-opt{font-size:13px;color:#6B7470;cursor:pointer;user-select:none;line-height:20px}
+.tips-panel-root .dim-opt:hover{color:#74A63F}
+.tips-panel-root .dim-opt.active{color:#74A63F;font-weight:600}
+.tips-panel-root .dim-opt .d-n{font-family:Consolas,'Cascadia Code','JetBrains Mono','SF Mono',monospace;font-size:11px;opacity:.65;margin-left:3px}
+
+/* ── 卡片（绿头通栏 + 三槽 meta + 底部动作行） ── */
+.tips-panel-root .tool-card{background:#fff;border:1px solid #DDE4B8;border-radius:8px;padding:16px 16px 0;display:flex;flex-direction:column;gap:8px;transition:box-shadow .15s,transform .15s;height:256px;box-sizing:border-box;min-width:0;box-shadow:0 1px 4px rgba(38,43,39,.08);position:relative;overflow:hidden}
+.tips-panel-root .tool-card:hover{box-shadow:0 8px 28px rgba(38,43,39,.18);transform:translateY(-1px)}
+.tips-panel-root .card-top{display:flex;align-items:center;gap:8px;background:#74A63F;margin:-16px -16px 0;padding:0 16px;height:32px;border-radius:8px 8px 0 0;box-sizing:border-box;flex-shrink:0}
+.tips-panel-root .card-ico{width:20px;height:20px;flex-shrink:0;font-size:13px;display:flex;align-items:center;justify-content:center;background:rgba(249,251,249,.2);color:#F9FBF9;border-radius:6px}
+.tips-panel-root .card-name{flex:1;min-width:0;font-size:20px;font-weight:600;letter-spacing:-0.01em;line-height:1.3;color:#F9FBF9;font-family:'Noto Serif SC',SimSun,'STSong','Songti SC',serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tips-panel-root .card-meta-row{display:flex;flex-direction:column;gap:4px;font-size:12px;line-height:1.5;min-width:0;flex:1;min-height:0;overflow:hidden}
+.tips-panel-root .cf{display:flex;align-items:flex-start;gap:6px;min-width:0}
+.tips-panel-root .cf-l{font-size:12px;line-height:1.5;color:#9AA39E;flex-shrink:0}
+.tips-panel-root .card-id{font-family:Consolas,'Cascadia Code','JetBrains Mono','SF Mono',monospace;line-height:1.5;color:#6B7470;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tips-panel-root .tip-type{display:inline-flex;align-items:center;gap:5px;color:#6B7470;white-space:nowrap;line-height:1.5}
+.tips-panel-root .tip-type svg{width:13px;height:13px;flex-shrink:0}
+.tips-panel-root .tip-type span{font-size:12px}
+.tips-panel-root .tip-type[data-type="diagnosis"]{color:#C0392B}
+.tips-panel-root .tip-type[data-type="method"]{color:#1A8A3F}
+.tips-panel-root .tip-type[data-type="capability"]{color:#3E571C}
+.tips-panel-root .tip-type[data-type="fact"]{color:#6B7470}
+.tips-panel-root .tip-type[data-type="feedback"]{color:#C7902B}
+.tips-panel-root .tip-desc-cell{font-size:12px;line-height:1.5;color:#6B7470;min-width:0;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;white-space:pre-line;overflow-wrap:anywhere}
+.tips-panel-root .card-actions{margin-top:auto;margin-left:-16px;margin-right:-16px;padding:0 16px;border-top:1px dashed #DDE4B8;height:40px;box-sizing:border-box;display:flex;align-items:center;gap:6px;flex-wrap:nowrap;flex-shrink:0}
+.tips-panel-root .card-actions .btn{height:24px;box-sizing:border-box;padding:0 8px;border:1px solid #DDE4B8;border-radius:8px;background:#fff;font-size:12px;line-height:1;font-weight:400;color:#6B7470;display:inline-flex;align-items:center;gap:5px;white-space:nowrap;cursor:pointer}
+.tips-panel-root .card-actions .btn:hover{border-color:#74A63F;color:#74A63F}
+.tips-panel-root .card-actions .btn.btn-danger{border-color:#DDE4B8;color:#C0392B}
+.tips-panel-root .card-actions .btn.btn-danger:hover{border-color:#C0392B;color:#C0392B}
+.tips-panel-root .p4-spacer{flex:1}
+.tips-panel-root .empty{grid-column:1/-1;padding:64px 24px;text-align:center;color:#9AA39E}
+.tips-panel-root .empty-icon{font-size:40px;opacity:.2;margin-bottom:12px}
+.tips-panel-root .empty-title{font-size:17px;font-weight:500;color:#6B7470;margin-bottom:6px}
+.tips-panel-root .empty-desc{font-size:13px;color:#9AA39E}
+
+/* ── 弹窗（组件注入 body，独立命名空间） ── */
+.tips-overlay{position:fixed;inset:0;background:rgba(38,43,39,.42);display:none;align-items:center;justify-content:center;z-index:300;padding:24px;box-sizing:border-box}
+.tips-overlay.show{display:flex}
+.tips-toast{position:fixed;left:50%;bottom:48px;transform:translateX(-50%) translateY(8px);background:#262B27;color:#F5F7F0;font-size:13px;padding:10px 18px;border-radius:8px;box-shadow:0 8px 24px rgba(38,43,39,.35);opacity:0;pointer-events:none;transition:opacity .18s,transform .18s;z-index:400}
+.tips-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.tips-form{width:640px;max-width:100%;max-height:92vh;background:#fff;border-radius:8px;box-shadow:0 12px 48px rgba(38,43,39,.35);display:flex;flex-direction:column;overflow:hidden;box-sizing:border-box}
+.tips-form-head{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid #DDE4B8;flex-shrink:0}
+.tips-form-title{font-size:17px;font-weight:600;color:#262B27;font-family:'Noto Serif SC',SimSun,'STSong','Songti SC',serif}
+.tips-form-close{width:24px;height:24px;border:none;background:#EEF4EF;color:#6B7470;border-radius:6px;cursor:pointer;font-size:13px;line-height:1;display:flex;align-items:center;justify-content:center}
+.tips-form-close:hover{background:#DDE4B8;color:#262B27}
+.tips-form-body{padding:20px;overflow-y:auto;display:flex;flex-direction:column;gap:14px;box-sizing:border-box}
+.tips-field{display:flex;flex-direction:column;gap:6px}
+.tips-field label{font-size:12px;color:#6B7470;font-weight:500}
+.tips-field .tips-req{color:#C0392B}
+.tips-field input,.tips-field select,.tips-field textarea{box-sizing:border-box;width:100%;border:1px solid #DDE4B8;border-radius:8px;font-size:13px;color:#262B27;background:#fff;outline:none;font-family:inherit}
+.tips-field input,.tips-field select{height:32px;padding:0 10px}
+.tips-field input:focus,.tips-field select:focus,.tips-field textarea:focus{border-color:#74A63F;box-shadow:0 0 0 2px rgba(116,166,63,.2)}
+.tips-field textarea{padding:8px 10px;line-height:1.6;resize:vertical}
+.tips-field .tips-sec-ta{min-height:64px}
+.tips-form-actions{display:flex;align-items:center;gap:8px;margin-top:4px}
+.tips-spacer{flex:1}
+.tips-btn{height:32px;padding:0 16px;border:1px solid #DDE4B8;border-radius:8px;background:#fff;font-size:13px;color:#6B7470;cursor:pointer;white-space:nowrap}
+.tips-btn:hover{border-color:#74A63F;color:#74A63F}
+.tips-btn-primary{background:#74A63F;border-color:#74A63F;color:#F9FBF9;font-weight:500}
+.tips-btn-primary:hover{background:#5D8A35;border-color:#5D8A35;color:#F9FBF9}
+.tips-btn-ghost{border-color:transparent;background:transparent;color:#74A63F;padding:0 4px}
+.tips-btn-ghost:hover{color:#5D8A35}
+
+/* ── 宪法弹窗（A4 渲染视图） ── */
+.tips-std{width:720px;max-width:100%;max-height:94vh;background:#fff;border-radius:8px;box-shadow:0 12px 48px rgba(38,43,39,.35);display:flex;flex-direction:column;overflow:hidden;box-sizing:border-box}
+.tips-std-head{display:flex;align-items:center;gap:10px;padding:16px 20px;border-bottom:1px solid #DDE4B8;flex-shrink:0}
+.tips-std-title{font-size:15px;font-weight:600;color:#262B27;font-family:'Noto Serif SC',SimSun,'STSong','Songti SC',serif;white-space:nowrap}
+.tips-std-sub{font-size:11px;color:#9AA39E;white-space:nowrap}
+.tips-std-head .tips-form-close{margin-left:auto}
+.tips-std-body{flex:1;overflow-y:auto;padding:24px 28px;font-size:14px;line-height:1.75;color:#262B27;box-sizing:border-box}
+.tips-std-body h1{font-size:24px;font-weight:600;margin:0 0 8px}
+.tips-std-body h2{font-size:18px;font-weight:600;margin:24px 0 10px;padding-bottom:6px;border-bottom:1px solid #DDE4B8}
+.tips-std-body h3{font-size:15px;font-weight:600;margin:18px 0 8px}
+.tips-std-body h4{font-size:14px;font-weight:600;margin:16px 0 6px}
+.tips-std-body p{margin:8px 0}
+.tips-std-body blockquote{border-left:3px solid #74A63F;padding:2px 0 2px 14px;color:#6B7470;margin:12px 0}
+.tips-std-body pre{background:#EEF4EF;border:1px solid #DDE4B8;border-radius:6px;padding:12px 14px;overflow-x:auto;font-size:13px;line-height:1.6;margin:12px 0}
+.tips-std-body pre code{background:none;padding:0}
+.tips-std-body code{font-family:Consolas,'Cascadia Code','JetBrains Mono','SF Mono',monospace;font-size:13px;background:#EEF4EF;padding:1px 5px;border-radius:4px}
+.tips-std-body table{border-collapse:collapse;width:100%;margin:14px 0;font-size:13px}
+.tips-std-body th,.tips-std-body td{border:1px solid #DDE4B8;padding:7px 10px;text-align:left;vertical-align:top}
+.tips-std-body th{background:#F9FBF9;font-weight:600;white-space:nowrap}
+.tips-std-body ul{margin:8px 0 8px 20px;padding:0}
+.tips-std-body li{margin:4px 0}
+.tips-std-body hr{border:none;border-top:1px solid #DDE4B8;margin:22px 0}
