@@ -18,8 +18,6 @@ var locFilter = 'all';    // 运行位置
 var accFilter = 'all';    // 接入形态
 var stateFilter = 'all';  // 状态
 var appsData = null;
-var tipsData = null;
-var tipF = 'all';
 var princData = null;
 var princF = 'all';
 
@@ -219,7 +217,6 @@ function updateCounts() {
   var el;
   el = document.getElementById('navToolsCnt'); if (el) el.textContent = tools.length;
   el = document.getElementById('navAppsCnt'); if (el && appsData) el.textContent = appsData.length;
-  el = document.getElementById('navTipsCnt'); if (el && tipsData) el.textContent = tipsData.length;
   el = document.getElementById('navPrincCnt'); if (el && princData) el.textContent = princData.length;
 }
 
@@ -249,7 +246,7 @@ function render() {
   try { cardOrder = JSON.parse(localStorage.getItem('agentboard-card-order') || '[]'); } catch(_) {}
   if (!Array.isArray(cardOrder)) cardOrder = [];
   sorted.sort(function(a,b){
-    // 已停用沉底（照原型 dashboard-leftnav.html:758）
+    // 已停用沉底
     var da = a.disabled ? 1 : 0;
     var db = b.disabled ? 1 : 0;
     if (da !== db) return da - db;
@@ -531,6 +528,7 @@ async function toggleDisabled(id) {
 
 /* ── 我的网站 ── */
 async function renderApps() {
+  if (!tools.length) { try { await fetchTools(); } catch (e) {} }  // devTool 派生本地开发需要工具列表
   try {
     var res = await fetch('/api/apps');
     var data = await res.json();
@@ -548,14 +546,24 @@ function paintApps() {
 function appDomainOf(a) {
   return (a.url || '').replace(/^https?:\/\//, '').replace(/\/$/, '');
 }
+// 本地开发地址从 devTool 指向的工具卡 port 派生（真相源 = tools/{id}/manifest.json，不在 apps 卡存副本）
+function appDevHtml(a) {
+  if (!a.devTool) return '';
+  var t = null;
+  (tools || []).forEach(function (x) { if (x.id === a.devTool) t = x; });
+  if (!t || !t.port) return '';
+  return 'localhost:' + t.port;
+}
 function appCard(a) {
   var ico = a.name ? a.name.trim().charAt(0) : '站';
   var desc = a.description || '—';
-  return '<div class="tool-card">'
-    + '<div class="card-top"><span class="card-ico">' + escHtml(ico) + '</span><div class="card-name">' + escHtml(a.name) + '</div></div>'
+  var dev = appDevHtml(a);
+  return '<div class="tool-card" data-id="' + escAttr(a.id) + '">'
+    + '<div class="card-top"><span class="card-ico">' + escHtml(ico) + '</span><div class="card-name">' + escHtml(a.name) + '</div><span class="card-drag-handle" draggable="true" title="拖拽排序"></span></div>'
     + '<div class="card-meta-row">'
     + '<span class="cf"><span class="cf-l">域名</span><a class="card-domain" href="' + escAttr(a.url || '#') + '" target="_blank" data-tip="' + escAttr(a.url || '') + '">' + escHtml(appDomainOf(a)) + ' ↗</a></span>'
     + '<span class="cf"><span class="cf-l">托管</span><span class="card-val">' + escHtml(a.host || '—') + '</span></span>'
+    + (dev ? '<span class="cf"><span class="cf-l">本地</span><span class="card-val">' + escHtml(dev) + '</span></span>' : '')
     + '<span class="cf"><span class="cf-l">描述</span><span class="card-desc' + (a.description ? '' : ' placeholder') + '" data-tip="' + escAttr(a.description || '') + '">' + escHtml(desc) + '</span></span>'
     + '</div>'
     + '<div class="card-actions">'
@@ -566,56 +574,68 @@ function appCard(a) {
     + '</div>'
     + '</div>';
 }
-
-/* ── 经验日志 ── */
-var TIP_DEFS=[['all','全部'],['diagnosis','诊断'],['method','方法'],['fact','事实'],['capability','能力'],['feedback','反馈']];
-var TIP_CHAR={'diagnosis':'诊','method':'方','fact':'事','capability':'能','feedback':'反'};
-var TIP_GEO={'diagnosis':'<svg viewBox="0 0 12 12" aria-hidden="true"><circle cx="6" cy="6" r="4.4" fill="none" stroke="currentColor" stroke-width="1.3"/></svg>','method':'<svg viewBox="0 0 12 12" aria-hidden="true"><rect x="1.6" y="1.6" width="8.8" height="8.8" rx="1" fill="none" stroke="currentColor" stroke-width="1.3"/></svg>','fact':'<svg viewBox="0 0 12 12" aria-hidden="true"><path d="M6 1.4 L10.6 6 L6 10.6 L1.4 6 Z" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg>','capability':'<svg viewBox="0 0 12 12" aria-hidden="true"><path d="M1.6 6 H10.4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><path d="M6 1.6 V10.4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>','feedback':'<svg viewBox="0 0 12 12" aria-hidden="true"><path d="M6 1.4 A4.6 4.6 0 0 1 6 10.6" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>'};
-var TIP_LABEL={'diagnosis':'诊断','method':'方法','fact':'事实','capability':'能力','feedback':'反馈'};
-
-async function renderTips() {
-  if (!tipsData) {
-    try {
-      var res = await fetch('/api/tips');
-      var data = await res.json();
-      if (!data.ok) { document.getElementById('tipGrid').innerHTML = '<div class="empty">日志加载失败</div>'; return; }
-      tipsData = data.tips || [];
-      updateCounts();
-    } catch(e) { document.getElementById('tipGrid').innerHTML = '<div class="empty">日志加载失败</div>'; return; }
+/* apps 拖拽排序：六点手柄触发（对齐 scheduler），事件委托在 #appGrid，drop 后按 DOM 顺序批量写 order */
+var appDragId = null;
+function onAppGridDragStart(e) {
+  if (!e.target.closest('.card-drag-handle')) { e.preventDefault(); return; }
+  var card = e.target.closest('.tool-card');
+  if (!card || !card.getAttribute('data-id')) return;
+  appDragId = card.getAttribute('data-id');
+  card.classList.add('dragging');
+  e.dataTransfer.effectAllowed = 'move';
+  e.dataTransfer.setData('text/plain', appDragId);
+}
+function onAppGridDragOver(e) {
+  e.preventDefault();
+  if (!appDragId) return;
+  var card = e.target.closest('.tool-card');
+  if (!card || card.getAttribute('data-id') === appDragId) return;
+  e.dataTransfer.dropEffect = 'move';
+  card.classList.add('drag-over');
+}
+function onAppGridDragLeave(e) {
+  var card = e.target.closest('.tool-card');
+  if (card) card.classList.remove('drag-over');
+}
+function onAppGridDrop(e) {
+  e.preventDefault();
+  var card = e.target.closest('.tool-card');
+  if (card) card.classList.remove('drag-over');
+  if (!appDragId || !card || card.getAttribute('data-id') === appDragId) return;
+  var grid = document.getElementById('appGrid');
+  var src = grid.querySelector('.tool-card[data-id="' + appDragId + '"]');
+  if (!src) return;
+  var cards = Array.prototype.slice.call(grid.querySelectorAll('.tool-card'));
+  var srcIdx = cards.indexOf(src);
+  var dstIdx = cards.indexOf(card);
+  if (srcIdx < dstIdx) card.parentNode.insertBefore(src, card.nextSibling);
+  else card.parentNode.insertBefore(src, card);
+  var ids = appGridOrder();
+  if (ids.length) persistAppOrder(ids);
+}
+function onAppGridDragEnd() {
+  var grid = document.getElementById('appGrid');
+  if (grid) {
+    var s = grid.querySelector('.tool-card.dragging');
+    if (s) s.classList.remove('dragging');
+    var overs = grid.querySelectorAll('.tool-card.drag-over');
+    for (var i = 0; i < overs.length; i++) overs[i].classList.remove('drag-over');
   }
-  renderTipDims();
-  var q = (document.getElementById('tipSearch') ? document.getElementById('tipSearch').value : '').trim().toLowerCase();
-  var list = tipsData.filter(function(x){
-    if (tipF !== 'all' && x.type !== tipF) return false;
-    if (q && (x.title + ' ' + x.desc + ' ' + x.file).toLowerCase().indexOf(q) === -1) return false;
-    return true;
-  });
-  document.getElementById('tipGrid').innerHTML = list.length ? list.map(tipCard).join('') : '<div class="empty">没有匹配的日志</div>';
+  appDragId = null;
 }
-function renderTipDims() {
-  var el = document.getElementById('tipDimBlocks'); if (!el) return;
-  var counts = {};
-  (tipsData || []).forEach(function(x){ counts[x.type] = (counts[x.type] || 0) + 1; });
-  var html = '<div class="dim-block" style="--b:#EEF4EF"><div class="dim-block-title">类型<span class="dim-arr">></span></div><div class="dim-block-opts">';
-  TIP_DEFS.forEach(function(d){
-    var cnt = d[0] === 'all' ? (tipsData || []).length : (counts[d[0]] || 0);
-    html += '<span class="dim-opt' + (tipF === d[0] ? ' active' : '') + '" onclick="setTipF(\'' + d[0] + '\')">' + d[1] + '<span style="font-size:11px;opacity:.55;margin-left:5px;font-family:var(--font-code)">' + cnt + '</span></span>';
-  });
-  html += '</div></div>';
-  el.innerHTML = html;
+function appGridOrder() {
+  var grid = document.getElementById('appGrid');
+  if (!grid) return [];
+  return Array.prototype.map.call(grid.querySelectorAll('.tool-card[data-id]'), function (c) { return c.getAttribute('data-id'); });
 }
-function setTipF(f) { tipF = f; renderTips(); }
-function tipCard(x) {
-  var t = TIP_LABEL[x.type] || '日志';
-  return '<div class="tool-card tip-card">'
-    + '<div class="card-top"><span class="card-ico">' + (TIP_CHAR[x.type] || '记') + '</span><div class="card-name">' + escHtml(x.title) + '</div></div>'
-    + '<div class="card-meta-row">'
-    + '<span class="cf"><span class="cf-l">类型</span><span class="tip-type">' + (TIP_GEO[x.type] || '') + escHtml(t) + '</span></span>'
-    + '<span class="cf"><span class="cf-l">文件</span><span class="card-id">' + escHtml(x.file) + '</span></span>'
-    + '<span class="cf top"><span class="cf-l">内容</span><span class="tip-desc-cell">' + escHtml(x.desc || '—') + '</span></span>'
-    + '</div>'
-    + '<div class="card-actions"><button class="btn edit" onclick="openEditTip(\'' + escAttr(x.file) + '\')">编辑</button><button class="btn del" onclick="deleteTip(\'' + escAttr(x.file) + '\')">删除</button><span class="p4-spacer"></span></div>'
-    + '</div>';
+function persistAppOrder(ids) {
+  fetch('/api/apps/reorder', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ ids: ids })
+  }).then(function (r) { return r.json(); }).then(function (d) {
+    if (d.ok) { appsData = null; renderApps(); toast('已保存排序'); }
+    else toast('排序保存失败：' + (d.error || ''));
+  }).catch(function (e) { toast('排序保存失败：' + e.message); });
 }
 
 /* ── 原则库（决策框架，经验日志同款呈现） ── */
@@ -649,7 +669,7 @@ function renderPrincDims() {
   var html = '<div class="dim-block" style="--b:#EEF4EF"><div class="dim-block-title">类型<span class="dim-arr">></span></div><div class="dim-block-opts">';
   PRINC_DEFS.forEach(function(d){
     var cnt = d[0] === 'all' ? (princData || []).length : (counts[d[0]] || 0);
-    html += '<span class="dim-opt' + (princF === d[0] ? ' active' : '') + '" onclick="setPrincF(\'' + d[0] + '\')">' + d[1] + '<span style="font-size:11px;opacity:.55;margin-left:5px;font-family:var(--font-code)">' + cnt + '</span></span>';
+    html += '<span class="dim-opt' + (princF === d[0] ? ' active' : '') + '" onclick="setPrincF(\'' + d[0] + '\')">' + d[1] + '<span class="d-n">' + cnt + '</span></span>';
   });
   html += '</div></div>';
   el.innerHTML = html;
@@ -659,17 +679,61 @@ function princCard(x) {
   return '<div class="tool-card tip-card">'
     + '<div class="card-top"><span class="card-ico">' + (PRINC_CHAR[x.type] || '则') + '</span><div class="card-name">' + escHtml(x.title) + '</div></div>'
     + '<div class="card-meta-row">'
-    + '<span class="cf"><span class="cf-l">类型</span><span class="tip-type">' + escHtml(PRINC_LABEL[x.type] || x.type || '原则') + '</span></span>'
+    + '<span class="cf"><span class="cf-l">类型</span><span class="tip-type" data-type="' + (x.type || '') + '"><span>' + escHtml(PRINC_LABEL[x.type] || x.type || '原则') + '</span></span></span>'
     + '<span class="cf"><span class="cf-l">文件</span><span class="card-id">' + escHtml(x.file) + '</span></span>'
     + '<span class="cf top"><span class="cf-l">内容</span><span class="tip-desc-cell">' + escHtml(x.what || x.desc || '—') + '</span></span>'
     + '</div>'
-    + '<div class="card-actions"><button class="btn edit" onclick="openEditPrinc(\'' + escAttr(x.file) + '\')">编辑</button><button class="btn del" onclick="deletePrinc(\'' + escAttr(x.file) + '\')">删除</button><span class="p4-spacer"></span></div>'
+    + '<div class="card-actions"><span class="p4-spacer"></span><button class="btn edit" onclick="openEditPrinc(\'' + escAttr(x.file) + '\')">编辑</button><button class="btn del" onclick="deletePrinc(\'' + escAttr(x.file) + '\')">删除</button></div>'
     + '</div>';
 }
 
-/* ── 原则库 新增/编辑/删除（与日志同款） ── */
+// ── 通用字段渲染（principles/tools 表单共用；apps 表单专属 custom/dynamic 逻辑不动） ──
+function renderFieldHtml(f, id) {
+  var req = f.required ? ' <span class="req">*</span>' : '';
+  var tip = f.tooltip ? ' title="' + escAttr(f.tooltip) + '"' : '';
+  var oc = f.onchange ? ' onchange="' + escAttr(f.onchange) + '"' : '';
+  var lab = '<label' + tip + '>' + escHtml(f.label) + req + '</label>';
+  var ctrl;
+  var ph = (f.placeholder || '').replace(/\n/g, '&#10;');
+  if (f.type === 'textarea') {
+    ctrl = '<textarea id="' + id + '" rows="' + (f.rows || 2) + '" placeholder="' + escAttr(ph) + '"' + oc + (f.taClass ? ' class="' + f.taClass + '"' : '') + '></textarea>';
+  } else if (f.type === 'select') {
+    ctrl = '<select id="' + id + '"' + oc + '>' + (f.options || []).map(function(o) {
+      var t = (typeof o === 'object' && o.title) ? ' title="' + escAttr(o.title) + '"' : '';
+      return '<option value="' + escAttr(optVal(o)) + '"' + t + '>' + escHtml(optLabel(o)) + '</option>';
+    }).join('') + '</select>';
+  } else if (f.type === 'date') {
+    ctrl = '<input id="' + id + '" type="date">';
+  } else if (f.type === 'checkbox') {
+    return '<div class="check-row"' + (f.rowId ? ' id="' + f.rowId + '"' : '') + '><input type="checkbox" id="' + id + '"' + oc + '><span' + tip + '>' + escHtml(f.label) + '</span></div>';
+  } else {
+    ctrl = '<input id="' + id + '" type="text" placeholder="' + escAttr(f.placeholder || '') + '"' + oc + '>';
+  }
+  return '<div class="field">' + lab + ctrl + '</div>';
+}
+
+/* ── 原则库 新增/编辑/删除（schema 驱动：字段来自 /api/principles/schema） ── */
 var princModalState = 'new';  // new | edit
 var princEditingFile = null;
+var princFields = null;  // 表单字段契约（lib/principle-schema.js → /api/principles/schema）
+var princFieldsRendered = false;
+async function ensurePrincSchema() {
+  if (princFields) return princFields;
+  try {
+    var res = await fetch('/api/principles/schema');
+    var data = await res.json();
+    princFields = (data.ok && data.schema && data.schema.fields) || [];
+  } catch (e) { princFields = []; }
+  return princFields;
+}
+function princInputId(key) { return 'pp-' + key; }
+function princVal(key) { var el = document.getElementById(princInputId(key)); return el ? el.value.trim() : ''; }
+function princSet(key, v) { var el = document.getElementById(princInputId(key)); if (el) el.value = v == null ? '' : v; }
+function renderPrincFields() {
+  if (princFieldsRendered || !princFields.length) return;
+  document.getElementById('princFields').innerHTML = princFields.map(function(f) { return renderFieldHtml(f, princInputId(f.key)); }).join('');
+  princFieldsRendered = true;
+}
 var PRINC_SEC_NAMES = { '是什么': 'what', '怎么用': 'how', '案例': 'case', '边界': 'edge' };
 function parsePrincSections(body) {
   var sec = { what: '', how: '', case: '', edge: '' };
@@ -687,17 +751,24 @@ function princToday() {
   var d = new Date();
   return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
 }
-function openNewPrinc() {
+async function openNewPrinc() {
+  await ensurePrincSchema();
+  renderPrincFields();
   princModalState = 'new'; princEditingFile = null;
   document.getElementById('princModalTitle').textContent = '新增原则';
-  document.getElementById('pp-type').value = 'review';
-  document.getElementById('pp-title').value = '';
-  document.getElementById('pp-date').value = princToday();
-  document.getElementById('pp-source').value = '';
-  ['pp-what', 'pp-how', 'pp-case', 'pp-edge'].forEach(function(id) { document.getElementById(id).value = ''; });
+  princSet('type', 'review');
+  princSet('title', '');
+  princSet('date', princToday());
+  princSet('source', '');
+  princSet('what', '');
+  princSet('how', '');
+  princSet('case', '');
+  princSet('edge', '');
   document.getElementById('princModal').style.display = 'flex';
 }
 async function openEditPrinc(file) {
+  await ensurePrincSchema();
+  renderPrincFields();
   princModalState = 'edit'; princEditingFile = file;
   document.getElementById('princModalTitle').textContent = '编辑原则';
   document.getElementById('princModal').style.display = 'flex';
@@ -716,27 +787,27 @@ async function openEditPrinc(file) {
     var h1 = rest.match(/^#\s+(.+)$/m);
     if (h1) { title = h1[1].trim(); rest = rest.slice(h1.index + h1[0].length).replace(/^\n+/, ''); }
     var sec = parsePrincSections(rest);
-    document.getElementById('pp-type').value = type;
-    document.getElementById('pp-date').value = date;
-    document.getElementById('pp-source').value = source;
-    document.getElementById('pp-title').value = title;
-    document.getElementById('pp-what').value = sec.what;
-    document.getElementById('pp-how').value = sec.how;
-    document.getElementById('pp-case').value = sec.case;
-    document.getElementById('pp-edge').value = sec.edge;
+    princSet('type', type);
+    princSet('date', date);
+    princSet('source', source);
+    princSet('title', title);
+    princSet('what', sec.what);
+    princSet('how', sec.how);
+    princSet('case', sec.case);
+    princSet('edge', sec.edge);
   } catch(e) { toast('读取失败：' + e.message); }
 }
 function closePrincModal() { document.getElementById('princModal').style.display = 'none'; }
 async function savePrinc() {
-  var title = document.getElementById('pp-title').value.trim();
-  var type = document.getElementById('pp-type').value;
-  var date = document.getElementById('pp-date').value.trim();
-  var source = document.getElementById('pp-source').value.trim();
+  var title = princVal('title');
+  var type = princVal('type');
+  var date = princVal('date');
+  var source = princVal('source');
   var sec = {
-    what: document.getElementById('pp-what').value.trim(),
-    how: document.getElementById('pp-how').value.trim(),
-    case: document.getElementById('pp-case').value.trim(),
-    edge: document.getElementById('pp-edge').value.trim()
+    what: princVal('what'),
+    how: princVal('how'),
+    case: princVal('case'),
+    edge: princVal('edge')
   };
   if (!title) return toast('标题必填');
   if (!sec.what || !sec.how) return toast('是什么 / 怎么用 必填');
@@ -772,48 +843,130 @@ function deletePrinc(file) {
     .catch(function(e){ toast('删除失败：' + e.message); });
 }
 
-/* ── 我的网站 增/改/删 ── */
+/* ── 我的网站 增/改/删（schema 驱动：字段来自 /api/apps/schema，禁止手写副本） ── */
 var appModalState = 'new';  // new | edit
 var appEditingId = null;
-function openAppModal() {
+var appFields = null;  // 表单字段契约（lib/apps-schema.js → /api/apps/schema）
+async function ensureAppSchema() {
+  if (appFields) return appFields;
+  try {
+    var res = await fetch('/api/apps/schema');
+    var data = await res.json();
+    appFields = (data.ok && data.schema && data.schema.fields) || [];
+  } catch (e) { appFields = []; }
+  return appFields;
+}
+// dynamic 字段（devTool）options 从 /api/tools 填充，一次即可
+var appToolOptionsLoaded = false;
+async function ensureAppToolOptions() {
+  if (appToolOptionsLoaded) return;
+  var list = tools;
+  if (!list || !list.length) {
+    try {
+      var res = await fetch('/api/tools');
+      var data = await res.json();
+      if (data.ok) list = data.tools || [];
+    } catch (e) { list = []; }
+  }
+  (appFields || []).forEach(function (f) {
+    if (f.dynamic) f.options = [''].concat((list || []).filter(function (x) { return x.id; }).map(function (x) { return { value: x.id, label: (x.name || x.id) + ' · ' + x.id }; }));
+  });
+  appToolOptionsLoaded = true;
+}
+function optVal(o) { return typeof o === 'object' ? o.value : o; }
+function optLabel(o) { return typeof o === 'object' ? o.label : o; }
+function appFieldHtml(f) {
+  var req = f.required ? ' <span class="req">*</span>' : '';
+  if (f.type === 'textarea') {
+    return '<div class="field"><label>' + f.label + req + '</label><textarea id="app-f-' + f.key + '" rows="' + (f.rows || 2) + '" placeholder="' + f.placeholder + '"></textarea></div>';
+  }
+  if (f.type === 'select') {
+    var opts = (f.options || []).map(function (o) { return '<option value="' + optVal(o) + '">' + optLabel(o) + '</option>'; }).join('');
+    if (f.custom) opts += '<option value="__custom__">自定义…</option>';
+    var html = '<div class="field"><label>' + f.label + req + '</label><select id="app-f-' + f.key + '"' + (f.custom ? ' onchange="appCustomToggle(\'' + f.key + '\')"' : '') + '>' + opts + '</select>';
+    if (f.custom) html += '<input id="app-f-' + f.key + '-custom" type="text" placeholder="' + f.customPlaceholder + '" style="display:none;margin-top:6px">';
+    return html + '</div>';
+  }
+  return '<div class="field"><label>' + f.label + req + '</label><input id="app-f-' + f.key + '" type="' + f.type + '"' + (f.min !== undefined ? ' min="' + f.min + '"' : '') + ' placeholder="' + (f.placeholder || '') + '"></div>';
+}
+function renderAppFields() {
+  document.getElementById('appFields').innerHTML = (appFields || []).map(appFieldHtml).join('');
+}
+function appVal(f) {
+  var el = document.getElementById('app-f-' + f.key);
+  if (!el) return '';
+  if (f.type === 'select' && f.custom && el.value === '__custom__') {
+    var c = document.getElementById('app-f-' + f.key + '-custom');
+    return c ? c.value.trim() : '';
+  }
+  return el.value.trim();
+}
+function appCustomToggle(key) {
+  var sel = document.getElementById('app-f-' + key);
+  var c = document.getElementById('app-f-' + key + '-custom');
+  if (c) c.style.display = sel.value === '__custom__' ? 'block' : 'none';
+}
+function resetAppForm() {
+  (appFields || []).forEach(function (f) {
+    var el = document.getElementById('app-f-' + f.key);
+    if (!el) return;
+    if (el.tagName === 'SELECT') {
+      el.value = f.options[0] !== undefined ? f.options[0] : '';
+      if (f.custom) { var c = document.getElementById('app-f-' + f.key + '-custom'); if (c) c.style.display = 'none'; }
+    } else el.value = '';
+  });
+}
+function fillAppForm(a) {
+  (appFields || []).forEach(function (f) {
+    var el = document.getElementById('app-f-' + f.key);
+    if (!el) return;
+    var v;
+    if (f.key === 'domain') v = (a.url || a.id || '').replace(/^https?:\/\//, '').replace(/\/$/, '');
+    else v = a[f.key] === undefined ? '' : a[f.key];
+    if (f.type === 'select') {
+      var known = false;
+      for (var i = 0; i < el.options.length; i++) { if (el.options[i].value === String(v)) { known = true; break; } }
+      if (known) el.value = v;
+      else if (f.custom) {
+        el.value = '__custom__';
+        var c = document.getElementById('app-f-' + f.key + '-custom');
+        if (c) { c.value = v; c.style.display = 'block'; }
+      } else el.value = f.options[0] || '';
+    } else el.value = v;
+  });
+}
+async function openAppModal() {
   appModalState = 'new'; appEditingId = null;
   document.getElementById('appModalTitle').textContent = '添加网站';
-  document.getElementById('ap-name').value = '';
-  document.getElementById('ap-domain').value = '';
-  document.getElementById('ap-desc').value = '';
-  document.getElementById('ap-host').value = '腾讯云 DNSPod → Vercel';
-  document.getElementById('ap-host-custom').style.display = 'none';
+  await ensureAppSchema();
+  await ensureAppToolOptions();
+  renderAppFields();
+  resetAppForm();
   document.getElementById('appModal').style.display = 'flex';
 }
-function openEditApp(id) {
+async function openEditApp(id) {
   var a = null;
-  (appsData || []).forEach(function(x){ if (x.id === id) a = x; });
+  (appsData || []).forEach(function (x) { if (x.id === id) a = x; });
   if (!a) return;
   appModalState = 'edit'; appEditingId = id;
   document.getElementById('appModalTitle').textContent = '编辑网站';
-  document.getElementById('ap-name').value = a.name || '';
-  document.getElementById('ap-domain').value = (a.url || a.id || '').replace(/^https?:\/\//, '').replace(/\/$/, '');
-  document.getElementById('ap-desc').value = a.description || '';
-  var host = a.host || '';
-  var sel = document.getElementById('ap-host');
-  var known = false;
-  for (var i = 0; i < sel.options.length; i++) { if (sel.options[i].value === host) { known = true; break; } }
-  if (known) { sel.value = host; document.getElementById('ap-host-custom').style.display = 'none'; }
-  else { sel.value = '__custom__'; var hc = document.getElementById('ap-host-custom'); hc.value = host; hc.style.display = 'block'; }
+  await ensureAppSchema();
+  await ensureAppToolOptions();
+  renderAppFields();
+  fillAppForm(a);
   document.getElementById('appModal').style.display = 'flex';
-}
-function appHostChange() {
-  document.getElementById('ap-host-custom').style.display = document.getElementById('ap-host').value === '__custom__' ? 'block' : 'none';
 }
 function closeAppModal() { document.getElementById('appModal').style.display = 'none'; }
 async function saveApp() {
-  var name = document.getElementById('ap-name').value.trim();
-  var domain = document.getElementById('ap-domain').value.trim();
-  if (!name) return toast('名称必填');
-  if (!domain) return toast('域名必填');
-  var host = document.getElementById('ap-host').value;
-  if (host === '__custom__') host = document.getElementById('ap-host-custom').value.trim();
-  var body = { name: name, domain: domain, description: document.getElementById('ap-desc').value.trim(), host: host };
+  var missing = [];
+  (appFields || []).forEach(function (f) { if (f.required && appVal(f) === '') missing.push(f.label); });
+  if (missing.length) return toast('必填：' + missing.join('、'));
+  var body = {};
+  (appFields || []).forEach(function (f) {
+    var v = appVal(f);
+    if (f.required || f.formOnly) body[f.key] = v;
+    else if (v !== '') body[f.key] = v;
+  });
   try {
     var res = await fetch(appModalState === 'edit' ? '/api/apps/' + encodeURIComponent(appEditingId) : '/api/apps', {
       method: appModalState === 'edit' ? 'PUT' : 'POST',
@@ -825,7 +978,7 @@ async function saveApp() {
     closeAppModal();
     appsData = null;
     renderApps();
-  } catch(e) { toast('保存失败：' + e.message); }
+  } catch (e) { toast('保存失败：' + e.message); }
 }
 function deleteApp(id) {
   var a = null;
@@ -839,147 +992,6 @@ function deleteApp(id) {
       else toast('删除失败：' + (d.error || ''));
     })
     .catch(function(e){ toast('删除失败：' + e.message); });
-}
-
-/* ── 经验日志 增/改/删 + 写入标准 ── */
-var tipModalState = 'new';  // new | edit
-var tipEditingFile = null;
-function openNewTip() {
-  tipModalState = 'new'; tipEditingFile = null;
-  document.getElementById('tipModalTitle').textContent = '新增日志';
-  document.getElementById('tp-type').value = 'diagnosis';
-  document.getElementById('tp-title').value = '';
-  document.getElementById('tp-desc').value = '';
-  document.getElementById('tipModal').style.display = 'flex';
-}
-async function openEditTip(file) {
-  tipModalState = 'edit'; tipEditingFile = file;
-  document.getElementById('tipModalTitle').textContent = '编辑日志';
-  document.getElementById('tipModal').style.display = 'flex';
-  document.getElementById('tp-desc').value = '加载中…';
-  try {
-    var res = await fetch('/api/tips/' + encodeURIComponent(file));
-    if (!res.ok) { toast('读取失败：' + res.status); return; }
-    var md = (await res.text()).replace(/\r\n/g, '\n');
-    var type = 'diagnosis', title = '', desc = md;
-    var fm = md.match(/^---\n([\s\S]*?)\n---\n?/);
-    if (fm) {
-      var t = fm[1].match(/^type:\s*(.+)$/m);
-      if (t) type = t[1].trim();
-      desc = md.slice(fm[0].length);
-    }
-    var h1 = desc.match(/^#\s+(.+)$/m);
-    if (h1) { title = h1[1].trim(); desc = desc.replace(h1[0], '').replace(/^\n+/, ''); }
-    document.getElementById('tp-type').value = type;
-    document.getElementById('tp-title').value = title;
-    document.getElementById('tp-desc').value = desc.trim();
-  } catch(e) { document.getElementById('tp-desc').value = ''; toast('读取失败：' + e.message); }
-}
-function tipTypeChange() {}
-function closeTipModal() { document.getElementById('tipModal').style.display = 'none'; }
-async function saveTip() {
-  var title = document.getElementById('tp-title').value.trim();
-  var type = document.getElementById('tp-type').value;
-  var desc = document.getElementById('tp-desc').value.trim();
-  if (!title) return toast('标题必填');
-  var body = { title: title, type: type, desc: desc };
-  try {
-    var res = await fetch(tipModalState === 'edit' ? '/api/tips/' + encodeURIComponent(tipEditingFile) : '/api/tips', {
-      method: tipModalState === 'edit' ? 'PUT' : 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body)
-    });
-    var data = await res.json();
-    if (!data.ok) return toast('保存失败：' + (data.error || res.status));
-    closeTipModal();
-    tipsData = null;
-    renderTips();
-  } catch(e) { toast('保存失败：' + e.message); }
-}
-function deleteTip(file) {
-  var x = null;
-  (tipsData || []).forEach(function(t){ if (t.file === file) x = t; });
-  if (!x) return;
-  if (!confirm('删除日志「' + (x.title || file) + '」？此操作不可恢复。')) return;
-  fetch('/api/tips/' + encodeURIComponent(file), { method: 'DELETE' })
-    .then(function(r){ return r.json(); })
-    .then(function(d){
-      if (d.ok) { tipsData = null; renderTips(); toast('已删除'); }
-      else toast('删除失败：' + (d.error || ''));
-    })
-    .catch(function(e){ toast('删除失败：' + e.message); });
-}
-async function openStd() {
-  var body = document.getElementById('stdBody'); if (!body) return;
-  document.getElementById('stdModal').style.display = 'flex';
-  body.innerHTML = '<div class="empty">加载中…</div>';
-  try {
-    var res = await fetch('/api/tips/const');
-    if (!res.ok) { body.innerHTML = '<div class="empty">CONSTITUTION.md 读取失败</div>'; return; }
-    var md = await res.text();
-    body.innerHTML = md2html(md);
-  } catch(e) { body.innerHTML = '<div class="empty">加载失败：' + escHtml(e.message) + '</div>'; }
-}
-function closeStd() { document.getElementById('stdModal').style.display = 'none'; }
-
-function mdInline(s){
-  s = escHtml(s);
-  s = s.replace(/`([^`]+)`/g,'<code>$1</code>');
-  s = s.replace(/\*\*([^*]+)\*\*/g,'<b>$1</b>');
-  s = s.replace(/\*([^*]+)\*/g,'<i>$1</i>');
-  return s;
-}
-function mdTableRow(l,tag){
-  var cells = l.replace(/^\s*\|/,'').replace(/\|\s*$/,'').split('|');
-  var h = '';
-  cells.forEach(function(c){
-    c = c.trim();
-    h += (tag==='th'?'<th>':'<td>') + mdInline(c) + (tag==='th'?'</th>':'</td>');
-  });
-  return '<tr>'+h+'</tr>';
-}
-function md2html(src){
-  var lines = src.split('\n');
-  var out = [], inCode = false, codeBuf = [], listBuf = [];
-  function flushList(){
-    if (listBuf.length){ out.push('<ul>'+listBuf.map(function(x){return '<li>'+x+'</li>';}).join('')+'</ul>'); listBuf = []; }
-  }
-  for (var i = 0; i < lines.length; i++){
-    var L = lines[i];
-    if (inCode){
-      if (/^```/.test(L)){ out.push('<pre><code>'+codeBuf.join('\n')+'</code></pre>'); inCode = false; codeBuf = []; }
-      else codeBuf.push(escHtml(L));
-      continue;
-    }
-    if (/^```/.test(L)){ flushList(); inCode = true; codeBuf = []; continue; }
-    var m;
-    if (m = L.match(/^\s*(#{1,6})\s+(.*)$/)){ flushList(); var n = m[1].length; out.push('<h'+n+'>'+mdInline(m[2])+'</h'+n+'>'); continue; }
-    if (/^\s*[-*]\s+/.test(L)){ var li = L.replace(/^\s*[-*]\s+/,''); listBuf.push(mdInline(li)); continue; }
-    if (/^\s*>\s?/.test(L)){ flushList(); out.push('<blockquote>'+mdInline(L.replace(/^\s*>\s?/,''))+'</blockquote>'); continue; }
-    if (/^\s*\|/.test(L)){
-      flushList();
-      var rows = [];
-      while (i < lines.length && /^\s*\|/.test(lines[i])){ rows.push(lines[i]); i++; }
-      i--;
-      if (rows.length){
-        var tbl = '<table><thead>'+mdTableRow(rows[0],'th')+'</thead><tbody>';
-        for (var r = 1; r < rows.length; r++){
-          if (/^[\s:|-]+$/.test(rows[r].trim())) continue;
-          tbl += mdTableRow(rows[r],'td');
-        }
-        tbl += '</tbody></table>';
-        out.push(tbl);
-      }
-      continue;
-    }
-    if (/^\s*-{3,}\s*$/.test(L)){ flushList(); out.push('<hr>'); continue; }
-    if (/^\s*$/.test(L)){ flushList(); continue; }
-    flushList();
-    out.push('<p>'+mdInline(L)+'</p>');
-  }
-  flushList();
-  if (inCode) out.push('<pre><code>'+codeBuf.join('\n')+'</code></pre>');
-  return out.join('');
 }
 
 /* ── 导航 + hash 路由（#page 或 #tools/key=val&key=val） ── */
@@ -1035,6 +1047,7 @@ function showPage(p){
 /* ── 治理审计：仿 #tips 三段式——按钮巡检 → 分类组件 → 三类全出明细，点分类可筛，不自动轮询 ── */
 var auditData = null;
 var auditF = 'all'; // schema / brand / tree / all
+var auditS = 'all'; // err / warn / ok / all —— 总面板点击数字筛选
 function auditInitial() {
   renderAuditDims();
   renderAudit();
@@ -1105,6 +1118,10 @@ function auditStatus(it) {
 }
 function auditSection(key, name, desc, s, kind) {
   var items = auditNormItems(s, kind).map(function(it){ return { name: it.name, errors: it.errors, warnings: it.warnings, st: auditStatus(it) }; });
+  if (auditS !== 'all') {
+    items = items.filter(function(it){ return it.st === auditS; });
+    if (!items.length) return '';
+  }
   var st = items.some(function(it){ return it.st === 'err'; }) ? 'err' : (items.some(function(it){ return it.st === 'warn'; }) ? 'warn' : 'ok');
   var errs = 0, warns = 0;
   items.forEach(function(it){ errs += it.errors.length; warns += it.warnings.length; });
@@ -1132,21 +1149,38 @@ function auditSummaryHtml() {
   if (auditF === 'all' || auditF === 'brand') secs.push(['brand', auditData.brand]);
   if (auditF === 'all' || auditF === 'tree') secs.push(['tree', auditData.tree]);
   secs.forEach(function(pair){ auditNormItems(pair[1], pair[0]).forEach(function(it){ c[auditStatus(it)]++; }); });
+  function item(k, label) {
+    return '<span class="audit-summary-item ' + k + (auditS === k ? ' active' : '') + '" onclick="setAuditS(\'' + k + '\')" title="点击只看' + label + '项，再点恢复"><span class="dot"></span>' + label + ' <b>' + c[k] + '</b></span>';
+  }
   return '<div class="audit-summary">'
-    + '<span class="audit-summary-item ok"><span class="dot"></span>正常 <b>' + c.ok + '</b></span>'
-    + '<span class="audit-summary-item warn"><span class="dot"></span>警告 <b>' + c.warn + '</b></span>'
-    + '<span class="audit-summary-item err"><span class="dot"></span>错误 <b>' + c.err + '</b></span>'
+    + item('ok', '正常')
+    + item('warn', '警告')
+    + item('err', '错误')
     + '</div>';
+}
+function setAuditS(s) {
+  auditS = (auditS === s ? 'all' : s);
+  renderAudit();
 }
 
 /* ── 初始化 ── */
 document.addEventListener('DOMContentLoaded', function() {
+  var tipDesc = document.getElementById('tp-desc');
+  if (tipDesc) tipDesc.addEventListener('input', function () { this.dataset.touched = '1'; });
   initToolForm();
   markOpened('dashboard');
   applyHash();
+  var appGridEl = document.getElementById('appGrid');
+  if (appGridEl) {
+    appGridEl.addEventListener('dragstart', onAppGridDragStart);
+    appGridEl.addEventListener('dragover', onAppGridDragOver);
+    appGridEl.addEventListener('dragleave', onAppGridDragLeave);
+    appGridEl.addEventListener('drop', onAppGridDrop);
+    appGridEl.addEventListener('dragend', onAppGridDragEnd);
+  }
   fetchTools();
   renderApps();
-  renderTips();
+  TipsPanel.load();
   renderPrinciples();
   fetchCronState();
   auditInitial();
@@ -1154,16 +1188,101 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // ══ S5 人写面板：工具表单弹窗（新建/编辑/补全/迁移/修复/注册 一套）══
 
-var CATEGORY_LIST = ['本地模型','远程模型','Agent','设施','获取','查阅','创作','职能','工作区','公开站'];
-var TYPE_LIST = [
-  { v:'service', l:'服务 — 常驻后台' },
-  { v:'cli',     l:'命令 — 用完就走' },
-  { v:'api',     l:'API — 外部服务' },
-  { v:'folder',  l:'文件夹 — 项目目录' },
-  { v:'group',   l:'组 — 多工具编排' }
-];
-var RUNTIME_LIST = ['node','python','go','cpp','csharp','shell','other'];
-var CAT_SUGGEST = {'本地模型':'service','远程模型':'api','Agent':'service','创作':'service','获取':'api','职能':'cli','设施':'service','查阅':'service','工作区':'folder','公开站':'folder'};
+var tfFields = null;      // 表单字段契约（lib/manifest-schema.js → /api/tools/schema）
+var tfCatSuggest = {};    // 分类 → 建议类型（schema 带）
+var tfFieldsRendered = false;
+async function ensureToolSchema() {
+  if (tfFields) return tfFields;
+  try {
+    var res = await fetch('/api/tools/schema');
+    var data = await res.json();
+    if (data.ok && data.schema) {
+      tfFields = data.schema.fields || [];
+      tfCatSuggest = data.schema.catSuggest || {};
+    }
+  } catch (e) {}
+  return tfFields;
+}
+var SEC_TIP = {
+  '功能': '这工具干嘛',
+  '分类': '选完自动建议类型，可改',
+  '调用方式': '只显示当前类型该填的',
+  '何时调用': '展开卡显示，AI 决定用它不用的依据'
+};
+function renderToolFields() {
+  if (tfFieldsRendered || !tfFields.length) return;
+  var html = '', curSec = null, secNum = 0, cgOpen = false, secOpen = false, i = 0;
+  while (i < tfFields.length) {
+    var f = tfFields[i];
+    if (f.section !== curSec) {
+      if (cgOpen) { html += '</div>'; cgOpen = false; }
+      if (secOpen) { html += '</div>'; secOpen = false; }
+      curSec = f.section; secNum++;
+      html += '<div class="sec"><div class="sec-h"><span class="sec-num">' + secNum + '</span><span class="sec-title"' + (SEC_TIP[curSec] ? ' title="' + escAttr(SEC_TIP[curSec]) + '"' : '') + '>' + escHtml(curSec) + '</span></div>';
+      secOpen = true;
+    }
+    if (f.cg) {
+      if (cgOpen && cgOpen !== f.cg) { html += '</div>'; cgOpen = false; }
+      if (!cgOpen) { html += '<div class="cg" id="cg-' + f.cg + '">'; cgOpen = f.cg; }
+      html += renderToolField(f); i++;
+      continue;
+    }
+    if (cgOpen) { html += '</div>'; cgOpen = false; }
+    if (f.row) {
+      var rowFields = [];
+      while (i < tfFields.length && tfFields[i].row === f.row && !tfFields[i].cg && tfFields[i].section === f.section) { rowFields.push(tfFields[i]); i++; }
+      html += renderFieldRow(rowFields);
+      continue;
+    }
+    html += renderToolField(f); i++;
+  }
+  if (cgOpen) html += '</div>';
+  if (secOpen) html += '</div>';
+  document.getElementById('toolFields').innerHTML = html;
+  buildIconPanel();
+  attachToolFormListeners();
+  tfFieldsRendered = true;
+}
+function renderFieldRow(fields) {
+  if (fields.length >= 3) return '<div class="row3">' + fields.map(function(f){ return renderToolField(f); }).join('') + '</div>';
+  if (fields.length === 2) return '<div class="row2">' + fields.map(function(f){ return renderToolField(f); }).join('') + '</div>';
+  return fields.map(function(f){ return renderToolField(f); }).join('');
+}
+function renderToolField(f) {
+  if (f.type === 'note') return '<div class="cg-note">' + escHtml(f.note || '') + '</div>';
+  if (f.type === 'display') return '<div class="field"><label>' + escHtml(f.label) + '</label>' + (f.displayHtml || '<div class="auto-val" id="' + f.input + '">—</div>') + '</div>';
+  if (f.type === 'icon') return iconFieldHtml(f);
+  if (f.newOnly) return idFieldHtml(f);
+  return renderFieldHtml(f, f.input);
+}
+function iconFieldHtml(f) {
+  return '<div class="field"><label title="' + escAttr(f.tooltip || '') + '">' + escHtml(f.label) + '</label>' +
+    '<div class="icon-row">' +
+    '<input id="' + f.input + '" type="text" placeholder="' + escAttr(f.placeholder || '') + '">' +
+    '<button type="button" class="btn" onclick="toggleIconPanel()">从库选</button>' +
+    '<button type="button" class="btn" onclick="clearIcon()">清空</button>' +
+    '</div><div id="icon-panel" style="display:none;margin-top:8px"></div></div>';
+}
+function idFieldHtml(f) {
+  return '<div class="field"><label title="' + escAttr(f.tooltip || '') + '">' + escHtml(f.label) + ' <span class="req" id="id-req" style="display:none">*</span></label>' +
+    '<input id="' + f.input + '" type="text" placeholder="' + escAttr(f.placeholder || '') + '" style="display:none">' +
+    '<div class="auto-val" id="id-val" title="编辑已有：ID 锁定 = 当前目录名。改名 = 挪目录，需谨慎。">—</div></div>';
+}
+function buildIconPanel() {
+  var ic = document.getElementById('icon-panel');
+  if (ic) ic.innerHTML = ICON_LIB.map(function(e){ return '<button type="button" class="icon-opt" title="选 ' + e + '" onclick="pickIcon(\'' + e + '\')">' + e + '</button>'; }).join('');
+}
+function attachToolFormListeners() {
+  document.querySelectorAll('#editModal input,#editModal select,#editModal textarea').forEach(function(el){
+    el.addEventListener('input', tfRender);
+  });
+  var nameEl = document.getElementById('f-name');
+  if (nameEl) nameEl.addEventListener('input', function(){
+    if (tfMode === 'new' && !idTouched) { var s = slugify(nameEl.value); if (s) document.getElementById('f-id').value = s; }
+  });
+  var idEl = document.getElementById('f-id');
+  if (idEl) idEl.addEventListener('input', function(){ idTouched = true; });
+}
 var ICON_LIB = ['🤖','🧠','🦙','🐱','🦞','🐙','💭','☁️','🆓','🎨','🎬','🎞️','🎵','🎙','🖌','📸','🎯','🔍','📥','🕸️','📡','🦐','📋','🔗','📌','📚','📕','📄','🗣','💬','📝','⚙','🏭','🐋','🛡','▲','◈','⬡','◎','↔️','🔀','⏰','🏠','🏪','🌐','🖼','🟢','🪽','👁','🎛','🧩','⭐','🔥','✨','📱','🗓','🔊'];
 
 var tfId = null;      // 当前编辑的 id（新建为 null）
@@ -1171,23 +1290,9 @@ var tfMode = 'new';   // new | edit | fix | complete | migrate | register
 var tfTool = null;    // 当前编辑的工具对象（buildManifest 保真 runtime 用）
 var tfMissing = [];   // complete 模式：缺的字段
 
-function initToolForm() {
-  // 原型提供静态 option（真相），只在 select 为空时才动态补
-  var catSel = document.getElementById('f-category');
-  if (catSel && !catSel.options.length) CATEGORY_LIST.forEach(function(c){ var o = document.createElement('option'); o.value = c; o.textContent = c; catSel.appendChild(o); });
-  var formSel = document.getElementById('f-form');
-  if (formSel && !formSel.options.length) TYPE_LIST.forEach(function(t){ var op = document.createElement('option'); op.value = t.v; op.textContent = t.l; formSel.appendChild(op); });
-  var rtSel = document.getElementById('f-runtime');
-  if (rtSel && !rtSel.options.length) RUNTIME_LIST.forEach(function(r){ var op = document.createElement('option'); op.value = r; op.textContent = r; rtSel.appendChild(op); });
-  var icPanel = document.getElementById('icon-panel');
-  icPanel.innerHTML = ICON_LIB.map(function(e){ return '<button type="button" class="icon-opt" title="选 '+e+'" onclick="pickIcon(\''+e+'\')">'+e+'</button>'; }).join('');
-  document.querySelectorAll('#editModal input,#editModal select,#editModal textarea').forEach(function(el){
-    el.addEventListener('input', tfRender);
-  });
-  document.getElementById('f-name').addEventListener('input', function(){
-    if (tfMode === 'new' && !idTouched) { var s = slugify(document.getElementById('f-name').value); if (s) document.getElementById('f-id').value = s; }
-  });
-  document.getElementById('f-id').addEventListener('input', function(){ idTouched = true; });
+async function initToolForm() {
+  await ensureToolSchema();
+  renderToolFields();
 }
 var idTouched = false;
 
@@ -1203,7 +1308,9 @@ function setIdLocked(editing) {
   if (idReq) idReq.style.display = editing ? 'none' : 'inline';
 }
 
-function openToolForm(id, mode) {
+async function openToolForm(id, mode) {
+  await ensureToolSchema();
+  renderToolFields();
   tfMode = mode || 'edit';
   tfId = id || null;
   idTouched = false;
@@ -1307,18 +1414,20 @@ function parseDesc(desc) {
 
 function suggestType() {
   var cat = document.getElementById('f-category').value;
-  if (CAT_SUGGEST[cat]) document.getElementById('f-form').value = CAT_SUGGEST[cat];
+  if (tfCatSuggest[cat]) document.getElementById('f-form').value = tfCatSuggest[cat];
   applyFormType();
 }
 function applyFormType() {
   var f = document.getElementById('f-form').value;
   var disabled = document.getElementById('f-disabled').checked;
-  ['service','cli','api','folder','group'].forEach(function(id){
-    document.getElementById('cg-' + id).classList.toggle('show', id === f);
+  var seen = {};
+  (tfFields || []).forEach(function(fd){
+    if (!fd.cg || seen[fd.cg]) return;
+    seen[fd.cg] = 1;
+    var show = !fd.formTypes || fd.formTypes.indexOf(f) !== -1;
+    var el = document.getElementById('cg-' + fd.cg);
+    if (el) el.classList.toggle('show', show);
   });
-  var hasOps = (f === 'service' || f === 'cli');
-  document.getElementById('ops-path').classList.toggle('show', hasOps);
-  document.getElementById('ops-none').classList.toggle('show', (f === 'api' || f === 'group'));
   var autoRow = document.getElementById('autoStart-row');
   var showAuto = (f === 'service' && !disabled);
   if (autoRow) autoRow.style.display = showAuto ? '' : 'none';

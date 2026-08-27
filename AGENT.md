@@ -4,41 +4,49 @@
 
 ```
 ~/.agentboard/
-├── AGENT.md              治理宪法（本文件）
-├── CLAUDE.md             Claude 适配层（@AGENT.md）
 ├── README.md             项目入口（人读，Quick Start / 治理入口）
 ├── LICENSE               许可
 ├── .gitignore            忽略规则
 ├── package.json          依赖（express + MCP SDK）
 ├── package-lock.json
+├── AGENT.md              治理宪法（本文件）
+├── CLAUDE.md             Claude 适配层（@AGENT.md）
 ├── inspection.json       巡检检查项
 ├── server.js             REST + Dashboard 装配（:3099）
 ├── start.js              启动入口（kill-port → server.js）
-├── apps-registry.json    公网应用注册表
 ├── lib/                  后端核心（双平面共享）
 │   ├── routes.js         REST 路由（/api/*、4 页、挂载 /mcp）→ /api/registry 从真源生成（AI 面）
 │   ├── tool-registry.js  核心逻辑：scanTools 三段验证 / 启停 / 端口查重
 │   ├── manifest-schema.js Manifest 契约唯一真相源（字段 / 分类 / 校验）
 │   ├── mcp-http.js       MCP Streamable HTTP（POST /mcp，JSON-RPC 2.0）
 │   ├── mcp-handlers.js   6 个 agentboard_* MCP 工具
-│   ├── static.js / api-page.js / self-check.js / ops-log.js / crash-guard.js / tip-schema.js / brand-drift.js / tree-drift.js / sync-proto.mjs
+│   ├── static.js / api-page.js / self-check.js / ops-log.js / crash-guard.js / tip-schema.js / apps-schema.js / principle-schema.js / brand-drift.js / tree-drift.js
 │   └── __tests__/        冒烟测试（node:test）
 ├── web/                  Dashboard 前端
-│   ├── index.html        6 页（工具架 / 我的网站 / 经验日志 / 说明书 / 治理审计 / 原则库）
+│   ├── index.html        6 页（工具架 / 我的网站 / 经验日志 / 原则库 / 治理审计 / 说明书）
 │   ├── _tokens.css       品牌 token 唯一银行（换肤改这一个文件）
 │   ├── _style.css        组件 + 页面级样式（引用 _tokens.css 变量）
 │   ├── _script.js        渲染 / 交互
+│   ├── shared/           tips 面板共享资源（tips-panel.css / tips-panel.js）
 │   └── logo.svg
-├── archive/              退场归档（可删的留存区，担心删早了先留；唯一一处）
+├── .claude/              Claude Code 项目级配置（settings.local.json，仅权限放行，不进版本库）
+├── tools/                工具架卡（宪法 = 本文件；形状 = lib/manifest-schema.js）
+├── apps/                 我的网站卡（宪法 = apps/CONSTITUTION.md；形状 = lib/apps-schema.js）
+├── examples/             tools 卡模板（copy 到 tools/）
+├── tips/                 经验日志卡（宪法 = tips/CONSTITUTION.md；形状 = lib/tip-schema.js）
+├── principles/           原则库卡（宪法 = principles/CONSTITUTION.md；形状内嵌宪法 §四）
 ├── docs/                 文档（不带 archive）
-├── examples/             manifest 模板（copy 到 tools/）
 ├── mechanisms/           系统机制说明
-├── principles/           原则
-├── tools/                工具注册（独立 git 仓库，主仓只 ignore 不追踪；一个目录一个 manifest.json）
-├── tips/                 踩坑沉淀
 ├── state/                运行态（api-calls）
-├── _runtime/             运行产物（pids / events.jsonl / logs）
-└── .claude/              Claude Code 项目级配置（settings.local.json，仅权限放行，不进版本库）
+├── _runtime/             运行态仓（gitignored，草稿有归属勿丢根层）
+│   ├── logs/             运行日志（restart / cleanup）
+│   ├── crash/            崩溃现场
+│   ├── inputs/           用户投料（改版参考等，**永不自动清**）
+│   ├── work/             AI 会话草稿（超 3 天清，AgentboardCleanup 登录触发）
+│   ├── pids/             进程身份凭证
+│   ├── CHECKPOINT.md     状态变更快照（hook 写）
+│   └── events.jsonl      运行事件流
+└── archive/              退场归档（可删的留存区，担心删早了先留；唯一一处）
 
 （省略 .git/、node_modules/、coverage/ 等非架构目录。全局 skills 是外部只读资源，不在本目录树内。）
 ```
@@ -167,12 +175,19 @@ agentboard 是骨件，不是全部。兄弟骨件各管一段，本骨件只代
 - **禁止删除 `tools/` 下的任何 manifest 目录**，除非用户逐文件确认
 - 用户说"删卡片"≠授权删文件。先问：隐藏还是删除？如果要删，列清单等确认
 - 改动前先 `curl localhost:3099/api/tools` 看现状
+- **会话 cwd 不得落在 `_runtime/` 内**——否则 checkpoint hook 会写出嵌套的 `_runtime/_runtime/CHECKPOINT.md`。出过事故（2026-08-27）。跨目录操作用绝对路径
 
 ## 操作日志
 
 - 写入路径：`~/.agentboard/tips/*.md`
 - **不要写到 `~/.claude/tips/`** — agentboard 不读那个目录
 - **写入前必须先读 `tips/CONSTITUTION.md`** — 格式、分类、准入五问的唯一真相源
+
+## 运行生命周期
+
+- **草稿有归属**：用户投喂参考（截图/资料）丢 `_runtime/inputs/`（**永不自动清**——投料是输入，清掉丢用户的输入）；AI 会话草稿（临时文件/验证脚本）丢 `_runtime/work/`。勿丢根层——清理器只认白名单子目录，散落文件没人管会积成垃圾
+- 清理：`scripts/cleanup-runtime.ps1` 读 `scripts/cleanup-runtime.config.json`（阈值单源），只清 `work/`（超 3 天），**永不碰 `inputs/`、`pids/`、`logs/`**。Task Scheduler `AgentboardCleanup` **登录触发**（开机登录即清理，不依赖定时开机）；`-DryRun` 先演练
+- `_runtime/CHECKPOINT.md` 由 checkpoint hook 写入，有实时消费者，勿删勿移
 
 ## 服务器
 

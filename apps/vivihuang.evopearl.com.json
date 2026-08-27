@@ -1,0 +1,11 @@
+{
+  "id": "vivihuang.evopearl.com",
+  "name": "黄辉辉作品集",
+  "url": "https://vivihuang.evopearl.com",
+  "description": "AI 产品经理（Agent 工具生态）个人作品集。暖纸米色底+鼠尾草绿accent，多页静态网站。",
+  "status": "live",
+  "host": "腾讯云 DNSPod → Vercel",
+  "logo": "https://vivihuang.evopearl.com/assets/brand/favicon.svg",
+  "agentNote": "静态多页网站，site/ 目录自包含可部署。品牌套件在 brand-kit.html。",
+  "order": 1
+}

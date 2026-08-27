@@ -8,16 +8,17 @@
 <!-- Google Fonts removed: blocked by GFW in China. System font stack used instead. -->
 <link rel="stylesheet" href="/_tokens.css">
 <link rel="stylesheet" href="/_style.css">
+<link rel="stylesheet" href="/shared/tips-panel.css">
 </head>
 <body>
 <!--
 AI AGENT REFERENCE — 工具架 Agentboard
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 API:     GET /api/tools     → 全部工具清单 JSON {ok, tools:[{id,name,description,category,port,ports,url,running,state,stateDetail,recovery,missingFields,startCommand,stopCommand,apiBase,projectPath,icon,version,order}]}
-API:     GET /api/apps      → 公网应用注册表 JSON {ok, apps:[...]}（apps-registry.json）
+API:     GET /api/apps      → 公网应用注册表 JSON {ok, apps:[...]}（apps/ 一个应用一个 {id}.json）
 API:     GET /api/tips      → 经验日志 JSON {ok, tips:[{file,title,desc,type}]}（tips/*.md）
 ACTION:  POST /api/tools/start/:id   POST /api/tools/stop/:id
-PAGES:   #page-tools(工具架)  #page-apps(我的网站)  #page-tips(经验日志)  #page-principles(原则库)  #page-docs(说明书 iframe /manual)  #page-audit(治理审计)
+PAGES:   #page-tools(工具架)  #page-apps(我的网站)  #page-tips(经验日志)  #page-principles(原则库)  #page-audit(治理审计)  #page-docs(说明书 iframe /manual，页序最底)
 API:     GET /api/principles → 原则库 JSON {ok, principles:[{file,title,desc,type}]}（principles/*.md）
 API:     POST/PUT/DELETE /api/principles[/:file] → 新增/编辑/删除原则（CONSTITUTION.md 受保护）
 DIMS:    #dimBlocks 四维异色筛选块(category/loc/acc/state) → setDimFilter(dim,val)
@@ -43,8 +44,8 @@ OCR:  Tesseract OCR (pytesseract)
     <div class="nav-item" data-page="apps" onclick="showPage('apps')"><span class="ico"><svg viewBox="0 0 20 20" aria-hidden="true"><rect class="ico-bg" width="20" height="20" rx="3"/><circle class="ico-fg" cx="10" cy="10" r="5" fill="none" stroke-width="1.4"/><path class="ico-fg" d="M10 3.8 L12.4 6.2 M10 3.8 L7.6 6.2 M10 3.8 V10" fill="none" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="nav-label">我的网站</span><span class="cnt" id="navAppsCnt">—</span></div>
     <div class="nav-item" data-page="tips" onclick="showPage('tips')"><span class="ico"><svg viewBox="0 0 20 20" aria-hidden="true"><rect class="ico-bg" width="20" height="20" rx="3"/><path class="ico-fg" d="M10 3.6 C7.5 3.6 6 5.4 6 7.5 C6 9.1 6.8 10 7.6 10.8 C8.2 11.4 8.5 11.8 8.6 12.6 H11.4 C11.5 11.8 11.8 11.4 12.4 10.8 C13.2 10 14 9.1 14 7.5 C14 5.4 12.5 3.6 10 3.6 Z"/><path class="ico-fg" d="M8.8 14 H11.2" fill="none" stroke-width="1.2" stroke-linecap="round"/><path class="ico-fg" d="M8.3 15.6 H11.7" fill="none" stroke-width="1.2" stroke-linecap="round"/></svg></span><span class="nav-label">经验日志</span><span class="cnt" id="navTipsCnt">—</span></div>
     <div class="nav-item" data-page="principles" onclick="showPage('principles')"><span class="ico"><svg viewBox="0 0 20 20" aria-hidden="true"><rect class="ico-bg" width="20" height="20" rx="3"/><path class="ico-fg" d="M10 3.8 L11.9 7.6 C11 8 9 8 8.1 7.6 Z" fill="none" stroke-width="1.4" stroke-linejoin="round"/><path class="ico-fg" d="M5.4 12.4 H14.6 M10 7.8 V12.4" fill="none" stroke-width="1.4" stroke-linecap="round"/><path class="ico-fg" d="M5.4 12.4 C5.4 13.9 7.4 14.8 10 14.8 C12.6 14.8 14.6 13.9 14.6 12.4" fill="none" stroke-width="1.4"/></svg></span><span class="nav-label">原则库</span><span class="cnt" id="navPrincCnt">—</span></div>
-    <div class="nav-item" data-page="docs" onclick="showPage('docs')"><span class="ico"><svg viewBox="0 0 20 20" aria-hidden="true"><rect class="ico-bg" width="20" height="20" rx="3"/><path class="ico-fg" d="M10 5 C8.6 4.2 6.6 4 4.2 4.3 V14.6 C6.6 14.3 8.6 14.5 10 15.3 C11.4 14.5 13.4 14.3 15.8 14.6 V4.3 C13.4 4 11.4 4.2 10 5 Z" fill="none" stroke-width="1.4" stroke-linejoin="round"/><path class="ico-fg" d="M10 5 V15.3" fill="none" stroke-width="1.4"/></svg></span><span class="nav-label">说明书</span></div>
     <div class="nav-item" data-page="audit" onclick="showPage('audit')"><span class="ico"><svg viewBox="0 0 20 20" aria-hidden="true"><rect class="ico-bg" width="20" height="20" rx="3"/><path class="ico-fg" d="M10 3.5 L15.5 5.5 V10 C15.5 13.5 13.2 15.8 10 16.7 C6.8 15.8 4.5 13.5 4.5 10 V5.5 Z" fill="none" stroke-width="1.4" stroke-linejoin="round"/><path class="ico-fg" d="M7.8 10.2 L9.3 11.7 L12.4 8.5" fill="none" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="nav-label">治理审计</span></div>
+    <div class="nav-item" data-page="docs" onclick="showPage('docs')"><span class="ico"><svg viewBox="0 0 20 20" aria-hidden="true"><rect class="ico-bg" width="20" height="20" rx="3"/><path class="ico-fg" d="M10 5 C8.6 4.2 6.6 4 4.2 4.3 V14.6 C6.6 14.3 8.6 14.5 10 15.3 C11.4 14.5 13.4 14.3 15.8 14.6 V4.3 C13.4 4 11.4 4.2 10 5 Z" fill="none" stroke-width="1.4" stroke-linejoin="round"/><path class="ico-fg" d="M10 5 V15.3" fill="none" stroke-width="1.4"/></svg></span><span class="nav-label">说明书</span></div>
   </nav>
   <div class="sidebar-foot"><span class="foot-txt">双平面 一份真相</span></div>
 </aside>
@@ -90,9 +91,9 @@ OCR:  Tesseract OCR (pytesseract)
       <div class="hero-sub">踩坑沉淀 同一坑不踩第二次</div>
     </div>
     <div class="search-bar">
-      <button class="btn-add" onclick="openNewTip()">+ 新增日志</button>
+      <button class="btn-add" data-tip-open>+ 新增日志</button>
       <div class="search-box">
-        <input id="tipSearch" placeholder="搜索标题或描述…" oninput="renderTips()">
+        <input id="tipSearch" data-tip-search placeholder="搜索标题或描述…">
         <svg class="search-ico" viewBox="0 0 20 20" aria-hidden="true"><circle cx="9" cy="9" r="6.5" fill="none" stroke="currentColor" stroke-width="2"/><line x1="14.2" y1="14.2" x2="18" y2="18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
       </div>
     </div>
@@ -118,13 +119,6 @@ OCR:  Tesseract OCR (pytesseract)
     <div class="tool-grid" id="princGrid"></div>
   </section>
 
-  <!-- ── 说明书（嵌入独立文档，自带 hero，不加外层 hero-bar） ── -->
-  <section class="page" id="page-docs">
-    <div class="docs-shell">
-      <iframe class="doc-frame" src="/manual"></iframe>
-    </div>
-  </section>
-
   <!-- ── 治理审计：schema/brand/tree 三合一健康度，独立路由页，按需巡检 ── -->
   <section class="page" id="page-audit">
     <div class="hero-bar">
@@ -141,6 +135,13 @@ OCR:  Tesseract OCR (pytesseract)
     <div class="audit-frame" id="auditGrid"></div>
   </section>
 
+  <!-- ── 说明书（嵌入独立文档，自带 hero，不加外层 hero-bar；页序最底） ── -->
+  <section class="page" id="page-docs">
+    <div class="docs-shell">
+      <iframe class="doc-frame" src="/manual"></iframe>
+    </div>
+  </section>
+
 </main>
 
 <!--STATS_SNAPSHOT-->
@@ -148,7 +149,6 @@ OCR:  Tesseract OCR (pytesseract)
 
 <div class="toast" id="toast"></div>
 
-<!--#SYNC:tool-modal#-->
 <!-- ── 编辑表单 modal（edit-form.html 原样搬来） ── -->
 <div class="modal-mask" id="editModal" onclick="if(event.target===this)closeModal()">
   <div class="modal">
@@ -161,119 +161,7 @@ OCR:  Tesseract OCR (pytesseract)
     <div class="modal-body">
       <div class="form-pane">
 
-        <div class="sec">
-          <div class="sec-h"><span class="sec-num">1</span><span class="sec-title">身份</span></div>
-          <div class="row3">
-            <div class="field"><label title="必填，≥2 字">名字 <span class="req">*</span></label><input id="f-name" type="text" placeholder="例：MiniCPM-V 4.6"></div>
-            <div class="field"><label title="必填，agent 用它定位 tools/{id}/。只能小写英文 + 数字 + 连字符（a-z 0-9 -），字母开头。建议直接用工具名做 ID（如 comfyui、deepseek-api），中文/大写会难倒 agent。">ID <span class="req" id="id-req" style="display:none">*</span></label>
-              <input id="f-id" type="text" placeholder="小写英文+连字符，例：minicpm-v" style="display:none">
-              <div class="auto-val" id="id-val" title="编辑已有：ID 锁定 = 当前目录名。改名 = 挪目录，需谨慎。">—</div></div>
-            <div class="field"><label>版本</label><div class="auto-val" id="f-version" title="原型：无版本数据">—</div></div>
-          </div>
-          <div class="field"><label title="emoji 图标，卡片 Header 显示。空 = 用名字首字">图标</label>
-            <div class="icon-row">
-              <input id="f-icon" type="text" placeholder="例：🖼️（空 = 用名字首字）">
-              <button type="button" class="btn" onclick="toggleIconPanel()">从库选</button>
-              <button type="button" class="btn" onclick="clearIcon()">清空</button>
-            </div>
-            <div id="icon-panel" style="display:none;margin-top:8px"></div>
-          </div>
-        </div>
-
-        <div class="sec">
-          <div class="sec-h"><span class="sec-num">2</span><span class="sec-title" title="这工具干嘛">功能</span></div>
-          <div class="field"><label title="必填，≥10 字">功能一句话 <span class="req">*</span></label><textarea id="f-func" rows="2" placeholder="例：本地视觉模型，理解图片内容（OCR / 描述 / 问答）。"></textarea></div>
-        </div>
-
-        <div class="sec">
-          <div class="sec-h"><span class="sec-num">3</span><span class="sec-title" title="选完自动建议类型，可改">分类</span></div>
-          <div class="row2">
-            <div class="field"><label>分类 <span class="req">*</span></label>
-              <select id="f-category" onchange="suggestType()">
-                <option title="本地运行的 AI 模型、GPU 推理进程、可启动的模型服务端点">本地模型</option>
-                <option title="远程 AI 模型 API、云端推理、聚合中继、不占本地 GPU 的模型端点">远程模型</option>
-                <option title="自主 Agent、多步任务执行、工具调用机器人">Agent</option>
-                <option title="基础设施、服务器、数据库、存储、部署运维">设施</option>
-                <option title="数据抓取、爬虫、API 客户端、信息提取">获取</option>
-                <option title="只读浏览、查看、目录、画廊、参考资料">查阅</option>
-                <option title="内容创作、生成、设计、编辑工具">创作</option>
-                <option title="业务职能工具、领域专用（财务/人事/行政/运营）">职能</option>
-              </select></div>
-            <div class="field"><label title="悬停选项看定义">类型 <span class="req">*</span></label>
-              <select id="f-form" onchange="applyFormType()" title="服务=常驻后台进程；命令=用完就走；API=外部服务；文件夹=项目目录；组=多工具编排">
-                <option value="service" title="常驻后台进程，可启动停止。含本地 API 服务。">服务 — 常驻后台</option>
-                <option value="cli" title="用完就走的一次性命令，在 Claude Code 里用 /触发词 调用。">命令 — 用完就走</option>
-                <option value="api" title="外部供应商服务，本地无进程，只填 API 地址 + 密钥，不可启动停止。">API — 外部服务</option>
-                <option value="folder" title="项目目录，不可运行，点开直接看项目。">文件夹 — 项目目录</option>
-                <option value="group" title="多个工具的编排。">组 — 多工具编排</option>
-              </select></div>
-          </div>
-          <div class="field"><label>派生展示（自动，从类型推导）</label>
-            <div class="auto-val" style="gap:16px"><span id="f-dims-loc"></span><span id="f-dims-acc"></span></div>
-          </div>
-        </div>
-
-        <div class="sec">
-          <div class="sec-h"><span class="sec-num">4</span><span class="sec-title" title="只显示当前类型该填的">调用方式</span></div>
-
-          <div class="cg" id="cg-service">
-            <div class="row3">
-              <div class="field"><label>端口</label><input id="f-port" type="text" placeholder="例：8080"></div>
-              <div class="field"><label>页面 URL</label><input id="f-url" type="text" placeholder="例：http://localhost:8080"></div>
-              <div class="field"><label>API 地址</label><input id="f-api" type="text" placeholder="例：…/v1/chat/completions"></div>
-            </div>
-            <div class="row2">
-              <div class="field"><label>启动命令 <span class="req">*</span></label><input id="f-start" type="text" placeholder="例：node server.js"></div>
-              <div class="field"><label>停止命令</label><input id="f-stop" type="text" placeholder="例：node stop.js"></div>
-            </div>
-            <div class="field"><label title="进程工作目录">项目路径</label><input id="f-path" type="text" placeholder="例：D:\tools\minicpm-v"></div>
-          </div>
-
-          <div class="cg" id="cg-cli">
-            <div class="row2">
-              <div class="field"><label>触发词</label><input id="f-trigger" type="text" placeholder="例：/clip（无触发词的 CLI 可留空）"></div>
-              <div class="field"><label>启动命令</label><input id="f-start-cli" type="text" placeholder="例：node run.js"></div>
-            </div>
-            <div class="field"><label title="命令所在目录">项目路径</label><input id="f-path-cli" type="text" placeholder="例：D:\tools\some-cli"></div>
-          </div>
-
-          <div class="cg" id="cg-api">
-            <div class="row3">
-              <div class="field"><label>API 地址 <span class="req">*</span></label><input id="f-api-api" type="text" placeholder="例：https://api.openai.com/v1/chat/completions"></div>
-              <div class="field"><label>密钥名</label><input id="f-keyname" type="text" placeholder="例：OPENAI_API_KEY"></div>
-              <div class="field"><label>文档 URL</label><input id="f-url-api" type="text" placeholder="例：https://platform.openai.com/docs"></div>
-            </div>
-          </div>
-
-          <div class="cg" id="cg-folder">
-            <div class="field"><label title="文件夹没有端口没有命令，项目路径就是它">项目路径 <span class="req">*</span></label><input id="f-path-folder" type="text" placeholder="例：D:\workspace\gallery"></div>
-          </div>
-
-          <div class="cg" id="cg-group">
-            <div class="field"><label title="组 = 多个工具的编排。每行一个子工具，格式：名字 —— 触发词">子工具 <span class="req">*</span></label>
-              <textarea id="f-children" rows="3" placeholder="📖 认知深读日报 —— cron-认知深读&#10;📡 AI信号日报 —— cron-AI信号"></textarea></div>
-          </div>
-        </div>
-
-        <div class="sec">
-          <div class="sec-h"><span class="sec-num">5</span><span class="sec-title" title="展开卡显示，AI 决定用它不用的依据">何时调用</span></div>
-          <div class="row2">
-            <div class="field"><label>何时用</label><textarea id="f-when" rows="2" placeholder="例：需要理解图片内容时。"></textarea></div>
-            <div class="field"><label>何时不用</label><textarea id="f-whennot" rows="2" placeholder="例：生成图片 → 用 ComfyUI。"></textarea></div>
-          </div>
-        </div>
-
-        <div class="sec">
-          <div class="sec-h"><span class="sec-num">6</span><span class="sec-title">运维</span></div>
-          <div class="cg" id="ops-path"><div class="field"><label title="下拉防拼错">运行时</label>
-            <select id="f-runtime"><option value="node">node</option><option value="python">python</option><option value="go">go</option><option value="cpp">cpp</option><option value="csharp">csharp</option><option value="shell">shell</option><option value="other">other</option></select>
-          </div></div>
-          <div class="cg" id="ops-none"><div class="cg-note">API / 组 无本地进程：没有项目路径、没有运行时。</div></div>
-          <div class="field" style="margin-top:12px"><label title="选填，记录模型在此工具上易犯的错">Agent 操作笔记</label><textarea id="f-notes" rows="2" placeholder="例：截图任务会误判端口；启动前先看 conflicts。"></textarea></div>
-          <div class="field"><label title="互斥工具 id，逗号分隔。AI 启动本工具前会检查这些工具是否在跑">冲突工具</label><input id="f-conflicts" type="text" placeholder="例：comfyui,stable-diffusion（GPU 显存互斥）。留空 = 无冲突（落盘空数组）"></div>
-          <div class="check-row" id="autoStart-row"><input type="checkbox" id="f-autostart" checked><span title="服务类型：开机自动启动。停用时此项隐藏">开机自动启动</span></div>
-          <div class="check-row" id="disabled-row"><input type="checkbox" id="f-disabled" onchange="applyFormType()"><span title="勾上后 AI 不可调用，同时强制取消开机自启">停用</span></div>
-        </div>
+        <div id="toolFields"></div>
 
         <div class="form-actions">
           <button class="btn go" onclick="saveTool()">保存</button>
@@ -291,10 +179,7 @@ OCR:  Tesseract OCR (pytesseract)
     </div>
   </div>
 </div>
-<!--#/SYNC#-->
-
-<!--#SYNC:app-modal#-->
-<!-- ── 添加网站 modal（原型：mock 态，保存推入 APPS） ── -->
+<!-- ── 添加网站 modal（schema 驱动：字段从 /api/apps/schema 渲染） ── -->
 <div class="modal-mask" id="appModal" onclick="if(event.target===this)closeAppModal()">
   <div class="modal modal-sm">
     <div class="modal-head">
@@ -303,18 +188,7 @@ OCR:  Tesseract OCR (pytesseract)
     </div>
     <div class="modal-body">
       <div class="form-pane">
-        <div class="field"><label>名称 <span class="req">*</span></label><input id="ap-name" type="text" placeholder="例：版式画廊"></div>
-        <div class="field"><label>域名 <span class="req">*</span></label><input id="ap-domain" type="text" placeholder="例：gallery.evopearl.com"></div>
-        <div class="field"><label>描述</label><textarea id="ap-desc" rows="2" placeholder="一句话说明这个站"></textarea></div>
-        <div class="field"><label>托管</label>
-          <select id="ap-host" onchange="appHostChange()">
-            <option value="腾讯云 DNSPod → Vercel">腾讯云 DNSPod → Vercel</option>
-            <option value="Cloudflare → Vercel">Cloudflare → Vercel</option>
-            <option value="Vercel（直连）">Vercel（直连）</option>
-            <option value="__custom__">自定义…</option>
-          </select>
-          <input id="ap-host-custom" type="text" placeholder="输入托管链路（如：阿里云 → Netlify）" style="display:none;margin-top:6px">
-        </div>
+        <div id="appFields"></div>
         <div class="form-actions">
           <button class="btn go" onclick="saveApp()">保存</button>
           <button class="btn" onclick="closeAppModal()">取消</button>
@@ -323,37 +197,6 @@ OCR:  Tesseract OCR (pytesseract)
     </div>
   </div>
 </div>
-<!--#/SYNC#-->
-<!--#SYNC:tip-modal#-->
-<!-- ── 新增日志 modal ── -->
-<div class="modal-mask" id="tipModal" onclick="if(event.target===this)closeTipModal()">
-  <div class="modal modal-sm">
-    <div class="modal-head">
-      <span class="modal-title" id="tipModalTitle">新增日志</span>
-      <span class="modal-close" onclick="closeTipModal()">✕</span>
-    </div>
-    <div class="modal-body">
-      <div class="form-pane">
-        <div class="field"><label>类型</label><select id="tp-type" onchange="tipTypeChange()">
-          <option value="diagnosis">诊断</option>
-          <option value="method">方法</option>
-          <option value="fact">事实</option>
-          <option value="capability">能力</option>
-          <option value="feedback">反馈</option>
-        </select></div>
-        <div class="field"><label>标题 <span class="req">*</span></label><input id="tp-title" type="text" placeholder="一句话说明踩的坑"></div>
-        <div class="field"><label>内容</label><textarea id="tp-desc" rows="6" placeholder="现象 / 根因 / 修复 / 预防"></textarea></div>
-        <div class="form-actions">
-          <button class="btn go" onclick="saveTip()">保存</button>
-          <button class="btn" onclick="closeTipModal()">取消</button>
-          <span class="std-link" onclick="openStd()">写入标准 ↗</span>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-<!--#/SYNC#-->
-<!--#SYNC:princ-modal#-->
 <!-- ── 原则 modal（五段结构化，CONSTITUTION 格式即面板） ── -->
 <div class="modal-mask" id="princModal" onclick="if(event.target===this)closePrincModal()">
   <div class="modal">
@@ -363,21 +206,7 @@ OCR:  Tesseract OCR (pytesseract)
     </div>
     <div class="modal-body">
       <div class="form-pane">
-        <div class="field"><label>类型</label><select id="pp-type">
-          <option value="review">审查</option>
-          <option value="design">设计</option>
-          <option value="architecture">架构</option>
-          <option value="governance">治理</option>
-          <option value="engineering">工程</option>
-          <option value="communication">沟通</option>
-        </select></div>
-        <div class="field"><label>日期（可选）</label><input id="pp-date" type="date"></div>
-        <div class="field"><label>来源（可选）</label><input id="pp-source" type="text" placeholder="触发提炼的事件/任务"></div>
-        <div class="field"><label>标题 <span class="req">*</span></label><input id="pp-title" type="text" placeholder="一句话洞察/方法，不是主题名"></div>
-        <div class="field"><label>是什么 <span class="req">*</span></label><textarea id="pp-what" class="sec-ta" placeholder="一句话说清楚这个原则"></textarea></div>
-        <div class="field"><label>怎么用 <span class="req">*</span></label><textarea id="pp-how" class="sec-ta" placeholder="具体步骤/检查清单，可操作"></textarea></div>
-        <div class="field"><label>案例</label><textarea id="pp-case" class="sec-ta" placeholder="至少一个真实案例，最好有前后对比（可留空）"></textarea></div>
-        <div class="field"><label>边界</label><textarea id="pp-edge" class="sec-ta" placeholder="什么时候不适用（可留空）"></textarea></div>
+        <div id="princFields"></div>
         <div class="form-actions">
           <button class="btn go" onclick="savePrinc()">保存</button>
           <button class="btn" onclick="closePrincModal()">取消</button>
@@ -387,21 +216,6 @@ OCR:  Tesseract OCR (pytesseract)
     </div>
   </div>
 </div>
-<!--#/SYNC#-->
-<!--#SYNC:std-modal#-->
-<!-- ── 写入标准 A4 modal（渲染后 markdown） ── -->
-<div class="modal-mask" id="stdModal" onclick="if(event.target===this)closeStd()">
-  <div class="std-sheet">
-    <div class="std-head">
-      <span class="std-t">操作日志宪法</span>
-      <span class="std-s">tips/CONSTITUTION.md · 渲染</span>
-      <span class="std-close" onclick="closeStd()">✕</span>
-    </div>
-    <div class="std-body" id="stdBody"></div>
-  </div>
-</div>
-<!--#/SYNC#-->
-
 <!-- S5 启动失败日志弹窗（查看日志按钮） -->
 <div class="modal-overlay" id="logModal" style="display:none">
   <div class="modal modal-lg">
@@ -420,6 +234,18 @@ OCR:  Tesseract OCR (pytesseract)
   </div>
 </div>
 
+<script>
+window.TIPS_CFG = {
+  api: '/api/tips',
+  constUrl: '/api/tips/const',
+  fileUrl: '/api/tips/',
+  sectionSel: '#page-tips',
+  stdTitle: '操作日志宪法 · 工具架',
+  normList: function (d) { return (d && d.tips) || []; },
+  normBody: function (d) { return typeof d === 'string' ? d : (d && d.content) || ''; }
+};
+</script>
+<script src="/shared/tips-panel.js"></script>
 <script src="/_script.js"></script>
 </body>
 </html>

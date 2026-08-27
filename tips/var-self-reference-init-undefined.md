@@ -25,7 +25,7 @@ var 声明 hoisting 到作用域顶部但未赋值，右侧引用的 `x` 恒为 
 默认值用字面量，不写自引用：
 
 ```js
-var APPS_REG = process.env.AGENTBOARD_APPS_REGISTRY || path.join(__dirname, '..', 'apps-registry.json');
+var APPS_DIR = process.env.AGENTBOARD_APPS_REGISTRY || path.join(__dirname, '..', 'apps');
 ```
 
 ## 预防

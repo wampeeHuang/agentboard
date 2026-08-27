@@ -1,0 +1,15 @@
+{
+  "id": "data.evopearl.com",
+  "name": "进化猫每日信号站",
+  "url": "https://data.evopearl.com",
+  "description": "AI 信号 + 认知深读 + 每日选题，三个板块的每日信息流。Anthropic 暖象牙白设计。",
+  "status": "live",
+  "host": "腾讯云 DNSPod → Vercel",
+  "logo": "https://data.evopearl.com/logo.svg",
+  "endpoints": {
+    "config": "https://data.evopearl.com/config.json",
+    "data": "https://data.evopearl.com/data/{task}/{date}.json"
+  },
+  "agentNote": "配置和数据结构见 config.json。每日数据文件格式：data/{task}/YYYY-MM-DD.json。三个 task: ai-signal, deep-read, daily-selection。",
+  "order": 3
+}

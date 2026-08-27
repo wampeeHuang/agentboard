@@ -127,40 +127,41 @@ Both planes share one truth source: `tools/{id}/manifest.json`. Change a file, b
 
 ```
 ~/.agentboard/
-├── AGENT.md               治理宪法（架构 / 原则 / 边界）
-├── CLAUDE.md              Claude 适配层（@AGENT.md）
 ├── README.md              项目入口（人读，Quick Start / 治理入口）
 ├── LICENSE                许可
 ├── .gitignore             忽略规则
 ├── package.json           依赖（express + MCP SDK）
 ├── package-lock.json
+├── AGENT.md               治理宪法（架构 / 原则 / 边界）
+├── CLAUDE.md              Claude 适配层（@AGENT.md）
 ├── inspection.json        巡检检查项
 ├── server.js              REST + Dashboard 装配（:3099）
 ├── start.js               启动入口（kill-port → server.js）
-├── apps-registry.json     公网应用注册表
 ├── lib/                   后端核心（双平面共享）
 │   ├── routes.js          REST 路由（/api/*、4 页、挂载 /mcp）→ /api/registry 从真源生成（AI 面）
 │   ├── tool-registry.js   核心逻辑：scanTools 三段验证 / 启停 / 端口查重
 │   ├── manifest-schema.js Manifest 契约唯一真相源（字段 / 分类 / 校验）
 │   ├── mcp-http.js        MCP Streamable HTTP（POST /mcp，JSON-RPC 2.0）
 │   ├── mcp-handlers.js    6 个 agentboard_* MCP 工具
-│   ├── static.js / api-page.js / self-check.js / ops-log.js / crash-guard.js / tip-schema.js / brand-drift.js / tree-drift.js / sync-proto.mjs
+│   ├── static.js / api-page.js / self-check.js / ops-log.js / crash-guard.js / tip-schema.js / apps-schema.js / principle-schema.js / brand-drift.js / tree-drift.js
 │   └── __tests__/         冒烟测试（node:test）
 ├── web/                   Dashboard 前端
-│   ├── index.html         6 页（工具架 / 我的网站 / 经验日志 / 说明书 / 治理审计 / 原则库）
+│   ├── index.html         6 页（工具架 / 我的网站 / 经验日志 / 原则库 / 治理审计 / 说明书）
 │   ├── _tokens.css        品牌 token 唯一银行（换肤改这一个文件）
 │   ├── _style.css         组件 + 页面级样式（引用 _tokens.css 变量）
 │   ├── _script.js         渲染 / 交互
+│   ├── shared/            tips 面板共享资源（tips-panel.css / tips-panel.js）
 │   └── logo.svg
-├── archive/               退场归档（可删的留存区，担心删早了先留；唯一一处）
+├── tools/                 工具架卡（宪法 = AGENT.md；形状 = lib/manifest-schema.js）
+├── apps/                  我的网站卡（宪法 = apps/CONSTITUTION.md；形状 = lib/apps-schema.js）
+├── examples/             tools 卡模板（copy 到 tools/）
+├── tips/                  经验日志卡（宪法 = tips/CONSTITUTION.md；形状 = lib/tip-schema.js）
+├── principles/            原则库卡（宪法 = principles/CONSTITUTION.md；形状内嵌宪法 §四）
 ├── docs/                  文档（不带 archive）
-├── examples/              manifest 模板（copy 到 tools/）
 ├── mechanisms/            系统机制说明
-├── principles/            原则
-├── tools/                 工具注册（独立 git 仓库，主仓只 ignore 不追踪）
-├── tips/                  踩坑沉淀（gitignored）
 ├── state/                 运行态（api-calls）
-└── _runtime/              运行产物（pids / events.jsonl / logs; gitignored）
+├── _runtime/              运行产物（pids / events.jsonl / logs; gitignored）
+└── archive/               退场归档（可删的留存区，担心删早了先留；唯一一处）
 
 （省略 .git/、node_modules/、coverage/ 等非架构目录。全局 skills 是外部只读资源，不在本目录树内。）
 ```

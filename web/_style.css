@@ -56,6 +56,7 @@ a{text-decoration:none;color:inherit}
 .dim-opt{font-size:14px;color:var(--text-secondary);cursor:pointer;user-select:none;line-height:20px}
 .dim-opt:hover{color:var(--green)}
 .dim-opt.active{color:var(--green);font-weight:600}
+.dim-opt .d-n{font-family:var(--font-code);font-size:11px;opacity:.65;margin-left:3px}
 /* 四维异色：维1 绿(主角色白字) · 维2 淡黄绿 · 维3 白底 · 维4 淡底，后两维用边框区分 */
 .dim-block.dim-fn .dim-block-title,.dim-block.dim-fn .dim-opt,.dim-block.dim-fn .dim-arr{color:var(--on-brand)}
 .dim-block.dim-fn .dim-opt{opacity:.92}
@@ -83,6 +84,9 @@ a{text-decoration:none;color:inherit}
 .audit-summary-item.warn .dot{background:var(--status-warn)}
 .audit-summary-item.err b{color:var(--status-error)}
 .audit-summary-item.err .dot{background:var(--status-error)}
+.audit-summary-item{cursor:pointer;user-select:none;border-radius:8px;padding:4px 10px;margin:-4px -10px}
+.audit-summary-item:hover{background:var(--paper-tint)}
+.audit-summary-item.active{background:var(--paper-tint);outline:1px solid var(--border)}
 .audit-section{background:var(--paper);border:1px solid var(--border);border-radius:12px;box-shadow:0 1px 4px rgba(0,0,0,.08);overflow:hidden;margin-bottom:16px}
 .audit-section.err{border-color:var(--status-error)}
 .audit-section.warn{border-color:var(--status-warn)}
@@ -118,8 +122,15 @@ a{text-decoration:none;color:inherit}
   background:var(--paper);border:1px solid var(--border);
   border-radius:12px;padding:14px 16px 0;display:flex;flex-direction:column;gap:8px;
   transition:box-shadow .15s,transform .15s;height:256px;box-sizing:border-box;min-width:0;
-  box-shadow:0 1px 4px rgba(0,0,0,.08);
+  box-shadow:0 1px 4px rgba(0,0,0,.08);position:relative;
 }
+/* 六点拖拽手柄（对齐 scheduler .card-drag-handle）：右上角，只手柄可拖 */
+.card-drag-handle{cursor:grab;position:absolute;top:9px;right:10px;width:12px;height:18px;opacity:.35;transition:opacity .12s;z-index:1;user-select:none}
+.card-drag-handle:hover{opacity:.8}
+.card-drag-handle:active{cursor:grabbing}
+.card-drag-handle::after{content:'';position:absolute;width:3px;height:3px;background:currentColor;border-radius:50%;top:0;left:3px;box-shadow:0 6px 0 currentColor,0 12px 0 currentColor,6px 0 0 currentColor,6px 6px 0 currentColor,6px 12px 0 currentColor}
+.tool-card.dragging{opacity:.35;transform:scale(.97)}
+.tool-card.drag-over{border-color:var(--green);box-shadow:0 0 0 2px rgba(116,166,63,.3)}
 .tool-card:hover{box-shadow:0 8px 28px rgba(0,0,0,.18);transform:translateY(-1px)}
 .tool-card.st-disabled{opacity:.45;filter:grayscale(.4)}
 .tool-card.st-disabled:hover{opacity:.6;filter:grayscale(.25)}
@@ -205,12 +216,24 @@ a{text-decoration:none;color:inherit}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
 
 /* ── 经验日志卡片：复用 .tool-card，字段行不同；类型徽章淡黄绿底 + 包豪斯几何 ── */
-.tip-type{flex-shrink:0;font-size:12px;font-weight:600;padding:2px 8px;border-radius:var(--radius-pill);background:var(--green-soft);color:var(--green-deep);display:inline-flex;align-items:center;gap:4px;line-height:1}
-.tip-type svg{width:10px;height:10px;flex-shrink:0}
+.tip-type{display:inline-flex;align-items:center;gap:5px;color:var(--text-secondary);white-space:nowrap;line-height:1.5}
+.tip-type svg{width:13px;height:13px;flex-shrink:0}
+.tip-type span{font-size:12px}
+.tip-type[data-type="diagnosis"]{color:var(--status-error)}
+.tip-type[data-type="method"]{color:var(--success)}
+.tip-type[data-type="capability"]{color:var(--ink)}
+.tip-type[data-type="fact"]{color:var(--text-secondary)}
+.tip-type[data-type="feedback"]{color:var(--status-warn)}
+.tip-type[data-type="review"]{color:var(--status-error)}
+.tip-type[data-type="design"]{color:var(--success)}
+.tip-type[data-type="architecture"]{color:var(--status-warn)}
+.tip-type[data-type="governance"]{color:var(--ink)}
+.tip-type[data-type="engineering"]{color:var(--text-secondary)}
+.tip-type[data-type="communication"]{color:var(--green-deep)}
 .cf.top{align-items:flex-start}
 .tip-card .card-meta-row{flex:1;min-height:0}
 .tip-card .cf.top{flex:1;min-height:0}
-.tip-desc-cell{font-size:12px;line-height:1.6;color:var(--text-secondary);min-width:0;white-space:pre-line;height:100%;overflow-y:auto}
+.tip-desc-cell{font-size:12px;line-height:1.5;color:var(--text-secondary);min-width:0;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;white-space:pre-line;overflow-wrap:anywhere}
 
 /* 新增按钮（绿方块） */
 .btn-add{width:96px;height:32px;flex-shrink:0;background:var(--green);border:none;color:var(--on-brand);font-size:14px;font-weight:500;padding:0;display:inline-flex;align-items:center;justify-content:center;border-radius:8px;cursor:pointer;box-sizing:border-box}

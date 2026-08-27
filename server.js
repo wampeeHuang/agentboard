@@ -274,8 +274,10 @@ function renderMarkdown(md, opts) {
   var keepH1 = opts.keepH1 !== false;
   var body = md.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   if (!keepH1) body = body.replace(/^#\s+.*\n/, '');
+  var codeBlocks = [];
   body = body.replace(/```(\w*)\n([\s\S]*?)```/g, function(_, lang, code) {
-    return '<pre><code>' + code.replace(/\n$/, '') + '</code></pre>';
+    codeBlocks.push('<pre><code>' + code.replace(/\n$/, '') + '</code></pre>');
+    return '\u0000CODE' + (codeBlocks.length - 1) + '\u0000';
   });
   body = body.replace(/`([^`]+)`/g, '<code>$1</code>');
   body = body.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
@@ -285,9 +287,11 @@ function renderMarkdown(md, opts) {
   body = body.replace(/^## (.+)/gm, '<h2>$1</h2>');
   if (keepH1) body = body.replace(/^# (.+)/gm, '<h1>$1</h1>');
   body = body.replace(/^- (.+)/gm, '<li>$1</li>');
-  body = body.replace(/(<li>.*<\/li>\n?)+/g, '<ul>$&</ul>');
+  body = body.replace(/(<li>.*<\/li>\n?)+/g, function(m) { return '<ul>' + m.replace(/\s+$/, '') + '</ul>'; });
   body = body.replace(/^(?!<[a-z]|$)(.+)$/gm, '<p>$1</p>');
   body = body.replace(/<p>\s*<\/p>/g, '');
+  body = body.replace(/<p>\u0000CODE(\d+)\u0000<\/p>/g, function(_, i) { return codeBlocks[+i]; });
+  body = body.replace(/\u0000CODE(\d+)\u0000/g, function(_, i) { return codeBlocks[+i]; });
   return body;
 }
 

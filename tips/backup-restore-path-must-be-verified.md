@@ -21,7 +21,7 @@ source: 18 个 tools/*/manifest.json 损坏后走恢复管线，发现备份声�
 写备份/恢复文档后必须实测一次完整恢复路径：
 1. `git clone` 到全新目录
 2. 跑起来（`node server.js`）
-3. 确认关键数据在（tools/、tips/、apps-registry.json）
+3. 确认关键数据在（tools/、tips/、apps/）
 4. 不在 → 修正备份方案或文档，直到跑通
 
 ## 预防

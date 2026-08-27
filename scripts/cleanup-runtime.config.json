@@ -1,0 +1,7 @@
+{
+  "$schema": "cleanup-runtime/v1",
+  "version": 1,
+  "work": {
+    "retention_days": 3
+  }
+}

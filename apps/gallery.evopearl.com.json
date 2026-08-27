@@ -1,0 +1,16 @@
+{
+  "id": "gallery.evopearl.com",
+  "name": "版式画廊",
+  "url": "https://gallery.evopearl.com",
+  "description": "43套设计模板统一索引 — AI可查询、预览、调用。CSS变量合约，四款版式切换。",
+  "status": "live",
+  "host": "腾讯云 DNSPod → Vercel",
+  "logo": "/assets/logo-gallery.svg",
+  "endpoints": {
+    "registry": "https://gallery.evopearl.com/api/registry",
+    "design-styles": "https://gallery.evopearl.com/api/design-styles"
+  },
+  "agentNote": "Vercel 部署。/api/registry 返回43模板完整索引。模板HTML通过 /templates/ 静态路径直接访问。本地 dev :3080。",
+  "order": 0,
+  "devTool": "html-gallery"
+}

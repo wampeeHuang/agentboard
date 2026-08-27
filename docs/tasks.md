@@ -6,13 +6,13 @@
 
 | # | 状态 | 任务 |
 |---|------|------|
-| 33 | 待做 | live 卡重构为 card-v2.html 设计 |
+| 33 | 待做 | live 卡重构（设计基准 card-data-contract.md；card-v2.html 原型已删 2026-08-26） |
 | 34 | 已完成 | 左侧导航 + 子页前端原型（`web/_proto/dashboard-leftnav.html`） |
 | 35 | 待做 | 自启动剥离 registry：删自启动 tab + 工具架卡片补自启徽标 |
 
 ## 活动线程
 
-**导航重构原型** `web/_proto/dashboard-leftnav.html`（file:// mock 数据）
+**导航重构原型** `web/_proto/dashboard-leftnav.html`（file:// mock 数据）~~已归档 2026-08-26：原型删除，6 页导航落地~~
 
 - 导航 5 项：工具架 / 我的网站 / 经验日志 / 说明书 / 系统规范（外链 /registry）
 - 每页顶部 128px 深军绿 `#2E5038` 英雄栏通栏，标题 32/400 系统字体，副标题 16/300 等宽

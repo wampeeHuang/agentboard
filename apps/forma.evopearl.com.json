@@ -1,0 +1,18 @@
+{
+  "id": "forma.evopearl.com",
+  "name": "排版工匠 Forma",
+  "url": "https://forma.evopearl.com",
+  "description": "AI Agent 排版引擎。Markdown → 微信/社媒排版，四款版式切换。Agent 写，Forma 排，人审核即发布。",
+  "status": "live",
+  "host": "腾讯云 DNSPod → Vercel",
+  "endpoints": {
+    "llms.txt": "https://forma.evopearl.com/llms.txt",
+    "llms-full.txt": "https://forma.evopearl.com/llms-full.txt",
+    "openapi.json": "https://forma.evopearl.com/openapi.json",
+    "view": "https://forma.evopearl.com/view",
+    "docs": "https://forma.evopearl.com/docs"
+  },
+  "agentNote": "llms.txt 和 openapi.json 是 AI 自动发现入口。本地 dev 在 :3103，逻辑同生产。",
+  "order": 5,
+  "devTool": "forma"
+}

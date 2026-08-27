@@ -1,0 +1,15 @@
+{
+  "id": "minds.evopearl.com",
+  "name": "人物思维顾问局",
+  "url": "https://minds.evopearl.com",
+  "description": "39 位人物思维顾问目录站，Anthropic 暖象牙白 + 陶土色系，单 HTML 纯静态。",
+  "status": "live",
+  "host": "腾讯云 DNSPod → Vercel",
+  "logo": "https://minds.evopearl.com/logo.svg",
+  "altUrls": [
+    "https://nuwa-perspective-catalog.vercel.app"
+  ],
+  "agentNote": "目录页每张卡片含人物摘要和思维框架。GitHub: https://github.com/wampeeHuang/nuwa-perspective-catalog",
+  "order": 2,
+  "devTool": "nuwa-catalog"
+}

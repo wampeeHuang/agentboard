@@ -34,3 +34,4 @@ git commit
 - **commit 前必跑 `git diff --cached --stat`**，看 staged 范围是不是只有想提交的。
 - 看到 staged 里有大面积 `D`（删除）文件，先核对是不是预期的，绝不 blind commit。
 - 提交前 `git status` 扫全量，不只扫 Untracked 区——staged 残留藏在 Changes to be committed 区。
+- **修复时别用会重新进 staged 的操作**（2026-08-27 二次踩坑）：soft-reset 撤销误提交后，用 `git restore --staged <file>` 把不该提交的移除即可，**不要**为了"恢复现场"再 `git add` 它——re-stage 会让下一次 commit 再次扫走。不是本次任务的 pre-staged 变更，留 unstaged 最安全。

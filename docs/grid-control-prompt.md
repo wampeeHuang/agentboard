@@ -1,6 +1,6 @@
 # 网格控制 UI 原型 · 固定 prompt
 
-> 可复用的原型要求。做像素级对齐的 UI 原型时，把下面 prompt 整段粘贴给 Claude，得到标准网格参考层 + 控制面板。参考实现：`web/_proto/dashboard-leftnav.html`（`.grid-overlay` / `.grid-ctl` / `gridStyle`）。
+> 可复用的原型要求。做像素级对齐的 UI 原型时，把下面 prompt 整段粘贴给 Claude，得到标准网格参考层 + 控制面板（自包含，无需参考文件）。
 
 ---
 

@@ -1,0 +1,19 @@
+{
+  "id": "shuiwuyou.evopearl.com",
+  "name": "税无忧",
+  "url": "https://shuiwuyou.evopearl.com",
+  "description": "电商个体户税务体检工具——自动记账+刷单检测+税务估算，零会计知识门槛",
+  "status": "live",
+  "host": "腾讯云 DNSPod → Vercel",
+  "altUrls": [
+    "https://tax.evopearl.com"
+  ],
+  "endpoints": {
+    "manifest": "https://shuiwuyou.evopearl.com/api/manifest",
+    "status": "https://shuiwuyou.evopearl.com/api/status",
+    "calculate": "https://shuiwuyou.evopearl.com/api/calculate"
+  },
+  "agentNote": "Vercel 部署。CSV 直传算税用 POST /api/calculate。完整文件导入(xlsx/pdf)仅本地可用。本地 dev :3457。",
+  "order": 6,
+  "devTool": "tax-wuyou"
+}
