@@ -1188,7 +1188,7 @@ function showPage(p){
 
 /* ── 治理审计：仿 #tips 三段式——按钮巡检 → 分类组件 → 三类全出明细，点分类可筛，不自动轮询 ── */
 var auditData = null;
-var auditF = 'all'; // schema / brand / tree / all
+var auditF = 'all'; // schema / brand / tree / docs / all
 var auditS = 'all'; // err / warn / ok / all —— 总面板点击数字筛选
 function auditInitial() {
   renderAuditDims();
@@ -1200,7 +1200,8 @@ function renderAuditDims() {
   var defs = [
     { key: 'schema', label: 'Manifest 契约' },
     { key: 'brand',  label: '品牌漂移' },
-    { key: 'tree',   label: '三树一致性' }
+    { key: 'tree',   label: '三树一致性' },
+    { key: 'docs',   label: '文档新鲜度' }
   ];
   var html = '<div class="dim-block" style="--b:#EEF4EF"><div class="dim-block-title">检查项<span class="dim-arr">></span></div><div class="dim-block-opts">';
   defs.forEach(function(d){
@@ -1241,6 +1242,7 @@ function renderAudit() {
   if (auditF === 'all' || auditF === 'schema') html += auditSection('schema', 'Manifest 契约', '工具注册表格式——每份 manifest.json 必须符合固定字段，格式错了工具上架会缺信息、agent 定位不到；删了 manifest 或启动文件的孤儿目录也在这里报', auditData.schema, 'schema');
   if (auditF === 'all' || auditF === 'brand') html += auditSection('brand', '品牌漂移', '页面配色——token 色值必须与 vivi 设计系统一致，跑偏了换肤时颜色会错乱', auditData.brand, 'brand');
   if (auditF === 'all' || auditF === 'tree') html += auditSection('tree', '三树一致性', '文档目录——AGENT.md / README / 说明书三份目录树必须跟真实文件对得上，对不上就是文档和代码脱节', auditData.tree, 'tree');
+  if (auditF === 'all' || auditF === 'docs') html += auditSection('docs', '文档新鲜度', '页面清单——说明书 .pg 块、index.html AI 参考注释、AGENT.md/README/说明书 routes 页数必须跟真实导航一致；加了页面忘了同步文档，这里兜住', auditData.docs, 'docs');
   el.innerHTML = html;
 }
 // 三类统一明细格式：项目名 → 错误(红) → 警告(黄) → 正常(绿)；列表先错误、再警告、正常垫底
@@ -1250,7 +1252,7 @@ function auditNormItems(s, kind) {
     return s.items.map(function(it){ return { name: it.name || it.id, errors: it.errors || [], warnings: it.warnings || [] }; });
   }
   return s.items.map(function(it){
-    return { name: kind === 'tree' ? it.doc + ' / ' + it.entry : it.file + ' · ' + it.check, errors: it.pass ? [] : [it.detail], warnings: [] };
+    return { name: kind === 'tree' || kind === 'docs' ? it.doc + ' / ' + it.entry : it.file + ' · ' + it.check, errors: it.pass ? [] : [it.detail], warnings: [] };
   });
 }
 function auditStatus(it) {
@@ -1290,6 +1292,7 @@ function auditSummaryHtml() {
   if (auditF === 'all' || auditF === 'schema') secs.push(['schema', auditData.schema]);
   if (auditF === 'all' || auditF === 'brand') secs.push(['brand', auditData.brand]);
   if (auditF === 'all' || auditF === 'tree') secs.push(['tree', auditData.tree]);
+  if (auditF === 'all' || auditF === 'docs') secs.push(['docs', auditData.docs]);
   secs.forEach(function(pair){ auditNormItems(pair[1], pair[0]).forEach(function(it){ c[auditStatus(it)]++; }); });
   function item(k, label) {
     return '<span class="audit-summary-item ' + k + (auditS === k ? ' active' : '') + '" onclick="setAuditS(\'' + k + '\')" title="点击只看' + label + '项，再点恢复"><span class="dot"></span>' + label + ' <b>' + c[k] + '</b></span>';

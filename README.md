@@ -138,19 +138,22 @@ Both planes share one truth source: `tools/{id}/manifest.json`. Change a file, b
 ├── server.js              REST + Dashboard 装配（:3099）
 ├── start.js               启动入口（kill-port → server.js）
 ├── lib/                   后端核心（双平面共享）
-│   ├── routes.js          REST 路由（/api/*、4 页、挂载 /mcp）→ /api/registry 从真源生成（AI 面）
+│   ├── routes.js          REST 路由（/api/*、7 页、挂载 /mcp）→ /api/registry 从真源生成（AI 面）
 │   ├── tool-registry.js   核心逻辑：scanTools 三段验证 / 启停 / 端口查重
 │   ├── manifest-schema.js Manifest 契约唯一真相源（字段 / 分类 / 校验）
 │   ├── mcp-http.js        MCP Streamable HTTP（POST /mcp，JSON-RPC 2.0）
 │   ├── mcp-handlers.js    6 个 agentboard_* MCP 工具
-│   ├── static.js / api-page.js / self-check.js / ops-log.js / crash-guard.js / tip-schema.js / apps-schema.js / principle-schema.js / brand-drift.js / tree-drift.js / commands.js
-│   └── __tests__/         冒烟测试（node:test）
+│   ├── static.js / api-page.js / self-check.js / ops-log.js / crash-guard.js / tip-schema.js / apps-schema.js / principle-schema.js / brand-drift.js / tree-drift.js / docs-fresh.js / commands.js
+│   ├── __tests__/         冒烟测试（node:test）
+│   │   ├── helpers.js      测试工具
+│   │   ├── fixtures.js     测试夹具
+│   │   └── smoke.test.js   冒烟入口
 ├── web/                   Dashboard 前端
-│   ├── index.html         6 页（工具架 / 我的网站 / 经验日志 / 原则库 / 治理审计 / 说明书）
+│   ├── index.html         7 页（工具架 / 能力地图 / 我的网站 / 经验日志 / 原则库 / 治理审计 / 说明书）
 │   ├── _tokens.css        品牌 token 唯一银行（换肤改这一个文件）
 │   ├── _style.css         组件 + 页面级样式（引用 _tokens.css 变量）
 │   ├── _script.js         渲染 / 交互
-│   ├── shared/            tips 面板 + 图标资源（tips-panel.css/js · logo-lib.js · logos/）
+│   ├── shared/            tips 面板 + 图标资源（tips-panel.css · tips-panel.js · logo-lib.js · icon-lib.js · logos/）
 │   ├── capability-map.svg  能力图谱（全局宪法 tab）
 │   └── logo.svg
 ├── tools/                 工具架卡（宪法 = AGENT.md；形状 = lib/manifest-schema.js）

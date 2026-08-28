@@ -18,7 +18,7 @@ API:     GET /api/tools     → 全部工具清单 JSON {ok, tools:[{id,name,des
 API:     GET /api/apps      → 公网应用注册表 JSON {ok, apps:[...]}（apps/ 一个应用一个 {id}.json）
 API:     GET /api/tips      → 经验日志 JSON {ok, tips:[{file,title,desc,type}]}（tips/*.md）
 ACTION:  POST /api/tools/start/:id   POST /api/tools/stop/:id
-PAGES:   #page-tools(工具架)  #page-apps(我的网站)  #page-tips(经验日志)  #page-principles(原则库)  #page-audit(治理审计)  #page-docs(说明书 iframe /manual，页序最底)
+PAGES:   #page-tools(工具架)  #page-capabilities(能力地图)  #page-apps(我的网站)  #page-tips(经验日志)  #page-principles(原则库)  #page-audit(治理审计)  #page-docs(说明书 iframe /manual，页序最底)
 API:     GET /api/principles → 原则库 JSON {ok, principles:[{file,title,desc,type}]}（principles/*.md）
 API:     POST/PUT/DELETE /api/principles[/:file] → 新增/编辑/删除原则（CONSTITUTION.md 受保护）
 DIMS:    #dimBlocks 四维异色筛选块(category/loc/acc/state) → setDimFilter(dim,val)
