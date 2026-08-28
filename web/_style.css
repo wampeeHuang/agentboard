@@ -151,6 +151,7 @@ a{text-decoration:none;color:inherit}
 .card-top{display:flex;align-items:center;gap:8px;background:var(--green);margin:-14px -16px 0;padding:0 16px;height:32px;border-radius:12px 12px 0 0;box-sizing:border-box;flex-shrink:0}
 .card-ico{width:20px;height:20px;flex-shrink:0;font-size:13px;display:flex;align-items:center;justify-content:center;background:rgba(var(--paper-rgb),.2);color:var(--on-brand);border-radius:6px}
 .card-name{flex:1;min-width:0;font-size:20px;font-weight:600;letter-spacing:-0.01em;line-height:1.3;color:var(--on-brand);font-family:var(--font-head);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bico{font-size:11px;line-height:1;margin-right:4px;opacity:.9}
 
 /* 第二区：ID/端口/状态/功能，每字段一行「标签+值」，行距统一，无端口显 — */
 .card-meta-row{display:flex;flex-direction:column;gap:4px;font-size:12px;line-height:1.5;min-width:0;flex:1;min-height:0;overflow:hidden}
@@ -204,6 +205,10 @@ a{text-decoration:none;color:inherit}
 .card-actions .btn.open-done:hover{background:var(--action-success-hover);border-color:var(--action-success-hover);color:var(--on-brand)}
 .card-actions .btn.edit{color:var(--text-secondary);border-color:var(--border)}
 .card-actions .btn.del{color:var(--status-error);border-color:var(--status-error)}
+.page#page-capabilities .card-actions .btn{padding:0 8px;font-size:11px}
+.page#page-capabilities .card-actions .btn.arch{margin-left:auto}
+.page#page-capabilities .card-actions .btn.del{background:var(--status-error);border-color:var(--status-error);color:var(--on-brand);font-weight:500}
+.page#page-capabilities .card-actions .btn.del:hover{background:var(--status-error);color:var(--on-brand);filter:brightness(.92)}
 .card-actions .btn.del:hover{background:var(--status-error);color:var(--on-brand)}
 .card-actions .btn.edit:hover{border-color:var(--green);color:var(--green)}
 
@@ -342,9 +347,10 @@ a{text-decoration:none;color:inherit}
 .check-row input{width:auto}
 .icon-row{display:flex;gap:6px;align-items:center}
 .icon-row input{flex:1}
-.icon-row .btn{height:29px;line-height:1;padding:0 12px;display:inline-flex;align-items:center;white-space:nowrap;font-size:11px;border:1px solid var(--border);background:var(--paper);cursor:pointer;color:var(--text-secondary)}
+.icon-row .btn{height:29px;line-height:1;padding:0 12px;display:inline-flex;align-items:center;white-space:nowrap;font-size:11px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--paper);cursor:pointer;color:var(--text-secondary)}
 .icon-row .btn:hover{border-color:var(--green);color:var(--green)}
 #icon-panel{display:flex;flex-wrap:wrap;gap:2px;max-width:520px;padding:6px;background:var(--paper-tint);border-radius:6px;border:1px solid var(--border);margin-top:6px}
+.icon-panel{display:flex;flex-wrap:wrap;gap:2px;max-width:520px;padding:6px;background:var(--paper-tint);border-radius:6px;border:1px solid var(--border);margin-top:6px}
 .icon-opt{font-size:18px;padding:4px 6px;border:1px solid var(--border);background:var(--paper);border-radius:6px;cursor:pointer;line-height:1}
 .icon-opt:hover{background:var(--paper-tint);transform:scale(1.15)}
 .auto-val{display:flex;align-items:center;gap:8px;padding:6px 10px;background:var(--paper-tint);border-radius:6px;font-family:var(--font-code);font-size:12px;color:var(--text-secondary);border:1px dashed var(--border);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-height:30px}
@@ -377,3 +383,56 @@ a{text-decoration:none;color:inherit}
 .filter-count{font-size:11px;color:var(--text-muted);font-weight:300;min-height:22px;padding:0 0 4px 0}
 .filter-count strong{color:var(--text);font-weight:500}
 ::selection{background:#262B27;color:#F9FBF9}
+
+/* ── 能力地图（技能/架构图/命令/全局宪法 四 tab，寄居 dashboard） ── */
+.hero-bar.sticky{position:sticky;top:0;z-index:20}
+.page#page-capabilities .hero-bar{height:128px;gap:8px;margin-bottom:32px}
+.page#page-capabilities .hero-eyebrow{margin-bottom:0}
+.page .cap-tabs,.page .diagram-grid,.page .cap-md,.page .cmd-table-wrap{max-width:1584px;margin-left:32px;margin-right:32px}
+.cap-tabs{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.page#page-capabilities .cap-tabs{margin-left:0;margin-right:0;margin-bottom:0}
+.cap-tab{height:32px;padding:0 16px;font-size:13px;letter-spacing:.03em;background:var(--paper-tint);border:1px solid var(--border);border-radius:8px;color:var(--text-secondary);cursor:pointer;transition:all .12s;display:inline-flex;align-items:center;gap:8px;box-sizing:border-box}
+.cap-tab:hover{border-color:var(--green);color:var(--green)}
+.cap-tab.active{background:var(--green);border-color:var(--green);color:var(--paper)}
+.cap-tab .count{font-size:10px;opacity:.7}
+.cap-content{padding-bottom:16px}
+.cap-toolbar{display:flex;align-items:center;gap:8px;max-width:1584px;margin:0 32px 24px}
+.cap-toolbar .search-box{flex:none;width:280px}
+.sf-field{margin-bottom:16px}
+.sf-field label{display:block;font-size:12px;color:var(--text-muted);margin-bottom:8px}
+#createSkillModal .modal input[type=text],#createSkillModal .modal select{padding:8px 16px;border-radius:8px}
+.sf-hint{font-size:11px;color:var(--text-muted);line-height:1.5;margin-top:16px;padding:8px 16px;background:var(--paper-tint);border-radius:8px}
+/* 架构图卡 */
+.diagram-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:12px;margin-top:8px}
+.diagram-card{background:var(--paper);padding:20px;display:flex;align-items:flex-start;gap:14px;transition:transform .15s,box-shadow .15s;box-shadow:var(--shadow-border),var(--shadow-card);text-decoration:none;color:inherit}
+.diagram-card:hover{transform:translateY(-1px);box-shadow:var(--shadow-border),var(--shadow-card-hover)}
+.diagram-card .card-mono{flex-shrink:0;width:44px;height:44px;background:var(--green);color:var(--on-brand);display:flex;align-items:center;justify-content:center;font-family:var(--font-code);font-size:14px;font-weight:500}
+.diagram-card .card-info{flex:1;min-width:0}
+.diagram-card .card-name{font-size:16px;font-weight:300;letter-spacing:-0.01em;line-height:1.35}
+.diagram-card .card-sub{font-size:11px;font-family:var(--font-code);color:var(--text-muted);margin-top:1px}
+.diagram-card .card-link{font-size:11px;color:var(--green);font-weight:500;margin-top:6px}
+/* 命令表 */
+.cmd-section h2{font-size:18px;font-weight:500;color:var(--text);margin:36px 0 12px;padding-top:16px;border-top:1px solid var(--border)}
+.cmd-table-wrap{overflow-x:auto}
+.cmd-table{width:100%;border-collapse:collapse;font-size:13px;margin-bottom:8px}
+.cmd-table th{background:var(--paper-tint);font-weight:500;font-size:12px;padding:8px 12px;border:1px solid var(--border);text-align:left;white-space:nowrap}
+.cmd-table td{padding:8px 12px;border:1px solid var(--border);font-size:13px;line-height:1.5}
+.cmd-code{font-family:var(--font-code);font-size:12px;background:var(--paper-tint);padding:2px 6px;color:var(--green);white-space:nowrap}
+.cmd-desc{color:var(--text-secondary);font-size:12px}
+.cmd-untag{font-size:10px;color:var(--status-error);border:1px solid currentColor;border-radius:3px;padding:0 4px;margin-right:6px;vertical-align:1px;white-space:nowrap}
+.cmd-muted{color:var(--text-muted)}
+.cmd-miss{opacity:.5}
+.cmd-miss .cmd-code{text-decoration:line-through;color:var(--text-muted)}
+.cmd-act{white-space:nowrap;text-align:right}
+.cmd-table .btn-mini{height:22px;padding:0 9px;border:1px solid var(--border);border-radius:6px;background:var(--paper);font-size:11px;font-family:inherit;color:var(--text-secondary);cursor:pointer;margin-left:6px}
+.cmd-table .btn-mini:hover{border-color:var(--green);color:var(--green)}
+.cmd-table .btn-mini.danger{min-width:74px;border-color:#F2C6C3;color:var(--status-error)}
+.cmd-table .btn-mini.danger:hover{background:var(--status-error);border-color:var(--status-error);color:var(--on-brand)}
+.cmd-table .btn-mini.danger.confirming{background:var(--status-error);border-color:var(--status-error);color:var(--on-brand);animation:pulse .4s ease-in-out 3}
+.cmd-ro{padding:8px 10px;background:var(--paper-tint);border:1px solid var(--border);border-radius:6px}
+/* 全局宪法 */
+.cap-md{margin-top:8px}
+.line-count{font-family:var(--font-code);font-size:12px;color:var(--text-muted);margin:8px 0 4px}
+/* 技能卡 meta 值 */
+.card-cat,.card-trig,.card-folder{color:var(--text-secondary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cap-empty{grid-column:1/-1;text-align:center;padding:56px 20px;color:var(--text-muted);font-size:13px}

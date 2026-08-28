@@ -1153,6 +1153,11 @@ function applyHash() {
   var pg = document.getElementById('page-' + page);
   applyingHash = true;
   try { if (pg) showPage(page); } finally { applyingHash = false; }
+  if (page === 'capabilities') {
+    if (capData && CAP_TABS.indexOf(seg[1]) >= 0) switchCap(seg[1]);
+    if (capData) refreshCapabilitiesSilent(); // 进页自动刷新：技能/命令/全局宪法随最新，无需重新扫描按钮
+    return;
+  }
   if (page !== 'tools' || !seg[1]) return;
   var dimMap = { category: 'domainFilter', loc: 'locFilter', acc: 'accFilter', state: 'stateFilter' };
   var touched = false;
@@ -1174,7 +1179,9 @@ function showPage(p){
   var pg = document.getElementById('page-' + p); if (pg) pg.classList.add('show');
   document.querySelectorAll('.nav-item').forEach(function(n){ n.classList.toggle('active', n.getAttribute('data-page') === p); });
   if (!applyingHash) {
-    var target = p === 'tools' ? 'tools' + (currentDimHash() ? '/' + currentDimHash() : '') : p;
+    var target = p === 'tools' ? 'tools' + (currentDimHash() ? '/' + currentDimHash() : '')
+      : p === 'capabilities' ? 'capabilities/' + capTab
+      : p;
     if (location.hash !== '#' + target) location.hash = target;
   }
 }
@@ -1298,6 +1305,551 @@ function setAuditS(s) {
   renderAudit();
 }
 
+/* ══ 能力地图：技能/架构图/命令/全局宪法（数据源 GET /api/catalog/data）══ */
+var capData = null;
+var capTab = 'skills';
+var capCat = 'all';
+var capState = 'all';
+var capArch = 'all';
+var CAP_TABS = ['skills', 'commands', 'global'];
+function capDiaMap() { var m = {}; (capData.diagrams || []).forEach(function(d) { m[d.skill] = d; }); return m; }
+function escJs(s) { return String(s == null ? '' : s).replace(/\\/g, '\\\\').replace(/'/g, "\\'"); }
+
+function fetchCapabilities() {
+  fetch('/api/catalog/data', { cache: 'no-store' })
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      capData = d;
+      var navEl = document.getElementById('navCapCnt');
+      if (navEl && d.skills) navEl.textContent = d.skills.length;
+      renderCapTabs();
+      var seg = window.location.hash.slice(1).split('/');
+      var want = (seg[0] === 'capabilities' && CAP_TABS.indexOf(seg[1]) >= 0) ? seg[1] : 'skills';
+      switchCap(want);
+    })
+    .catch(function() {
+      var c = document.getElementById('capContent');
+      if (c) c.innerHTML = '<div class="cap-empty">能力数据加载失败</div>';
+    });
+}
+function renderCapTabs() {
+  var el = document.getElementById('capTabs'); if (!el || !capData) return;
+  var defs = [
+    { id: 'skills',   label: '技能',     cnt: capData.skills.length },
+    { id: 'commands', label: '命令',     cnt: capData.commands.length },
+    { id: 'global',   label: '全局宪法', cnt: capData.global.lines ? capData.global.lines + ' 行' : null }
+  ];
+  el.innerHTML = defs.map(function(t) {
+    return '<button class="cap-tab' + (capTab === t.id ? ' active' : '') + '" onclick="switchCap(\'' + t.id + '\')">' + t.label + (t.cnt != null ? '<span class="count">' + t.cnt + '</span>' : '') + '</button>';
+  }).join('');
+}
+function switchCap(tab) {
+  if (CAP_TABS.indexOf(tab) < 0 || !capData) return;
+  capTab = tab;
+  renderCapTabs();
+  var content = document.getElementById('capContent'); if (!content) return;
+  if (tab === 'skills') renderCapSkills(content);
+  else if (tab === 'commands') renderCapCommands(content);
+  else renderCapGlobal(content);
+  var target = 'capabilities/' + tab;
+  if (window.location.hash !== '#' + target) {
+    try { history.replaceState(null, '', '#' + target); } catch(_) { window.location.hash = target; }
+  }
+  window.scrollTo(0, 0);
+}
+/* 技能 tab：工具架卡片样式 + 分类/状态 dim + 可新增 */
+function renderCapSkills(content) {
+  content.innerHTML = ''
+    + '<div class="cap-toolbar">'
+    +   '<button class="btn-add" onclick="createSkill()">+ 新增技能</button>'
+    +   '<div class="search-box"><input id="capSearchInput" placeholder="搜索技能名或简介…" oninput="refreshCapSkillsGrid()">'
+    +     '<svg class="search-ico" viewBox="0 0 20 20" aria-hidden="true"><circle cx="9" cy="9" r="6.5" fill="none" stroke="currentColor" stroke-width="2"/><line x1="14.2" y1="14.2" x2="18" y2="18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>'
+    +   '</div>'
+    + '</div>'
+    + '<div class="dim-blocks" id="capDims"></div>'
+    + '<div class="tool-grid" id="capSkillsGrid"></div>';
+  buildCapDims();
+  refreshCapSkillsGrid();
+}
+function capFilteredSkills() {
+  var q = ((document.getElementById('capSearchInput') || {}).value || '').toLowerCase();
+  var diaMap = capDiaMap();
+  return capData.skills.filter(function(s) {
+    if (capCat !== 'all' && (s.category || '其他') !== capCat) return false;
+    if (capState === 'active' && s.disabled) return false;
+    if (capState === 'disabled' && !s.disabled) return false;
+    if (capArch === 'yes' && !diaMap[s.name]) return false;
+    if (capArch === 'no' && diaMap[s.name]) return false;
+    if (q) {
+      var hay = ((s.name || '') + ' ' + (s.displayName || '') + ' ' + (s.description || '')).toLowerCase();
+      if (hay.indexOf(q) < 0) return false;
+    }
+    return true;
+  });
+}
+function refreshCapSkillsGrid() {
+  buildCapDims();
+  var grid = document.getElementById('capSkillsGrid'); if (!grid) return;
+  var list = capFilteredSkills();
+  grid.innerHTML = list.map(renderSkillCard).join('') || '<div class="cap-empty">无匹配技能</div>';
+}
+function buildCapDims() {
+  var el = document.getElementById('capDims'); if (!el || !capData) return;
+  var cats = {};
+  capData.skills.forEach(function(s) { var c = s.category || '其他'; cats[c] = (cats[c] || 0) + 1; });
+  var names = Object.keys(cats).sort(function(a, b) { if (a === '其他') return 1; if (b === '其他') return -1; return a < b ? -1 : 1; });
+  var diaMap = capDiaMap();
+  var withD = capData.skills.filter(function(s) { return diaMap[s.name]; }).length;
+  var html = '<div class="dim-block" style="--b:#EEF4EF"><div class="dim-block-title">分类<span class="dim-arr">></span></div><div class="dim-block-opts">'
+    + '<span class="dim-opt' + (capCat === 'all' ? ' active' : '') + '" onclick="setCapCat(\'all\')">全部(' + capData.skills.length + ')</span>'
+    + names.map(function(c) {
+        return '<span class="dim-opt' + (capCat === c ? ' active' : '') + '" onclick="setCapCat(\'' + escJs(c) + '\')">' + escHtml(c) + '(' + cats[c] + ')</span>';
+      }).join('')
+    + '</div></div>';
+  html += '<div class="dim-block" style="--b:#EEF4EF"><div class="dim-block-title">状态<span class="dim-arr">></span></div><div class="dim-block-opts">'
+    + '<span class="dim-opt' + (capState === 'all' ? ' active' : '') + '" onclick="setCapState(\'all\')">全部</span>'
+    + '<span class="dim-opt' + (capState === 'active' ? ' active' : '') + '" onclick="setCapState(\'active\')">正常</span>'
+    + '<span class="dim-opt' + (capState === 'disabled' ? ' active' : '') + '" onclick="setCapState(\'disabled\')">已停用</span>'
+    + '</div></div>';
+  html += '<div class="dim-block" style="--b:#EEF4EF"><div class="dim-block-title">架构图<span class="dim-arr">></span></div><div class="dim-block-opts">'
+    + '<span class="dim-opt' + (capArch === 'all' ? ' active' : '') + '" onclick="setCapArch(\'all\')">全部(' + capData.skills.length + ')</span>'
+    + '<span class="dim-opt' + (capArch === 'yes' ? ' active' : '') + '" onclick="setCapArch(\'yes\')">含图(' + withD + ')</span>'
+    + '<span class="dim-opt' + (capArch === 'no' ? ' active' : '') + '" onclick="setCapArch(\'no\')">无图(' + (capData.skills.length - withD) + ')</span>'
+    + '</div></div>';
+  el.innerHTML = html;
+}
+function setCapCat(c) { capCat = c; refreshCapSkillsGrid(); }
+function setCapState(s) { capState = s; refreshCapSkillsGrid(); }
+function setCapArch(a) { capArch = a; refreshCapSkillsGrid(); }
+function renderSkillCard(s) {
+  var hasDia = !!capDiaMap()[s.name];
+  var act = s.disabled
+    ? '<button class="btn go" onclick="event.stopPropagation();toggleSkill(\'' + escJs(s.name) + '\',true)"><span class="bico">▶</span>启用</button>'
+    : '<button class="btn stop" onclick="event.stopPropagation();toggleSkill(\'' + escJs(s.name) + '\',false)"><span class="bico">⏸</span>停用</button>';
+  return '<div class="tool-card' + (s.disabled ? ' st-disabled' : '') + '" data-id="' + escAttr(s.name) + '">'
+    + '<div class="card-top"><span class="card-ico">' + escHtml(s.icon || CAT_ICON[s.category] || s.mono || s.name.substring(0, 2)) + '</span><div class="card-name">' + escHtml(s.displayName || s.name) + '</div><span class="card-drag-handle" draggable="true" title="拖拽排序"></span></div>'
+    + '<div class="card-meta-row">'
+    +   '<span class="cf"><span class="cf-l">目录</span><span class="card-cat">' + escHtml(s.name) + '</span></span>'
+    +   '<span class="cf"><span class="cf-l">分类</span><span class="card-cat">' + escHtml(s.category || '其他') + '</span></span>'
+    +   (s.trigger ? '<span class="cf"><span class="cf-l">触发</span><span class="card-trig">' + escHtml(s.trigger) + '</span></span>' : '')
+    +   (s.description ? '<span class="cf"><span class="cf-l">简介</span><span class="card-desc" data-tip="' + escAttr(s.description) + '">' + escHtml(s.description) + '</span></span>' : '')
+    + '</div>'
+    + '<div class="card-actions">' + act
+    +   '<button class="btn edit" onclick="event.stopPropagation();editSkill(\'' + escJs(s.name) + '\',\'' + escJs(s.displayName || s.name) + '\',\'' + escJs(s.category || '其他') + '\',\'' + escJs(s.icon || '') + '\')" title="修改名称/分类/图标"><span class="bico">✎</span>编辑</button>'
+    +   '<button class="btn" onclick="event.stopPropagation();openSkillDir(\'' + escJs(s.name) + '\')" title="在资源管理器打开"><span class="bico">📁</span>文件夹</button>'
+    +   '<button class="btn del" onclick="event.stopPropagation();trashSkill(\'' + escJs(s.name) + '\')" title="移入回收区 skills/_trash/，可手动恢复"><span class="bico">🗑</span>删除</button>'
+    +   (hasDia ? '<button class="btn go arch" onclick="window.open(\'/skill-html/' + encodeURIComponent(s.name) + '/system-diagram.html\',\'_blank\')" title="查看架构图"><span class="bico">📊</span>架构图</button>' : '')
+    + '</div>'
+    + '</div>';
+}
+function toggleSkill(name, enable) {
+  if (!enable && !confirm('停用技能「' + name + '」？Claude Code 将不再发现它，可随时重新启用。')) return;
+  fetch('/api/skills/' + encodeURIComponent(name) + '/' + (enable ? 'enable' : 'disable'), { method: 'POST' })
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      if (!d.ok) { alert(d.error || '操作失败'); return; }
+      refreshCapabilitiesSilent();
+    })
+    .catch(function() { alert('请求失败'); });
+}
+function trashSkill(name) {
+  if (!confirm('删除技能「' + name + '」？将移入回收区 skills/_trash/，可手动恢复。')) return;
+  fetch('/api/skills/' + encodeURIComponent(name) + '/trash', { method: 'POST' })
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      if (!d.ok) { alert(d.error || '操作失败'); return; }
+      refreshCapabilitiesSilent();
+    })
+    .catch(function() { alert('请求失败'); });
+}
+function editSkill(name, displayName, category, icon) {
+  var ov = document.createElement('div');
+  ov.className = 'modal-overlay';
+  ov.id = 'editSkillModal';
+  ov.innerHTML = '<div class="modal modal-sm">'
+    + '<div class="modal-header"><span class="modal-title">编辑技能</span><span class="modal-sub">' + escHtml(name) + '</span>'
+    + '<button class="modal-close" onclick="this.closest(\'.modal-overlay\').remove()">×</button></div>'
+    + '<div class="modal-body">'
+    +   '<div class="sf-field"><label>名称（中文显示名）</label>'
+    +     '<input type="text" id="efDisplayName" value="' + escAttr(displayName) + '"></div>'
+    +   '<div class="sf-field"><label>分类</label>'
+    +     '<select id="efCategory">' + CAP_CATS.map(function(c) { return '<option value="' + escHtml(c) + '"' + (c === category ? ' selected' : '') + '>' + escHtml(c) + '</option>'; }).join('') + '</select></div>'
+    +   '<div class="sf-field"><label>图标</label>'
+    +     skillIconFieldHtml('efIcon', icon)
+    +   '</div>'
+    +   '<div class="sf-hint">编辑 = 改中文名 + 分类 + 图标。写回 SKILL.md frontmatter。目录名不可改（调用用）。</div>'
+    + '</div>'
+    + '<div class="modal-footer"><div class="form-actions" style="flex:1">'
+    +   '<button class="btn go" onclick="submitEditSkill(\'' + escJs(name) + '\')">保存</button>'
+    +   '<button class="btn" onclick="this.closest(\'.modal-overlay\').remove()">取消</button>'
+    + '</div></div>'
+    + '</div></div>';
+  document.body.appendChild(ov);
+}
+function submitEditSkill(name) {
+  var displayName = ((document.getElementById('efDisplayName') || {}).value || '').trim();
+  var category = ((document.getElementById('efCategory') || {}).value || '').trim();
+  var icon = ((document.getElementById('efIcon') || {}).value || '').trim();
+  fetch('/api/skills/' + encodeURIComponent(name), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ displayName: displayName, category: category, icon: icon }) })
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      if (!d.ok) { alert(d.error || '操作失败'); return; }
+      var ov = document.querySelector('.modal-overlay'); if (ov) ov.remove();
+      refreshCapabilitiesSilent();
+    })
+    .catch(function() { alert('请求失败'); });
+}
+function refreshCapabilitiesSilent() {
+  fetch('/api/catalog/data', { cache: 'no-store' })
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      capData = d;
+      var n = document.getElementById('navCapCnt'); if (n) n.textContent = d.skills.length;
+      renderCapTabs();
+      if (capTab === 'skills') refreshCapSkillsGrid();
+      else if (capTab === 'commands') refreshCapCommands();
+      else renderCapGlobal(document.getElementById('capContent'));
+    })
+    .catch(function() {});
+}
+function openSkillDir(name) {
+  fetch('/open-dir/' + encodeURIComponent(name)).catch(function() {});
+}
+/* 技能拖拽排序：六点手柄触发（对齐 apps/apps），事件委托在 #page-capabilities，drop 后按 DOM 顺序 POST /api/skills/reorder 落盘 */
+var capDragId = null;
+function onCapGridDragStart(e) {
+  if (!e.target.closest('.card-drag-handle')) { e.preventDefault(); return; }
+  var card = e.target.closest('.tool-card');
+  if (!card || !card.getAttribute('data-id')) return;
+  capDragId = card.getAttribute('data-id');
+  card.classList.add('dragging');
+  try { e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', capDragId); } catch (_) {}
+}
+function onCapGridDragOver(e) {
+  e.preventDefault();
+  if (!capDragId) return;
+  var card = e.target.closest('.tool-card');
+  if (!card || card.getAttribute('data-id') === capDragId) return;
+  try { e.dataTransfer.dropEffect = 'move'; } catch (_) {}
+  card.classList.add('drag-over');
+}
+function onCapGridDragLeave(e) {
+  var card = e.target.closest('.tool-card');
+  if (card) card.classList.remove('drag-over');
+}
+function onCapGridDrop(e) {
+  e.preventDefault();
+  var card = e.target.closest('.tool-card');
+  if (card) card.classList.remove('drag-over');
+  if (!capDragId || !card || card.getAttribute('data-id') === capDragId) return;
+  var grid = document.getElementById('capSkillsGrid');
+  var src = grid.querySelector('.tool-card[data-id="' + capDragId + '"]');
+  if (!src) return;
+  var cards = Array.prototype.slice.call(grid.querySelectorAll('.tool-card'));
+  var srcIdx = cards.indexOf(src);
+  var dstIdx = cards.indexOf(card);
+  if (srcIdx < dstIdx) card.parentNode.insertBefore(src, card.nextSibling);
+  else card.parentNode.insertBefore(src, card);
+  var names = Array.prototype.map.call(grid.querySelectorAll('.tool-card[data-id]'), function (c) { return c.getAttribute('data-id'); });
+  if (names.length) persistCapOrder(names);
+}
+function onCapGridDragEnd() {
+  var grid = document.getElementById('capSkillsGrid');
+  if (grid) {
+    var s = grid.querySelector('.tool-card.dragging');
+    if (s) s.classList.remove('dragging');
+    var overs = grid.querySelectorAll('.tool-card.drag-over');
+    for (var i = 0; i < overs.length; i++) overs[i].classList.remove('drag-over');
+  }
+  capDragId = null;
+}
+function persistCapOrder(names) {
+  fetch('/api/skills/reorder', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ names: names })
+  }).then(function (r) { return r.json(); }).then(function (d) {
+    if (d.ok) { refreshCapabilitiesSilent(); toast('已保存排序'); }
+    else toast('排序保存失败：' + (d.error || ''));
+  }).catch(function (e) { toast('排序保存失败：' + e.message); });
+}
+
+/* 命令 tab：分类面板 + 表格 + 未标注桶
+   数据 = 源扫描（Claude Code 内置命令） × agent 二次加构（分类/名称/说明自己补注）
+   normCmd 兼容两形态：旧 {cat,trigger,name,desc} 与新合并 {name,category,displayName,description,annotated,sourceDesc} */
+var capCmdCat = 'all'; // 'all' | <category> | 'unannotated'
+function normCmd(c) {
+  return {
+    id: c.trigger || c.name || '',
+    cat: c.category || c.cat || '未分类',
+    name: c.displayName || c.name || '',
+    desc: c.description || c.desc || c.sourceDesc || '',
+    annotated: c.annotated !== false,
+    miss: c.inSource === false
+  };
+}
+function capCmdList() { return (capData.commands || []).map(normCmd); }
+function renderCapCommands(content) {
+  content.innerHTML = ''
+    + '<div class="cap-toolbar">'
+    +   '<button class="btn-add" onclick="createCommand()">+ 新增命令</button>'
+    +   '<div class="search-box"><input id="capCmdSearch" placeholder="搜索命令、名称或说明…" oninput="refreshCapCommands()">'
+    +     '<svg class="search-ico" viewBox="0 0 20 20" aria-hidden="true"><circle cx="9" cy="9" r="6.5" fill="none" stroke="currentColor" stroke-width="2"/><line x1="14.2" y1="14.2" x2="18" y2="18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>'
+    +   '</div>'
+    + '</div>'
+    + '<div class="dim-blocks" id="capCmdDims"></div>'
+    + '<div class="cmd-table-wrap" id="capCmdTable"></div>';
+  buildCmdDims();
+  refreshCapCommands();
+}
+function buildCmdDims() {
+  var el = document.getElementById('capCmdDims'); if (!el) return;
+  var cmds = capCmdList();
+  var cats = {}, unann = 0;
+  cmds.forEach(function(c) {
+    if (!c.annotated) unann++;
+    cats[c.cat] = (cats[c.cat] || 0) + 1;
+  });
+  var names = Object.keys(cats).sort(function(a, b) { return a < b ? -1 : 1; });
+  var opts = '<span class="dim-opt' + (capCmdCat === 'all' ? ' active' : '') + '" onclick="setCapCmdCat(\'all\')">全部(' + cmds.length + ')</span>'
+    + names.map(function(c) {
+        return '<span class="dim-opt' + (capCmdCat === c ? ' active' : '') + '" onclick="setCapCmdCat(\'' + escJs(c) + '\')">' + escHtml(c) + '(' + cats[c] + ')</span>';
+      }).join('')
+    + '<span class="dim-opt' + (capCmdCat === 'unannotated' ? ' active' : '') + '" onclick="setCapCmdCat(\'unannotated\')">未标注(' + unann + ')</span>';
+  el.innerHTML = '<div class="dim-block" style="--b:#EEF4EF"><div class="dim-block-title">分类<span class="dim-arr">></span></div><div class="dim-block-opts">' + opts + '</div></div>';
+}
+function setCapCmdCat(c) { capCmdCat = c; refreshCapCommands(); }
+function refreshCapCommands() {
+  buildCmdDims();
+  var el = document.getElementById('capCmdTable'); if (!el) return;
+  var q = ((document.getElementById('capCmdSearch') || {}).value || '').toLowerCase();
+  var list = capCmdList().filter(function(c) {
+    if (capCmdCat === 'unannotated' && c.annotated) return false;
+    if (capCmdCat !== 'all' && capCmdCat !== 'unannotated' && c.cat !== capCmdCat) return false;
+    if (q) {
+      var hay = (c.id + ' ' + c.name + ' ' + c.desc).toLowerCase();
+      if (hay.indexOf(q) < 0) return false;
+    }
+    return true;
+  });
+  if (!list.length) { el.innerHTML = '<div class="cap-empty">无匹配命令</div>'; return; }
+  el.innerHTML = '<table class="cmd-table"><thead><tr><th style="width:150px">命令</th><th style="width:170px">名称</th><th>说明</th><th style="width:152px">操作</th></tr></thead><tbody>'
+    + list.map(function(c) {
+        var trCls = c.miss ? ' class="cmd-miss"' : '';
+        var title = c.miss ? ' title="源中未检出——下次扫描没检索到，可删除"' : '';
+        var nameCell = c.annotated
+          ? escHtml(c.name)
+          : '<span class="cmd-untag">未标注</span> ' + escHtml(c.name);
+        var descCell = c.desc ? escHtml(c.desc) : '<span class="cmd-muted">未填写说明</span>';
+        var act = '';
+        if (c.annotated) {
+          act += '<button class="btn-mini" onclick="createCommand(\'' + escJs(c.id) + '\',\'edit\')">编辑</button>'
+            + '<button class="btn-mini danger" onclick="deleteCommand(\'' + escJs(c.id) + '\', event)">删除</button>';
+        } else {
+          act += '<button class="btn-mini" onclick="createCommand(\'' + escJs(c.id) + '\')">标注</button>';
+        }
+        return '<tr' + trCls + title + '><td><code class="cmd-code">/' + escHtml(c.id) + '</code></td><td>' + nameCell + '</td><td class="cmd-desc">' + descCell + '</td><td class="cmd-act">' + act + '</td></tr>';
+      }).join('')
+    + '</tbody></table>';
+}
+/* 新增命令：选未标注命令补注（分类+中文名+中文说明），或手动输入命令名补录提取漏检的命令 */
+var CAP_CMD_CATS = ['会话控制', '配置管理', '项目管理', '代码分析', '记忆系统', 'IDE 集成', '账户认证', '诊断帮助'];
+var _cmdEditId = null; // 编辑态：命令名固定为标注键
+function createCommand(preset, mode) {
+  var list = capCmdList();
+  var editRow = null;
+  if (mode === 'edit' && preset) {
+    for (var i = 0; i < list.length; i++) if (list[i].id === preset) { editRow = list[i]; break; }
+    if (!editRow) { alert('命令不存在：/' + preset); return; }
+  }
+  _cmdEditId = editRow ? editRow.id : null;
+  var title, sub, nameField, hint;
+  if (editRow) {
+    title = '编辑命令';
+    sub = '/' + editRow.id;
+    nameField = '<div class="sf-field"><label>命令</label><div class="cmd-ro"><code class="cmd-code">/' + escHtml(editRow.id) + '</code></div></div>';
+    hint = '编辑 = 改分类 + 中文名 + 中文说明。命令名固定（标注键），不可改。';
+  } else {
+    var unann = list.filter(function(c) { return !c.annotated; });
+    var inUnann = unann.some(function(c) { return c.id === preset; });
+    var customOnly = preset && !inUnann;
+    title = preset ? '标注命令' : '新增命令';
+    sub = '分类 / 名称 / 说明为二次加构标注';
+    var opts = unann.length
+      ? unann.map(function(c) { return '<option value="' + escHtml(c.id) + '"' + (c.id === preset ? ' selected' : '') + '>/' + escHtml(c.id) + (c.desc ? ' — ' + escHtml(c.desc.slice(0, 60)) : '') + '</option>'; }).join('')
+      : '<option value="">— 无未标注命令，可手动输入 —</option>';
+    opts += '<option value="__custom__"' + (customOnly ? ' selected' : '') + '>＋ 手动输入命令名…</option>';
+    nameField = '<div class="sf-field"><label>命令</label>'
+      + '<select id="cfName" onchange="cfNameChanged(this)">' + opts + '</select></div>'
+      + '<div class="sf-field" id="cfNameCustom" style="display:none"><label>命令名（英文触发词）</label>'
+      + '<input type="text" id="cfNameInput" placeholder="如：model"></div>';
+    hint = '未标注命令的英文名/说明来自 Claude Code 源自动解析；分类 + 中文名 + 中文说明自己补。源里漏检的命令（如 /model）可手动输入命令名补录。';
+  }
+  var catOpts = CAP_CMD_CATS.map(function(c) {
+    return '<option value="' + escHtml(c) + '"' + (editRow && c === editRow.cat ? ' selected' : '') + '>' + escHtml(c) + '</option>';
+  }).join('');
+  var ov = document.createElement('div');
+  ov.className = 'modal-overlay';
+  ov.id = 'createCommandModal';
+  ov.innerHTML = '<div class="modal modal-sm">'
+    + '<div class="modal-header"><span class="modal-title">' + title + '</span><span class="modal-sub">' + sub + '</span>'
+    + '<button class="modal-close" onclick="this.closest(\'.modal-overlay\').remove()">×</button></div>'
+    + '<div class="modal-body">'
+    +   nameField
+    +   '<div class="sf-field"><label>分类</label>'
+    +     '<select id="cfCategory">' + catOpts + '</select></div>'
+    +   '<div class="sf-field"><label>名称（中文显示名）</label>'
+    +     '<input type="text" id="cfDisplayName" placeholder="如：切换模型" value="' + (editRow ? escAttr(editRow.name) : '') + '"></div>'
+    +   '<div class="sf-field"><label>说明</label>'
+    +     '<textarea id="cfDesc" rows="3" placeholder="这个命令干什么用…">' + (editRow ? escHtml(editRow.desc) : '') + '</textarea></div>'
+    +   '<div class="sf-hint">' + hint + '</div>'
+    + '</div>'
+    + '<div class="modal-footer"><div class="form-actions" style="flex:1">'
+    +   '<button class="btn go" onclick="submitCreateCommand()">保存</button>'
+    +   '<button class="btn" onclick="this.closest(\'.modal-overlay\').remove()">取消</button>'
+    +   '<span class="hint" id="cfHint"></span>'
+    + '</div></div>'
+    + '</div></div>';
+  document.body.appendChild(ov);
+  if (!editRow && customOnly) {
+    var cv = document.getElementById('cfNameCustom');
+    if (cv) cv.style.display = 'block';
+    var ci = document.getElementById('cfNameInput');
+    if (ci) ci.value = preset;
+  }
+}
+function cfNameChanged(sel) {
+  var custom = document.getElementById('cfNameCustom');
+  if (custom) custom.style.display = sel.value === '__custom__' ? 'block' : 'none';
+}
+function deleteCommand(name) {
+  if (!confirm('删除命令 /' + name + '？\n未标注命令将从列表移除；已标注命令的二次标注会被清除。')) return;
+  fetch('/api/commands/' + encodeURIComponent(name), { method: 'DELETE' })
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      if (!d.ok) { alert(d.error || '删除失败'); return; }
+      refreshCapabilitiesSilent();
+    })
+    .catch(function() { alert('请求失败'); });
+}
+function submitCreateCommand() {
+  var name = _cmdEditId;
+  if (!name) {
+    name = ((document.getElementById('cfName') || {}).value || '').trim();
+    if (name === '__custom__') name = ((document.getElementById('cfNameInput') || {}).value || '').trim();
+  }
+  if (!name) { alert('命令名必填'); return; }
+  var category = ((document.getElementById('cfCategory') || {}).value || '').trim();
+  var displayName = ((document.getElementById('cfDisplayName') || {}).value || '').trim();
+  var description = ((document.getElementById('cfDesc') || {}).value || '').trim();
+  fetch('/api/commands', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: name, category: category, displayName: displayName, description: description }) })
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      if (!d.ok) { alert(d.error || '保存失败'); return; }
+      var ov = document.querySelector('.modal-overlay'); if (ov) ov.remove();
+      refreshCapabilitiesSilent();
+    })
+    .catch(function() { alert('请求失败'); });
+}
+/* 删除 = 去掉二次标注：二次点击确认（按钮变「确认删除？」），源里还在的命令回未标注桶 */
+function deleteCommand(name, ev) {
+  var btn = ev && ev.currentTarget;
+  if (btn && btn.dataset.confirm !== '1') {
+    btn.dataset.confirm = '1';
+    btn.textContent = '确认删除？';
+    btn.classList.add('confirming');
+    setTimeout(function() {
+      if (btn.dataset.confirm === '1') { btn.dataset.confirm = ''; btn.textContent = '删除'; btn.classList.remove('confirming'); }
+    }, 3000);
+    return;
+  }
+  fetch('/api/commands/' + encodeURIComponent(name), { method: 'DELETE' })
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      if (!d.ok) { alert(d.error || '删除失败'); return; }
+      refreshCapabilitiesSilent();
+    })
+    .catch(function() { alert('请求失败'); });
+}
+function renderCapGlobal(content) {
+  var g = capData.global;
+  content.innerHTML = '<div class="line-count">' + escHtml(g.path) + ' · ' + g.lines + ' 行</div>'
+    + '<div class="std-body cap-md">' + (g.html || '<p>CLAUDE.md 未找到</p>') + '</div>';
+}
+/* 新增技能：只选分类，其余自解析 */
+var CAP_CATS = ['视觉与设计', '写作与文档', '文件与格式', '开发与工具', '思维与方法', '其他'];
+function buildSkillNameOptions() {
+  if (!capData) return '<option value="">— 数据未加载 —</option>';
+  var opts = '<option value="">— 选择未注册技能 —</option>';
+  (capData.unregistered || []).forEach(function(u) {
+    opts += '<option value="' + escHtml(u.name) + '">' + escHtml(u.displayName || u.name) + '（未注册）</option>';
+  });
+  (capData.skills || []).forEach(function(s) {
+    opts += '<option value="' + escHtml(s.name) + '" disabled>' + escHtml(s.displayName || s.name) + '（已注册）</option>';
+  });
+  return opts;
+}
+function skillIconFieldHtml(fieldId, value) {
+  return '<div class="icon-row"><input type="text" id="' + fieldId + '" value="' + escAttr(value || '') + '" placeholder="留空用分类图标">'
+    + '<button type="button" class="btn" onclick="toggleSkillIconPanel(\'' + fieldId + '\')">从库选</button>'
+    + '</div><div class="icon-panel" id="' + fieldId + 'Panel" style="display:none"></div>';
+}
+function toggleSkillIconPanel(fieldId) {
+  var panel = document.getElementById(fieldId + 'Panel');
+  if (!panel) return;
+  if (!panel.dataset.built) {
+    panel.innerHTML = ICON_LIB.map(function(e) { return '<button type="button" class="icon-opt" title="' + e + '" onclick="pickSkillIcon(\'' + fieldId + '\',\'' + e + '\')">' + e + '</button>'; }).join('');
+    panel.dataset.built = '1';
+  }
+  panel.style.display = panel.style.display === 'none' ? 'flex' : 'none';
+}
+function pickSkillIcon(fieldId, e) {
+  document.getElementById(fieldId).value = e;
+  var panel = document.getElementById(fieldId + 'Panel'); if (panel) panel.style.display = 'none';
+}
+function createSkill() {
+  var ov = document.createElement('div');
+  ov.className = 'modal-overlay';
+  ov.id = 'createSkillModal';
+  ov.innerHTML = '<div class="modal modal-sm">'
+    + '<div class="modal-header"><span class="modal-title">新增技能</span><span class="modal-sub">~/.claude/skills/&lt;name&gt;/SKILL.md</span>'
+    + '<button class="modal-close" onclick="this.closest(\'.modal-overlay\').remove()">×</button></div>'
+    + '<div class="modal-body">'
+    +   '<div class="sf-field"><label>技能目录（英文，调用用）</label>'
+    +     '<select id="sfName">' + buildSkillNameOptions() + '</select></div>'
+    +   '<div class="sf-field"><label>名称（中文显示名，面板给人看）</label>'
+    +     '<input type="text" id="sfDisplayName" placeholder="如：透视路由器"></div>'
+    +   '<div class="sf-field"><label>分类</label>'
+    +     '<select id="sfCategory">' + CAP_CATS.map(function(c) { return '<option value="' + escHtml(c) + '">' + escHtml(c) + '</option>'; }).join('') + '</select></div>'
+    +   '<div class="sf-field"><label>图标（可选，默认按分类）</label>'
+    +     skillIconFieldHtml('sfIcon')
+    +   '</div>'
+    +   '<div class="sf-hint">下拉选未注册目录 + 中文名 + 分类即建卡。简介/触发从 SKILL.md frontmatter 自解析。</div>'
+    + '</div>'
+    + '<div class="modal-footer"><div class="form-actions" style="flex:1">'
+    +   '<button class="btn go" onclick="submitCreateSkill()">创建</button>'
+    +   '<button class="btn" onclick="this.closest(\'.modal-overlay\').remove()">取消</button>'
+    +   '<span class="hint" id="sfHint"></span>'
+    + '</div></div>'
+    + '</div></div>';
+  document.body.appendChild(ov);
+}
+function submitCreateSkill() {
+  var name = ((document.getElementById('sfName') || {}).value || '').trim();
+  if (!name) { alert('技能目录必选'); return; }
+  var displayName = ((document.getElementById('sfDisplayName') || {}).value || '').trim();
+  var category = ((document.getElementById('sfCategory') || {}).value || '').trim();
+  var icon = ((document.getElementById('sfIcon') || {}).value || '').trim();
+  var payload = { name: name, displayName: displayName, category: category, icon: icon };
+  fetch('/api/skills', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      if (!d.ok) { alert(d.error || '创建失败'); return; }
+      var ov = document.querySelector('.modal-overlay'); if (ov) ov.remove();
+      fetchCapabilities();
+    })
+    .catch(function() { alert('请求失败'); });
+}
+
 /* ── 初始化 ── */
 document.addEventListener('DOMContentLoaded', function() {
   var tipDesc = document.getElementById('tp-desc');
@@ -1321,6 +1873,14 @@ document.addEventListener('DOMContentLoaded', function() {
     toolGridEl.addEventListener('drop', onToolGridDrop);
     toolGridEl.addEventListener('dragend', onToolGridDragEnd);
   }
+  var capPageEl = document.getElementById('page-capabilities');
+  if (capPageEl) {
+    capPageEl.addEventListener('dragstart', onCapGridDragStart);
+    capPageEl.addEventListener('dragover', onCapGridDragOver);
+    capPageEl.addEventListener('dragleave', onCapGridDragLeave);
+    capPageEl.addEventListener('drop', onCapGridDrop);
+    capPageEl.addEventListener('dragend', onCapGridDragEnd);
+  }
   try { if (localStorage.getItem('agentboard-tools-sub') === '1') toggleToolsSub(true); } catch(_) {}
   var toolsNav = document.getElementById('toolsNavItem');
   if (toolsNav) {
@@ -1343,6 +1903,7 @@ document.addEventListener('DOMContentLoaded', function() {
   renderPrinciples();
   fetchCronState();
   auditInitial();
+  fetchCapabilities();
 });
 
 // ══ S5 人写面板：工具表单弹窗（新建/编辑/补全/迁移/修复/注册 一套）══
@@ -1419,7 +1980,6 @@ function iconFieldHtml(f) {
     '<div class="icon-row">' +
     '<input id="' + f.input + '" type="text" placeholder="' + escAttr(f.placeholder || '') + '">' +
     '<button type="button" class="btn" onclick="toggleIconPanel()">从库选</button>' +
-    '<button type="button" class="btn" onclick="clearIcon()">清空</button>' +
     '</div><div id="icon-panel" style="display:none;margin-top:8px"></div></div>';
 }
 function idFieldHtml(f) {
@@ -1442,7 +2002,6 @@ function attachToolFormListeners() {
   var idEl = document.getElementById('f-id');
   if (idEl) idEl.addEventListener('input', function(){ idTouched = true; });
 }
-var ICON_LIB = ['🤖','🧠','🦙','🐱','🦞','🐙','💭','☁️','🆓','🎨','🎬','🎞️','🎵','🎙','🖌','📸','🎯','🔍','📥','🕸️','📡','🦐','📋','🔗','📌','📚','📕','📄','🗣','💬','📝','⚙','🏭','🐋','🛡','▲','◈','⬡','◎','↔️','🔀','⏰','🏠','🏪','🌐','🖼','🟢','🪽','👁','🎛','🧩','⭐','🔥','✨','📱','🗓','🔊'];
 
 var tfId = null;      // 当前编辑的 id（新建为 null）
 var tfMode = 'new';   // new | edit | fix | complete | migrate | register
@@ -1747,8 +2306,6 @@ function pickIcon(e) {
   document.getElementById('icon-panel').style.display = 'none';
   tfRender();
 }
-function clearIcon() { document.getElementById('f-icon').value = ''; tfRender(); }
-
 function confirmDelete(id) {
   var t = tools.find(function(x){ return x.id === id; });
   var label = t && t.name ? t.name : id;
