@@ -1418,7 +1418,7 @@ function buildCapDims() {
     + '</div></div>';
   (capData.links || []).forEach(function(l) {
     html += '<div class="dim-block" style="--b:#EEF4EF"><div class="dim-block-title">' + escHtml(l.label) + '<span class="dim-arr">></span></div><div class="dim-block-opts">'
-      + '<a class="dim-opt" href="' + escAttr(l.url) + '" target="_blank" rel="noopener" title="' + escAttr(l.url) + '"><svg class="cmd-link-ico" viewBox="0 0 20 20" aria-hidden="true"><rect width="20" height="20" rx="3" fill="var(--green)"/><rect x="4" y="4" width="12" height="3.2" rx="0.8" fill="var(--paper)"/><path d="M4 10.2 H16 M4 13.8 H16 M7 4 V16 M11 4 V16" fill="none" stroke="var(--paper)" stroke-width="1.4"/></svg>' + escHtml(l.desc || l.label) + ' ↗</a>'
+      + '<a class="dim-opt" href="' + escAttr(l.url) + '" target="_blank" rel="noopener" title="' + escAttr(l.url) + '"><img class="cmd-link-ico" src="' + window.LOGO_LIB.bitable.src + '" alt="" width="18" height="18">' + escHtml(l.desc || l.label) + ' ↗</a>'
       + '</div></div>';
   });
   el.innerHTML = html;
@@ -1798,8 +1798,36 @@ function doDeleteCmd(name) {
 }
 function renderCapGlobal(content) {
   var g = capData.global;
-  content.innerHTML = '<div class="line-count">' + escHtml(g.path) + ' · ' + g.lines + ' 行</div>'
-    + '<div class="std-body cap-md">' + (g.html || '<p>CLAUDE.md 未找到</p>') + '</div>';
+  var secs = g.sections || [];
+  var toc = secs.length
+    ? '<div class="constitution-toc">' + secs.map(function(s, i) {
+        var m = s.match(/^(\d+)\.\s*(.+)/);
+        var num = m ? m[1] : String(i + 1);
+        var title = m ? m[2] : s;
+        return '<div class="const-item" onclick="jumpConstSection(' + (i + 1) + ')" title="跳转到全文第 ' + (i + 1) + ' 章"><span class="const-num">' + escHtml(num) + '</span><span class="const-title">' + escHtml(title) + '</span></div>';
+      }).join('') + '</div>'
+    : '<div class="cap-empty">未解析到章节</div>';
+  content.innerHTML =
+    '<div class="cap-toolbar">'
+    + '<button class="btn-add" onclick="openConstitutionFolder()"><span class="bico">📁</span>打开文件夹</button>'
+    + '</div>'
+    + '<div class="const-head">宪法是行为规则唯一真相源，章节按重要性排序——越靠前越要守。</div>'
+    + toc
+    + '<details class="const-details"><summary>查看全文（' + g.lines + ' 行）</summary><div class="std-body cap-md">' + (g.html || '<p>CLAUDE.md 未找到</p>') + '</div></details>'
+    + '<button class="cap-top" id="capTopBtn" onclick="backToCapTop()" title="回顶部" aria-label="回顶部">▲</button>';
+}
+function openConstitutionFolder() {
+  fetch('/open-constitution').catch(function() {});
+}
+function backToCapTop() {
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+function jumpConstSection(n) {
+  var d = document.querySelector('.const-details');
+  if (d && !d.open) d.open = true;
+  var el = document.getElementById('sec-' + n);
+  if (!el) return;
+  setTimeout(function() { el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 60);
 }
 /* 新增技能：只选分类，其余自解析 */
 var CAP_CATS = ['视觉与设计', '写作与文档', '文件与格式', '开发与工具', '思维与方法', '其他'];
@@ -1930,6 +1958,10 @@ document.addEventListener('DOMContentLoaded', function() {
   fetchCronState();
   auditInitial();
   fetchCapabilities();
+  window.addEventListener('scroll', function() {
+    var b = document.getElementById('capTopBtn');
+    if (b) b.classList.toggle('show', window.scrollY > 400);
+  });
 });
 
 // ══ S5 人写面板：工具表单弹窗（新建/编辑/补全/迁移/修复/注册 一套）══

@@ -143,14 +143,15 @@ Both planes share one truth source: `tools/{id}/manifest.json`. Change a file, b
 │   ├── manifest-schema.js Manifest 契约唯一真相源（字段 / 分类 / 校验）
 │   ├── mcp-http.js        MCP Streamable HTTP（POST /mcp，JSON-RPC 2.0）
 │   ├── mcp-handlers.js    6 个 agentboard_* MCP 工具
-│   ├── static.js / api-page.js / self-check.js / ops-log.js / crash-guard.js / tip-schema.js / apps-schema.js / principle-schema.js / brand-drift.js / tree-drift.js
+│   ├── static.js / api-page.js / self-check.js / ops-log.js / crash-guard.js / tip-schema.js / apps-schema.js / principle-schema.js / brand-drift.js / tree-drift.js / commands.js
 │   └── __tests__/         冒烟测试（node:test）
 ├── web/                   Dashboard 前端
 │   ├── index.html         6 页（工具架 / 我的网站 / 经验日志 / 原则库 / 治理审计 / 说明书）
 │   ├── _tokens.css        品牌 token 唯一银行（换肤改这一个文件）
 │   ├── _style.css         组件 + 页面级样式（引用 _tokens.css 变量）
 │   ├── _script.js         渲染 / 交互
-│   ├── shared/            tips 面板共享资源（tips-panel.css / tips-panel.js）
+│   ├── shared/            tips 面板 + 图标资源（tips-panel.css/js · logo-lib.js · logos/）
+│   ├── capability-map.svg  能力图谱（全局宪法 tab）
 │   └── logo.svg
 ├── tools/                 工具架卡（宪法 = AGENT.md；形状 = lib/manifest-schema.js）
 ├── apps/                  我的网站卡（宪法 = apps/CONSTITUTION.md；形状 = lib/apps-schema.js）
@@ -159,7 +160,7 @@ Both planes share one truth source: `tools/{id}/manifest.json`. Change a file, b
 ├── principles/            原则库卡（宪法 = principles/CONSTITUTION.md；形状内嵌宪法 §四）
 ├── docs/                  文档（不带 archive）
 ├── mechanisms/            系统机制说明
-├── state/                 运行态（api-calls）
+├── state/                 运行态（api-calls · commands 快照）
 ├── _runtime/              运行产物（pids / events.jsonl / logs; gitignored）
 └── archive/               退场归档（可删的留存区，担心删早了先留；唯一一处）
 

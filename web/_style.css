@@ -45,7 +45,7 @@ a{text-decoration:none;color:inherit}
 .hero-eyebrow{font-size:12px;letter-spacing:.22em;text-transform:uppercase;color:var(--green);margin-bottom:6px}
 .hero-title{font-size:32px;font-weight:600;letter-spacing:.01em;color:var(--green);font-family:var(--font-head);line-height:1.2}
 .hero-sub{font-size:16px;font-weight:400;color:var(--text-secondary);margin-top:8px;line-height:1.6}
-#page-tools .hero-bar,#page-apps .hero-bar,#page-tips .hero-bar{margin-bottom:0}
+#page-tools .hero-bar,#page-apps .hero-bar,#page-tips .hero-bar,#page-principles .hero-bar{margin-bottom:0}
 
 /* 行1 大搜索框（B站式）：居中、浅灰底、圆角、放大镜SVG在框内右侧 */
 .search-bar{padding:32px 0 16px;display:flex;align-items:center;gap:8px}
@@ -400,6 +400,9 @@ a.dim-opt{text-decoration:none;display:inline-flex;align-items:center;gap:5px}
 .cap-content{padding-bottom:16px}
 .cap-toolbar{display:flex;align-items:center;gap:8px;max-width:1584px;margin:0 32px 24px}
 .cap-toolbar .search-box{flex:none;width:280px}
+.cap-toolbar .btn-add{width:auto;padding:0 16px;gap:6px}
+/* 经验日志按钮对齐其他板块（tips-panel 共享组件是胶囊形，dashboard 内改回方角） */
+#page-tips .btn-add{border-radius:8px;font-size:14px;padding:0}
 .sf-field{margin-bottom:16px}
 .sf-field label{display:block;font-size:12px;color:var(--text-muted);margin-bottom:8px}
 #createSkillModal .modal input[type=text],#createSkillModal .modal select{padding:8px 16px;border-radius:8px}
@@ -440,6 +443,19 @@ a.dim-opt{text-decoration:none;display:inline-flex;align-items:center;gap:5px}
 /* 全局宪法 */
 .cap-md{margin-top:8px}
 .line-count{font-family:var(--font-code);font-size:12px;color:var(--text-muted);margin:8px 0 4px}
+.const-head{max-width:1584px;margin:0 32px 16px;font-size:13px;color:var(--text-secondary);line-height:1.6}
+.constitution-toc{max-width:1584px;margin:0 32px 20px;display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:10px}
+.const-item{display:flex;align-items:baseline;gap:10px;padding:10px 14px;background:var(--paper-tint);border:1px solid var(--border);border-radius:8px;cursor:pointer;transition:border-color .15s}
+.const-item:hover{border-color:var(--green)}
+.const-num{font-family:var(--font-code);font-size:12px;color:var(--green);font-weight:600;min-width:16px}
+.const-title{font-size:13px;color:var(--text-primary)}
+#page-capabilities .cap-md h2{scroll-margin-top:170px}
+.const-details{max-width:1584px;margin:0 32px 40px;border:1px solid var(--border);border-radius:8px;padding:10px 14px}
+.const-details summary{cursor:pointer;font-size:13px;color:var(--text-secondary);user-select:none}
+.const-details[open] summary{margin-bottom:8px}
+.cap-top{position:fixed;right:32px;bottom:32px;width:40px;height:40px;border-radius:50%;border:none;background:var(--green);color:var(--on-brand);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:60;box-shadow:0 4px 12px rgba(38,43,39,.25);opacity:0;pointer-events:none;transform:translateY(8px);transition:opacity .2s,transform .2s,background .15s}
+.cap-top.show{opacity:1;pointer-events:auto;transform:none}
+.cap-top:hover{background:var(--green-deep)}
 /* 技能卡 meta 值 */
 .card-cat,.card-trig,.card-folder{color:var(--text-secondary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .cap-empty{grid-column:1/-1;text-align:center;padding:56px 20px;color:var(--text-muted);font-size:13px}

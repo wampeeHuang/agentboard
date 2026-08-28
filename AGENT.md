@@ -20,14 +20,15 @@
 │   ├── manifest-schema.js Manifest 契约唯一真相源（字段 / 分类 / 校验）
 │   ├── mcp-http.js       MCP Streamable HTTP（POST /mcp，JSON-RPC 2.0）
 │   ├── mcp-handlers.js   6 个 agentboard_* MCP 工具
-│   ├── static.js / api-page.js / self-check.js / ops-log.js / crash-guard.js / tip-schema.js / apps-schema.js / principle-schema.js / brand-drift.js / tree-drift.js
+│   ├── static.js / api-page.js / self-check.js / ops-log.js / crash-guard.js / tip-schema.js / apps-schema.js / principle-schema.js / brand-drift.js / tree-drift.js / commands.js
 │   └── __tests__/        冒烟测试（node:test）
 ├── web/                  Dashboard 前端
 │   ├── index.html        6 页（工具架 / 我的网站 / 经验日志 / 原则库 / 治理审计 / 说明书）
 │   ├── _tokens.css       品牌 token 唯一银行（换肤改这一个文件）
 │   ├── _style.css        组件 + 页面级样式（引用 _tokens.css 变量）
 │   ├── _script.js        渲染 / 交互
-│   ├── shared/           tips 面板共享资源（tips-panel.css / tips-panel.js）
+│   ├── shared/           tips 面板 + 图标资源（tips-panel.css/js · logo-lib.js · logos/）
+│   ├── capability-map.svg  能力图谱（全局宪法 tab）
 │   └── logo.svg
 ├── .claude/              Claude Code 项目级配置（settings.local.json，仅权限放行，不进版本库）
 ├── tools/                工具架卡（宪法 = 本文件；形状 = lib/manifest-schema.js）
@@ -37,7 +38,7 @@
 ├── principles/           原则库卡（宪法 = principles/CONSTITUTION.md；形状内嵌宪法 §四）
 ├── docs/                 文档（不带 archive）
 ├── mechanisms/           系统机制说明
-├── state/                运行态（api-calls）
+├── state/                运行态（api-calls · commands 快照）
 ├── _runtime/             运行态仓（gitignored，草稿有归属勿丢根层）
 │   ├── logs/             运行日志（restart / cleanup）
 │   ├── crash/            崩溃现场
