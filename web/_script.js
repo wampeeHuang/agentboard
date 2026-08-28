@@ -1636,9 +1636,7 @@ function refreshCapCommands() {
     + list.map(function(c) {
         var trCls = c.miss ? ' class="cmd-miss"' : '';
         var title = c.miss ? ' title="源中未检出——下次扫描没检索到，可删除"' : '';
-        var nameCell = c.annotated
-          ? escHtml(c.name)
-          : '<span class="cmd-untag">未标注</span> ' + escHtml(c.name);
+        var nameCell = escHtml(c.name);
         var descCell = c.desc ? escHtml(c.desc) : '<span class="cmd-muted">未填写说明</span>';
         var act = '';
         if (c.annotated) {
