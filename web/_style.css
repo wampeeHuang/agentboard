@@ -19,6 +19,18 @@ a{text-decoration:none;color:inherit}
 .nav-item.active .cnt{background:var(--paper);color:var(--green-deep)}
 .nav-item .ico .ico-bg{fill:var(--green)}
 .nav-item .ico .ico-fg{fill:var(--paper);stroke:var(--paper)}
+.nav-caret{margin-left:8px;font-size:11px;color:var(--text-muted);width:14px;text-align:center;flex-shrink:0;transition:transform .15s}
+.nav-item.active .nav-caret{color:var(--green-deep)}
+.nav-item.drag-over{outline:2px dashed var(--green);outline-offset:-2px;background:var(--green-soft)}
+.nav-sub{display:none;flex-direction:column;gap:2px;margin:0 8px 0 38px;padding:2px 0 6px;border-left:1px solid var(--border)}
+.nav-sub.open{display:flex}
+.nav-sub-item{padding:6px 10px;border-radius:6px;font-size:13px;color:var(--text-secondary);cursor:pointer;user-select:none;transition:background .12s,color .12s;line-height:1.4;display:flex;align-items:center;justify-content:space-between;gap:6px}
+.nav-sub-item:hover{background:var(--paper-tint);color:var(--green-deep)}
+.nav-sub-label{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.nav-sub-del{display:none;font-size:15px;line-height:1;color:var(--text-muted);padding:0 3px;flex-shrink:0;border-radius:4px}
+.nav-sub-del:hover{color:var(--status-error);background:var(--status-error-soft,var(--paper-tint))}
+.nav-sub-item:hover .nav-sub-del{display:inline-block}
+.nav-sub-hint{font-size:11px;color:var(--text-muted);padding:4px 10px;line-height:1.5}
 .sidebar-foot{height:64px;display:flex;align-items:center;padding:0 16px;border-top:1px solid var(--border);font-size:16px;color:var(--text-muted)}
 
 /* ── 右侧内容 ── */

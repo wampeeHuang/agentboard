@@ -204,6 +204,7 @@ async function fetchTools() {
       updateCounts();
       buildDimBlocks();
       render();
+      renderToolsSub();
     } else {
       toast('工具清单加载失败：' + (data.error || '未知错误'));
     }
@@ -240,31 +241,9 @@ function render() {
     });
   }
 
-  // Sort: category group, then running first, then order
-  var catOrder = {'模型':0, '本地模型':0, '远程模型':0, 'Agent':1, '设施':2, '获取':3, '查阅':4, '创作':5, '职能':6};
-  var cardOrder = [];
-  try { cardOrder = JSON.parse(localStorage.getItem('agentboard-card-order') || '[]'); } catch(_) {}
-  if (!Array.isArray(cardOrder)) cardOrder = [];
-  sorted.sort(function(a,b){
-    // 已停用沉底
-    var da = a.disabled ? 1 : 0;
-    var db = b.disabled ? 1 : 0;
-    if (da !== db) return da - db;
-    var ai = cardOrder.indexOf(a.id);
-    var bi = cardOrder.indexOf(b.id);
-    // both in saved order: preserve user arrangement
-    if (ai !== -1 && bi !== -1) return ai - bi;
-    // one is new (not in saved order): push to end
-    if (ai !== -1) return -1;
-    if (bi !== -1) return 1;
-    // both new: fallback to category -> running -> order
-    var ca = catOrder[a.category] != null ? catOrder[a.category] : 99;
-    var cb = catOrder[b.category] != null ? catOrder[b.category] : 99;
-    if (ca !== cb) return ca - cb;
-    if (a.running && !b.running) return -1;
-    if (!a.running && b.running) return 1;
-    return (a.order||99) - (b.order||99);
-  });
+  // Sort: 用户排列(cardOrder) 优先 → 新卡按 分类→运行→order 兜底
+  var cardOrder = loadCardOrder();
+  sorted.sort(function(a,b){ return compareTools(a,b,cardOrder); });
 
   if (!sorted.length) {
     grid.innerHTML = '<div class="empty"><p>没有工具匹配当前筛选组合</p><p style="font-size:12px;margin-top:8px"><a class="reset-link" onclick="resetDims()" title="清除所有筛选条件">← 重置全部筛选</a></p></div>';
@@ -306,7 +285,7 @@ function renderCard(t) {
   var ico = t.icon || (t.name || t.id).trim().charAt(0);
   var extraClass = (t.disabled && state !== 'disabled') ? ' st-disabled' : '';
   return '<div class="tool-card st-' + state + extraClass + '" data-id="' + t.id + '">'
-    + '<div class="card-top"><span class="card-ico">' + escHtml(ico) + '</span><div class="card-name">' + escHtml(t.name || t.id) + '</div></div>'
+    + '<div class="card-top"><span class="card-ico">' + escHtml(ico) + '</span><div class="card-name">' + escHtml(t.name || t.id) + '</div><span class="card-drag-handle" draggable="true" title="拖拽排序"></span></div>'
     + metaRowHtml(t, state)
     + actionsHtml(t, state)
     + '</div>';
@@ -425,6 +404,75 @@ async function verifyAndOpen(btn, id, url) {
   btn.textContent = origText;
   btn.style.opacity = '';
   btn.style.pointerEvents = '';
+}
+
+/* ── 侧边栏工具架可折叠：展开快捷跳转子栏；拖卡片到「工具架」按钮即添加，子项右侧 × 删除 ── */
+var TOOLS_SUB_DEFAULT = ['claude-catalog', 'catalog', 'source-rack'];
+function loadToolsSub() {
+  try {
+    var v = JSON.parse(localStorage.getItem('agentboard-tools-sub-list') || 'null');
+    if (Array.isArray(v)) return v.filter(function(id){ return typeof id === 'string'; });
+  } catch(_) {}
+  return TOOLS_SUB_DEFAULT.slice();
+}
+function saveToolsSub(list) {
+  try { localStorage.setItem('agentboard-tools-sub-list', JSON.stringify(list)); } catch(_) {}
+}
+function toggleToolsSub(force) {
+  var sub = document.getElementById('toolsSub');
+  if (!sub) return;
+  var open = force != null ? !!force : !sub.classList.contains('open');
+  sub.classList.toggle('open', open);
+  var caret = document.getElementById('toolsCaret');
+  if (caret) caret.textContent = open ? '▾' : '▸';
+  try { localStorage.setItem('agentboard-tools-sub', open ? '1' : '0'); } catch(_) {}
+}
+function toolsNavClick() {
+  var toolsPage = document.getElementById('page-tools');
+  if (!toolsPage.classList.contains('show')) showPage('tools');
+  toggleToolsSub();
+}
+function quickPreview(id) {
+  var t = tools.find(function(x){ return x.id === id; });
+  if (t && t.url) window.open(t.url, '_blank');
+}
+function renderToolsSub() {
+  var sub = document.getElementById('toolsSub');
+  if (!sub) return;
+  var list = loadToolsSub();
+  if (!list.length) {
+    sub.innerHTML = '<div class="nav-sub-hint">拖卡片到「工具架」加入快捷</div>';
+    return;
+  }
+  sub.innerHTML = list.map(function(id){
+    var t = tools.find(function(x){ return x.id === id; });
+    var label = t && t.name ? t.name : id;
+    return '<div class="nav-sub-item" title="' + escAttr(t && t.url ? t.url : '') + '" onclick="quickPreview(\'' + id + '\')">'
+      + '<span class="nav-sub-label">' + escHtml(label) + '</span>'
+      + '<span class="nav-sub-del" title="移除快捷" onclick="event.stopPropagation();deleteToolsSubItem(\'' + id + '\')">×</span>'
+      + '</div>';
+  }).join('');
+}
+function addToolsSub(id) {
+  var t = tools.find(function(x){ return x.id === id; });
+  if (!t) { toast('工具不存在'); return; }
+  if (!t.url) { toast('「' + (t.name || id) + '」无跳转地址，不可加入快捷'); return; }
+  var list = loadToolsSub();
+  if (list.indexOf(id) !== -1) { toast('已在快捷栏'); return; }
+  list.push(id);
+  saveToolsSub(list);
+  renderToolsSub();
+  toggleToolsSub(true);
+  toast('已加入快捷栏：' + (t.name || id));
+}
+function deleteToolsSubItem(id) {
+  var t = tools.find(function(x){ return x.id === id; });
+  var name = t && t.name ? t.name : id;
+  if (!confirm('从工具架快捷栏移除「' + name + '」？')) return;
+  var list = loadToolsSub().filter(function(x){ return x !== id; });
+  saveToolsSub(list);
+  renderToolsSub();
+  toast('已移除：' + name);
 }
 
 function pollUntil(id, wantRunning, maxTries) {
@@ -636,6 +684,93 @@ function persistAppOrder(ids) {
     if (d.ok) { appsData = null; renderApps(); toast('已保存排序'); }
     else toast('排序保存失败：' + (d.error || ''));
   }).catch(function (e) { toast('排序保存失败：' + e.message); });
+}
+
+/* ── 工具架拖拽排序：六点手柄（对齐 apps），事件委托在 #toolGrid，drop 后算全局序写 localStorage['agentboard-card-order'] ── */
+function loadCardOrder() {
+  var cardOrder = [];
+  try { cardOrder = JSON.parse(localStorage.getItem('agentboard-card-order') || '[]'); } catch (_) {}
+  return Array.isArray(cardOrder) ? cardOrder : [];
+}
+// render() 排序与拖拽落盘共用的比较器：用户排列优先 → 已停用沉底 → 新卡按 分类→运行→order 兜底
+function compareTools(a, b, cardOrder) {
+  var da = a.disabled ? 1 : 0;
+  var db = b.disabled ? 1 : 0;
+  if (da !== db) return da - db;
+  var ai = cardOrder.indexOf(a.id);
+  var bi = cardOrder.indexOf(b.id);
+  if (ai !== -1 && bi !== -1) return ai - bi;
+  if (ai !== -1) return -1;
+  if (bi !== -1) return 1;
+  var catOrder = {'模型':0, '本地模型':0, '远程模型':0, 'Agent':1, '设施':2, '获取':3, '查阅':4, '创作':5, '职能':6};
+  var ca = catOrder[a.category] != null ? catOrder[a.category] : 99;
+  var cb = catOrder[b.category] != null ? catOrder[b.category] : 99;
+  if (ca !== cb) return ca - cb;
+  if (a.running && !b.running) return -1;
+  if (!a.running && b.running) return 1;
+  return (a.order||99) - (b.order||99);
+}
+var toolDragId = null;
+function onToolGridDragStart(e) {
+  if (!e.target.closest('.card-drag-handle')) { e.preventDefault(); return; }
+  var card = e.target.closest('.tool-card');
+  if (!card || !card.getAttribute('data-id')) return;
+  toolDragId = card.getAttribute('data-id');
+  card.classList.add('dragging');
+  e.dataTransfer.effectAllowed = 'move';
+  e.dataTransfer.setData('text/plain', toolDragId);
+}
+function onToolGridDragOver(e) {
+  e.preventDefault();
+  if (!toolDragId) return;
+  var card = e.target.closest('.tool-card');
+  if (!card || card.getAttribute('data-id') === toolDragId) return;
+  e.dataTransfer.dropEffect = 'move';
+  card.classList.add('drag-over');
+}
+function onToolGridDragLeave(e) {
+  var card = e.target.closest('.tool-card');
+  if (card) card.classList.remove('drag-over');
+}
+function onToolGridDrop(e) {
+  e.preventDefault();
+  var card = e.target.closest('.tool-card');
+  if (card) card.classList.remove('drag-over');
+  if (!toolDragId || !card || card.getAttribute('data-id') === toolDragId) return;
+  var grid = document.getElementById('toolGrid');
+  var src = grid.querySelector('.tool-card[data-id="' + toolDragId + '"]');
+  if (!src) return;
+  var cards = Array.prototype.slice.call(grid.querySelectorAll('.tool-card'));
+  var srcIdx = cards.indexOf(src);
+  var dstIdx = cards.indexOf(card);
+  if (srcIdx < dstIdx) card.parentNode.insertBefore(src, card.nextSibling);
+  else card.parentNode.insertBefore(src, card);
+  persistToolOrder(grid);
+}
+function onToolGridDragEnd() {
+  var grid = document.getElementById('toolGrid');
+  if (grid) {
+    var s = grid.querySelector('.tool-card.dragging');
+    if (s) s.classList.remove('dragging');
+    var overs = grid.querySelectorAll('.tool-card.drag-over');
+    for (var i = 0; i < overs.length; i++) overs[i].classList.remove('drag-over');
+  }
+  toolDragId = null;
+}
+// 拖拽后落盘：只重排可见卡（当前筛选下），不可见卡保持原位 → 全序写 localStorage，render 排序直接消费
+function persistToolOrder(gridEl) {
+  var visible = Array.prototype.map.call(gridEl.querySelectorAll('.tool-card[data-id]'), function (c) { return c.getAttribute('data-id'); });
+  if (!visible.length) return;
+  var cardOrder = loadCardOrder();
+  var full = tools.slice().sort(function (a, b) { return compareTools(a, b, cardOrder); }).map(function (t) { return t.id; });
+  var visIdx = 0, out = [];
+  for (var i = 0; i < full.length; i++) {
+    if (visible.indexOf(full[i]) !== -1) out.push(visible[visIdx++]);
+    else out.push(full[i]);
+  }
+  localStorage.setItem('agentboard-card-order', JSON.stringify(out));
+  render();
+  toast('已保存排序');
 }
 
 /* ── 原则库（决策框架，经验日志同款呈现） ── */
@@ -1178,6 +1313,30 @@ document.addEventListener('DOMContentLoaded', function() {
     appGridEl.addEventListener('drop', onAppGridDrop);
     appGridEl.addEventListener('dragend', onAppGridDragEnd);
   }
+  var toolGridEl = document.getElementById('toolGrid');
+  if (toolGridEl) {
+    toolGridEl.addEventListener('dragstart', onToolGridDragStart);
+    toolGridEl.addEventListener('dragover', onToolGridDragOver);
+    toolGridEl.addEventListener('dragleave', onToolGridDragLeave);
+    toolGridEl.addEventListener('drop', onToolGridDrop);
+    toolGridEl.addEventListener('dragend', onToolGridDragEnd);
+  }
+  try { if (localStorage.getItem('agentboard-tools-sub') === '1') toggleToolsSub(true); } catch(_) {}
+  var toolsNav = document.getElementById('toolsNavItem');
+  if (toolsNav) {
+    toolsNav.addEventListener('dragover', function(e) {
+      if (!toolDragId) return;
+      e.preventDefault();
+      toolsNav.classList.add('drag-over');
+    });
+    toolsNav.addEventListener('dragleave', function() { toolsNav.classList.remove('drag-over'); });
+    toolsNav.addEventListener('drop', function(e) {
+      e.preventDefault();
+      toolsNav.classList.remove('drag-over');
+      if (toolDragId) addToolsSub(toolDragId);
+    });
+  }
+  renderToolsSub();
   fetchTools();
   renderApps();
   TipsPanel.load();
