@@ -1416,6 +1416,11 @@ function buildCapDims() {
     + '<span class="dim-opt' + (capArch === 'yes' ? ' active' : '') + '" onclick="setCapArch(\'yes\')">含图(' + withD + ')</span>'
     + '<span class="dim-opt' + (capArch === 'no' ? ' active' : '') + '" onclick="setCapArch(\'no\')">无图(' + (capData.skills.length - withD) + ')</span>'
     + '</div></div>';
+  (capData.links || []).forEach(function(l) {
+    html += '<div class="dim-block" style="--b:#EEF4EF"><div class="dim-block-title">' + escHtml(l.label) + '<span class="dim-arr">></span></div><div class="dim-block-opts">'
+      + '<a class="dim-opt" href="' + escAttr(l.url) + '" target="_blank" rel="noopener" title="' + escAttr(l.url) + '">' + escHtml(l.desc || l.label) + ' ↗</a>'
+      + '</div></div>';
+  });
   el.innerHTML = html;
 }
 function setCapCat(c) { capCat = c; refreshCapSkillsGrid(); }
