@@ -66,7 +66,8 @@ a{text-decoration:none;color:inherit}
 .dim-arr{font-size:13px;color:var(--text-muted);margin-left:6px;font-weight:400}
 .dim-block-opts{display:flex;flex-wrap:wrap;gap:16px;align-content:flex-start}
 .dim-opt{font-size:14px;color:var(--text-secondary);cursor:pointer;user-select:none;line-height:20px}
-a.dim-opt{text-decoration:none;display:inline-block}
+a.dim-opt{text-decoration:none;display:inline-flex;align-items:center;gap:5px}
+.cmd-link-ico{width:18px;height:18px;flex-shrink:0}
 .dim-opt:hover{color:var(--green)}
 .dim-opt.active{color:var(--green);font-weight:600}
 .dim-opt .d-n{font-family:var(--font-code);font-size:11px;opacity:.65;margin-left:3px}
@@ -426,9 +427,15 @@ a.dim-opt{text-decoration:none;display:inline-block}
 .cmd-act{white-space:nowrap;text-align:right}
 .cmd-table .btn-mini{height:22px;padding:0 9px;border:1px solid var(--border);border-radius:6px;background:var(--paper);font-size:11px;font-family:inherit;color:var(--text-secondary);cursor:pointer;margin-left:6px}
 .cmd-table .btn-mini:hover{border-color:var(--green);color:var(--green)}
-.cmd-table .btn-mini.danger{min-width:74px;border-color:#F2C6C3;color:var(--status-error)}
+.cmd-table .btn-mini.danger{border-color:#F2C6C3;color:var(--status-error)}
 .cmd-table .btn-mini.danger:hover{background:var(--status-error);border-color:var(--status-error);color:var(--on-brand)}
-.cmd-table .btn-mini.danger.confirming{background:var(--status-error);border-color:var(--status-error);color:var(--on-brand);animation:pulse .4s ease-in-out 3}
+.cmd-pop{position:fixed;z-index:1200;background:var(--paper);border:1px solid var(--border);border-radius:8px;box-shadow:0 6px 24px rgba(0,0,0,.14);padding:12px 14px;display:flex;flex-direction:column;gap:10px;min-width:210px}
+.cmd-pop-msg{font-size:13px;color:var(--text);display:flex;align-items:center;gap:6px}
+.cmd-pop-actions{display:flex;justify-content:flex-end;gap:8px}
+.cmd-pop .pop-btn{height:24px;padding:0 12px;border:1px solid var(--border);border-radius:6px;background:var(--paper);font-size:12px;font-family:inherit;color:var(--text-secondary);cursor:pointer}
+.cmd-pop .pop-btn:hover{border-color:var(--green);color:var(--green)}
+.cmd-pop .pop-btn.danger{border-color:#F2C6C3;color:var(--status-error)}
+.cmd-pop .pop-btn.danger:hover{background:var(--status-error);border-color:var(--status-error);color:var(--on-brand)}
 .cmd-ro{padding:8px 10px;background:var(--paper-tint);border:1px solid var(--border);border-radius:6px}
 /* 全局宪法 */
 .cap-md{margin-top:8px}

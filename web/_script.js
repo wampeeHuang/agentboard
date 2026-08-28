@@ -1418,7 +1418,7 @@ function buildCapDims() {
     + '</div></div>';
   (capData.links || []).forEach(function(l) {
     html += '<div class="dim-block" style="--b:#EEF4EF"><div class="dim-block-title">' + escHtml(l.label) + '<span class="dim-arr">></span></div><div class="dim-block-opts">'
-      + '<a class="dim-opt" href="' + escAttr(l.url) + '" target="_blank" rel="noopener" title="' + escAttr(l.url) + '">' + escHtml(l.desc || l.label) + ' ↗</a>'
+      + '<a class="dim-opt" href="' + escAttr(l.url) + '" target="_blank" rel="noopener" title="' + escAttr(l.url) + '"><svg class="cmd-link-ico" viewBox="0 0 20 20" aria-hidden="true"><rect width="20" height="20" rx="3" fill="var(--green)"/><rect x="4" y="4" width="12" height="3.2" rx="0.8" fill="var(--paper)"/><path d="M4 10.2 H16 M4 13.8 H16 M7 4 V16 M11 4 V16" fill="none" stroke="var(--paper)" stroke-width="1.4"/></svg>' + escHtml(l.desc || l.label) + ' ↗</a>'
       + '</div></div>';
   });
   el.innerHTML = html;
@@ -1637,7 +1637,7 @@ function refreshCapCommands() {
     return true;
   });
   if (!list.length) { el.innerHTML = '<div class="cap-empty">无匹配命令</div>'; return; }
-  el.innerHTML = '<table class="cmd-table"><thead><tr><th style="width:150px">命令</th><th style="width:170px">名称</th><th>说明</th><th style="width:152px">操作</th></tr></thead><tbody>'
+  el.innerHTML = '<table class="cmd-table"><thead><tr><th style="width:150px">命令</th><th style="width:170px">名称</th><th>说明</th><th style="width:120px">操作</th></tr></thead><tbody>'
     + list.map(function(c) {
         var trCls = c.miss ? ' class="cmd-miss"' : '';
         var title = c.miss ? ' title="源中未检出——下次扫描没检索到，可删除"' : '';
@@ -1753,18 +1753,41 @@ function submitCreateCommand() {
     })
     .catch(function() { alert('请求失败'); });
 }
-/* 删除 = 去掉二次标注：二次点击确认（按钮变「确认删除？」），源里还在的命令回未标注桶 */
+/* 删除 = 去掉二次标注：气泡确认（Popconfirm）——按钮不变，气泡浮层，源里还在的命令回未标注桶 */
+var _cmdPop = null;
 function deleteCommand(name, ev) {
+  if (ev) { ev.preventDefault(); ev.stopPropagation(); }
+  closeCmdPop();
   var btn = ev && ev.currentTarget;
-  if (btn && btn.dataset.confirm !== '1') {
-    btn.dataset.confirm = '1';
-    btn.textContent = '确认删除？';
-    btn.classList.add('confirming');
-    setTimeout(function() {
-      if (btn.dataset.confirm === '1') { btn.dataset.confirm = ''; btn.textContent = '删除'; btn.classList.remove('confirming'); }
-    }, 3000);
-    return;
-  }
+  var r = btn ? btn.getBoundingClientRect() : { left: 200, top: 200, bottom: 220 };
+  var pop = document.createElement('div');
+  pop.className = 'cmd-pop';
+  pop.innerHTML = '<div class="cmd-pop-msg">确认删除 <code class="cmd-code">/' + escHtml(name) + '</code> 命令？</div>'
+    + '<div class="cmd-pop-actions">'
+    + '<button class="pop-btn" data-act="cancel">取消</button>'
+    + '<button class="pop-btn danger" data-act="confirm">确认删除</button>'
+    + '</div>';
+  var left = Math.max(8, Math.min(r.left, window.innerWidth - 230));
+  var top = r.bottom + 8;
+  if (top + 110 > window.innerHeight) top = Math.max(8, r.top - 100);
+  pop.style.left = left + 'px';
+  pop.style.top = top + 'px';
+  pop.querySelector('[data-act="cancel"]').addEventListener('click', function(e) { e.stopPropagation(); closeCmdPop(); });
+  pop.querySelector('[data-act="confirm"]').addEventListener('click', function(e) { e.stopPropagation(); doDeleteCmd(name); });
+  document.body.appendChild(pop);
+  _cmdPop = pop;
+  document.addEventListener('click', onCmdPopDocClick);
+}
+function onCmdPopDocClick(e) {
+  if (_cmdPop && !_cmdPop.contains(e.target)) closeCmdPop();
+}
+document.addEventListener('keydown', function(e) { if (e.key === 'Escape') closeCmdPop(); });
+function closeCmdPop() {
+  document.removeEventListener('click', onCmdPopDocClick);
+  if (_cmdPop) { _cmdPop.remove(); _cmdPop = null; }
+}
+function doDeleteCmd(name) {
+  closeCmdPop();
   fetch('/api/commands/' + encodeURIComponent(name), { method: 'DELETE' })
     .then(function(r) { return r.json(); })
     .then(function(d) {
