@@ -3,5 +3,11 @@
   "version": 1,
   "work": {
     "retention_days": 3
+  },
+  "state": {
+    "retention_days": 30,
+    "clean": [
+      "api-calls"
+    ]
   }
 }

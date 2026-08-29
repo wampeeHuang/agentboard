@@ -132,8 +132,8 @@ Both planes share one truth source: `tools/{id}/manifest.json`. Change a file, b
 ├── .gitignore             忽略规则
 ├── package.json           依赖（express + MCP SDK）
 ├── package-lock.json
-├── AGENT.md               治理宪法（架构 / 原则 / 边界）
-├── CLAUDE.md              Claude 适配层（@AGENT.md）
+├── AGENTS.md               治理宪法（架构 / 原则 / 边界）
+├── CLAUDE.md              Claude 适配层（@AGENTS.md）
 ├── inspection.json        巡检检查项
 ├── server.js              REST + Dashboard 装配（:3099）
 ├── start.js               启动入口（kill-port → server.js）
@@ -156,7 +156,7 @@ Both planes share one truth source: `tools/{id}/manifest.json`. Change a file, b
 │   ├── shared/            tips 面板 + 图标资源（tips-panel.css · tips-panel.js · logo-lib.js · icon-lib.js · logos/）
 │   ├── capability-map.svg  能力图谱（全局宪法 tab）
 │   └── logo.svg
-├── tools/                 工具架卡（宪法 = AGENT.md；形状 = lib/manifest-schema.js）
+├── tools/                 工具架卡（宪法 = AGENTS.md；形状 = lib/manifest-schema.js）
 ├── apps/                  我的网站卡（宪法 = apps/CONSTITUTION.md；形状 = lib/apps-schema.js）
 ├── examples/             tools 卡模板（copy 到 tools/）
 ├── tips/                  经验日志卡（宪法 = tips/CONSTITUTION.md；形状 = lib/tip-schema.js）
@@ -176,10 +176,10 @@ Both planes share one truth source: `tools/{id}/manifest.json`. Change a file, b
 
 治理层一份真相，人 AI 各走一扇门，同源不漂移：
 
-- **人** — 治理宪法在 [`AGENT.md`](AGENT.md)：架构 / 治理原则（第一性）/ 骨件边界 / 资产边界 / 工具调用协议。README 只做入口不抄内容，`AGENT.md` 是唯一真相源，改文件即改文档。
-- **AI** — `GET /api/registry` 从真源生成三篇：治理宪法（AGENT.md）+ Manifest Schema（lib/manifest-schema.js 实时字段表）+ 真相源索引（指针直指各数据家）。
+- **人** — 治理宪法在 [`AGENTS.md`](AGENTS.md)：架构 / 治理原则（第一性）/ 骨件边界 / 资产边界 / 工具调用协议。README 只做入口不抄内容，`AGENTS.md` 是唯一真相源，改文件即改文档。
+- **AI** — `GET /api/registry` 从真源生成三篇：治理宪法（AGENTS.md）+ Manifest Schema（lib/manifest-schema.js 实时字段表）+ 真相源索引（指针直指各数据家）。
 
-每条治理主题只有一个家：`AGENT.md`（宪法）、`lib/manifest-schema.js`（契约）、`web/_tokens.css`（设计 token，品牌基因契约在 `~/.claude/skills/vivi-design-system/brand-dna.md`）、`tips/CONSTITUTION.md`（日志格式）、`~/.claude/CLAUDE.md`（落盘规则）。要改规矩，改真源文件，视图自动变。
+每条治理主题只有一个家：`AGENTS.md`（宪法）、`lib/manifest-schema.js`（契约）、`web/_tokens.css`（设计 token，品牌基因契约在 `~/.claude/skills/vivi-design-system/brand-dna.md`）、`tips/CONSTITUTION.md`（日志格式）、`~/.claude/CLAUDE.md`（落盘规则）。要改规矩，改真源文件，视图自动变。
 
 ---
 

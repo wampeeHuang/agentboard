@@ -36,6 +36,20 @@
     feedback: '<svg viewBox="0 0 12 12" aria-hidden="true"><path d="M6 1.4 A4.6 4.6 0 0 1 6 10.6" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>'
   };
 
+  /* ── 领域元数据（独立口：general 通用 + 各机制生态子目录，标签页按此渲染）── */
+  var DOMAIN_DEFS = [['all', '全部'], ['general', '通用'], ['dsh', 'DSH'], ['cron', 'Cron']];
+  var DOMAIN_LABEL = { general: '通用', dsh: 'DSH', cron: 'Cron' };
+
+  /* ── 作者元数据（来源：谁写的，枚举 + 其他兜底）── */
+  var AUTHOR_DEFS = [['all', '全部'], ['人工', '人工'], ['dsh-agent', 'dsh-agent'], ['claude', 'claude'], ['codex', 'codex'], ['cron', 'cron'], ['其他', '其他']];
+
+  /* ── 筛选分类悬停气泡文案（作者/领域/类型）── */
+  var DIM_DESC = {
+    author: { all: '所有来源', '人工': '你手动写的', 'dsh-agent': 'DeepSeek Harness agent 沉淀', claude: 'Claude 沉淀', codex: 'Codex 沉淀', cron: '定时任务沉淀', '其他': '未知来源' },
+    domain: { all: '所有领域', general: '不依附任何系统的经验', dsh: 'DeepSeek Harness 专属', cron: '调度中心专属' },
+    type: { all: '所有类型', diagnosis: '为什么X会这样？因果链路', method: '怎么做X？步骤序列', fact: 'X在哪/是什么？', capability: '我能用X在Y场景做什么', feedback: '用户/环境的纠正' }
+  };
+
   /* ── 宪法 §三 承接：每类型分区字段 ──
      [分区标题, slot] 顺序即保存顺序；capability 额外 tool/scenario 进 frontmatter */
   var SCHEMA = {
@@ -57,7 +71,7 @@
   var SEC_PLACEHOLDER = { phen: PH_PHEN, cause: PH_CAUSE_DIAG, act: PH_ACT, prev: PH_PREV, cap: PH_CAP, why: PH_WHY, quick: PH_QUICK };
   var CAP_SLOTS = { cap: 1, why: 1, quick: 1 };
 
-  var state = { data: [], filter: 'all', search: '', editFile: null, formType: 'diagnosis', sections: [] };
+  var state = { data: [], filter: 'all', domainFilter: 'all', authorFilter: 'all', search: '', editFile: null, formType: 'diagnosis', sections: [] };
 
   function $(id) { return document.getElementById(id); }
   function esc(s) {
@@ -146,9 +160,29 @@
   }
 
   /* ── 列表渲染 ── */
+  /* 领域归属：frontmatter domain 优先；其次按文件路径前缀（dsh/xxx.md → dsh）；否则通用 */
+  function tipDomain(x) {
+    if (x && typeof x.domain === 'string' && x.domain) return x.domain;
+    var f = (x && x.file) || '';
+    var i = f.indexOf('/');
+    if (i > 0) return f.slice(0, i);
+    return 'general';
+  }
+  /* 作者归属：frontmatter author；缺省视为"其他"（未知来源） */
+  function tipAuthor(x) {
+    return (x && typeof x.author === 'string' && x.author) ? x.author : '其他';
+  }
   function tipList() {
     var list = state.data;
     if (state.filter !== 'all') list = list.filter(function (t) { return t.type === state.filter; });
+    if (state.domainFilter !== 'all') {
+      var df = state.domainFilter;
+      list = list.filter(function (t) { return tipDomain(t) === df; });
+    }
+    if (state.authorFilter !== 'all') {
+      var af = state.authorFilter;
+      list = list.filter(function (t) { return tipAuthor(t) === af; });
+    }
     if (state.search) {
       var q = state.search.toLowerCase();
       list = list.filter(function (t) {
@@ -159,15 +193,57 @@
     }
     return list;
   }
+  /* ── 筛选分类悬停气泡（白底，复用站内 tip-bubble 风格）── */
+  var _tipBubble = null, _tipBubbleTimer = null;
+  function showBubble(opt) {
+    var desc = opt.getAttribute('data-desc');
+    if (!desc) return;
+    if (!_tipBubble) {
+      _tipBubble = document.createElement('div');
+      _tipBubble.className = 'tips-bubble';
+      _tipBubble.style.display = 'none';
+      document.body.appendChild(_tipBubble);
+    }
+    _tipBubble.textContent = desc;
+    var r = opt.getBoundingClientRect();
+    _tipBubble.style.display = 'block';
+    var bw = _tipBubble.offsetWidth;
+    _tipBubble.style.left = Math.min(Math.max(r.left, 8), window.innerWidth - bw - 8) + 'px';
+    _tipBubble.style.top = (r.bottom + 6) + 'px';
+  }
+  function hideBubble() {
+    clearTimeout(_tipBubbleTimer);
+    if (_tipBubble) _tipBubble.style.display = 'none';
+  }
+
   function renderDims() {
     var wrap = $('tipDimBlocks');
     if (!wrap) return;
-    var counts = {};
-    state.data.forEach(function (x) { var k = x.type || ''; counts[k] = (counts[k] || 0) + 1; });
-    var html = '<div class="dim-block dim-status"><div class="dim-block-title">类型</div><div class="dim-block-opts">';
+    var tCounts = {}, dCounts = {}, aCounts = {};
+    state.data.forEach(function (x) {
+      var k = x.type || '';
+      tCounts[k] = (tCounts[k] || 0) + 1;
+      var dk = tipDomain(x);
+      dCounts[dk] = (dCounts[dk] || 0) + 1;
+      var ak = tipAuthor(x);
+      aCounts[ak] = (aCounts[ak] || 0) + 1;
+    });
+    var html = '<div class="dim-block dim-author"><div class="dim-block-title">作者</div><div class="dim-block-opts">';
+    AUTHOR_DEFS.forEach(function (d) {
+      var n = d[0] === 'all' ? state.data.length : (aCounts[d[0]] || 0);
+      html += '<span class="dim-opt' + (state.authorFilter === d[0] ? ' active' : '') + '" data-tipa="' + d[0] + '" data-desc="' + escAttr(DIM_DESC.author[d[0]] || '') + '">' + d[1] + '<span class="d-n">' + n + '</span></span>';
+    });
+    html += '</div></div>';
+    html += '<div class="dim-block dim-domain"><div class="dim-block-title">领域</div><div class="dim-block-opts">';
+    DOMAIN_DEFS.forEach(function (d) {
+      var n = d[0] === 'all' ? state.data.length : (dCounts[d[0]] || 0);
+      html += '<span class="dim-opt' + (state.domainFilter === d[0] ? ' active' : '') + '" data-tipd="' + d[0] + '" data-desc="' + escAttr(DIM_DESC.domain[d[0]] || '') + '">' + d[1] + '<span class="d-n">' + n + '</span></span>';
+    });
+    html += '</div></div>';
+    html += '<div class="dim-block dim-status"><div class="dim-block-title">类型</div><div class="dim-block-opts">';
     TIP_DEFS.forEach(function (d) {
-      var n = d[0] === 'all' ? state.data.length : (counts[d[0]] || 0);
-      html += '<span class="dim-opt' + (state.filter === d[0] ? ' active' : '') + '" data-tipf="' + d[0] + '">' + d[1] + '<span class="d-n">' + n + '</span></span>';
+      var n = d[0] === 'all' ? state.data.length : (tCounts[d[0]] || 0);
+      html += '<span class="dim-opt' + (state.filter === d[0] ? ' active' : '') + '" data-tipf="' + d[0] + '" data-desc="' + escAttr(DIM_DESC.type[d[0]] || '') + '">' + d[1] + '<span class="d-n">' + n + '</span></span>';
     });
     html += '</div></div>';
     wrap.innerHTML = html;
@@ -180,12 +256,15 @@
     var geo = TIP_GEO[type] || TIP_GEO.diagnosis;
     var label = TIP_LABEL[type] || type;
     var desc = (x.desc || '').slice(0, 200);
+    var dom = tipDomain(x);
+    var domLabel = DOMAIN_LABEL[dom] || dom;
     return '<div class="tool-card">'
       + '<div class="card-top"><span class="card-ico">' + esc(TIP_CHAR[type] || '记') + '</span><span class="card-name">' + esc(x.title || x.file) + '</span></div>'
       + '<div class="card-meta-row">'
+      + '<div class="cf"><div class="cf-l">作者</div><div class="tip-meta-val">' + esc(x.author || '其他') + '</div></div>'
+      + '<div class="cf"><div class="cf-l">领域</div><div class="tip-domain" data-domain="' + escAttr(dom) + '">' + esc(domLabel) + '</div></div>'
       + '<div class="cf"><div class="cf-l">类型</div><div class="tip-type" data-type="' + escAttr(type) + '">' + geo + '<span>' + esc(label) + '</span></div></div>'
-      + '<div class="cf"><div class="cf-l">文件</div><div class="card-id">' + esc(x.file || '') + '</div></div>'
-      + '<div class="cf"><div class="cf-l">内容</div><div class="tip-desc-cell">' + esc(desc) + '</div></div>'
+      + '<div class="cf"><div class="cf-l">来源</div><div class="tip-meta-val">' + esc(x.source || '') + '</div></div>'
       + '</div>'
       + '<div class="card-actions"><span class="p4-spacer"></span>'
       + '<button class="btn" data-act="edit" data-file="' + escAttr(x.file) + '">编辑</button>'
@@ -259,6 +338,8 @@
     state.editFile = null;
     $('tips-form-title').textContent = '新增日志';
     $('tips-tp-type').value = 'diagnosis';
+    $('tips-tp-domain').value = 'general';
+    $('tips-tp-author').value = '人工';
     $('tips-tp-title').value = '';
     $('tips-tp-source').value = '';
     var tool = $('tips-tp-tool'), scen = $('tips-tp-scenario');
@@ -281,7 +362,7 @@
         var d;
         try { d = JSON.parse(res.text); } catch (e) { d = res.text; }
         var md = normBody(d).replace(/\r\n/g, '\n');
-        var type = 'diagnosis', source = '', tool = '', scenario = '', rest = md, title = '';
+        var type = 'diagnosis', source = '', tool = '', scenario = '', domain = 'general', author = '人工', rest = md, title = '';
         var fm = md.match(/^---\n([\s\S]*?)\n---\n?/);
         if (fm) {
           var f = fm[1];
@@ -289,6 +370,8 @@
           var s = f.match(/^source:\s*(.+)$/m); if (s) source = s[1].trim();
           var tl = f.match(/^tool:\s*(.+)$/m); if (tl) tool = tl[1].trim();
           var sc = f.match(/^scenario:\s*(.+)$/m); if (sc) scenario = sc[1].trim();
+          var dm = f.match(/^domain:\s*(.+)$/m); if (dm) domain = dm[1].trim();
+          var au = f.match(/^author:\s*(.+)$/m); if (au) author = au[1].trim();
           rest = md.slice(fm[0].length);
         }
         var h1 = rest.match(/^#\s+(.+)$/m);
@@ -311,6 +394,8 @@
         $('tips-tp-type').value = typeVal;
         $('tips-tp-title').value = title;
         $('tips-tp-source').value = source;
+        var domEl = $('tips-tp-domain'); if (domEl) domEl.value = domain === 'general' || domain === 'dsh' || domain === 'cron' ? domain : 'general';
+        var authEl = $('tips-tp-author'); if (authEl) authEl.value = author || '人工';
         state.formType = typeVal;
         formTypeChange(); // 先重建骨架，再回填分区（formTypeChange 会重置 state.sections）
         state.sections = schemaFor(typeVal).map(function (pair) {
@@ -337,11 +422,15 @@
     if (!title) { toast('标题必填', 'error'); $('tips-tp-title').focus(); return; }
     var type = $('tips-tp-type').value;
     var source = $('tips-tp-source').value.trim();
+    var domain = $('tips-tp-domain').value;
+    var author = $('tips-tp-author').value;
     var toolEl = $('tips-tp-tool'), scenEl = $('tips-tp-scenario');
     var body = {
       title: title,
       type: type,
       source: source,
+      domain: domain,
+      author: author,
       tool: toolEl ? toolEl.value.trim() : '',
       scenario: scenEl ? scenEl.value.trim() : '',
       desc: buildDesc()
@@ -381,6 +470,12 @@
     + '<div class="tips-form">'
     + '<div class="tips-form-head"><span class="tips-form-title" id="tips-form-title">新增日志</span><button class="tips-form-close" data-tips-close>x</button></div>'
     + '<div class="tips-form-body">'
+    + '<div class="tips-field"><label>作者</label><select id="tips-tp-author">'
+    + '<option value="人工">人工</option><option value="dsh-agent">dsh-agent</option><option value="claude">claude</option><option value="codex">codex</option><option value="cron">cron</option><option value="其他">其他</option>'
+    + '</select></div>'
+    + '<div class="tips-field"><label>领域</label><select id="tips-tp-domain">'
+    + '<option value="general">通用</option><option value="dsh">DSH</option><option value="cron">Cron</option>'
+    + '</select></div>'
     + '<div class="tips-field"><label>类型</label><select id="tips-tp-type">'
     + '<option value="diagnosis">诊断</option><option value="method">方法</option><option value="fact">事实</option><option value="capability">能力</option><option value="feedback">反馈</option>'
     + '</select></div>'
@@ -464,13 +559,28 @@
     }
 
     var dims = $('tipDimBlocks');
-    if (dims) dims.addEventListener('click', function (e) {
-      var opt = e.target.closest('.dim-opt');
-      if (!opt) return;
-      state.filter = opt.getAttribute('data-tipf');
-      renderDims();
-      renderGrid();
-    });
+    if (dims) {
+      dims.addEventListener('mouseover', function (e) {
+        var opt = e.target.closest('.dim-opt');
+        if (!opt) return;
+        clearTimeout(_tipBubbleTimer);
+        _tipBubbleTimer = setTimeout(function () { showBubble(opt); }, 200);
+      });
+      dims.addEventListener('mouseout', function (e) {
+        var to = e.relatedTarget;
+        if (to && to.closest && to.closest('.dim-opt')) return;
+        hideBubble();
+      });
+      dims.addEventListener('click', function (e) {
+        var opt = e.target.closest('.dim-opt');
+        if (!opt) return;
+        if (opt.hasAttribute('data-tipa')) state.authorFilter = opt.getAttribute('data-tipa');
+        else if (opt.hasAttribute('data-tipd')) state.domainFilter = opt.getAttribute('data-tipd');
+        else state.filter = opt.getAttribute('data-tipf');
+        renderDims();
+        renderGrid();
+      });
+    }
 
     var grid = $('tipGrid');
     if (grid) grid.addEventListener('click', function (e) {

@@ -78,6 +78,8 @@ capability 不回答"为什么坏了"，门槛比五问低——不需要"踩坑
 
 互斥检验：一条日志不可能同时主要回答"为什么"又主要回答"怎么做"——诉求不同，写出来重点不同。
 
+> **type 是"形式轴"，与"领域轴/作者轴"正交**（见 §三·领域与作者）。一条日志同时具有三个属性：type（回答什么问题）× domain（在哪个世界适用）× author（谁写的）。
+
 ---
 
 ## 三、格式
@@ -89,6 +91,8 @@ YAML frontmatter（`---` 包裹）在前，正文 H1 标题在后。frontmatter 
 ```markdown
 ---
 type: diagnosis | method | fact | capability | feedback
+domain: general | dsh | cron        # 必填，缺省 general
+author: 人工 | dsh-agent | claude | codex | cron | 其他   # 必填，缺省 其他
 date: YYYY-MM-DD
 source: 触发写入的事件/任务简述
 ---
@@ -144,12 +148,29 @@ recipe: 详细操作手册的绝对路径（可选）
 
 ---
 
+## 三·补、领域与作者（独立口机制）
+
+**domain 与 type 正交**：type 答"这是什么类型的知识"（形式轴），domain 答"这条知识在哪个世界适用"（领域轴）。二者相乘，同一个 domain 内可展开全部 5 类 type。
+
+**domain 归属判据（依附性测试）**：
+> **去掉某个系统，这条经验还成立吗？**
+> - 还成立 → 不依附该系统，归 `general`（或它真正依附的系统）
+> - 不成立 → 归该系统（dsh / cron）
+
+**独立口规则**：凡是有独有机制、坑只有它自己的人才懂的系统，给它一个**物理子目录**（`tips/dsh/`、`tips/cron/`）——文件在哪个目录就是哪个领域，写路径天然强制，无需每次判断。新增系统 = 建目录 + schema 枚举加一项 + 面板自动出现标签页（按路径前缀推导）。通用池（根目录）吸收其余一切，不细分。
+
+**author 规则**：写"谁写的"（来源轴），与 domain 无关——dsh agent 也会踩通用坑（author=dsh-agent, domain=general）。新 agent 不知道身份 → 写"其他"；稳定后由人把它加进枚举。**禁止自创枚举外的值**（schema 会拒绝）。
+
+**存量默认**：缺 domain → general；缺 author → 其他（存量零迁移，schema 不标红）。
+
+---
+
 ## 四、边界（不写入清单）
 
 - **项目设计文档** — 描述系统怎么设计的 → 放 `design-spec.md`
 - **当前状态快照** — 工具数、端口号、运行状态 → 放 `state/`，自动落盘
 - **操作历史** — 谁在什么时候做了什么 → 放 `state/call-log.jsonl`
-- **调度中心经验** — 属于调度中心的踩坑 → 放 `~/.scheduler/tips/`，不重复写两份
+- **调度中心经验** — 属于调度中心的踩坑 → 写入统一库 `tips/cron/`（调度中心服务已指向统一库，cron agent 经其 API 写入即落此目录）；视图只在 3099，3100 不再展示
 - **代码逻辑** — 能从代码本身读懂的 → 代码就是真相源
 - **CLAUDE.md 已有** — 行为规则、项目约定 → 已在 CLAUDE.md
 - **Git 已记录** — commit message 说清楚了的 → git log

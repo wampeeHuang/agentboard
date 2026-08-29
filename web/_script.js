@@ -1241,8 +1241,8 @@ function renderAudit() {
   var html = auditSummaryHtml();
   if (auditF === 'all' || auditF === 'schema') html += auditSection('schema', 'Manifest 契约', '工具注册表格式——每份 manifest.json 必须符合固定字段，格式错了工具上架会缺信息、agent 定位不到；删了 manifest 或启动文件的孤儿目录也在这里报', auditData.schema, 'schema');
   if (auditF === 'all' || auditF === 'brand') html += auditSection('brand', '品牌漂移', '页面配色——token 色值必须与 vivi 设计系统一致，跑偏了换肤时颜色会错乱', auditData.brand, 'brand');
-  if (auditF === 'all' || auditF === 'tree') html += auditSection('tree', '三树一致性', '文档目录——AGENT.md / README / 说明书三份目录树必须跟真实文件对得上，对不上就是文档和代码脱节', auditData.tree, 'tree');
-  if (auditF === 'all' || auditF === 'docs') html += auditSection('docs', '文档新鲜度', '页面清单——说明书 .pg 块、index.html AI 参考注释、AGENT.md/README/说明书 routes 页数必须跟真实导航一致；加了页面忘了同步文档，这里兜住', auditData.docs, 'docs');
+  if (auditF === 'all' || auditF === 'tree') html += auditSection('tree', '三树一致性', '文档目录——AGENTS.md / README / 说明书三份目录树必须跟真实文件对得上，对不上就是文档和代码脱节', auditData.tree, 'tree');
+  if (auditF === 'all' || auditF === 'docs') html += auditSection('docs', '文档新鲜度', '页面清单——说明书 .pg 块、index.html AI 参考注释、AGENTS.md/README/说明书 routes 页数必须跟真实导航一致；加了页面忘了同步文档，这里兜住', auditData.docs, 'docs');
   el.innerHTML = html;
 }
 // 三类统一明细格式：项目名 → 错误(红) → 警告(黄) → 正常(绿)；列表先错误、再警告、正常垫底

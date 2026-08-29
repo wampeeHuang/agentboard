@@ -83,7 +83,7 @@
     {
       "id": "tree_drift",
       "label": "目录树未漂移",
-      "what": "AGENT.md / README / 说明书三棵树列出的文件真实存在，且 lib/ + web/ 真实文件全部入树",
+      "what": "AGENTS.md / README / 说明书三棵树列出的文件真实存在，且 lib/ + web/ 真实文件全部入树",
       "job": "inspector-b-daily",
       "severity": "error",
       "declarative": "node_module",

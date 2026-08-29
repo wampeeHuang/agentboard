@@ -83,6 +83,17 @@ MCP 工具: `agentboard_list_tools`, `agentboard_get_tool`, `agentboard_start_to
 **停止**：读 PID 文件 → `taskkill /PID {pid} /T /F` 精确杀进程树 → 失败回退 `stopCommand` → 清 PID 文件 + 缓存
 **端口查重**：`createTool` / `updateTool` 写入前强制绕过缓存扫描，端口被占当场拦截（`checkPortUnique`）
 
+### 运行数据边界（state/ vs _runtime/）
+
+两个 gitignored 运行数据目录，职责与保留期不同，禁止混用：
+
+| 目录 | 内容 | 保留契约 | 清理器 |
+|---|---|---|---|
+| `state/` | 可查询的运行快照：`api-calls/*.jsonl`（月度 API 调用日志）、`commands.json`、`skill-order.json` | `state/api-calls/` **30 天**；`commands*` / `skill-order` 为当前状态快照，保留 | `scripts/cleanup-runtime.ps1`（state 段） |
+| `_runtime/` | 短期过程现场：`work/`（中间草稿）、`logs/`、`crash/`、`pids/`、`inputs/`（参考材料）、`events.jsonl` | `work/` **3 天**；`inputs/` 参考材料永不自动清；`logs/` 自轮转 | `scripts/cleanup-runtime.ps1`（work 段） |
+
+边界规则：**可查询的快照进 `state/`，一次性过程现场进 `_runtime/`**。二者都不可当作永久归档（永久归档进 `archive/`，且有备份语义）。清理只由 `scripts/cleanup-runtime.ps1` 执行，禁止 agent 随手删运行数据。
+
 ## 工具调用协议
 
 AI agent 通过 **MCP** 调工具（`lib/mcp-http.js`，Streamable HTTP，`POST /mcp`），标准 JSON-RPC 协议。
