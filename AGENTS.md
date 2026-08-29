@@ -9,8 +9,8 @@
 ├── .gitignore            忽略规则
 ├── package.json          依赖（express + MCP SDK）
 ├── package-lock.json
-├── AGENT.md              治理宪法（本文件）
-├── CLAUDE.md             Claude 适配层（@AGENT.md）
+├── AGENTS.md              治理宪法（本文件）
+├── CLAUDE.md             Claude 适配层（@AGENTS.md）
 ├── inspection.json       巡检检查项
 ├── server.js             REST + Dashboard 装配（:3099）
 ├── start.js              启动入口（kill-port → server.js）
@@ -167,7 +167,7 @@ AI agent 通过 **MCP** 调工具（`lib/mcp-http.js`，Streamable HTTP，`POST 
 - **Local-first** — 不依赖云服务。不要求登录。不连外网
 - **Protocol over implementation** — 先定义 schema 再写代码，字段变更先改 schema 再改实践
 
-**本机定位**：工具架 ≤500 工具、单用户。不设技术禁用清单——出现真实硬需求就引入，重大技术决策写进 AGENT.md。
+**本机定位**：工具架 ≤500 工具、单用户。不设技术禁用清单——出现真实硬需求就引入，重大技术决策写进 AGENTS.md。
 
 ## 骨件边界
 
