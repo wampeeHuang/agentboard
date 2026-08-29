@@ -190,7 +190,7 @@ agentboard 是骨件，不是全部。兄弟骨件各管一段，本骨件只代
 - **禁止删除 `tools/` 下的任何 manifest 目录**，除非用户逐文件确认
 - 用户说"删卡片"≠授权删文件。先问：隐藏还是删除？如果要删，列清单等确认
 - 改动前先 `curl localhost:3099/api/tools` 看现状
-- **会话 cwd 不得落在 `_runtime/` 内**——否则 checkpoint hook 会写出嵌套的 `_runtime/_runtime/CHECKPOINT.md`。出过事故（2026-08-27）。跨目录操作用绝对路径
+- **会话 cwd 不得落在 `_runtime/` 内**——否则 checkpoint hook 会写出嵌套的 `_runtime/_runtime/CHECKPOINT.md`。跨目录操作用绝对路径
 
 ## 操作日志
 
