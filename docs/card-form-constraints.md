@@ -9,13 +9,13 @@
 
 | 类型 | 定义 | 谁归这类 | 必填 |
 |---|---|---|---|
-| **服务** service | 常驻后台进程（含本地 API 服务） | 本地模型、Supervisor、画廊… | startCommand 或 port |
+| **服务** service | 常驻后台进程（含本地 API 服务） | 模型（本地）、Supervisor、画廊… | startCommand 或 port |
 | **命令** cli | 用完就走的一次性命令 | 视频管线、剪藏… | trigger |
-| **API** | 外部供应商服务，本地无进程 | 远程模型、Coze、Figma MCP… | apiBase |
+| **API** | 外部供应商服务，本地无进程 | 模型（远程）、Coze、Figma MCP… | apiBase |
 | **文件夹** folder | 项目目录，不可运行 | workspace 项目 | projectPath |
 | **组** group | 多工具编排 | 日报组、视频管线组… | children |
 
-**判断**：原 4 类漏 API。API 是「注册上去就能调」的工具主体（远程模型 7 个 + 各类外部服务），必须有专属类。
+**判断**：原 4 类漏 API。API 是「注册上去就能调」的工具主体（模型-远程 7 个 + 各类外部服务），必须有专属类。分类里模型不再拆本地/远程——运行位置由独立 `loc` 字段承担。
 
 ## 二、字段 → 显隐条件（类型驱动）
 
