@@ -213,6 +213,8 @@ a.dim-opt{text-decoration:none;display:inline-flex;align-items:center;gap:5px}
 .page#page-capabilities .card-actions .btn.del:hover{background:var(--status-error);color:var(--on-brand);filter:brightness(.92)}
 .card-actions .btn.del:hover{background:var(--status-error);color:var(--on-brand)}
 .card-actions .btn.edit:hover{border-color:var(--green);color:var(--green)}
+.card-actions .btn.pub{border-color:var(--green);color:var(--green-deep)}
+.card-actions .btn.pub:hover{background:var(--green-soft);border-color:var(--green);color:var(--green-deep)}
 
 /* 启停开关（toggle-sm） */
 .toggle-sm{display:inline-flex;align-items:center;gap:5px;cursor:pointer;flex-shrink:0;user-select:none}
@@ -388,6 +390,7 @@ a.dim-opt{text-decoration:none;display:inline-flex;align-items:center;gap:5px}
 
 /* ── 能力地图（技能/架构图/命令/全局宪法 四 tab，寄居 dashboard） ── */
 .hero-bar.sticky{position:sticky;top:0;z-index:20}
+.hero-bar.sticky.no-sticky{position:relative;z-index:auto}
 .page#page-capabilities .hero-bar{height:128px;gap:8px;margin-bottom:32px}
 .page#page-capabilities .hero-eyebrow{margin-bottom:0}
 .page .cap-tabs,.page .diagram-grid,.page .cap-md,.page .cmd-table-wrap{max-width:1584px;margin-left:32px;margin-right:32px}
@@ -444,15 +447,17 @@ a.dim-opt{text-decoration:none;display:inline-flex;align-items:center;gap:5px}
 .cap-md{margin-top:8px}
 .line-count{font-family:var(--font-code);font-size:12px;color:var(--text-muted);margin:8px 0 4px}
 .const-head{max-width:1584px;margin:0 32px 16px;font-size:13px;color:var(--text-secondary);line-height:1.6}
-.constitution-toc{max-width:1584px;margin:0 32px 20px;display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:10px}
+.const-nav{position:sticky;top:0;z-index:30;background:var(--paper);border-bottom:1px solid var(--border);padding:10px 0 12px;margin:0 32px 18px;max-width:1584px}
+.const-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(245px,1fr));gap:10px}
+.const-folder{justify-self:start;align-self:center;display:inline-flex;align-items:center;gap:6px;background:var(--green);border:none;color:var(--on-brand);font-size:13px;font-weight:500;padding:8px 14px;border-radius:8px;cursor:pointer;white-space:nowrap}
+.const-folder:hover{background:var(--green-deep)}
 .const-item{display:flex;align-items:baseline;gap:10px;padding:10px 14px;background:var(--paper-tint);border:1px solid var(--border);border-radius:8px;cursor:pointer;transition:border-color .15s}
 .const-item:hover{border-color:var(--green)}
 .const-num{font-family:var(--font-code);font-size:12px;color:var(--green);font-weight:600;min-width:16px}
 .const-title{font-size:13px;color:var(--text-primary)}
 #page-capabilities .cap-md h2{scroll-margin-top:170px}
 .const-details{max-width:1584px;margin:0 32px 40px;border:1px solid var(--border);border-radius:8px;padding:10px 14px}
-.const-details summary{cursor:pointer;font-size:13px;color:var(--text-secondary);user-select:none}
-.const-details[open] summary{margin-bottom:8px}
+.const-details-title{font-size:13px;color:var(--text-secondary);margin-bottom:8px}
 .cap-top{position:fixed;right:32px;bottom:32px;width:40px;height:40px;border-radius:50%;border:none;background:var(--green);color:var(--on-brand);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:60;box-shadow:0 4px 12px rgba(38,43,39,.25);opacity:0;pointer-events:none;transform:translateY(8px);transition:opacity .2s,transform .2s,background .15s}
 .cap-top.show{opacity:1;pointer-events:auto;transform:none}
 .cap-top:hover{background:var(--green-deep)}

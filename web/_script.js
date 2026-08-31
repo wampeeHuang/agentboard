@@ -23,16 +23,14 @@ var princF = 'all';
 
 // 领域映射：category → 领域（dim 块按此聚合）
 var domainMap = {
-  '模型': '模型', '本地模型': '模型', '远程模型': '模型',
+  '模型': '模型',
   'Agent': 'Agent', '设施': '设施', '获取': '获取',
   '查阅': '查阅', '创作': '创作', '职能': '职能', '工作区': '职能', '公开站': '公开站'
 };
 
 // 分类显示名 + 悬停解释。key 匹配 manifest.json 里的 category 字段
 var catMeta = {
-  '模型':     {label:'模型',     tip:'本地+云端 AI 模型能力：视觉理解/语音合成/LLM API — 模型的调用入口'},
-  '本地模型': {label:'本地模型', tip:'本地部署的 AI 模型：MiniCPM视觉/CosyVoice语音/ACE音乐 — 本机 GPU 驱动'},
-  '远程模型': {label:'远程模型', tip:'云端 AI 模型 API：DeepSeek/GLM/GPT/Imagen — 按量调用的远程模型'},
+  '模型':     {label:'模型',     tip:'AI 模型能力：本地推理或云端 API 的调用入口 — 本地/远程看运行位置'},
   'Agent':    {label:'Agent',    tip:'自主 AI Agent：Claude Code/Hermes/Codex CLI/RAG — 能独立执行任务的智能体'},
   '设施':     {label:'设施',     tip:'透明基础设施：API网关/协议代理/定时调度/联邦巡检 — 管道自己跑，日常不碰'},
   '获取':     {label:'获取',     tip:'数据采集：网页抓取/社媒下载/OCR/云盘 — 从外部获取信息的工具'},
@@ -56,6 +54,7 @@ function hasLocalProcess(t) {
   return !!(t.startCommand || t.stopCommand || (t.ports && t.ports.length > 0) || t.port || t.projectPath);
 }
 function getToolLoc(t) {
+  if (t.loc) return t.loc;
   return (t.apiBase && !hasLocalProcess(t)) ? '远程' : '本地';
 }
 // 纯远程 API（无本地进程）→ 仅接入
@@ -354,6 +353,9 @@ function actionsHtml(t, state) {
   var isOpened = opened[t.id];
   if (t.url && (t.running || v)) {
     btns.push('<a href="' + escAttr(t.url) + '" target="_blank" class="btn ' + (isOpened ? 'open-done' : 'open') + '" onclick="event.preventDefault();event.stopPropagation();verifyAndOpen(event.target,\'' + t.id + '\',\'' + escAttr(t.url) + '\')">' + (isOpened ? '打开中' : '打开') + '</a>');
+  }
+  if (t.publicUrl) {
+    btns.push('<a href="' + escAttr(t.publicUrl) + '" target="_blank" class="btn pub" title="公网站点">公网 ↗</a>');
   }
   btns.push('<button class="btn edit" onclick="event.stopPropagation();openToolForm(\'' + t.id + '\',\'edit\')">编辑</button>');
 
@@ -702,7 +704,7 @@ function compareTools(a, b, cardOrder) {
   if (ai !== -1 && bi !== -1) return ai - bi;
   if (ai !== -1) return -1;
   if (bi !== -1) return 1;
-  var catOrder = {'模型':0, '本地模型':0, '远程模型':0, 'Agent':1, '设施':2, '获取':3, '查阅':4, '创作':5, '职能':6};
+  var catOrder = {'模型':0, 'Agent':1, '设施':2, '获取':3, '查阅':4, '创作':5, '职能':6};
   var ca = catOrder[a.category] != null ? catOrder[a.category] : 99;
   var cb = catOrder[b.category] != null ? catOrder[b.category] : 99;
   if (ca !== cb) return ca - cb;
@@ -1350,6 +1352,8 @@ function switchCap(tab) {
   if (CAP_TABS.indexOf(tab) < 0 || !capData) return;
   capTab = tab;
   renderCapTabs();
+  var heroEl = document.getElementById('capHero');
+  if (heroEl) heroEl.classList.toggle('no-sticky', tab === 'global');
   var content = document.getElementById('capContent'); if (!content) return;
   if (tab === 'skills') renderCapSkills(content);
   else if (tab === 'commands') renderCapCommands(content);
@@ -1588,7 +1592,7 @@ var capCmdCat = 'all'; // 'all' | <category> | 'unannotated'
 function normCmd(c) {
   return {
     id: c.trigger || c.name || '',
-    cat: c.category || c.cat || '未分类',
+    cat: c.category || c.cat || '',
     name: c.displayName || c.name || '',
     desc: c.description || c.desc || c.sourceDesc || '',
     annotated: c.annotated !== false,
@@ -1615,7 +1619,7 @@ function buildCmdDims() {
   var cats = {}, unann = 0;
   cmds.forEach(function(c) {
     if (!c.annotated) unann++;
-    cats[c.cat] = (cats[c.cat] || 0) + 1;
+    if (c.cat) cats[c.cat] = (cats[c.cat] || 0) + 1;
   });
   var names = Object.keys(cats).sort(function(a, b) { return a < b ? -1 : 1; });
   var opts = '<span class="dim-opt' + (capCmdCat === 'all' ? ' active' : '') + '" onclick="setCapCmdCat(\'all\')">全部(' + cmds.length + ')</span>'
@@ -1802,21 +1806,22 @@ function doDeleteCmd(name) {
 function renderCapGlobal(content) {
   var g = capData.global;
   var secs = g.sections || [];
-  var toc = secs.length
-    ? '<div class="constitution-toc">' + secs.map(function(s, i) {
-        var m = s.match(/^(\d+)\.\s*(.+)/);
-        var num = m ? m[1] : String(i + 1);
-        var title = m ? m[2] : s;
-        return '<div class="const-item" onclick="jumpConstSection(' + (i + 1) + ')" title="跳转到全文第 ' + (i + 1) + ' 章"><span class="const-num">' + escHtml(num) + '</span><span class="const-title">' + escHtml(title) + '</span></div>';
-      }).join('') + '</div>'
+  var cards = secs.map(function(s, i) {
+    var m = s.match(/^(\d+)\.\s*(.+)/);
+    var num = m ? m[1] : String(i + 1);
+    var title = m ? m[2] : s;
+    return '<div class="const-item" onclick="jumpConstSection(' + (i + 1) + ')" title="跳转到全文第 ' + (i + 1) + ' 章"><span class="const-num">' + escHtml(num) + '</span><span class="const-title">' + escHtml(title) + '</span></div>';
+  }).join('');
+  var nav = secs.length
+    ? '<div class="const-nav"><div class="const-grid">'
+      + '<button class="const-folder" onclick="openConstitutionFolder()" title="打开 CLAUDE.md 所在文件夹"><span class="bico">📁</span>打开文件夹</button>'
+      + cards
+      + '</div></div>'
     : '<div class="cap-empty">未解析到章节</div>';
   content.innerHTML =
-    '<div class="cap-toolbar">'
-    + '<button class="btn-add" onclick="openConstitutionFolder()"><span class="bico">📁</span>打开文件夹</button>'
-    + '</div>'
+    nav
     + '<div class="const-head">宪法是行为规则唯一真相源，章节按重要性排序——越靠前越要守。</div>'
-    + toc
-    + '<details class="const-details"><summary>查看全文（' + g.lines + ' 行）</summary><div class="std-body cap-md">' + (g.html || '<p>CLAUDE.md 未找到</p>') + '</div></details>'
+    + '<div class="const-details"><div class="const-details-title">宪法全文 · ' + g.lines + ' 行</div><div class="std-body cap-md">' + (g.html || '<p>CLAUDE.md 未找到</p>') + '</div></div>'
     + '<button class="cap-top" id="capTopBtn" onclick="backToCapTop()" title="回顶部" aria-label="回顶部">▲</button>';
 }
 function openConstitutionFolder() {
@@ -1826,8 +1831,6 @@ function backToCapTop() {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 function jumpConstSection(n) {
-  var d = document.querySelector('.const-details');
-  if (d && !d.open) d.open = true;
   var el = document.getElementById('sec-' + n);
   if (!el) return;
   setTimeout(function() { el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 60);
@@ -2113,9 +2116,10 @@ async function openToolForm(id, mode) {
   var ver = isNew ? '' : (t && (t.version || (t.runtime && t.runtime.version) || ''));
   document.getElementById('f-version').textContent = ver || '—';
   setv('f-icon', isNew ? '' : (t && t.icon || ''));
-  setv('f-category', isNew ? '本地模型' : (t && t.category ? t.category : '本地模型'));
+  setv('f-category', isNew ? '模型' : (t && t.category ? t.category : '模型'));
   var typeVal = isNew ? 'service' : (t && t.type ? t.type : 'service');
   document.getElementById('f-form').value = typeVal;
+  setv('f-loc', isNew ? ((typeVal === 'api') ? '远程' : '本地') : ((t && (t.loc || getToolLoc(t))) || '本地'));
 
   var func = '', when = '', whennot = '', ret = '', extra = '';
   if (t && t.description) {
@@ -2129,14 +2133,18 @@ async function openToolForm(id, mode) {
   setv('f-func', isNew ? '' : func);
   setv('f-when', isNew ? '' : when);
   setv('f-whennot', isNew ? '' : whennot);
+  setv('f-ret', isNew ? '' : ret);
+  setv('f-extra-note', isNew ? '' : extra);
   if (!isNew && t) {
     if (!func) func = t.capability || '';
     setv('f-func', func);
     if (t.capability && !func) setv('f-func', t.capability);
   }
+  setv('f-cap', isNew ? '' : (t && (t.capability || '')));
 
   setv('f-port', isNew ? '' : ((t && t.ports && t.ports.length) ? t.ports[0] : (t && t.port)));
   setv('f-url', isNew ? '' : (t && t.url));
+  setv('f-public-url', isNew ? '' : (t && t.publicUrl));
   setv('f-api', isNew ? '' : (t && t.apiBase));
   setv('f-start', isNew ? '' : (t && t.startCommand));
   setv('f-stop', isNew ? '' : (t && t.stopCommand));
@@ -2193,7 +2201,10 @@ function parseDesc(desc) {
 
 function suggestType() {
   var cat = document.getElementById('f-category').value;
-  if (tfCatSuggest[cat]) document.getElementById('f-form').value = tfCatSuggest[cat];
+  var loc = document.getElementById('f-loc').value;
+  var sug = tfCatSuggest[cat];
+  if (cat === '模型' && loc === '远程') sug = 'api';
+  if (sug) document.getElementById('f-form').value = sug;
   applyFormType();
 }
 function applyFormType() {
@@ -2217,7 +2228,7 @@ function typeOf() {
   var f = document.getElementById('f-form').value;
   function v(fid){ var el = document.getElementById(fid); return el ? el.value.trim() : ''; }
   return {
-    loc: (f === 'api') ? '远程' : '本地',
+    loc: v('f-loc') || ((f === 'api') ? '远程' : '本地'),
     acc: (function(){
       if (f === 'cli' || f === 'group') return ['命令行'];
       if (f === 'folder') return ['文件夹'];
@@ -2229,13 +2240,13 @@ function typeOf() {
 }
 function tfRender() {
   var d = typeOf();
-  var dl = document.getElementById('f-dims-loc'); if (dl) dl.textContent = '运行位置：' + d.loc;
   var da = document.getElementById('f-dims-acc'); if (da) da.textContent = '接入形态：' + (d.acc.join(' / ') || '—');
   var missing = [];
   function v(fid){ var el = document.getElementById(fid); return el ? el.value.trim() : ''; }
   if (v('f-name').length < 1) missing.push('名字');
   if (v('f-func').length < 2) missing.push('功能一句话');
   if (!v('f-category')) missing.push('分类');
+  if (!v('f-loc')) missing.push('运行位置');
   var f = document.getElementById('f-form').value;
   if (f === 'service' && (v('f-start') === '' || v('f-stop') === '')) missing.push('启动/停止命令');
   if (f === 'api' && v('f-api-api') === '') missing.push('API 地址');
@@ -2266,6 +2277,7 @@ function buildManifest() {
   function v(fid){ var el = document.getElementById(fid); return el ? el.value.trim() : ''; }
   var f = document.getElementById('f-form').value;
   var mf = { name: v('f-name'), id: v('f-id'), category: v('f-category'), type: f };
+  var locV = v('f-loc'); if (locV) mf.loc = locV;
   var ownerVal = (tfMode === 'new' || tfMode === 'register') ? '外部' : ((tfTool && tfTool.owner) || '外部');
   if (ownerVal) mf.owner = ownerVal;
   var ver = (document.getElementById('f-version').textContent || '').trim();
@@ -2278,15 +2290,15 @@ function buildManifest() {
   var retMap = { service: '调 ' + (v('f-api') || v('f-url') || (port ? ':' + port : '本地服务')), cli: '在 Claude Code 输入 /' + v('f-trigger'), api: '调 ' + v('f-api-api'), folder: '打开项目目录', group: '运行组编排' };
   if (v('f-ret')) parts.push('【返回】' + v('f-ret'));
   else parts.push('【返回】' + retMap[f]);
-  var extraEl = document.getElementById('f-extra');
-  var extra = extraEl ? extraEl.value : '';
+  var extra = v('f-extra-note');
   if (extra) parts.push(extra);
   mf.description = parts.join('。');
-  mf.capability = func.slice(0, 30);
+  mf.capability = v('f-cap') || func.slice(0, 30);
   if (v('f-icon')) mf.icon = v('f-icon');
   if (f === 'service') {
     if (v('f-port')) mf.port = Number(v('f-port'));
     if (v('f-url')) mf.url = v('f-url');
+    if (v('f-public-url')) mf.publicUrl = v('f-public-url');
     if (v('f-api')) mf.apiBase = v('f-api');
     mf.startCommand = v('f-start') || undefined;
     mf.stopCommand = v('f-stop') || undefined;
