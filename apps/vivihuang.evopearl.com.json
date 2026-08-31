@@ -1,11 +1,11 @@
 {
   "id": "vivihuang.evopearl.com",
-  "name": "黄辉辉作品集",
+  "name": "个人作品集（Vivi Huang）",
   "url": "https://vivihuang.evopearl.com",
-  "description": "AI 产品经理（Agent 工具生态）个人作品集。暖纸米色底+鼠尾草绿accent，多页静态网站。",
+  "description": "旧版个人作品集：AI 独立开发者，Agent 工具生态、智能建筑可视化、跨平台应用设计。新一代 Vivi Harness 个人网站尚未部署到公网。",
   "status": "live",
   "host": "腾讯云 DNSPod → Vercel",
   "logo": "https://vivihuang.evopearl.com/assets/brand/favicon.svg",
-  "agentNote": "静态多页网站，site/ 目录自包含可部署。品牌套件在 brand-kit.html。",
+  "agentNote": "这是旧版作品集，不是 Vivi Harness。新一代 Vivi Harness 个人网站（D:\\workspace\\vivi-harness）尚未部署到公网，勿把此域名当作 Vivi Harness 的线上入口。旧作品集可作为历史参考，不代表新站设计与规范。",
   "order": 1
 }
