@@ -20,7 +20,7 @@
 │   ├── manifest-schema.js Manifest 契约唯一真相源（字段 / 分类 / 校验）
 │   ├── mcp-http.js       MCP Streamable HTTP（POST /mcp，JSON-RPC 2.0）
 │   ├── mcp-handlers.js   6 个 agentboard_* MCP 工具
-│   ├── static.js / api-page.js / self-check.js / ops-log.js / crash-guard.js / tip-schema.js / apps-schema.js / principle-schema.js / brand-drift.js / tree-drift.js / docs-fresh.js / commands.js
+│   ├── static.js / api-page.js / self-check.js / ops-log.js / crash-guard.js / tip-schema.js / apps-schema.js / principle-schema.js / brand-drift.js / tree-drift.js / docs-fresh.js / schema-loader.js
 │   ├── __tests__/        冒烟测试（node:test）
 │   │   ├── helpers.js     测试工具
 │   │   ├── fixtures.js    测试夹具
