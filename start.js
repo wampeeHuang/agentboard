@@ -1,5 +1,5 @@
 // Pre-start guard: kill orphan processes on agentboard port before starting.
-// 防止 node -e "require('./server.js')" 残留进程占端口，阻塞重启。
+// 防止残留进程占端口，阻塞重启。
 const { execSync } = require('child_process');
 const PORT = 3099;
 
@@ -9,4 +9,5 @@ try {
   // kill-port fails if port is free — that's fine
 }
 
-require('./server.js');
+const { startServer } = require('./server.js');
+startServer();

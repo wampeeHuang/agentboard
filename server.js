@@ -68,7 +68,6 @@ function getHealth() {
 
 const PROJECT_DIR = __dirname;
 const AGENTBOARD_HOME = process.env.AGENTBOARD_HOME || path.join(os.homedir(), '.agentboard');
-const commandsApi = require('./lib/commands')(AGENTBOARD_HOME);
 const TOOLS_DIR = process.env.AGENTBOARD_TOOLS_DIR || path.join(AGENTBOARD_HOME, 'tools');
 const TOOLS_DIRS = [TOOLS_DIR];
 const SKILLS_DIR = process.env.AGENTBOARD_SKILLS_DIR || path.join(os.homedir(), '.claude', 'skills');
@@ -99,224 +98,6 @@ function winPath(p) {
   return m ? m[1].toUpperCase() + ':\\' + p.slice(3) : p;
 }
 
-// Chinese skill name -> SKILL.md name: field not used, map ourselves
-var CHINESE_NAMES = {
-  'algorithmic-art': '算法艺术',
-  'brand-guidelines': '品牌设计指南',
-  'canvas-design': '画布设计',
-  'claude-api': 'Claude API 开发',
-  'doc-coauthoring': '文档协同写作',
-  'docx': 'Word 文档处理',
-  'frontend-design': '前端界面设计',
-  'internal-comms': '内部沟通文案',
-  'mcp-builder': 'MCP 服务构建',
-  'pdf': 'PDF 文档处理',
-  'pptx': 'PPT 演示文稿',
-  'skill-creator': '技能创建器',
-  'slack-gif-creator': 'Slack GIF 制作',
-  'theme-factory': '主题工厂',
-  'web-artifacts-builder': 'Web 构件生成',
-  'webapp-testing': 'Web 应用测试',
-  'xlsx': 'Excel 表格处理',
-  'beautiful-feishu-whiteboard': '飞书白板设计',
-  'beautiful-html-templates': '精美 HTML 模板',
-  'codebase-to-course': '代码库转课程',
-  'frontend-slides-editable': '可编辑幻灯片',
-  'huashu-design': '花叔设计',
-  'nuwa-skill': '女娲技能',
-  'evolution-cat-infographic': '进化猫图文流水线',
-  'guizang-social-card-skill': '归藏社交卡片',
-  'guizang-ppt-skill': '归藏PPT',
-  'claude-mem': '记忆系统',
-  'find-docs': '文档查找',
-  'huashu-research': '花叔调研',
-  'wechat-article-reader': '微信文章阅读',
-  'video-analyzer': '视频分析',
-  'perspective-router': '视角路由器',
-  'evolution-cat-article': '进化猫文章写作',
-  'evolution-cat': '进化猫写作引擎',
-  'skill-craftsmanship-framework': '工匠框架',
-  'social-image-publisher': '矩阵图文发布',
-  'anysearch': 'AnySearch 搜索',
-  'opencli-usage': 'OpenCLI 使用指南',
-  'opencli-adapter-author': 'OpenCLI 适配器编写',
-  'opencli-autofix': 'OpenCLI 自动修复',
-  'opencli-browser': 'OpenCLI 浏览器',
-  'opencli-browser-sitemap': 'OpenCLI 站点地图',
-  'opencli-sitemap-author': 'OpenCLI 站点地图编写',
-  'smart-search': '智能搜索'
-};
-function getChineseName(name) {
-  if (CHINESE_NAMES[name]) return CHINESE_NAMES[name];
-  if (name.indexOf('perspective-') === 0) {
-    var person = name.slice('perspective-'.length).replace(/-/g, ' ');
-    return person.replace(/\b\w/g, function(c) { return c.toUpperCase(); }) + ' 视角';
-  }
-  return name;
-}
-
-function parseSkill(name, baseDir, disabled) {
-  var skillMd = read(path.join(baseDir, name, 'SKILL.md'));
-  if (!skillMd) return null;
-  var fm = {};
-  var fmMatch = skillMd.match(/^---\r?\n([\s\S]*?)\r?\n---/);
-  if (fmMatch) {
-    var lines = fmMatch[1].split('\n');
-    var mlKey = null, mlVal = [];
-    for (var i = 0; i < lines.length; i++) {
-      var line = lines[i];
-      var m = line.match(/^(\w+):\s*(.+)/);
-      if (m) {
-        if (mlKey) { fm[mlKey] = mlVal.join('\n').trim(); mlKey = null; mlVal = []; }
-        var val = m[2].trim();
-        if (val === '|' || val === '>') { mlKey = m[1]; }
-        else { fm[m[1]] = val; }
-      } else if (mlKey) {
-        var im = line.match(/^\s{2,}(.+)/);
-        if (im) { mlVal.push(im[1]); }
-      }
-    }
-    if (mlKey) { fm[mlKey] = mlVal.join('\n').trim(); }
-  }
-  var desc = fm.description || '';
-  if (!desc) {
-    var body = skillMd.replace(/^---[\s\S]*?---\n*/, '').replace(/^#\s+.*\n*/, '');
-    var bodyLines = body.split('\n');
-    for (var i = 0; i < bodyLines.length; i++) {
-      var line = bodyLines[i].trim();
-      if (line && !line.startsWith('#') && !line.startsWith('>') && line.length > 10) {
-        desc = line.substring(0, 120);
-        break;
-      }
-    }
-  }
-  var words = name.split(/[-_]/).filter(function(w) { return w.length > 0; });
-  var mono = words.length >= 2
-    ? (words[0][0] + words[words.length - 1][0]).toUpperCase()
-    : name.substring(0, 2).toUpperCase();
-  return {
-    name: name,
-    displayName: (fm.display_name && String(fm.display_name).trim()) ? String(fm.display_name).trim() : getChineseName(name),
-    description: desc,
-    trigger: fm.trigger || '',
-    icon: (fm.icon && String(fm.icon).trim()) ? String(fm.icon).trim() : '',
-    mono: mono,
-    category: (fm.category && String(fm.category).trim()) ? String(fm.category).trim() : classifySkill(name, desc),
-    folderPath: path.join(baseDir, name),
-    disabled: !!disabled
-  };
-}
-
-function scanAllSkills() {
-  var skills = [];
-  var seen = {};
-  listDirs(SKILLS_DIR).forEach(function(name) {
-    if (seen[name]) return;
-    seen[name] = true;
-    var s = parseSkill(name, SKILLS_DIR, false);
-    if (s) skills.push(s);
-  });
-  var disDir = path.join(SKILLS_DIR, '_disabled');
-  if (fs.existsSync(disDir)) {
-    listDirs(disDir).forEach(function(name) {
-      if (seen[name]) return;
-      seen[name] = true;
-      var s = parseSkill(name, disDir, true);
-      if (s) skills.push(s);
-    });
-  }
-  return skills;
-}
-
-// 停用技能：把 skills/<name> 移到 skills/_disabled/<name>（Claude Code 不再发现）；启用反向。
-function moveSkillDir(name, disable) {
-  if (!/^[A-Za-z0-9_-]+$/.test(name)) return { ok: false, status: 400, error: '非法技能名' };
-  var src = disable ? safeResolve(SKILLS_DIR, name) : safeResolve(SKILLS_DIR, '_disabled', name);
-  var dst = disable ? safeResolve(SKILLS_DIR, '_disabled', name) : safeResolve(SKILLS_DIR, name);
-  if (!src || !dst) return { ok: false, status: 400, error: '路径越界' };
-  if (!fs.existsSync(src)) return { ok: false, status: 404, error: '技能不存在' };
-  if (!fs.statSync(src).isDirectory() || !fs.existsSync(path.join(src, 'SKILL.md'))) {
-    return { ok: false, status: 400, error: '非技能目录，拒绝移动' };
-  }
-  if (fs.existsSync(dst)) return { ok: false, status: 409, error: '目标已存在' };
-  try { if (disable) { var disDir = path.join(SKILLS_DIR, '_disabled'); if (!fs.existsSync(disDir)) fs.mkdirSync(disDir); } fs.renameSync(src, dst); } catch (e) { return { ok: false, status: 500, error: '移动失败: ' + e.message }; }
-  return { ok: true, disabled: disable, name: name };
-}
-
-// 回收技能：把 skills/<name> 移到 skills/_trash/<name>（回收区，可手动搬回恢复）。
-function trashSkill(name) {
-  if (!/^[A-Za-z0-9_-]+$/.test(name)) return { ok: false, status: 400, error: '非法技能名' };
-  var src = safeResolve(SKILLS_DIR, name);
-  var dst = safeResolve(SKILLS_DIR, '_trash', name);
-  if (!src || !dst) return { ok: false, status: 400, error: '路径越界' };
-  if (!fs.existsSync(src)) return { ok: false, status: 404, error: '技能不存在' };
-  if (!fs.statSync(src).isDirectory() || !fs.existsSync(path.join(src, 'SKILL.md'))) {
-    return { ok: false, status: 400, error: '非技能目录，拒绝移动' };
-  }
-  if (fs.existsSync(dst)) return { ok: false, status: 409, error: '回收站已有同名' };
-  try { var trDir = path.join(SKILLS_DIR, '_trash'); if (!fs.existsSync(trDir)) fs.mkdirSync(trDir); fs.renameSync(src, dst); } catch (e) { return { ok: false, status: 500, error: '移动失败: ' + e.message }; }
-  return { ok: true, trashed: true, name: name };
-}
-
-function classifySkill(name, desc) {
-  // 单一维度：技能产出什么
-  var MAP = {
-    'algorithmic-art': '视觉与设计',
-    'archify': '视觉与设计',
-    'beautiful-feishu-whiteboard': '视觉与设计',
-    'brand-guidelines': '视觉与设计',
-    'canvas-design': '视觉与设计',
-    'frontend-design': '视觉与设计',
-    'huashu-design': '视觉与设计',
-    'theme-factory': '视觉与设计',
-    'slack-gif-creator': '视觉与设计',
-    'frontend-slides-editable': '视觉与设计',
-    'doc-coauthoring': '写作与文档',
-    'internal-comms': '写作与文档',
-    'codebase-to-course': '写作与文档',
-    'docx': '文件与格式',
-    'pptx': '文件与格式',
-    'xlsx': '文件与格式',
-    'pdf': '文件与格式',
-    'claude-api': '开发与工具',
-    'mcp-builder': '开发与工具',
-    'web-artifacts-builder': '开发与工具',
-    'webapp-testing': '开发与工具',
-    'perspective-router': '思维与方法',
-    'nuwa-skill': '思维与方法',
-    'skill-creator': '思维与方法',
-    'evolution-cat-infographic': '写作与文档',
-    'guizang-social-card-skill': '视觉与设计',
-    'guizang-ppt-skill': '视觉与设计',
-    'claude-mem': '思维与方法',
-    'find-docs': '开发与工具',
-    'huashu-research': '思维与方法',
-    'wechat-article-reader': '写作与文档',
-    'video-analyzer': '开发与工具',
-    'beautiful-html-templates': '视觉与设计',
-    'evolution-cat-article': '写作与文档',
-    'skill-craftsmanship-framework': '思维与方法',
-    'social-image-publisher': '开发与工具',
-    'anysearch': '开发与工具',
-    'opencli-usage': '开发与工具',
-    'opencli-adapter-author': '开发与工具',
-    'opencli-autofix': '开发与工具',
-    'opencli-browser': '开发与工具',
-    'opencli-browser-sitemap': '开发与工具',
-    'opencli-sitemap-author': '开发与工具',
-    'smart-search': '开发与工具',
-    'workspace-governor': '思维与方法'
-  };
-  if (MAP[name]) return MAP[name];
-  if (name.indexOf('lark-') === 0) return '开发与工具';
-  var s = (name + ' ' + (desc || '')).toLowerCase();
-  if (/\b(design|art|theme|visual|brand|canvas|illustrat|gif|animation|whiteboard|feishu)\b/i.test(s)) return '视觉与设计';
-  if (/\b(writ|doc|article|internal.comm|report|blog|memo|faq)\b/i.test(s)) return '写作与文档';
-  if (/\b(pdf|docx|xlsx|pptx?|excel|word|powerpoint|format|convert|markdown|csv|spreadsheet)\b/i.test(s)) return '文件与格式';
-  if (/\b(api|mcp|sdk|server|code|test|debug|build|deploy|playwright|browser|automation|cli|git|npm|node|react|tailwind|component)\b/i.test(s)) return '开发与工具';
-  if (/\b(perspective|mindset|framework|think|mentor|philosophy|methodology|distill)\b/i.test(s)) return '思维与方法';
-  return '其他';
-}
 
 function renderMarkdown(md, opts) {
   opts = opts || {};
@@ -481,7 +262,7 @@ function startServer() {
 
 
   // shared context for route/static modules (module-level helpers + closure logging state)
-  var ctx = { read: read, esc: esc, monogram: monogram, listDirs: listDirs, openFolder: openFolder, safeResolve: safeResolve, getChineseName: getChineseName, scanAllSkills: scanAllSkills, parseSkill: parseSkill, moveSkillDir: moveSkillDir, trashSkill: trashSkill, renderMarkdown: renderMarkdown, scanTools: scanTools, findManifest: findManifest, startTool: startTool, stopTool: stopTool, createTool: createTool, updateTool: updateTool, getHealth: getHealth, apiHTML: apiHTML, registry: registry, TOOLS_DIR: TOOLS_DIR, SKILLS_DIR: SKILLS_DIR, TIPS_DIR: TIPS_DIR, PRINCIPLES_DIR: PRINCIPLES_DIR, LOCAL_SKILLS_DIR: LOCAL_SKILLS_DIR, PROJECT_DIR: PROJECT_DIR, AGENTBOARD_HOME: AGENTBOARD_HOME, apiLog: apiLog, apiCounts: apiCounts, BUILTIN_COMMANDS: commandsApi.SEED_COMMANDS, commands: commandsApi };
+  var ctx = { read: read, esc: esc, monogram: monogram, listDirs: listDirs, openFolder: openFolder, safeResolve: safeResolve, renderMarkdown: renderMarkdown, scanTools: scanTools, findManifest: findManifest, startTool: startTool, stopTool: stopTool, createTool: createTool, updateTool: updateTool, getHealth: getHealth, apiHTML: apiHTML, registry: registry, TOOLS_DIR: TOOLS_DIR, SKILLS_DIR: SKILLS_DIR, TIPS_DIR: TIPS_DIR, PRINCIPLES_DIR: PRINCIPLES_DIR, LOCAL_SKILLS_DIR: LOCAL_SKILLS_DIR, PROJECT_DIR: PROJECT_DIR, apiLog: apiLog, apiCounts: apiCounts };
 
   // routes (REST API + content)
   require('./lib/routes')(app, ctx);
@@ -518,4 +299,6 @@ function startServer() {
 
 if (require.main === module) {
   startServer();
-}
+}
+
+module.exports = { startServer: startServer };
