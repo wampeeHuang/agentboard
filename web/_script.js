@@ -610,7 +610,7 @@ function appCard(a) {
   return '<div class="tool-card" data-id="' + escAttr(a.id) + '">'
     + '<div class="card-top"><span class="card-ico">' + escHtml(ico) + '</span><div class="card-name">' + escHtml(a.name) + '</div><span class="card-drag-handle" draggable="true" title="拖拽排序"></span></div>'
     + '<div class="card-meta-row">'
-    + '<span class="cf"><span class="cf-l">域名</span><a class="card-domain" href="' + escAttr(a.url || '#') + '" target="_blank" data-tip="' + escAttr(a.url || '') + '">' + escHtml(appDomainOf(a)) + ' ↗</a></span>'
+    + '<span class="cf"><span class="cf-l">地址</span><a class="card-domain" href="' + escAttr(a.url || '#') + '" target="_blank" data-tip="' + escAttr(a.url || '') + '">' + escHtml(appDomainOf(a)) + ' ↗</a></span>'
     + '<span class="cf"><span class="cf-l">托管</span><span class="card-val">' + escHtml(a.host || '—') + '</span></span>'
     + (dev ? '<span class="cf"><span class="cf-l">本地</span><span class="card-val">' + escHtml(dev) + '</span></span>' : '')
     + '<span class="cf"><span class="cf-l">描述</span><span class="card-desc' + (a.description ? '' : ' placeholder') + '" data-tip="' + escAttr(a.description || '') + '">' + escHtml(desc) + '</span></span>'
@@ -1085,7 +1085,7 @@ function fillAppForm(a) {
     var el = document.getElementById('app-f-' + f.key);
     if (!el) return;
     var v;
-    if (f.key === 'domain') v = (a.url || a.id || '').replace(/^https?:\/\//, '').replace(/\/$/, '');
+    if (f.key === 'address') v = a.url || '';
     else v = a[f.key] === undefined ? '' : a[f.key];
     if (f.type === 'select') {
       var known = false;

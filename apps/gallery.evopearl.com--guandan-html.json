@@ -1,0 +1,10 @@
+{
+  "id": "gallery.evopearl.com--guandan-html",
+  "name": "掼蛋姐妹局",
+  "url": "https://gallery.evopearl.com/guandan.html",
+  "description": "用人物、队伍颜色和牌面关系讲清掼蛋规则的手机友好图解指南，可离线保存阅读。",
+  "status": "live",
+  "host": "腾讯云 DNSPod → EdgeOne → Vercel",
+  "agentNote": "长期保留的独立掼蛋指南。源码：D:\\workspace\\_output\\个案\\文档\\20260905_掼蛋速通指南\\掼蛋速通指南.html；公网由 gallery.evopearl.com/guandan.html 精确路径规则回源独立 Vercel 项目。",
+  "order": 7
+}
