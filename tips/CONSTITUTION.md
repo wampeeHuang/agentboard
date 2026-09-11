@@ -193,6 +193,7 @@ recipe: 详细操作手册的绝对路径（可选）
 - **frontmatter 已标准化** — 全部 YAML `---` 包裹，type 收敛到 5 类标准值
 - **25 条 capability 误标已纠正** — 原标 capability 但无 tool/scenario 的诊断/方法类日志，改回 diagnosis(20)/method(5)
 - **6 条遗留缺 source** — agentboard-architecture / agentboard-tools-lifecycle / backup-strategy / json-parse-null / project-json-pattern / toolrack-delete-first-verify，触发事件不可考，留空待人工补
+- **1 条非标准 type 已纠正（2026-09-11）** — `version-bound-inline-review-gates.md` 原 `type: pattern`（不在五类枚举内，会让 `/tips` 标红），按内容归 `method`。同日复核：全库 482 条 `errors=0`，`warnings=7`（均为上一条列出的遗留缺 source，保留待人工补）
 
 ---
 
