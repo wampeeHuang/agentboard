@@ -11,5 +11,5 @@
     "data": "https://data.evopearl.com/data/{task}/{date}.json"
   },
   "agentNote": "配置和数据结构见 config.json。每日数据文件格式：data/{task}/YYYY-MM-DD.json。三个 task: ai-signal, deep-read, daily-selection。",
-  "order": 3
+  "order": 0
 }

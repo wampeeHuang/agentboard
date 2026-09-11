@@ -13,6 +13,6 @@
     "docs": "https://forma.evopearl.com/docs"
   },
   "agentNote": "llms.txt 和 openapi.json 是 AI 自动发现入口。本地 dev 在 :3103，逻辑同生产。",
-  "order": 5,
+  "order": 4,
   "devTool": "forma"
 }
