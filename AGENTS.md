@@ -52,6 +52,44 @@
 │   └── events.jsonl      运行事件流
 └── archive/              退场归档（可删的留存区，担心删早了先留；唯一一处）
 
+[generated-inventory:start]
+磁盘文件清单（运行 node scripts/sync-doc-inventory.js 更新）
+  lib/__tests__/fixtures.js
+  lib/__tests__/helpers.js
+  lib/__tests__/smoke.test.js
+  lib/__tests__/tips-filename.test.js
+  lib/__tests__/tips-semantic-filename.test.js
+  lib/api-page.js
+  lib/apps-schema.js
+  lib/brand-drift.js
+  lib/crash-guard.js
+  lib/docs-fresh.js
+  lib/manifest-schema.js
+  lib/mcp-handlers.js
+  lib/mcp-http.js
+  lib/ops-log.js
+  lib/principle-schema.js
+  lib/routes.js
+  lib/schema-loader.js
+  lib/self-check.js
+  lib/static.js
+  lib/tip-schema.js
+  lib/tool-registry.js
+  lib/tree-drift.js
+  web/_script.js
+  web/_style.css
+  web/_tokens.css
+  web/capability-map.svg
+  web/index.html
+  web/logo.svg
+  web/shared/icon-lib.js
+  web/shared/logo-lib.js
+  web/shared/logos/capability-map.svg
+  web/shared/logos/inspiration-wall.svg
+  web/shared/tips-panel.css
+  web/shared/tips-panel.js
+[generated-inventory:end]
+
 （省略 .git/、node_modules/、coverage/ 等非架构目录。全局 skills 是外部只读资源，不在本目录树内。）
 ```
 
@@ -201,7 +239,7 @@ agentboard 是骨件，不是全部。兄弟骨件各管一段，本骨件只代
 ## 运行生命周期
 
 - **草稿有归属**：用户投喂参考（截图/资料）丢 `_runtime/inputs/`（**永不自动清**——投料是输入，清掉丢用户的输入）；AI 会话草稿（临时文件/验证脚本）丢 `_runtime/work/`。勿丢根层——清理器只认白名单子目录，散落文件没人管会积成垃圾
-- 清理：`scripts/cleanup-runtime.ps1` 读 `scripts/cleanup-runtime.config.json`（阈值单源），只清 `work/`（超 3 天），**永不碰 `inputs/`、`pids/`、`logs/`**。Task Scheduler `AgentboardCleanup` **登录触发**（开机登录即清理，不依赖定时开机）；`-DryRun` 先演练
+- 清理：`scripts/cleanup-runtime.ps1` 读 `scripts/cleanup-runtime.config.json`（阈值单源）。`work/` 按顶层草稿包的最新后代修改时间判定超 3 天，移至 `archive/runtime-work/批次/`，保存逐文件 SHA-256 清单并回验；不自动删除归档。含 `.keep` / `.active` 或链接的包跳过。恢复时先核对批次 `manifest.json` 与原位置无冲突，再移回对应 `source`。`-DryRun` 先演练；`-WorkOnly` 仅处理草稿，不执行 state 日志保留策略。**不清理 `inputs/`、`pids/`、`logs/`**（仅追加 cleanup.log）。Task Scheduler `AgentboardCleanup` **登录触发**，沿用既有任务。
 - `_runtime/CHECKPOINT.md` 由 checkpoint hook 写入，有实时消费者，勿删勿移
 
 ## 服务器

@@ -167,6 +167,44 @@ Both planes share one truth source: `tools/{id}/manifest.json`. Change a file, b
 ├── _runtime/              运行产物（pids / events.jsonl / logs; gitignored）
 └── archive/               退场归档（可删的留存区，担心删早了先留；唯一一处）
 
+[generated-inventory:start]
+磁盘文件清单（运行 node scripts/sync-doc-inventory.js 更新）
+  lib/__tests__/fixtures.js
+  lib/__tests__/helpers.js
+  lib/__tests__/smoke.test.js
+  lib/__tests__/tips-filename.test.js
+  lib/__tests__/tips-semantic-filename.test.js
+  lib/api-page.js
+  lib/apps-schema.js
+  lib/brand-drift.js
+  lib/crash-guard.js
+  lib/docs-fresh.js
+  lib/manifest-schema.js
+  lib/mcp-handlers.js
+  lib/mcp-http.js
+  lib/ops-log.js
+  lib/principle-schema.js
+  lib/routes.js
+  lib/schema-loader.js
+  lib/self-check.js
+  lib/static.js
+  lib/tip-schema.js
+  lib/tool-registry.js
+  lib/tree-drift.js
+  web/_script.js
+  web/_style.css
+  web/_tokens.css
+  web/capability-map.svg
+  web/index.html
+  web/logo.svg
+  web/shared/icon-lib.js
+  web/shared/logo-lib.js
+  web/shared/logos/capability-map.svg
+  web/shared/logos/inspiration-wall.svg
+  web/shared/tips-panel.css
+  web/shared/tips-panel.js
+[generated-inventory:end]
+
 （省略 .git/、node_modules/、coverage/ 等非架构目录。全局 skills 是外部只读资源，不在本目录树内。）
 ```
 

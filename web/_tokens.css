@@ -1,8 +1,8 @@
 :root{
   /* 设计系统：白60 · 绿30 · 黄10 */
-  --green:#74A63F; --deep:#3E571C; --yellow:#D9E26B; --soft:#E5ECA1;
+  --green:#6B9A3A; --deep:#3E571C; --yellow:#D9E26B; --soft:#E5ECA1;
   --green-deep:#3E571C; --green-soft:#E5ECA1;
-  --green-rgb:116,166,63;   /* 半透明用 rgba(var(--green-rgb),.08) */
+  --green-rgb:107,154,58;   /* 半透明用 rgba(var(--green-rgb),.08) */
   --on-brand:#F9FBF9;       /* 绿底前景（替代散落的 #fff / #FAFAF8） */
   --paper-rgb:249,251,249;  /* 白色半透明用 rgba(var(--paper-rgb),.2) */
   /* color/surface 面 */

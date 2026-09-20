@@ -10,7 +10,7 @@
 :root{
   --paper:#F9FBF9; --paper-tint:#EEF4EF; --line:#DDE4B8; --line-soft:#E3ECE6;
   --ink:#262B27; --ink-light:#6B7470; --ink-faint:#9AA39E;
-  --green:#74A63F; --deep:#3E571C; --soft:#E5ECA1; --yellow:#D9E26B;
+  --green:#6B9A3A; --deep:#3E571C; --soft:#E5ECA1; --yellow:#D9E26B;
   --run:#1A8A3F; --err:#C0392B; --warn:#C7902B;
   --font-head:'Noto Serif SC',SimSun,serif;
   --font-body:Inter,'Noto Sans SC','Microsoft YaHei',sans-serif;
@@ -448,7 +448,55 @@ code{font-family:var(--font-code);font-size:.88em;background:var(--soft);color:v
 │   ├── <span class="dir">pids/</span>               <span class="arrow">←</span> <span class="cm">进程身份凭证</span>
 │   ├── <span class="file">CHECKPOINT.md</span>       <span class="arrow">←</span> <span class="cm">状态变更快照（hook 写）</span>
 │   └── <span class="file">events.jsonl</span>        <span class="arrow">←</span> <span class="cm">运行事件流</span>
-<span class="top">└── <span class="dir">archive/</span>              <span class="arrow">←</span> <span class="cm">退场归档（可删的留存区，唯一一处）</span></span></pre>
+<span class="top">└── <span class="dir">archive/</span>              <span class="arrow">←</span> <span class="cm">退场归档（可删的留存区，唯一一处）</span></span>
+
+[generated-inventory:start]
+磁盘文件清单（运行 node scripts/sync-doc-inventory.js 更新）
+  lib/__tests__/fixtures.js
+  lib/__tests__/helpers.js
+  lib/__tests__/smoke.test.js
+  lib/__tests__/tips-filename.test.js
+  lib/__tests__/tips-semantic-filename.test.js
+  lib/api-page.js
+  lib/apps-schema.js
+  lib/brand-drift.js
+  lib/crash-guard.js
+  lib/docs-fresh.js
+  lib/manifest-schema.js
+  lib/mcp-handlers.js
+  lib/mcp-http.js
+  lib/ops-log.js
+  lib/principle-schema.js
+  lib/routes.js
+  lib/schema-loader.js
+  lib/self-check.js
+  lib/static.js
+  lib/tip-schema.js
+  lib/tool-registry.js
+  lib/tree-drift.js
+  web/_script.js
+  web/_style.css
+  web/_tokens.css
+  web/capability-map.svg
+  web/index.html
+  web/logo.svg
+  web/shared/icon-lib.js
+  web/shared/logo-lib.js
+  web/shared/logos/capability-map.svg
+  web/shared/logos/inspiration-wall.svg
+  web/shared/tips-panel.css
+  web/shared/tips-panel.js
+  docs/使用说明书.html
+  docs/card-data-contract.md
+  docs/card-form-constraints.md
+  docs/grid-control-prompt.md
+  docs/RECOVERY.md
+  docs/tasks.md
+  mechanisms/session-guard.md
+  examples/hello-server/manifest.json
+  examples/nextjs-app/manifest.json
+[generated-inventory:end]
+</pre>
       </div>
     </div>
     <p class="flow-note">省略 <code>.git/</code>、<code>node_modules/</code>、<code>coverage/</code> 等非架构目录。全局 skills 是外部只读资源，不在本目录树内。</p>

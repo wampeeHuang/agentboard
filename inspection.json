@@ -2,7 +2,7 @@
   "$schema": "urn:inspector:inspection:v1",
   "project": "agentboard",
   "bone": true,
-  "updated": "2026-08-26",
+  "updated": "2026-09-20",
   "checks": [
     {
       "id": "manifest_schema",
@@ -70,7 +70,7 @@
     {
       "id": "brand_drift",
       "label": "品牌值未漂移",
-      "what": "web/_style.css :root 品牌承载值（绿/深绿/黄/淡黄绿/墨/标题字体首族）⊆ vivi brand-dna.md 契约值集",
+      "what": "web/_tokens.css 与说明书的品牌色、标题字体首族逐角色匹配 vivi-tokens.json 唯一机器契约",
       "job": "inspector-b-daily",
       "severity": "error",
       "declarative": "node_module",
