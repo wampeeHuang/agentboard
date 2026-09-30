@@ -14,7 +14,7 @@
 2. 分类 → 这条日志回答什么问题（五类互斥）
 3. 套模板 → 按类型填正文结构
 4. 查不写入 → 别写进不该进的东西（本项目清单见 §四）
-5. 落盘 → frontmatter + # 标题 + 正文；文件名 kebab-case；经 /api/tips 写入
+5. 落盘 → frontmatter + # 标题 + 正文；文件名 kebab-case；经 /api/tips 写入（**必须带 `file` 参数**，不带只能拿到时间戳名，不合本宪法）
 ```
 
 **维护时**，四规则循环：过期即归档 · 发现即修 · 重复即合并 · 不凑数。
@@ -145,6 +145,21 @@ recipe: 详细操作手册的绝对路径（可选）
 - 中文为主，代码/变量名英文
 - 文件名 kebab-case，语义化
 - frontmatter 后空行再接 `# 标题`
+
+### 落盘接口契约（`POST /api/tips`）
+
+文件名由调用方给，服务端不猜中文标题的英文 slug：
+
+```jsonc
+{ "file": "grid-ruler-not-found.md",   // 必带，纯文件名不带目录
+  "type": "diagnosis", "title": "…", "desc": "…",
+  "domain": "general", "author": "dsh-agent", "source": "…" }
+```
+
+- `file` 必须匹配 `^[a-z0-9]+(-[a-z0-9]+)*\.md$`（小写英文/数字/连字符 + `.md`）。大写、中文、空格、下划线、路径穿越一律 **400**，不落盘。
+- 同名条目已存在 → **409**，拒绝覆盖（换名字，或用 `PUT /api/tips/{file}` 编辑既有条目）。
+- **省略 `file` 会退化为时间戳名 `tip-YYYYMMDD-HHMM.md`**——那是并发写入的兜底，不合本宪法，不要依赖。
+- `domain: dsh | cron` 时文件落进 `tips/dsh/` 、`tips/cron/` 子目录，`file` 仍只给文件名。
 
 ---
 

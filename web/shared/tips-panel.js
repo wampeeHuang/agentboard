@@ -342,6 +342,9 @@
     $('tips-tp-author').value = '人工';
     $('tips-tp-title').value = '';
     $('tips-tp-source').value = '';
+    // 新建：文件名必填（宪法 §三 kebab-case 语义化），解禁编辑态锁定的输入框
+    var newFileEl = $('tips-tp-file');
+    if (newFileEl) { newFileEl.value = ''; newFileEl.disabled = false; newFileEl.title = '宪法 §三 要求文件名 kebab-case 语义化。小写英文/数字/连字符 + .md'; }
     var tool = $('tips-tp-tool'), scen = $('tips-tp-scenario');
     if (tool) tool.value = '';
     if (scen) scen.value = '';
@@ -354,6 +357,9 @@
   function openEdit(file) {
     state.editFile = file;
     $('tips-form-title').textContent = '编辑日志';
+    // 文件名是条目的身份：编辑只改内容，改名走文件系统（PUT /api/tips/{file} 按名定位）
+    var editFileEl = $('tips-tp-file');
+    if (editFileEl) { editFileEl.value = file; editFileEl.disabled = true; editFileEl.title = '文件名不可在此修改（编辑按名定位）。要改名请重命名文件。'; }
     $('tips-form-overlay').classList.add('show');
     fetch(fileUrl + encodeURIComponent(file))
       .then(function (r) { return r.text().then(function (t) { return { ok: r.ok, text: t }; }); })
@@ -417,9 +423,20 @@
     });
     return parts.join('\n\n');
   }
+  // 宪法 §三：文件名 kebab-case 语义化。服务端同一规则，这里先拦一道给出即时反馈。
+  var TIP_FILE_RE = /^[a-z0-9]+(-[a-z0-9]+)*\.md$/;
+
   function save() {
     var title = $('tips-tp-title').value.trim();
     if (!title) { toast('标题必填', 'error'); $('tips-tp-title').focus(); return; }
+    var fileEl = $('tips-tp-file');
+    var fileName = fileEl ? fileEl.value.trim() : '';
+    // 新建必须给文件名：不给的话服务端只能退化成时间戳名，不合宪法
+    if (!state.editFile && !TIP_FILE_RE.test(fileName)) {
+      toast('文件名必填：小写英文/数字/连字符 + .md', 'error');
+      if (fileEl) fileEl.focus();
+      return;
+    }
     var type = $('tips-tp-type').value;
     var source = $('tips-tp-source').value.trim();
     var domain = $('tips-tp-domain').value;
@@ -435,6 +452,8 @@
       scenario: scenEl ? scenEl.value.trim() : '',
       desc: buildDesc()
     };
+    // 仅新建时传 file：编辑按名定位，PUT 不接受改名
+    if (!state.editFile) body.file = fileName;
     var url = api, method = 'POST';
     if (state.editFile) { url = fileUrl + encodeURIComponent(state.editFile); method = 'PUT'; }
     fetch(url, {
@@ -480,6 +499,7 @@
     + '<option value="diagnosis">诊断</option><option value="method">方法</option><option value="fact">事实</option><option value="capability">能力</option><option value="feedback">反馈</option>'
     + '</select></div>'
     + '<div class="tips-field"><label>标题 <span class="tips-req">*</span></label><input id="tips-tp-title" placeholder="一句话洞察标题"></div>'
+    + '<div class="tips-field"><label>文件名 <span class="tips-req">*</span></label><input id="tips-tp-file" placeholder="kebab-case 英文，例：docker-restore-keep-volume-before-recreate.md" title="宪法 §三 要求文件名 kebab-case 语义化。小写英文/数字/连字符 + .md"></div>'
     + '<div class="tips-field"><label>来源</label><input id="tips-tp-source" placeholder="触发提炼的事件/任务（可留空）"></div>'
     + '<div class="tips-cap-fields" id="tips-cap-fields" hidden>'
     + '<div class="tips-field"><label>工具</label><input id="tips-tp-tool" placeholder="工具名（capability 前门面字段）"></div>'

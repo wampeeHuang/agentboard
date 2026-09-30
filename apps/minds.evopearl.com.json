@@ -10,6 +10,6 @@
     "https://nuwa-perspective-catalog.vercel.app"
   ],
   "agentNote": "目录页每张卡片含人物摘要和思维框架。GitHub: https://github.com/wampeeHuang/nuwa-perspective-catalog",
-  "order": 3,
+  "order": 4,
   "devTool": "nuwa-catalog"
 }

@@ -1,0 +1,9 @@
+{
+  "id": "sld.evopearl.com",
+  "name": "宋连达磁性元器件官网",
+  "url": "https://sld.evopearl.com",
+  "description": "宋连达磁性元器件定制开发官网，展示七类产品、加工能力、质量与参数化技术询盘入口。",
+  "status": "live",
+  "host": "腾讯云 DNSPod → Vercel",
+  "agentNote": "静态官网，正式开发源为 D:/workspace/_lab/2026-09-22-宋连达工厂增长/website。先读项目根 README.md 与 HANDOFF.md；facts/ 是对外事实唯一来源。任何改动发布前均按 _runtime/deploy/README.md 做本地与线上复验。"
+}

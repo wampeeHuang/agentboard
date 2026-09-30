@@ -209,6 +209,20 @@ async function fetchTools() {
   }
 }
 
+async function loadPrivateLinks() {
+  var keyManagementLink = document.getElementById('keyManagementLink');
+  if (!keyManagementLink) return;
+  try {
+    var res = await fetch('/api/private-links', { cache: 'no-store' });
+    var data = await res.json();
+    var url = data && data.ok && data.links && data.links.keyManagementUrl;
+    if (url) {
+      keyManagementLink.href = url;
+      keyManagementLink.hidden = false;
+    }
+  } catch (_) {}
+}
+
 function updateCounts() {
   var el;
   el = document.getElementById('navToolsCnt'); if (el) el.textContent = tools.length;
@@ -339,7 +353,9 @@ function actionsHtml(t, state) {
   } else if (isFolder) {
     btns.push('<button class="btn go" onclick="event.stopPropagation();window.open(\'/workspace/' + t.id + '\', \'_blank\')">查看项目</button>');
   } else if (isCli) {
-    if (hasCommands) btns.push('<button class="btn go" onclick="event.stopPropagation();startTool(\'' + t.id + '\')">运行</button>');
+    if (state === 'running' && t.openCommand) btns.push('<button class="btn open" onclick="event.stopPropagation();openTool(\'' + t.id + '\')">打开</button>');
+    else if (state === 'running') btns.push('<span class="card-placeholder">运行中</span>');
+    else if (hasCommands) btns.push('<button class="btn go" onclick="event.stopPropagation();startTool(\'' + t.id + '\')">运行</button>');
     else btns.push('<span class="cmd-hint">在 Claude Code 中输入</span>');
   } else if (state === 'running') {
     btns.push('<button class="btn stop" onclick="event.stopPropagation();stopTool(\'' + t.id + '\')">停止</button>');
@@ -528,6 +544,17 @@ async function startTool(id) {
     delete starting[id];
     render();
     alert('连接失败');
+  }
+}
+
+async function openTool(id) {
+  try {
+    var res = await fetch('/api/tools/open/' + id, {method:'POST'});
+    var data = await res.json();
+    if (!data.ok) throw new Error(data.error || '未知错误');
+    toast('已打开窗口');
+  } catch (e) {
+    alert('打开失败: ' + e.message);
   }
 }
 
@@ -1370,6 +1397,7 @@ document.addEventListener('DOMContentLoaded', function() {
   }
   renderToolsSub();
   ensureToolSchema();  // 分类筛选取值从 schema 派生（先拉，dim 块刷新）
+  loadPrivateLinks();
   fetchTools();
   loadServerCardOrder();
   renderApps();

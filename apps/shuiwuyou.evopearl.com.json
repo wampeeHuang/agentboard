@@ -14,6 +14,6 @@
     "calculate": "https://shuiwuyou.evopearl.com/api/calculate"
   },
   "agentNote": "Vercel 部署。CSV 直传算税用 POST /api/calculate。完整文件导入(xlsx/pdf)仅本地可用。本地 dev :3457。",
-  "order": 6,
+  "order": 7,
   "devTool": "tax-wuyou"
 }

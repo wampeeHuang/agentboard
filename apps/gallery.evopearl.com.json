@@ -11,6 +11,6 @@
     "design-styles": "https://gallery.evopearl.com/api/design-styles"
   },
   "agentNote": "Vercel 部署。/api/registry 返回43模板完整索引。模板HTML通过 /templates/ 静态路径直接访问。本地 dev :3080。",
-  "order": 2,
+  "order": 3,
   "devTool": "html-gallery"
 }

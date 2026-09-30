@@ -61,12 +61,18 @@ OCR:  Tesseract OCR (pytesseract)
       <div class="hero-title">工具架</div>
       <div class="hero-sub">本机工具架 一份真相，两个平面</div>
     </div>
-    <div class="search-bar">
+    <div class="search-bar tools-toolbar">
+      <div class="tools-search-group">
       <button class="btn-add" onclick="openToolForm(null,'new')">+ 新增工具</button>
       <div class="search-box">
         <input id="searchInput" placeholder="输入工具名、功能或描述搜索…" oninput="render()">
         <svg class="search-ico" viewBox="0 0 20 20" aria-hidden="true"><circle cx="9" cy="9" r="6.5" fill="none" stroke="currentColor" stroke-width="2"/><line x1="14.2" y1="14.2" x2="18" y2="18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
       </div>
+    </div>
+      <a id="keyManagementLink" class="feishu-base-link" hidden target="_blank" rel="noopener noreferrer" title="打开密钥管理中心（新标签页）">
+        <img src="/shared/logos/feishu-base.png" alt="" aria-hidden="true">
+        <span>密钥管理中心</span>
+      </a>
     </div>
     <div class="dim-blocks tools-dims" id="dimBlocks"></div>
     <div class="tool-grid" id="toolGrid"></div>

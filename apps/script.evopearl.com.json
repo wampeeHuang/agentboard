@@ -1,0 +1,11 @@
+{
+  "id": "script.evopearl.com",
+  "name": "文案脚本工作台",
+  "url": "https://script.evopearl.com",
+  "description": "正式工作入口：文案与章节编辑、口播时长估算、离线保存和跨设备同步；录音限电脑端。",
+  "status": "live",
+  "host": "腾讯云 DNSPod → EdgeOne → Vercel；Supabase 数据与录音",
+  "devTool": "script-editor",
+  "agentNote": "日常工作统一进入 https://script.evopearl.com/projects。线上稿件使用 Supabase 账号数据，浏览器离线副本经修订号同步；8781 是本地开发/旧稿入口，projects 目录未与云端同步，不得把两端同名稿当成同一最新版本。旧稿迁移须核对ID、正文、音频并验收后指定唯一工作副本。源码 D:/tools/script-editor；本地Agent到云端的同步桥尚未实现。AI配音合成未在网站接通。",
+  "order": 0
+}

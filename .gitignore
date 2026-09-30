@@ -15,3 +15,8 @@ skills/
 coverage/
 # web 原型工作区
 web/_proto/
+# 浏览器验收痕迹与运行态归档只保留在本机，可能包含会话数据。
+.playwright-cli/
+archive/runtime-work/
+# 本机调研投料与派生知识稿，不作为 Agentboard 源码发布。
+_knowledge_base/

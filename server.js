@@ -79,6 +79,16 @@ const PREFERRED_PORT = parseInt(process.env.PORT || '3099', 10);
 const PLATFORM = process.platform;
 
 function read(p) { try { return fs.readFileSync(p,'utf8'); } catch(_) { return null; } }
+function privateLinks() {
+  // 真实业务入口只保留在 gitignored 的本机 state 配置；公开源码不携带 Base 标识。
+  try {
+    var config = JSON.parse(read(path.join(AGENTBOARD_HOME, 'state', 'private-links.json')) || '{}');
+    var url = new URL(config.keyManagementUrl || '');
+    var host = url.hostname.toLowerCase();
+    if (url.protocol !== 'https:' || !(host.endsWith('.feishu.cn') || host.endsWith('.larksuite.com'))) return {};
+    return { keyManagementUrl: url.toString() };
+  } catch (_) { return {}; }
+}
 function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function monogram(name) { var s = (name||'').trim(); var en = s.match(/[A-Za-z][A-Za-z\s]+/); if (en) { var w = en[0].split(/\s+/).filter(Boolean); if (w.length >= 2) return (w[0][0] + w[w.length-1][0]).toUpperCase(); if (w.length === 1 && w[0].length >= 2) return w[0].substring(0,2).toUpperCase(); } var cn = s.replace(/[^一-鿿]/g,''); if (cn.length >= 2) return cn[0] + cn[cn.length-1]; var ascii = s.replace(/[^A-Za-z0-9]/g,''); if (ascii.length >= 2) return ascii.substring(0,2).toUpperCase(); return (s.substring(0,2) || '??').toUpperCase(); }
 function listDirs(p) { try { return fs.readdirSync(p).filter(function(name){ if (name.charAt(0) === '.') return false; try { return fs.statSync(path.join(p, name)).isDirectory(); } catch(_) { return false; } }); } catch(_) { return []; } }
@@ -259,6 +269,11 @@ function startServer() {
     next();
   });
 
+  app.get('/api/private-links', function(req, res) {
+    res.set('Cache-Control', 'no-store');
+    res.json({ ok: true, links: privateLinks() });
+  });
+
 
 
   // shared context for route/static modules (module-level helpers + closure logging state)
@@ -301,4 +316,4 @@ if (require.main === module) {
   startServer();
 }
 
-module.exports = { startServer: startServer };
+module.exports = { startServer: startServer };

@@ -6,5 +6,5 @@
   "status": "live",
   "host": "腾讯云 DNSPod → Vercel",
   "agentNote": "静态网站，Vercel 部署。1 片起做，BGA 最小间距 0.3mm，01005 元件。深圳光明新区自有工厂。",
-  "order": 5
+  "order": 6
 }
