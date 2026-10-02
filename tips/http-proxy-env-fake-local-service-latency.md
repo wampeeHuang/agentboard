@@ -1,9 +1,10 @@
 ---
 type: diagnosis
 date: 2026-09-11
+updated: 2026-10-02
 domain: general
 author: dsh-agent
-source: 灵感图库会话：测本地 8771 图片加载延迟，urllib 报每次约 2 秒，原始 socket 实测 15 毫秒
+source: 灵感图库会话：测本地 8771 图片加载延迟，urllib 报每次约 2 秒，原始 socket 实测 15 毫秒；2026-10-02 script-editor 补第二种故障模式：urllib 经代理访问 HTTPS 外站直接 SSL 失败
 ---
 
 # http_proxy 环境变量会让 urllib 探测本地服务时走代理，制造出每请求约 2 秒的假延迟
@@ -63,3 +64,42 @@ print(int((time.time() - t0) * 1000), 'ms')
 - 出现"延迟与 payload 大小无关的固定值"（本例 6 MB 与 0 字节都是 ~2050 ms），第一反应应该是**测量链路有问题**，而不是服务端慢——真实的服务端瓶颈通常随体积、并发、内容类型变化。
 - 多个测量工具结果矛盾时（本例 favicon 14 ms vs 图片 2046 ms），先做一次**原始 socket 对照**再下结论，不要基于单一客户端的结果改代码。
 - 同类陷阱：Python 脚本里 `urllib` 抓外网也会走这个代理；HTTP 服务端自身若用 `urllib` 探测本机端口同理。
+
+---
+
+## 2026-10-02 补充：同一个代理，第二种故障模式是「直接失败」而非「变慢」
+
+**现象**：文稿工作台的所有云端操作（登录、同步、拉取）都返回「服务内部错误」，用户以为是自己密码错。
+前端只看到 500，错误话术还是通用的内部错误——因为真正的异常在传输层。
+
+**根因**：项目用 `urllib.request.urlopen` 访问 Supabase（HTTPS）时**通过代理建立 CONNECT 隧道，隧道内 TLS 直接失败**：
+
+```
+urllib 默认（读环境代理）→ URLError: [SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol
+显式指定同一代理        → HTTP 401（连得通，未带凭证属正常）
+```
+
+即：**同一台机器、同一个代理，`urllib` 自动读环境变量走代理会 SSL 崩，显式传代理却正常。** 这和上面的"假延迟"是同一根因（urllib 的代理处理不可靠）的两种表现——一个慢、一个断。
+
+**定位手法（可复用）**：不要只测一次。做三路对照：
+
+```bash
+curl -s -o /dev/null -w "%{http_code}\n" --max-time 20 https://<host>/<path>                       # 直连
+curl -s -o /dev/null -w "%{http_code}\n" --max-time 20 --proxy http://127.0.0.1:7897 https://<host>/<path>  # 显式代理
+python -c "import urllib.request; urllib.request.urlopen('https://<host>/<path>', timeout=15)"      # urllib 默认
+```
+
+若 curl 两路都通、`urllib` 一路报 `UNEXPECTED_EOF_WHILE_READING`，就是本类的指纹，**不要去改服务端或怀疑凭证**。
+
+**修复**：改用 `requests` 并显式设置 `proxies`，问题消失：
+
+```python
+import os, requests
+proxy = os.environ.get('HTTPS_PROXY') or os.environ.get('https_proxy')
+requests.get(url, timeout=(10, 30), proxies={'http': proxy, 'https': proxy} if proxy else None)
+```
+
+**预防**：
+- 只要项目里出现 `urllib` + 外网 + 本机有代理，就先把这条列进怀疑清单。
+- 传输层失败**必须**映射成可读话术（本例最终区分出「邮箱或密码不正确」「连不上网站」「授权已失效」三种），否则用户会把网络故障当成自己输错密码。
+- `NO_PROXY` 只覆盖列出的域；本机代理环境下访问新的外站默认是要走代理的。
