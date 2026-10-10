@@ -1,5 +1,6 @@
 node_modules/
 _runtime/
+.workbuddy/
 *.log
 patrol-result.json
 .env
