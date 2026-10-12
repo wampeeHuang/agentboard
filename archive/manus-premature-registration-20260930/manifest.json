@@ -1,0 +1,14 @@
+{
+  "name": "Manus Studio · 待安装",
+  "description": "【用途】Manus 官方桌面 Agent，可用于视频、网站与多步创作任务。【何时用】需要使用 Manus Studio 桌面工作区时。【当前状态】尚未安装：2026-09-30 Microsoft Store 明确返回 CN 市场不可获取；此卡停用，仅登记官方入口。",
+  "icon": "🖐️",
+  "category": "Agent",
+  "loc": "本地",
+  "url": "https://manus.im/desktop",
+  "owner": "外部",
+  "type": "cli",
+  "agent_notes": "安装未完成，禁止当作可调用工具或本地模型。官方 Windows 入口为 Microsoft Store 产品 9PHV7M7V4S5L，包族 ManusAI.Manus_vajzd2mq3s8wj。本机区域 CN，StoreEdgeFD 返回 Product is not purchasable in market CN；US 目录有记录，仅作诊断，未修改区域。恢复时先核对官方可用性和实际安装包，再登记真实 processPath/startCommand/openCommand 并解除停用；不要猜安装路径。安装客户端不代表服务全本地运行；登录、文件访问授权和付费生成需分别核实。",
+  "capability": "桌面 Agent 与视频创作",
+  "disabled": true,
+  "conflicts": []
+}

@@ -1,0 +1,21 @@
+{
+  "name": "算力AI 模型中转",
+  "id": "suanliai",
+  "description": "【用途】suanliai.top 的 New API 模型聚合网关，提供多模型 API 目录。【何时用】已核实目标模型、协议和计费后，经该站调用对应模型。【何时不用】需要供应商官方直连或尚未确认模型身份与额度时。【返回】按所选协议返回模型响应；2026-09-22 已验证密钥和模型目录读取，尚未验证具体模型调用。",
+  "icon": "🔀",
+  "version": "1.0.1",
+  "category": "模型",
+  "capability": "第三方多模型 API 中转",
+  "categoryAck": true,
+  "loc": "远程",
+  "order": 40,
+  "type": "api",
+  "apiBase": "https://suanliai.top/v1",
+  "apiKeyName": "SUANLIAI_API_KEY",
+  "models": [],
+  "url": "https://suanliai.top",
+  "owner": "外部",
+  "conflicts": [],
+  "agent_notes": "suanliai.top 与 suanli.cn 不是同一站；不可套用 api.suanli.cn。SUANLIAI_API_KEY 由本机用户环境变量提供，manifest 不存密钥。2026-09-22：带密钥 GET https://suanliai.top/v1/models 返回 200、550 个目录条目；这只验证鉴权和目录读取，models 保持空列表，避免把目录条目误报为可实际调用。选择具体模型前须验证协议、调用、计费、供应商身份、Token 用量与上下文能力。",
+  "disabled": true
+}

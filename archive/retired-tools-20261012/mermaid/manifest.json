@@ -1,0 +1,19 @@
+{
+  "name": "美人鱼架构图",
+  "description": "【用途】渲染架构图/流程图/时序图/类图（Mermaid 语法）。agent 通过 claude-mermaid MCP 自动渲染架构图；人工编辑打开 mermaid.live 网页编辑器。【何时用】需要画系统架构/流程图/时序图时，让 agent 画完贴出 localhost:3737/{id} 预览地址（仅会话运行期间存活）。【何时不用】画完要长期保存→导出 PNG/SVG，或把 .mmd 源码存进项目（源码在 ~/.config/claude-mermaid/live/{id}/diagram.mmd）。【返回】实时预览地址 + .mmd 源码",
+  "icon": "🧜",
+  "category": "创作",
+  "loc": "本地",
+  "url": "https://mermaid.live",
+  "capability": "架构图/流程图/时序图渲染（Mermaid）",
+  "owner": "自建",
+  "agent_notes": "agent 侧通过 MCP 服务器 npx claude-mermaid 使用（.claude.json mcpServers.mermaid）。live 预览 http://localhost:3737/{diagram-id} 只在 Claude 会话运行期间存活，会话结束即失效。源码 ~/.config/claude-mermaid/live/{diagram-id}/diagram.mmd。人工打开 = 浏览器访问 https://mermaid.live 网页编辑器。详见 tip mermaid-live-source-location.md",
+  "conflicts": [],
+  "runtime": {
+    "language": "node",
+    "version": "",
+    "manager": "",
+    "note": ""
+  },
+  "type": "api"
+}

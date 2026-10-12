@@ -1,0 +1,10 @@
+{
+  "id": "gallery.evopearl.com--inspiration",
+  "name": "灵感图库说明书",
+  "url": "https://gallery.evopearl.com/inspiration/",
+  "description": "把喜欢的图存成自己的素材：按领域与维度分类、挂在项目下当参考的图片灵感库说明书。",
+  "status": "live",
+  "host": "腾讯云 DNSPod → EdgeOne → Vercel",
+  "devTool": "inspiration-wall",
+  "agentNote": "⚠ 公网这份是 2026-10-01 的旧版：2026-10-02 只改了源文件（D:\\workspace\\_lab\\2026-09-01-灵感墙\\docs\\manual\\index.html），**未重新发布**。本地预览：http://localhost:8771/docs/manual/index.html（工具卡 inspiration-wall）。发布三步：scripts/build-manual-site.py → 在 _runtime/deploy/manual-site 执行 vercel --prod --yes --scope camellia3hs-projects → scripts/publish-manual-edge.py；发布后跑 checks/verify-manual-public.py 验线上字节哈希。源目录：D:\\workspace\\_lab\\2026-09-01-灵感墙\\docs\\manual\\。"
+}

@@ -22,6 +22,10 @@
   --gc-success:#27AE60; --gc-error:#E67E22; --gc-fatal:#C0392B;
   /* radius */
   --radius-sm:8px; --radius-md:12px; --radius-pill:999px;
+  /* 卡片尺寸契约：宽度 384 与间距 32 全站统一（工具卡/分类卡/网站卡/经验卡/原则卡）。
+     高度分两级：工具类卡片 256（--card-h），分类筛选块 96（--dim-h）。
+     改这里全站生效；任何页面不得用 minmax()/1fr 覆盖卡片宽度，不得把 gap 降到 32px 以下。 */
+  --card-w:384px; --card-h:256px; --dim-h:96px; --card-gap:32px;
   --shadow-border:0 0 0 1px rgba(38,43,39,.08);
   --shadow-card:0 1px 2px rgba(38,43,39,.06);
   --shadow-card-hover:0 2px 8px rgba(38,43,39,.1);

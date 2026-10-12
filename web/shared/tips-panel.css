@@ -20,8 +20,10 @@
 .tips-panel-root .search-ico{position:absolute;right:12px;top:50%;transform:translateY(-50%);width:18px;height:18px;color:#6B7470}
 .tips-panel-root .btn-add{padding:8px 16px;background:#74A63F;color:#F9FBF9;border:none;border-radius:20px;font-size:13px;cursor:pointer;display:inline-flex;align-items:center;gap:4px;white-space:nowrap;font-weight:500;box-sizing:border-box}
 .tips-panel-root .btn-add:hover{background:#5D8A35}
-.tips-panel-root .dim-blocks{display:flex;gap:16px;margin-bottom:24px;align-items:stretch;flex-wrap:wrap}
-.tips-panel-root .dim-block{flex:0 0 384px;min-width:0;border-radius:8px;padding:16px;min-height:96px;display:flex;flex-direction:column;background:#fff;border:1px solid #DDE4B8;box-sizing:border-box}
+/* 分类卡片：宽度/间距同工具卡（384 / 32），高基准 96（--dim-h，标签多则长）。
+   本文件可能被别处内嵌，token 带兜底值。 */
+.tips-panel-root .dim-blocks{display:flex;gap:var(--card-gap,32px);margin-bottom:24px;align-items:stretch;flex-wrap:wrap}
+.tips-panel-root .dim-block{flex:0 0 var(--card-w,384px);width:var(--card-w,384px);min-height:var(--dim-h,96px);min-width:0;border-radius:8px;padding:16px;display:flex;flex-direction:column;background:#fff;border:1px solid #DDE4B8;box-sizing:border-box}
 .tips-panel-root .dim-block:hover{background:#fff;box-shadow:0 2px 12px rgba(38,43,39,.08)}
 .tips-panel-root .dim-block-title{font-size:17px;font-weight:700;color:#262B27;font-family:var(--font-head);margin-bottom:12px;display:flex;align-items:center}
 .tips-panel-root .dim-block-opts{display:flex;flex-wrap:wrap;gap:14px;align-content:flex-start}

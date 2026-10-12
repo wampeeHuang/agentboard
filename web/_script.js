@@ -296,8 +296,9 @@ function renderCard(t) {
   var logo = TOOL_LOGO[t.id];
   var icoHtml = logo ? '<img src="' + logo + '" alt="">' : escHtml(ico);
   var extraClass = (t.disabled && state !== 'disabled') ? ' st-disabled' : '';
+  var trialBadge = (t.tags && t.tags.indexOf('试用') !== -1) ? '<span class="tag-trial" title="试用工具">试用</span>' : '';
   return '<div class="tool-card st-' + state + extraClass + '" data-id="' + t.id + '">'
-    + '<div class="card-top"><span class="card-ico">' + icoHtml + '</span><div class="card-name">' + escHtml(t.name || t.id) + '</div><span class="card-drag-handle" draggable="true" title="拖拽排序"></span></div>'
+    + '<div class="card-top"><span class="card-ico">' + icoHtml + '</span><div class="card-name">' + escHtml(t.name || t.id) + trialBadge + '</div><span class="card-drag-handle" draggable="true" title="拖拽排序"></span></div>'
     + metaRowHtml(t, state)
     + actionsHtml(t, state)
     + '</div>';
@@ -1249,7 +1250,8 @@ function renderAuditDims() {
     { key: 'schema', label: 'Manifest 契约' },
     { key: 'brand',  label: '品牌漂移' },
     { key: 'tree',   label: '三树一致性' },
-    { key: 'docs',   label: '文档新鲜度' }
+    { key: 'docs',   label: '文档新鲜度' },
+    { key: 'card',   label: '卡片尺寸契约' }
   ];
   var html = '<div class="dim-block" style="--b:#EEF4EF"><div class="dim-block-title">检查项<span class="dim-arr">></span></div><div class="dim-block-opts">';
   defs.forEach(function(d){
@@ -1283,7 +1285,7 @@ function renderAudit() {
   var el = document.getElementById('auditGrid');
   if (!el) return;
   if (!auditData) {
-    el.innerHTML = '<div class="audit-idle">点上方「开始巡检」按钮，手动跑一遍三处检查；每处结果可逐条核验</div>';
+    el.innerHTML = '<div class="audit-idle">点上方「开始巡检」按钮，手动跑一遍五处检查；每处结果可逐条核验</div>';
     return;
   }
   var html = auditSummaryHtml();
@@ -1291,6 +1293,7 @@ function renderAudit() {
   if (auditF === 'all' || auditF === 'brand') html += auditSection('brand', '品牌漂移', '页面配色——token 色值必须与 vivi 设计系统一致，跑偏了换肤时颜色会错乱', auditData.brand, 'brand');
   if (auditF === 'all' || auditF === 'tree') html += auditSection('tree', '三树一致性', '文档目录——AGENTS.md / README / 说明书三份目录树必须跟真实文件对得上，对不上就是文档和代码脱节', auditData.tree, 'tree');
   if (auditF === 'all' || auditF === 'docs') html += auditSection('docs', '文档新鲜度', '页面清单——说明书 .pg 块、index.html AI 参考注释、AGENTS.md/README/说明书 routes 页数必须跟真实导航一致；加了页面忘了同步文档，这里兜住', auditData.docs, 'docs');
+  if (auditF === 'all' || auditF === 'card') html += auditSection('card', '卡片尺寸契约', '卡片几何——全站卡片严格 384×256，栅格间距 ≥32px；宽度不许用 minmax()/1fr 跟着容器浮动，任何一方改窄改小这里立刻报', auditData.card, 'card');
   el.innerHTML = html;
 }
 // 三类统一明细格式：项目名 → 错误(红) → 警告(黄) → 正常(绿)；列表先错误、再警告、正常垫底
@@ -1341,6 +1344,7 @@ function auditSummaryHtml() {
   if (auditF === 'all' || auditF === 'brand') secs.push(['brand', auditData.brand]);
   if (auditF === 'all' || auditF === 'tree') secs.push(['tree', auditData.tree]);
   if (auditF === 'all' || auditF === 'docs') secs.push(['docs', auditData.docs]);
+  if (auditF === 'all' || auditF === 'card') secs.push(['card', auditData.card]);
   secs.forEach(function(pair){ auditNormItems(pair[1], pair[0]).forEach(function(it){ c[auditStatus(it)]++; }); });
   function item(k, label) {
     return '<span class="audit-summary-item ' + k + (auditS === k ? ' active' : '') + '" onclick="setAuditS(\'' + k + '\')" title="点击只看' + label + '项，再点恢复"><span class="dot"></span>' + label + ' <b>' + c[k] + '</b></span>';
@@ -1497,9 +1501,23 @@ function buildIconPanel() {
   var ic = document.getElementById('icon-panel');
   if (ic) ic.innerHTML = ICON_LIB.map(function(e){ return '<button type="button" class="icon-opt" title="选 ' + e + '" onclick="pickIcon(\'' + e + '\')">' + e + '</button>'; }).join('');
 }
+// textarea 按内容自适应高度：清掉滚动条，高度=内容高（上限 40vh 再出滚动）
+function autoGrowTA(el) {
+  if (!el) return;
+  el.style.height = 'auto';
+  var h = el.scrollHeight;
+  var max = Math.round(window.innerHeight * 0.4);
+  el.style.height = Math.min(h, max) + 'px';
+  el.style.overflowY = h > max ? 'auto' : 'hidden';
+}
 function attachToolFormListeners() {
   document.querySelectorAll('#editModal input,#editModal select,#editModal textarea').forEach(function(el){
     el.addEventListener('input', tfRender);
+  });
+  // textarea 按内容自适应高度（无滚动条）：输入时 + 首次填充时都调
+  document.querySelectorAll('#editModal textarea').forEach(function(el){
+    el.addEventListener('input', function(){ autoGrowTA(el); });
+    autoGrowTA(el);
   });
   var nameEl = document.getElementById('f-name');
   if (nameEl) nameEl.addEventListener('input', function(){
@@ -1604,6 +1622,8 @@ async function openToolForm(id, mode) {
   setv('f-conflicts', isNew ? '' : (t && t.conflicts ? t.conflicts.map(function(c){ return typeof c === 'string' ? c : (c.toolId || c.toolName || ''); }).join(',') : ''));
   document.getElementById('f-autostart').checked = !isNew && t && t.autoStart;
   document.getElementById('f-disabled').checked = !isNew && t && t.disabled;
+  var _trialEl = document.getElementById('f-trial');
+  if (_trialEl) _trialEl.checked = !isNew && t && t.tags && t.tags.indexOf('试用') !== -1;
   var _ackEl = document.getElementById('f-category-ack');
   if (_ackEl) _ackEl.checked = !isNew && t && t.categoryAck;
 
@@ -1622,6 +1642,7 @@ async function openToolForm(id, mode) {
   applyFormType();
   document.getElementById('editModal').style.display = 'flex';
   tfRender();
+  document.querySelectorAll('#editModal textarea').forEach(autoGrowTA); // 打开即按内容展开
 }
 
 function parseDesc(desc) {
@@ -1769,6 +1790,8 @@ function buildManifest() {
   }
   if (f === 'service' && document.getElementById('f-autostart').checked) mf.autoStart = true;
   if (document.getElementById('f-disabled').checked) mf.disabled = true;
+  var _trialEl = document.getElementById('f-trial');
+  mf.tags = (_trialEl && _trialEl.checked) ? ['试用'] : []; // 总是输出：空数组 = 清标签（PUT 是合并语义，靠它去除）
   var _ackEl = document.getElementById('f-category-ack');
   if (_ackEl && _ackEl.checked) mf.categoryAck = true;
   if (v('f-notes')) mf.agent_notes = v('f-notes');

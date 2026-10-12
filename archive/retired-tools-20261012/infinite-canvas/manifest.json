@@ -1,0 +1,27 @@
+{
+  "id": "infinite-canvas",
+  "name": "无限画布 Infinite-Canvas",
+  "icon": "🎨",
+  "version": "main 67f49e4（2026-08-28；上游作者已宣布停更）",
+  "category": "创作",
+  "categoryAck": true,
+  "loc": "本地",
+  "type": "service",
+  "port": 3011,
+  "url": "http://127.0.0.1:3011/static/smart-canvas.html",
+  "projectPath": "D:\\tools\\infinite-canvas",
+  "owner": "外部",
+  "conflicts": [],
+  "description": "【用途】本机自托管的 AI 创作画布：智能画布（/static/smart-canvas.html?id=画布id，无限画布式的多节点图生图/视频生成工作台）与无限画布（/static/canvas.html）。接 OpenAI 协议 API / 火山引擎 / Modelscope / 本地 ComfyUI / RunningHub。【何时用】要在本机用画布方式做图/视频生成、串多步节点工作流、或想把自己的模型 API 接进一张可视化画布时。【何时不用】只做单轮问答（直接调模型 API）；只做架构图/流程图（走 archify）。【返回】网页 http://127.0.0.1:3011/static/smart-canvas.html",
+  "capability": "本地 AI 图像视频创作画布",
+  "startCommand": "cd /d D:\\tools\\infinite-canvas && set IC_PORT=3011 && .venv\\Scripts\\python.exe .local\\serve.py",
+  "openCommand": "start http://127.0.0.1:3011/static/smart-canvas.html",
+  "stopCommand": "npx kill-port 3011",
+  "runtime": {
+    "language": "python",
+    "version": "3.11.9（项目内 .venv）",
+    "manager": "pip",
+    "note": "FastAPI + uvicorn；依赖用 uv 从阿里云镜像装入 D:\\tools\\infinite-canvas\\.venv（pip 直连 pypi.org 在本机会 SSL EOF 卡住）"
+  },
+  "agent_notes": "【源码】上游 github.com/hero8152/Infinite-Canvas，main 67f49e4（2026-08-28，作者已宣布停更、新版转 www.DX-OS.com 闭源下载）。D:\\tools\\infinite-canvas 是 --depth 1 浅检出，上游文件未改；本机新增只有 .local/serve.py（启动器）、.local/ 下诊断脚本和 .gitignore。\n【端口是本机唯一偏离点】上游 main.py 末尾把 uvicorn 端口硬编码 3000，而本机 3000 已被 PullMD（Docker 容器，不在工具架）占用 → 没有改上游文件，改用 .local/serve.py 启动器 import 上游 app、按 IC_PORT 绑端口（默认 3011），IC_HOST 默认 127.0.0.1（仅本机可访问；要局域网给 ComfyUI/PS 插件用才设 0.0.0.0，注意画布里有 API key 配置）。要换端口，只改 manifest 里 startCommand 的 IC_PORT + port + url 三处，别去动 main.py。\n【依赖怎么装的】不要跑「安装依赖.bat」的离线路径：仓库自带 packages/ 是 cp314 轮子，与仓库自带 python/（3.10.11 嵌入式）和本机 Python 3.11 都不匹配。正确做法是项目内 venv + uv（uv 0.11 在 C:\\Users\\Administrator\\AppData\\Local\\Programs\\Python\\Python311\\Scripts\\uv.exe）；uv 必须设 UV_CACHE_DIR 到工作区内（默认缓存目录 C:\\...\\uv\\cache 被沙箱拒写，会直接报 failed to initialize cache）；pip 直连 pypi.org 会 SSL EOF 卡死、走代理也卡，用国内镜像（阿里云 https://mirrors.aliyun.com/pypi/simple/）配 uv 才一把过。\n【两个画布的区分】/static/smart-canvas.html?id=<画布id> 是「智能画布」（kind=smart），/static/canvas.html 是「无限画布」（kind=classic），首页 / 是 index.html（AI Studio）。画布 id 由 POST /api/canvases 生成，落盘 data/canvases/<id>.json；页面 JS 读 URL 的 id 参数加载画布并把 document.title 换成画布名（可用这个判断有没有真加载）。\n【功能前提】空部署时画布 UI 能开，但生成能力为零——必须先配一个渠道：设置里填 API 站点/协议/key，或 Modelscope key，或本地 ComfyUI 地址（默认探 127.0.0.1:8188）。没有任何 key 时点「运行」必然失败，这不是部署坏了。\n【许可证】上游已申请著作权：禁止商业用途，可自用/公司内用；基于其代码二次开发必须开源并注明作者（README 原文 Commercial use is prohibited）。不要把它的代码搬进商业产品；本机只能是本地自用部署。\n【数据与备份】data/（画布 JSON、prompt 库、资产库索引）、output/、assets/ 是运行时数据，已在 .gitignore 排除；删画布默认进回收站（保留 30 天），要彻底清用 DELETE /api/canvases/{id}/purge。\n【别被 git status 骗了】运行后 static/*.html 会显示被改（13 个文件、每个只差几行）——那是上游自己在提供页面时把资源引用改写成 ?v=时间戳（缓存击穿，main.py 的 static_html_response），不是我们改的；要回滚用 git checkout -- static/，但下次访问又会改写。\n【漫剧管线已落地，别再从头找】2026-09-24 起本机有一条「小说 → 漫剧」的完整管线，唯一事实源：D:\\tools\\infinite-canvas\\.local\\pipeline\\小说到漫剧-管线.md（含七段结构、逐段现状、踩坑、最短可用路径）。配套：.local\\pipeline\\prompts\\{1-拆集改写.md,2-分镜表.md}（S1/S2 的 LLM 提示词与 JSON 契约）、.local\\pipeline\\分镜表.schema.json（分镜表机器可读契约）；画布「工作流」菜单里已有两个本机可跑的自定义工作流：`custom/漫剧-01-分镜出图-ZImage.json`（7 参数，实测 36s/张）与 `custom/漫剧-02-图生视频-LTX本地.json`（8 参数，实测 175s/5 秒带音轨片）。它们由 .local\\import-pipeline.mjs 导入/更新，.local\\build-ltx-local.mjs 生成本机 GGUF 版，.local\\verify-canvas-run.mjs / verify-canvas-video.mjs 做画布入口验收。\n【漫剧管线四个必知坑】① 画布内置工作流的模型名与本机模型对不上（内置要 flux-ultra-vae / minimax_h3_* / ltx-2.3-22b-dev-fp8，本机是 z_image_turbo_nvfp4 / qwen_3_4b_fp8_mixed / ae.safetensors / LTX GGUF），要用 .local/build 里重指过模型的自定义版；② ComfyUI 必须带 --extra-model-paths-config film-extra-model-paths.yaml 启动，否则 LTX 的 VAE 不在 VAELoader 可见列表里；③ 本机 LTXDirector 比画布内置工作流新：多了 start_second/end_second/start_frame/end_frame 四个必填，且 frame_rate 输出槽位从 5 挪到 6（slot 5 现在是 MOTION_GUIDE_DATA）；④ LTX 音频 VAE 必须用 LTXVAudioVAELoader（VAELoader/VAELoaderKJ 会报 VAE is invalid: None），video VAE 用普通 VAELoader。\n【画布执行工作流的语义】POST /api/workflows/<name>/run 是**同步**返回产物的（不是异步 task）：实测出图 36s、出视频 181s 后直接拿到 /assets/output/*.png|mp4；fields 按 <name>.config.json 的 node/input 映射覆盖节点入参。\n【本次部署验证】2026-09-23：GET / 200（AI Studio）、GET /static/smart-canvas.html?id=<真实画布id> 200 且无 JS 异常、标题被换成画布名、DOM 860 节点；POST /api/canvases 建画布→落盘 data/canvases/*.json→按 id 打开→DELETE+purge 清空，全链路通过。"
+}
