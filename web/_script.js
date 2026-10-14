@@ -288,7 +288,7 @@ function classifyState(t) {
   return t.state || (t.running ? 'running' : 'stopped');
 }
 
-var TOOL_LOGO = { 'capability-map': '/shared/logos/capability-map.svg', 'inspiration-wall': '/shared/logos/inspiration-wall.svg' };
+var TOOL_LOGO = { 'evolution-cat-editor': '/shared/logos/evolution-cat-editor.svg', 'capability-map': '/shared/logos/capability-map.svg', 'inspiration-wall': '/shared/logos/inspiration-wall.svg' };
 
 function renderCard(t) {
   var state = classifyState(t);
