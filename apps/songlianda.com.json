@@ -1,0 +1,9 @@
+{
+  "id": "songlianda.com",
+  "name": "宋连达磁性元器件官网",
+  "url": "https://songlianda.com",
+  "description": "宋连达磁性元器件定制开发官网，展示七类产品、加工能力、质量与参数化技术询盘入口。",
+  "status": "live",
+  "host": "阿里云 DNS → Vercel（页面＋询盘 API）→ 飞书询盘总表与通知",
+  "agentNote": "开发源：D:/workspace/_lab/2026-09-22-宋连达工厂增长/website。先读根 README.md、HANDOFF.md；facts/为事实源。完整部署/验收/恢复手册：D:/workspace/_lab/2026-09-22-宋连达工厂增长/website/部署与域名维护.md。公司主账号持域名、维护人员RAM；Vercel项目songlianda-web，scope camellia3hs-projects。www与旧域按原路径308至正式域。页面已上线，飞书新域端到端、三网长期稳定性、搜索提交尚未验收。"
+}
