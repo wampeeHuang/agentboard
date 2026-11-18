@@ -26,7 +26,7 @@
 - 接口：`GET /api/links` → `{ ok, links: [{id,label,url,icon,openInNewTab}] }`
 - 外壳只负责渲染：标签、图标、是否新标签页都来自配置；未配置就整块隐藏。
 - URL 只允许 `http(s)`；图标只允许本地 `svg/png/webp` 文件名；不存 token。
-- 启动迁移 `links-v1` 把旧 `state/private-links.json` 写进当前 `config/links.json`；运行时和前端不再读旧文件。
+- 启动迁移 `links-v1` 把旧 `data/state/private-links.json` 写进当前 `data/config/links.json`；运行时和前端不再读旧文件。
 
 ### Connector（同步/动作，含凭据）
 
@@ -92,7 +92,7 @@
 
 ### 迁移与兼容
 
-- 旧 `state/private-links.json` 保留为备份；启动迁移 `links-v1` 写入新配置，前端不感知旧格式。
+- 旧 `data/state/private-links.json` 保留为备份；启动迁移 `links-v1` 写入新配置，前端不感知旧格式。
 - 旧工具架 UI 的 `/api/private-links` 形状保留一个版本，避免外部脚本立刻断。
 - 新增配置示例见 `examples/config/links.example.json`。
 

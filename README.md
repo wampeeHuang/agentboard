@@ -21,8 +21,9 @@ Agentboard is a local tool control plane. Drop a `manifest.json` in the `tools/`
 ## App / Data boundary
 
 - **App root**：克隆/安装目录，装代码：`server.js`、`lib/`、`web/`、`docs/`、`examples/`、`scripts/`。
-- **Data root**：默认 `~/.agentboard`（可用 `AGENTBOARD_HOME` 改）：`tools/`、`apps/`、`tips/`、`principles/`、`state/`、`config/`、`_runtime/`、`archive/`、`skills/`。
+- **Data root**：默认 `~/.agentboard/data`（由 `agentboard.config.json` 指向，`AGENTBOARD_HOME` 可覆盖）：`tools/`、`apps/`、`tips/`、`principles/`、`state/`、`config/`、`_runtime/`、`archive/`、`skills/`。
 - 个人卡片是数据，不是应用代码；`apps/`、`tips/`、`principles/` 的卡片默认不进 Git，只保留宪法/契约。
+- 数据包搬迁：停 dashboard 后执行 `npm run data:move -- D:\AgentboardData`；脚本只复制 `data/`、切换 `agentboard.config.json` 指针，不删除旧数据，验证 `/api/boundary` 后再清理。
 - `npm run init` 只补目录、三份宪法和 `examples/` 模板；已存在的数据不覆盖。
 - 单用户、本地优先，不要求账号/登录；只监听 `127.0.0.1`。详见 [docs/DATA-BOUNDARY.md](docs/DATA-BOUNDARY.md) 与 [docs/INTEGRATIONS.md](docs/INTEGRATIONS.md)。
 - 侧栏底部「应用与数据」只呈现两张文件夹（应用文件夹 / 个人数据文件夹）+ 未解耦/已解耦状态，只提供打开文件夹；工具架搜索旁的 `＋` 管理外部入口。
@@ -45,7 +46,7 @@ git clone https://github.com/wampeeHuang/agentboard.git ~/agentboard
 
 Windows PowerShell: `~` works. Windows cmd: replace `~` with `%USERPROFILE%`.
 
-数据默认在 `~/.agentboard`（`AGENTBOARD_HOME` 可改）；如果那里已有数据，`npm run init` 不会覆盖。
+数据默认在 `~/.agentboard/data`（`agentboard.config.json` 指向）；如果那里已有数据，`npm run init` 不会覆盖。
 
 ### 3. Install
 
@@ -74,15 +75,95 @@ The dashboard opens at `http://localhost:3099` with the data root's tools; on an
 Copy an example and customize, or create from scratch:
 
 ```bash
-cp -r examples/hello-server ~/.agentboard/tools/my-server
-# edit ~/.agentboard/tools/my-server/manifest.json with your paths and ports
+cp -r examples/hello-server ~/.agentboard/data/tools/my-server
+# edit ~/.agentboard/data/tools/my-server/manifest.json with your paths and ports
 ```
 
 Or create a directory and manifest manually:
 
 ```
-~/.agentboard/tools/my-server/
-└── manifest.json
+~/.agentboard/
+├── README.md              项目入口（人读，Quick Start / 治理入口）
+├── LICENSE                许可
+├── .gitignore             忽略规则
+├── package.json           依赖（express + MCP SDK）
+├── package-lock.json
+├── AGENTS.md               治理宪法（架构 / 原则 / 边界）
+├── CLAUDE.md              Claude 适配层（@AGENTS.md）
+├── inspection.json        巡检检查项
+├── agentboard.config.json 当前数据包指针（本机，gitignored）
+├── agentboard.config.example.json 数据包指针示例
+├── server.js              REST + Dashboard 装配（:3099）
+├── start.js               启动入口（kill-port → server.js）
+├── lib/                   后端核心（双平面共享）
+│   ├── routes.js          REST 路由（/api/*、7 页、挂载 /mcp）
+│   ├── tool-registry.js   核心逻辑：scanTools / 启停 / 端口查重 / ${AGENTBOARD_DATA} 解析
+│   ├── manifest-schema.js Manifest 契约唯一真相源
+│   ├── mcp-http.js        MCP Streamable HTTP（POST /mcp）
+│   └── __tests__/         冒烟测试（node:test）
+├── web/                   Dashboard 前端
+├── .claude/               Claude Code 项目级配置（不进版本库）
+├── data/                  数据包根（可整体复制/搬迁；默认 ~/.agentboard/data）
+│   ├── agentboard-data.json  数据包清单
+│   ├── tools/             工具架卡
+│   ├── apps/              我的网站卡
+│   ├── tips/              经验日志卡
+│   ├── principles/        原则库卡
+│   ├── config/            外部入口 links.json
+│   ├── state/             运行态快照 + migrations
+│   ├── _runtime/          短期运行现场
+│   ├── archive/           退场归档
+│   ├── skills/            本地 skills
+│   └── _knowledge_base/   本机调研投料与派生知识稿（gitignored）
+├── examples/              tools 卡模板（copy 到 data/tools/）
+├── docs/                  文档（不带 archive）
+├── mechanisms/            系统机制说明
+└── scripts/               初始化、清理、文档清单、data:move 一键搬迁
+
+[generated-inventory:start]
+磁盘文件清单（运行 node scripts/sync-doc-inventory.js 更新）
+  lib/__tests__/fixtures.js
+  lib/__tests__/helpers.js
+  lib/__tests__/smoke.test.js
+  lib/__tests__/tips-filename.test.js
+  lib/__tests__/tips-semantic-filename.test.js
+  lib/api-page.js
+  lib/apps-schema.js
+  lib/brand-drift.js
+  lib/card-drift.js
+  lib/crash-guard.js
+  lib/docs-fresh.js
+  lib/links.js
+  lib/manifest-schema.js
+  lib/mcp-handlers.js
+  lib/mcp-http.js
+  lib/migrations.js
+  lib/ops-log.js
+  lib/paths.js
+  lib/principle-schema.js
+  lib/routes.js
+  lib/schema-loader.js
+  lib/self-check.js
+  lib/static.js
+  lib/tip-schema.js
+  lib/tool-registry.js
+  lib/tree-drift.js
+  web/_script.js
+  web/_style.css
+  web/_tokens.css
+  web/capability-map.svg
+  web/index.html
+  web/logo.svg
+  web/shared/back-to-top.css
+  web/shared/back-to-top.js
+  web/shared/icon-lib.js
+  web/shared/logo-lib.js
+  web/shared/logos/capability-map.svg
+  web/shared/logos/evolution-cat-editor.svg
+  web/shared/logos/inspiration-wall.svg
+  web/shared/tips-panel.css
+  web/shared/tips-panel.js
+[generated-inventory:end]
 ```
 
 **Minimum viable manifest:**
@@ -137,7 +218,7 @@ Agentboard stops when you close the terminal. To keep it alive:
 
 Both planes share one truth source: `tools/{id}/manifest.json`. Change a file, both planes see it instantly.
 
-> 当前作者机的默认部署是 `APP_ROOT = DATA_ROOT = ~/.agentboard`。独立安装时应用代码在 `APP_ROOT`，个人数据在 `DATA_ROOT`（默认 `~/.agentboard`）；见 [docs/DATA-BOUNDARY.md](docs/DATA-BOUNDARY.md)。
+> 当前作者机的默认部署是 `APP_ROOT = ~/.agentboard`，`DATA_ROOT = ~/.agentboard/data`。独立安装时应用代码在 `APP_ROOT`，个人数据在 `DATA_ROOT`（默认 `APP_ROOT/data`）；见 [docs/DATA-BOUNDARY.md](docs/DATA-BOUNDARY.md)。
 
 ```
 ~/.agentboard/
@@ -405,7 +486,7 @@ curl -s http://localhost:3099/api/tools | node -e "var d='';process.stdin.on('da
 |----------|---------|-------------|
 | `PORT` | `3099` | Dashboard port. Fails loudly if occupied — no silent fallback |
 | `AGENTBOARD_HOME` | `~/.agentboard` | Data root directory |
-| `AGENTBOARD_TOOLS_DIR` | `~/.agentboard/tools` | Where manifest directories are scanned |
+| `AGENTBOARD_TOOLS_DIR` | `~/.agentboard/data/tools` | Where manifest directories are scanned |
 
 ---
 
@@ -424,7 +505,7 @@ Same codebase, all three platforms, zero native dependencies.
 
 ## 诚实边界
 
-- **仅限 localhost。** 无认证、无 TLS、无用户隔离——信任边界是文件系统。任何能写 `~/.agentboard/tools/` 的人都能执行任意 shell 命令。不要暴露到公网，不要绑定 0.0.0.0
+- **仅限 localhost。** 无认证、无 TLS、无用户隔离——信任边界是文件系统。任何能写 `~/.agentboard/data/tools/` 的人都能执行任意 shell 命令。不要暴露到公网，不要绑定 0.0.0.0
 - **不做进程监控（Supervisor 的职责）。** agentboard 启动/停止工具，不保证它们活着。进程守护交给 [supervisor](https://github.com/wampeeHuang/supervisor)
 - **不适合多用户。** 单用户设计，无权限系统、无多租户
 - **Manifest 是唯一真相源。** 不运行时编辑 manifest 文件会立即生效——没有"提交"按钮，不需要重启。这也是陷阱：格式错误会静默降级，务必用 schema 验证
@@ -441,7 +522,7 @@ Same codebase, all three platforms, zero native dependencies.
 
 ## Security
 
-Agentboard is designed for **localhost only**. No auth, no TLS, no user isolation. The trust boundary is the filesystem — anyone who can write to `~/.agentboard/tools/` can already execute arbitrary shell commands. **Do not expose to the network.** Do not bind to `0.0.0.0`.
+Agentboard is designed for **localhost only**. No auth, no TLS, no user isolation. The trust boundary is the filesystem — anyone who can write to `~/.agentboard/data/tools/` can already execute arbitrary shell commands. **Do not expose to the network.** Do not bind to `0.0.0.0`.
 
 ## License
 

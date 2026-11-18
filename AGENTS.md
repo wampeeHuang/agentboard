@@ -12,11 +12,13 @@
 ├── AGENTS.md              治理宪法（本文件）
 ├── CLAUDE.md             Claude 适配层（@AGENTS.md）
 ├── inspection.json       巡检检查项
+├── agentboard.config.json 当前数据包指针（本机，gitignored）
+├── agentboard.config.example.json 数据包指针示例
 ├── server.js             REST + Dashboard 装配（:3099）
 ├── start.js              启动入口（kill-port → server.js）
 ├── lib/                  后端核心（双平面共享）
 │   ├── routes.js         REST 路由（/api/*、7 页、挂载 /mcp）→ /api/registry 从真源生成（AI 面）
-│   ├── tool-registry.js  核心逻辑：scanTools 三段验证 / 启停 / 端口查重
+│   ├── tool-registry.js  核心逻辑：scanTools 三段验证 / 启停 / 端口查重 / ${AGENTBOARD_DATA} 解析
 │   ├── manifest-schema.js Manifest 契约唯一真相源（字段 / 分类 / 校验）
 │   ├── mcp-http.js       MCP Streamable HTTP（POST /mcp，JSON-RPC 2.0）
 │   ├── mcp-handlers.js   6 个 agentboard_* MCP 工具
@@ -34,23 +36,22 @@
 │   ├── capability-map.svg  能力图谱（全局宪法 tab）
 │   └── logo.svg
 ├── .claude/              Claude Code 项目级配置（settings.local.json，仅权限放行，不进版本库）
-├── tools/                工具架卡（宪法 = 本文件；形状 = lib/manifest-schema.js）
-├── apps/                 我的网站卡（宪法 = apps/CONSTITUTION.md；形状 = lib/apps-schema.js）
-├── examples/             tools 卡模板（copy 到 tools/）
-├── tips/                 经验日志卡（宪法 = tips/CONSTITUTION.md；形状 = lib/tip-schema.js）
-├── principles/           原则库卡（宪法 = principles/CONSTITUTION.md；形状内嵌宪法 §四）
+├── data/                 ← 数据包根：可整体复制/搬迁；默认 ~/.agentboard/data
+│   ├── agentboard-data.json  数据包清单（id / schema / 内容 / 计数）
+│   ├── tools/            工具架卡（宪法 = AGENTS.md；形状 = lib/manifest-schema.js）
+│   ├── apps/             我的网站卡（宪法 = apps/CONSTITUTION.md；形状 = lib/apps-schema.js）
+│   ├── tips/             经验日志卡（宪法 = tips/CONSTITUTION.md；形状 = lib/tip-schema.js）
+│   ├── principles/       原则库卡（宪法 = principles/CONSTITUTION.md；形状内嵌宪法 §四）
+│   ├── config/           外部入口 links.json；凭据走环境变量
+│   ├── state/            运行态快照（api-calls · commands · migrations）
+│   ├── _runtime/         短期运行现场（logs / crash / inputs / work / pids / events / CHECKPOINT）
+│   ├── archive/          退场归档（可删的留存区；唯一一处）
+│   ├── skills/           本地 skills
+│   └── _knowledge_base/  本机调研投料与派生知识稿（gitignored）
+├── examples/             tools 卡模板（copy 到 data/tools/）
 ├── docs/                 文档（不带 archive）
 ├── mechanisms/           系统机制说明
-├── state/                运行态（api-calls · commands 快照）
-├── _runtime/             运行态仓（gitignored，草稿有归属勿丢根层）
-│   ├── logs/             运行日志（restart / cleanup）
-│   ├── crash/            崩溃现场
-│   ├── inputs/           用户投料（改版参考等，**永不自动清**）
-│   ├── work/             AI 会话草稿（超 3 天清，AgentboardCleanup 登录触发）
-│   ├── pids/             进程身份凭证
-│   ├── CHECKPOINT.md     状态变更快照（hook 写）
-│   └── events.jsonl      运行事件流
-└── archive/              退场归档（可删的留存区，担心删早了先留；唯一一处）
+└── scripts/              初始化、清理、文档清单、data:move 一键搬迁
 
 [generated-inventory:start]
 磁盘文件清单（运行 node scripts/sync-doc-inventory.js 更新）
@@ -103,16 +104,19 @@
 ### 应用层 / 数据层边界
 
 - `APP_ROOT`：代码、`web/`、`docs/`、`examples/`、`scripts/`（仓库/安装目录）。
-- `DATA_ROOT`：用户数据，默认 `~/.agentboard`，可用 `AGENTBOARD_HOME` 覆盖；含 `tools/ apps/ tips/ principles/ state/ config/ _runtime/ archive/ skills/`。
-- `lib/paths.js` 是唯一路径真相源；后端不再用 `__dirname/_runtime` 或仓库根写运行数据。
-- 个人卡片是数据，不进 Git；只保留 `apps|tips|principles/CONSTITUTION.md`。`npm run init` 只补目录/宪法/示例，不覆盖已有数据。
-- 数据迁移是启动时数据层职责：`lib/migrations.js` + `state/migrations/` 标记；旧链接卡片由 `links-v1` 写入 `config/links.json`，前端不感知旧格式，旧文件只做备份。
+- `DATA_ROOT`：数据包根，默认 `APP_ROOT/data`（`~/.agentboard/data`），由 `agentboard.config.json` 的 `dataRoot` 指向；`AGENTBOARD_HOME` / `AGENTBOARD_DATA_DIR` 可覆盖。含 `tools/ apps/ tips/ principles/ state/ config/ _runtime/ archive/ skills/ _knowledge_base/`。
+- **数据层 = `data/` 一个目录**；`data/agentboard-data.json` 是包清单；应用壳可单独交付，`data/` 可整体复制/搬迁。`agentboard.config.json` 是当前数据包指针。
+- `lib/paths.js` 是唯一路径真相源；默认 `APP_ROOT/data`，不再把数据放在应用根。
+- 工具命令/脚本不写死数据路径：manifest 用 `${AGENTBOARD_DATA}`，脚本从 `AGENTBOARD_DATA` 环境变量取；应用执行前解析。
+- `npm run data:move -- <目标目录>`：停服后复制数据包并切换指针；旧数据保留，验证后再清理。
+- 个人卡片是数据，不进 Git；`data/` 整体 gitignored。`npm run init` 只补目录/宪法/示例，不覆盖已有数据。
+- 数据迁移是启动时数据层职责：`lib/migrations.js` + `data/state/migrations/` 标记；旧链接卡片由 `links-v1` 写入 `data/config/links.json`，前端不感知旧格式，旧文件只做备份。
 - 单用户、本地、无账号/登录；只监听 `127.0.0.1`。远程/团队另做认证层，不把登录塞进单机面板。
 - 外部入口（密钥中心、GitHub 仓库管理）走 `DATA_ROOT/config/links.json` + `GET /api/links`；同步类走 connector 配置/环境变量，不把 URL、Token、App Secret 写进源码或前端。
 - 侧栏底部「应用与数据」走 `/api/boundary`，只呈现应用文件夹 / 个人数据文件夹两张行 + 未解耦/已解耦状态；只提供打开（`/api/reveal`），不显示计数；工具架 `＋` 通过 `POST/DELETE /api/links` 写同一份 links.json。
 - 详见 [docs/DATA-BOUNDARY.md](docs/DATA-BOUNDARY.md) 与 [docs/INTEGRATIONS.md](docs/INTEGRATIONS.md)。
 
-**双平面架构**: MCP (AI plane) + REST (human plane)，共享同一真相源 `tools/*/manifest.json`。
+**双平面架构**: MCP (AI plane) + REST (human plane)，共享同一真相源 `data/tools/*/manifest.json`。
 
 | 平面 | 协议 | 传输 | 消费者 |
 |------|------|------|--------|
@@ -122,7 +126,7 @@
 MCP 工具: `agentboard_list_tools`, `agentboard_get_tool`, `agentboard_start_tool`, `agentboard_stop_tool`, `agentboard_create_tool`, `agentboard_update_tool`。注册在 `~/.claude/settings.json` → `mcpServers.agentboard`。
 
 工具卡片来源：
-- **manifest.json** — `~/.agentboard/tools/*/manifest.json`，一个目录一个工具
+- **manifest.json** — `~/.agentboard/data/tools/*/manifest.json`，一个目录一个工具
 - **cron-scheduler** — manifest 注册，`type: "group"`。日报状态来自 `/api/cron/state`（代理到 localhost:3100 调度器）
 
 ### 进程身份层
@@ -130,26 +134,26 @@ MCP 工具: `agentboard_list_tools`, `agentboard_get_tool`, `agentboard_start_to
 工具运行状态不只看端口，有三段验证（`lib/tool-registry.js` → `scanTools`）：
 
 ```
-端口活跃？→ 读 _runtime/pids/{id}.pid → process.kill(pid,0) 存活？→ running=true
+端口活跃？→ 读 data/_runtime/pids/{id}.pid → process.kill(pid,0) 存活？→ running=true
                                   ↘ PID 死 → 清过期文件 → 进程名兜底验证
 ```
 
 端口活跃 ≠ 工具在运行。PID 文件是 agentboard 启动工具时写入的身份凭证。无 PID 文件的工具（外部启动）退回到进程名检测。
 
-**启动**：`spawn` → 写 `_runtime/pids/{id}.pid` → 轮询端口 + PID 存活双重确认（15s）→ 清 scan 缓存
+**启动**：`spawn` → 写 `data/_runtime/pids/{id}.pid` → 轮询端口 + PID 存活双重确认（15s）→ 清 scan 缓存
 **停止**：读 PID 文件 → `taskkill /PID {pid} /T /F` 精确杀进程树 → 失败回退 `stopCommand` → 清 PID 文件 + 缓存
 **端口查重**：`createTool` / `updateTool` 写入前强制绕过缓存扫描，端口被占当场拦截（`checkPortUnique`）
 
-### 运行数据边界（state/ vs _runtime/）
+### 运行数据边界（data/state/ vs data/_runtime/）
 
 两个 gitignored 运行数据目录，职责与保留期不同，禁止混用：
 
 | 目录 | 内容 | 保留契约 | 清理器 |
 |---|---|---|---|
-| `state/` | 可查询的运行快照：`api-calls/*.jsonl`（月度 API 调用日志）、`commands.json`、`skill-order.json` | `state/api-calls/` **30 天**；`commands*` / `skill-order` 为当前状态快照，保留 | `scripts/cleanup-runtime.ps1`（state 段） |
-| `_runtime/` | 短期过程现场：`work/`（中间草稿）、`logs/`、`crash/`、`pids/`、`inputs/`（参考材料）、`events.jsonl` | `work/` **3 天**；`inputs/` 参考材料永不自动清；`logs/` 自轮转 | `scripts/cleanup-runtime.ps1`（work 段） |
+| `data/state/` | 可查询的运行快照：`api-calls/*.jsonl`（月度 API 调用日志）、`commands.json`、`skill-order.json` | `data/state/api-calls/` **30 天**；`commands*` / `skill-order` 为当前状态快照，保留 | `scripts/cleanup-runtime.ps1`（state 段） |
+| `data/_runtime/` | 短期过程现场：`work/`（中间草稿）、`logs/`、`crash/`、`pids/`、`inputs/`（参考材料）、`events.jsonl` | `work/` **3 天**；`inputs/` 参考材料永不自动清；`logs/` 自轮转 | `scripts/cleanup-runtime.ps1`（work 段） |
 
-边界规则：**可查询的快照进 `state/`，一次性过程现场进 `_runtime/`**。二者都不可当作永久归档（永久归档进 `archive/`，且有备份语义）。清理只由 `scripts/cleanup-runtime.ps1` 执行，禁止 agent 随手删运行数据。
+边界规则：**可查询的快照进 `data/state/`，一次性过程现场进 `data/_runtime/`**。二者都不可当作永久归档（永久归档进 `data/archive/`，且有备份语义）。清理只由 `scripts/cleanup-runtime.ps1` 执行，禁止 agent 随手删运行数据。
 
 ## 工具调用协议
 
@@ -209,7 +213,7 @@ AI agent 通过 **MCP** 调工具（`lib/mcp-http.js`，Streamable HTTP，`POST 
 
 ```
 1. 确认工具已安装、配置完成、可正常工作
-2. 在 ~/.agentboard/tools/{id}/ 下建 manifest.json
+2. 在 ~/.agentboard/data/tools/{id}/ 下建 manifest.json
 3. curl localhost:3099/api/tools 确认可见
 4. 之后才考虑是否在 memory 留指针（不是工具定义本身）
 ```
@@ -234,37 +238,37 @@ agentboard 是骨件，不是全部。兄弟骨件各管一段，本骨件只代
 |------|------|------------------|
 | 定时任务 | `~/.scheduler` 骨件（:3100） | 只读 scheduler-state.json 做面板展示；不存 SQLite、不写 jobs.json |
 | 进程守护 | `~/.supervisor` 骨件（:3097） | 不守护自己。agentboard 唯一守护 = supervisor |
-| 模型/密钥 | `tools/*/manifest.json` | 只读 apiKeyName 指向的环境变量，不存密钥副本 |
+| 模型/密钥 | `data/tools/*/manifest.json` | 只读 apiKeyName 指向的环境变量，不存密钥副本 |
 
 ## 资产边界
 
-- 应用资产在 `APP_ROOT`；用户数据在 `DATA_ROOT`（默认 `~/.agentboard`，`AGENTBOARD_HOME` 可改）。代码不写数据根，数据根不提交。
+- 应用资产在 `APP_ROOT`；用户数据在 `DATA_ROOT`（默认 `~/.agentboard/data`，`agentboard.config.json` 可指向别处）。代码不写数据根，数据根不提交。
 - `~/.claude/` 只保留 Claude Code 原生文件（宪法、skills、memory）。Agentboard 可以读、展示、索引，但不写入、不修改、不复制
 - Skills、全局宪法对 Agentboard 是只读索引
 
 ## 红线
 
-- **禁止删除 `tools/` 下的任何 manifest 目录**，除非用户逐文件确认
+- **禁止删除 `data/tools/` 下的任何 manifest 目录**，除非用户逐文件确认
 - 用户说"删卡片"≠授权删文件。先问：隐藏还是删除？如果要删，列清单等确认
 - 改动前先 `curl localhost:3099/api/tools` 看现状
-- **会话 cwd 不得落在 `_runtime/` 内**——否则 checkpoint hook 会写出嵌套的 `_runtime/_runtime/CHECKPOINT.md`。跨目录操作用绝对路径
+- **会话 cwd 不得落在 `data/_runtime/` 内**——否则 checkpoint hook 会写出嵌套的 `data/_runtime/_runtime/CHECKPOINT.md`。跨目录操作用绝对路径
 
 ## 操作日志
 
-- 写入路径：`DATA_ROOT/tips/*.md`（默认 `~/.agentboard/tips/*.md`）
+- 写入路径：`DATA_ROOT/tips/*.md`（默认 `~/.agentboard/data/tips/*.md`）
 - **不要写到 `~/.claude/tips/`** — agentboard 不读那个目录
-- **写入前必须先读 `tips/CONSTITUTION.md`** — 格式、分类、准入五问的唯一真相源
+- **写入前必须先读 `data/tips/CONSTITUTION.md`** — 格式、分类、准入五问的唯一真相源
 
 ## 运行生命周期
 
-- **草稿有归属**：用户投喂参考（截图/资料）丢 `_runtime/inputs/`（**永不自动清**——投料是输入，清掉丢用户的输入）；AI 会话草稿（临时文件/验证脚本）丢 `_runtime/work/`。勿丢根层——清理器只认白名单子目录，散落文件没人管会积成垃圾
-- 清理：`scripts/cleanup-runtime.ps1` 读 `scripts/cleanup-runtime.config.json`（阈值单源）。`work/` 按顶层草稿包的最新后代修改时间判定超 3 天，移至 `archive/runtime-work/批次/`，保存逐文件 SHA-256 清单并回验；不自动删除归档。含 `.keep` / `.active` 或链接的包跳过。恢复时先核对批次 `manifest.json` 与原位置无冲突，再移回对应 `source`。`-DryRun` 先演练；`-WorkOnly` 仅处理草稿，不执行 state 日志保留策略。**不清理 `inputs/`、`pids/`、`logs/`**（仅追加 cleanup.log）。Task Scheduler `AgentboardCleanup` **登录触发**，沿用既有任务。
-- `_runtime/CHECKPOINT.md` 由 checkpoint hook 写入，有实时消费者，勿删勿移
+- **草稿有归属**：用户投喂参考（截图/资料）丢 `data/_runtime/inputs/`（**永不自动清**——投料是输入，清掉丢用户的输入）；AI 会话草稿（临时文件/验证脚本）丢 `data/_runtime/work/`。勿丢根层——清理器只认白名单子目录，散落文件没人管会积成垃圾
+- 清理：`scripts/cleanup-runtime.ps1` 读 `scripts/cleanup-runtime.config.json`（阈值单源）。`work/` 按顶层草稿包的最新后代修改时间判定超 3 天，移至 `data/archive/runtime-work/批次/`，保存逐文件 SHA-256 清单并回验；不自动删除归档。含 `.keep` / `.active` 或链接的包跳过。恢复时先核对批次 `manifest.json` 与原位置无冲突，再移回对应 `source`。`-DryRun` 先演练；`-WorkOnly` 仅处理草稿，不执行 state 日志保留策略。**不清理 `inputs/`、`pids/`、`logs/`**（仅追加 cleanup.log）。Task Scheduler `AgentboardCleanup` **登录触发**，沿用既有任务。
+- `data/_runtime/CHECKPOINT.md` 由 checkpoint hook 写入，有实时消费者，勿删勿移
 
 ## 服务器
 
 - 端口 3099，进程 `dashboard`
-- 进程守护由 Supervisor 管理，详见 `~/.agentboard/tools/supervisor/manifest.json`
+- 进程守护由 Supervisor 管理，详见 `~/.agentboard/data/tools/supervisor/manifest.json`
 - manifest 改动无需重启，每次请求都会重新扫描
 
 ## 巡检

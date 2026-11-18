@@ -9,7 +9,9 @@ param(
 
 $ErrorActionPreference = 'Stop'
 $ConfigPath = Join-Path $PSScriptRoot 'cleanup-runtime.config.json'
-$RuntimeDir = Join-Path (Split-Path $PSScriptRoot -Parent) '_runtime'
+$ProjectDir = Split-Path $PSScriptRoot -Parent
+$DataDir = Join-Path $ProjectDir 'data'
+$RuntimeDir = Join-Path $DataDir '_runtime'
 $WorkDir = Join-Path $RuntimeDir 'work'
 $LogPath = Join-Path (Join-Path $RuntimeDir 'logs') 'cleanup.log'
 
@@ -19,8 +21,7 @@ $workDays = [int]$cfg.work.retention_days
 
 $now = Get-Date
 if ($workDays -lt 1) { throw 'work retention_days must be positive' }
-$ProjectDir = Split-Path $PSScriptRoot -Parent
-$ArchiveDir = Join-Path $ProjectDir 'archive'
+$ArchiveDir = Join-Path $DataDir 'archive'
 $BatchDir = Join-Path $ArchiveDir ('runtime-work/' + (Get-Date -Format 'yyyyMMdd-HHmmss') + '-' + [guid]::NewGuid().ToString('N').Substring(0,8))
 
 function Assert-Contained([string]$Candidate, [string]$Root) {

@@ -371,96 +371,26 @@ html.embed .module-in{padding-left:32px;padding-right:32px}
         <span class="code-filename">~/.agentboard/</span>
       </div>
       <div class="code-body">
-<pre><span class="top"><span class="dir">~/.agentboard/</span></span>            <span class="arrow">←</span> <span class="cm">一切都在这一个目录里</span>
-<span class="grp">── ① 入口与身份 ──</span>
-<span class="top">├── <span class="file">README.md</span>             <span class="arrow">←</span> <span class="cm">入口：人读 Quick Start</span></span>
-<span class="top">├── <span class="file">LICENSE</span>               <span class="arrow">←</span> <span class="cm">MIT</span></span>
-<span class="top">├── <span class="file">package.json</span>          <span class="arrow">←</span> <span class="cm">依赖：express + MCP SDK</span></span>
-<span class="top">├── <span class="file">package-lock.json</span>     <span class="arrow">←</span> <span class="cm">锁版本（npm 生成）</span></span>
-<span class="grp">── ② 治理宪法 ──</span>
-<span class="top">├── <span class="file">AGENTS.md</span>              <span class="arrow">←</span> <span class="cm">治理宪法：架构 / 协议 / 边界</span></span>
-<span class="top">├── <span class="file">CLAUDE.md</span>             <span class="arrow">←</span> <span class="cm">项目指令（@AGENTS.md）</span></span>
-<span class="top">├── <span class="file">inspection.json</span>       <span class="arrow">←</span> <span class="cm">巡检检查项</span></span>
-<span class="top">├── <span class="file">HANDOFF.md</span>            <span class="arrow">←</span> <span class="cm">会话交接日志</span></span>
-<span class="grp">── ③ 代码实现 ──</span>
-<span class="top">├── <span class="file">server.js</span>             <span class="arrow">←</span> <span class="cm">装配骨架：建 app → 挂 lib → 起服务</span></span>
-<span class="top">├── <span class="file">start.js</span>              <span class="arrow">←</span> <span class="cm">启动入口</span></span>
-<span class="top">├── <span class="dir">lib/</span>                  <span class="arrow">←</span> <span class="cm">双平面共享核心</span></span>
-│   ├── <span class="file">routes.js</span>           <span class="arrow">←</span> <span class="cm">REST 路由 / 7 页 / 挂 MCP</span>
-│   ├── <span class="file">tool-registry.js</span>    <span class="arrow">←</span> <span class="cm">三段验证 / 启停 / 端口查重</span>
-│   ├── <span class="file">manifest-schema.js</span>  <span class="arrow">←</span> <span class="cm">卡片契约唯一真相源</span>
-│   ├── <span class="file">mcp-http.js</span>         <span class="arrow">←</span> <span class="cm">MCP Streamable HTTP</span>
-│   ├── <span class="file">mcp-handlers.js</span>     <span class="arrow">←</span> <span class="cm">6 个 agentboard_* 工具</span>
-│   ├── <span class="file">static.js</span>           <span class="arrow">←</span> <span class="cm">静态文件服务</span>
-│   ├── <span class="file">api-page.js</span>         <span class="arrow">←</span> <span class="cm">/api 发现页</span>
-│   ├── <span class="file">self-check.js</span>       <span class="arrow">←</span> <span class="cm">自检</span>
-│   ├── <span class="file">ops-log.js</span>          <span class="arrow">←</span> <span class="cm">操作事件日志</span>
-│   ├── <span class="file">crash-guard.js</span>      <span class="arrow">←</span> <span class="cm">子进程崩溃防护</span>
-│   ├── <span class="file">tip-schema.js</span>       <span class="arrow">←</span> <span class="cm">踩坑类型校验</span>
-│   ├── <span class="file">apps-schema.js</span>      <span class="arrow">←</span> <span class="cm">网站注册表字段校验</span>
-│   ├── <span class="file">principle-schema.js</span> <span class="arrow">←</span> <span class="cm">原则库字段校验</span>
-│   ├── <span class="file">schema-loader.js</span>   <span class="arrow">←</span> <span class="cm">manifest-schema 热重载加载器</span>
-│   ├── <span class="file">brand-drift.js</span>      <span class="arrow">←</span> <span class="cm">品牌漂移审计</span>
-│   ├── <span class="file">card-drift.js</span>      <span class="arrow">←</span> <span class="cm">卡片尺寸契约审计</span>
-│   ├── <span class="file">tree-drift.js</span>       <span class="arrow">←</span> <span class="cm">目录树漂移审计</span>
-│   ├── <span class="file">docs-fresh.js</span>       <span class="arrow">←</span> <span class="cm">文档新鲜度审计</span>
-│   ├── <span class="dir">__tests__/</span>          <span class="arrow">←</span> <span class="cm">冒烟测试（node:test）</span>
-│   │   ├── <span class="file">helpers.js</span>       <span class="arrow">←</span> <span class="cm">测试工具</span>
-│   │   ├── <span class="file">fixtures.js</span>      <span class="arrow">←</span> <span class="cm">测试夹具</span>
-│   │   └── <span class="file">smoke.test.js</span>    <span class="arrow">←</span> <span class="cm">冒烟入口</span>
-<span class="top">├── <span class="dir">web/</span>                  <span class="arrow">←</span> <span class="cm">前端面板</span></span>
-│   ├── <span class="file">index.html</span>          <span class="arrow">←</span> <span class="cm">6 页面板</span>
-│   ├── <span class="file">_tokens.css</span>         <span class="arrow">←</span> <span class="cm">品牌 token 唯一银行（换肤改此文件）</span>
-│   ├── <span class="file">_style.css</span>          <span class="arrow">←</span> <span class="cm">组件样式（引用 _tokens.css 变量）</span>
-│   ├── <span class="file">_script.js</span>          <span class="arrow">←</span> <span class="cm">渲染 / 交互</span>
-│   ├── <span class="dir">shared/</span>             <span class="arrow">←</span> <span class="cm">tips 面板 + 图标资源（tips-panel.css · tips-panel.js · logo-lib.js · icon-lib.js · logos/）</span>
-│   ├── <span class="file">capability-map.svg</span>   <span class="arrow">←</span> <span class="cm">能力图谱（全局宪法 tab）</span>
-│   └── <span class="file">logo.svg</span>            <span class="arrow">←</span> <span class="cm">图标（favicon 唯一真源）</span>
-<span class="top">├── <span class="dir">scripts/</span>              <span class="arrow">←</span> <span class="cm">工具脚本（运行态清理）</span></span>
-│   ├── <span class="file">cleanup-runtime.ps1</span> <span class="arrow">←</span> <span class="cm">清理执行器 · 登录触发</span>
-│   └── <span class="file">cleanup-runtime.config.json</span> <span class="arrow">←</span> <span class="cm">清理阈值单源（work 超 3 天）</span>
-<span class="top">├── <span class="dir">.claude/</span>              <span class="arrow">←</span> <span class="cm">本机 Claude 设置</span></span>
-│   └── <span class="file">settings.local.json</span> <span class="arrow">←</span> <span class="cm">本机设置（不入库）</span>
-<span class="grp">── ④ 四卡注册表（宪法 + 一条一文件 · 同构）──</span>
-<span class="top">├── <span class="dir">tools/</span>                <span class="arrow">←</span> <span class="cm">工具架卡 · 宪法=AGENTS.md · 形状=lib/manifest-schema.js · 模板=examples/</span></span>
-│   └── <span class="file">{id}/manifest.json</span>  <span class="arrow">←</span> <span class="cm">一张卡一个目录</span>
-<span class="top">├── <span class="dir">examples/</span>             <span class="arrow">←</span> <span class="cm">tools 卡模板（copy 到 tools/）</span></span>
-│   ├── <span class="dir">hello-server/</span>       <span class="arrow">←</span> <span class="cm">最小示例</span>
-│   │   └── <span class="file">manifest.json</span>   <span class="arrow">←</span> <span class="cm">卡片契约</span>
-│   └── <span class="dir">nextjs-app/</span>         <span class="arrow">←</span> <span class="cm">Next.js 示例</span>
-│       └── <span class="file">manifest.json</span>   <span class="arrow">←</span> <span class="cm">卡片契约</span>
-<span class="top">├── <span class="dir">apps/</span>                 <span class="arrow">←</span> <span class="cm">我的网站卡 · 宪法=CONSTITUTION.md · 形状=lib/apps-schema.js · 模板=表单</span></span>
-│   ├── <span class="file">CONSTITUTION.md</span>    <span class="arrow">←</span> <span class="cm">准入二问 / 分类 / 字段</span>
-│   └── <span class="file">{id}.json</span>          <span class="arrow">←</span> <span class="cm">一张卡一个文件</span>
-<span class="top">├── <span class="dir">tips/</span>                 <span class="arrow">←</span> <span class="cm">经验日志卡 · 宪法=CONSTITUTION.md · 形状=lib/tip-schema.js · 模板=表单</span></span>
-│   ├── <span class="file">CONSTITUTION.md</span>    <span class="arrow">←</span> <span class="cm">准入五问 / 分类 / 模板</span>
-│   └── <span class="file">*.md</span>                <span class="arrow">←</span> <span class="cm">一条一个坑</span>
-<span class="top">└── <span class="dir">principles/</span>           <span class="arrow">←</span> <span class="cm">原则库卡 · 宪法=CONSTITUTION.md · 形状=内嵌宪法 §四 · 模板=表单</span></span>
-    ├── <span class="file">CONSTITUTION.md</span>    <span class="arrow">←</span> <span class="cm">准入四问 / 分类 / 格式</span>
-    └── <span class="file">*.md</span>                <span class="arrow">←</span> <span class="cm">一条一个原则</span>
-<span class="grp">── ⑤ 文档与机制 ──</span>
-<span class="top">├── <span class="dir">docs/</span>                 <span class="arrow">←</span> <span class="cm">文档</span></span>
-│   ├── <span class="file">使用说明书.html</span>          <span class="arrow">←</span> <span class="cm">说明书（就是本页）</span>
-│   ├── <span class="file">card-data-contract.md</span> <span class="arrow">←</span> <span class="cm">卡片数据契约</span>
-│   ├── <span class="file">card-form-constraints.md</span> <span class="arrow">←</span> <span class="cm">表单约束</span>
-│   ├── <span class="file">grid-control-prompt.md</span> <span class="arrow">←</span> <span class="cm">网格控制 prompt</span>
-│   ├── <span class="file">RECOVERY.md</span>         <span class="arrow">←</span> <span class="cm">灾难恢复</span>
-│   └── <span class="file">tasks.md</span>            <span class="arrow">←</span> <span class="cm">任务记录</span>
-<span class="top">├── <span class="dir">mechanisms/</span>           <span class="arrow">←</span> <span class="cm">机制说明</span></span>
-│   └── <span class="file">session-guard.md</span>    <span class="arrow">←</span> <span class="cm">会话守卫</span>
-<span class="grp">── ⑥ 运行与归档 ──</span>
-<span class="top">├── <span class="dir">state/</span>                <span class="arrow">←</span> <span class="cm">运行态（api-calls · commands 快照）</span></span>
-│   └── <span class="dir">api-calls/</span>          <span class="arrow">←</span> <span class="cm">每月一目录</span>
-│       └── <span class="file">YYYY-MM/*.jsonl</span> <span class="arrow">←</span> <span class="cm">每次 API 调用一条</span>
-<span class="top">├── <span class="dir">_runtime/</span>             <span class="arrow">←</span> <span class="cm">运行态仓（gitignored，草稿有归属）</span></span>
-│   ├── <span class="dir">logs/</span>               <span class="arrow">←</span> <span class="cm">运行日志（restart / cleanup）</span>
-│   ├── <span class="dir">crash/</span>              <span class="arrow">←</span> <span class="cm">崩溃现场</span>
-│   ├── <span class="dir">inputs/</span>             <span class="arrow">←</span> <span class="cm">用户投料（永不自动清）</span>
-│   ├── <span class="dir">work/</span>               <span class="arrow">←</span> <span class="cm">AI 会话草稿（超 3 天清）</span>
-│   ├── <span class="dir">pids/</span>               <span class="arrow">←</span> <span class="cm">进程身份凭证</span>
-│   ├── <span class="file">CHECKPOINT.md</span>       <span class="arrow">←</span> <span class="cm">状态变更快照（hook 写）</span>
-│   └── <span class="file">events.jsonl</span>        <span class="arrow">←</span> <span class="cm">运行事件流</span>
-<span class="top">└── <span class="dir">archive/</span>              <span class="arrow">←</span> <span class="cm">退场归档（可删的留存区，唯一一处）</span></span>
+<pre>~/.agentboard/            应用壳 + 数据包根
+├── README.md / AGENTS.md / CLAUDE.md / LICENSE / package.json
+├── server.js / start.js
+├── lib/                  routes / tool-registry / manifest-schema / mcp-http / audits
+├── web/                  Dashboard 前端
+├── docs/ mechanisms/ examples/ scripts/
+├── agentboard.config.json  当前数据包指针（gitignored）
+├── data/                 数据包根：可整体复制/搬迁
+│   ├── agentboard-data.json  数据包清单
+│   ├── tools/            工具架卡
+│   ├── apps/             我的网站卡
+│   ├── tips/             经验日志卡
+│   ├── principles/       原则库卡
+│   ├── config/           links.json
+│   ├── state/            api-calls · commands · migrations
+│   ├── _runtime/         logs / crash / inputs / work / pids / events
+│   ├── archive/          退场归档
+│   ├── skills/           本地 skills
+│   └── _knowledge_base/  本机调研投料
+└── .claude/
 
 [generated-inventory:start]
 磁盘文件清单（运行 node scripts/sync-doc-inventory.js 更新）

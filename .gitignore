@@ -22,6 +22,11 @@ principles/*
 # 本机集成配置：外部入口 URL、凭据引用；不进仓库（只忽略数据根 config/，示例仍可入库）
 /config/
 
+# 数据包根：应用壳可以单独交付，数据包可整体备份/搬迁
+/data/
+# 本机数据根指针；示例文件入库，实际指针不入库
+/agentboard.config.json
+
 # Claude Code 项目级配置
 .claude/
 # c8 测试覆盖率产物
