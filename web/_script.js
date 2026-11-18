@@ -363,49 +363,69 @@ async function deleteExternalLink(id) {
   } catch (e) { toast('删除失败：' + e.message); }
 }
 
-/* ── 存储地图：应用/数据/内容/运行态/集成 ── */
+/* ── 应用与数据：用户只关心两个地方 ── */
 var storageBoundary = null;
-function storageRowHtml(layer) {
-  var ico = { app: 'A', tools: 'T', content: 'C', runtime: 'R', integrations: 'I' }[layer.id] || '·';
-  var note = (layer.count != null ? layer.count + ' · ' : '') + (layer.note || '');
-  var sub = '';
-  if (layer.paths) {
-    sub = '<div class="storage-subpaths">' + Object.keys(layer.paths).map(function(k) {
-      return '<span>' + escHtml(k) + ' ' + (layer.counts && layer.counts[k] || 0) + ' · ' + escHtml(layer.paths[k]) + '</span>';
-    }).join('') + '</div>';
-  }
-  return '<div class="storage-row">' +
-    '<div class="storage-row-h"><span class="storage-row-ico">' + ico + '</span><span class="storage-row-label">' + escHtml(layer.label) + '</span>' +
-    (note ? '<span class="storage-row-note">' + escHtml(note) + '</span>' : '') + '</div>' +
-    '<div class="storage-path"><code>' + escHtml(layer.path) + '</code><button type="button" class="storage-copy" data-copy="' + escAttr(layer.path) + '">复制</button></div>' +
-    sub + '</div>';
+
+function storageChip(id, label, count, title) {
+  return '<button type="button" class="storage-chip" data-reveal="' + id + '" title="' + escAttr(title) + '"><b>' + (count || 0) + '</b><span>' + escHtml(label) + '</span></button>';
 }
+
 function renderStorageMap(b) {
   var pop = document.getElementById('storagePop');
   if (!pop) return;
-  var counts = b.counts || {};
-  pop.innerHTML = '<div class="storage-head"><span class="storage-title">存储地图</span>' +
-    '<span class="storage-badge">' + (b.sameRoot ? '应用/数据同目录' : '应用/数据已分离') + '</span>' +
+  var c = b.counts || {};
+  var appUrl = location.origin + '/';
+  var same = !!b.sameRoot;
+  pop.innerHTML = '<div class="storage-head"><span class="storage-title">应用与数据</span>' +
+    '<span class="storage-badge">' + (same ? '同根 / 可分离' : '已分离') + '</span>' +
+    '<button type="button" class="storage-refresh" onclick="refreshStorageMap()" title="刷新" aria-label="刷新">↻</button>' +
     '<button type="button" class="storage-close" onclick="closeStorageMap()" aria-label="关闭">✕</button></div>' +
-    '<div class="storage-sub">共 ' + b.layers.length + ' 个部分 · 个人内容卡片不进 Git</div>' +
-    '<div class="storage-layers">' + b.layers.map(storageRowHtml).join('') + '</div>' +
-    '<div class="storage-counts">' +
-      '<span>工具 <b>' + (counts.tools || 0) + '</b></span>' +
-      '<span>网站 <b>' + (counts.apps || 0) + '</b></span>' +
-      '<span>经验 <b>' + (counts.tips || 0) + '</b></span>' +
-      '<span>原则 <b>' + (counts.principles || 0) + '</b></span>' +
-      '<span>外部入口 <b>' + (counts.links || 0) + '</b></span>' +
+    '<div class="storage-sub">2 个地方 · 应用是代码，个人数据是你的内容与配置</div>' +
+    '<div class="storage-groups">' +
+      '<section class="storage-group">' +
+        '<div class="storage-group-h"><span class="storage-group-ico">A</span><div><div class="storage-group-title">应用层</div><div class="storage-group-sub">通用应用 / 代码</div></div></div>' +
+        '<div class="storage-group-path"><code>' + escHtml(b.appRoot) + '</code><button type="button" class="storage-copy" data-copy="' + escAttr(b.appRoot) + '">复制</button></div>' +
+        '<a class="storage-app-url" href="' + escAttr(appUrl) + '" target="_blank" rel="noopener noreferrer">' + escHtml(appUrl) + '</a>' +
+        '<div class="storage-group-actions"><a class="storage-action primary" href="' + escAttr(appUrl) + '" target="_blank" rel="noopener noreferrer">打开应用</a><button type="button" class="storage-action" data-reveal="app">打开应用目录</button></div>' +
+      '</section>' +
+      '<section class="storage-group storage-group-data">' +
+        '<div class="storage-group-h"><span class="storage-group-ico">D</span><div><div class="storage-group-title">个人数据层</div><div class="storage-group-sub">你的内容 / 配置 / 运行数据</div></div></div>' +
+        '<div class="storage-group-path"><code>' + escHtml(b.dataRoot) + '</code><button type="button" class="storage-copy" data-copy="' + escAttr(b.dataRoot) + '">复制</button></div>' +
+        '<div class="storage-group-actions"><button type="button" class="storage-action primary" data-reveal="data">打开数据目录</button></div>' +
+        '<div class="storage-chip-grid">' +
+          storageChip('tools', '工具', c.tools, '打开 tools/') +
+          storageChip('apps', '网站', c.apps, '打开 apps/') +
+          storageChip('tips', '经验', c.tips, '打开 tips/') +
+          storageChip('principles', '原则', c.principles, '打开 principles/') +
+          storageChip('config', '外部入口', c.links, '打开 config/') +
+        '</div>' +
+        '<div class="storage-note">导入的 manifest / 配置单会自动出现在这里；点 ↻ 刷新计数。</div>' +
+        '<div class="storage-system">运行态与集成配置也在数据层：<code>state / _runtime / config</code></div>' +
+      '</section>' +
     '</div>' +
-    '<div class="storage-foot">' + (b.sameRoot
-      ? '当前应用与数据同目录；可用 AGENTBOARD_HOME 指定独立数据根。'
+    '<div class="storage-foot">' + (same
+      ? '应用代码与个人数据当前同根，数据目录独立；可用 AGENTBOARD_HOME 指定独立数据根。'
       : '应用与数据已分离；数据根由 AGENTBOARD_HOME 指定。') + '</div>';
 }
+
+async function refreshStorageMap() {
+  var pop = document.getElementById('storagePop');
+  if (!pop || pop.hidden) return;
+  try {
+    var res = await fetch('/api/boundary', { cache: 'no-store' });
+    var b = await res.json();
+    if (!b || !b.ok) throw new Error((b && b.error) || '读取失败');
+    storageBoundary = b;
+    renderStorageMap(b);
+  } catch (e) { toast('刷新失败：' + e.message); }
+}
+
 async function openStorageMap() {
   var btn = document.getElementById('storageMapBtn');
   var pop = document.getElementById('storagePop');
   if (!btn || !pop) return;
   if (!pop.hidden) { closeStorageMap(); return; }
-  pop.innerHTML = '<div class="storage-head"><span class="storage-title">存储地图</span><button type="button" class="storage-close" onclick="closeStorageMap()" aria-label="关闭">✕</button></div><div class="storage-sub">读取路径与计数…</div>';
+  pop.innerHTML = '<div class="storage-head"><span class="storage-title">应用与数据</span><button type="button" class="storage-close" onclick="closeStorageMap()" aria-label="关闭">✕</button></div><div class="storage-sub">读取中…</div>';
   pop.hidden = false;
   btn.setAttribute('aria-expanded', 'true');
   try {
@@ -415,15 +435,26 @@ async function openStorageMap() {
     storageBoundary = b;
     renderStorageMap(b);
   } catch (e) {
-    pop.innerHTML = '<div class="storage-head"><span class="storage-title">存储地图</span><button type="button" class="storage-close" onclick="closeStorageMap()" aria-label="关闭">✕</button></div><div class="storage-sub">读取失败：' + escHtml(e.message) + '</div>';
+    pop.innerHTML = '<div class="storage-head"><span class="storage-title">应用与数据</span><button type="button" class="storage-close" onclick="closeStorageMap()" aria-label="关闭">✕</button></div><div class="storage-sub">读取失败：' + escHtml(e.message) + '</div>';
   }
 }
+
 function closeStorageMap() {
   var pop = document.getElementById('storagePop');
   var btn = document.getElementById('storageMapBtn');
   if (pop) pop.hidden = true;
   if (btn) btn.setAttribute('aria-expanded', 'false');
 }
+
+async function revealPath(target) {
+  try {
+    var res = await fetch('/api/reveal', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ target: target }) });
+    var data = await res.json();
+    if (!data.ok) { toast('打开失败：' + (data.error || '未知错误')); return; }
+    toast('已打开目录');
+  } catch (e) { toast('打开失败：' + e.message); }
+}
+
 function initStorageMap() {
   var btn = document.getElementById('storageMapBtn');
   var pop = document.getElementById('storagePop');
@@ -441,6 +472,8 @@ function initStorageMap() {
     if (lm && lm.style.display === 'flex') closeLinksModal();
   });
   document.addEventListener('click', function(e) {
+    var r = e.target.closest ? e.target.closest('[data-reveal]') : null;
+    if (r && pop.contains(r)) { e.preventDefault(); revealPath(r.getAttribute('data-reveal')); return; }
     var c = e.target.closest ? e.target.closest('.storage-copy') : null;
     if (!c) return;
     var text = c.getAttribute('data-copy') || '';

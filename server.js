@@ -89,6 +89,15 @@ function monogram(name) { var s = (name||'').trim(); var en = s.match(/[A-Za-z][
 function listDirs(p) { try { return fs.readdirSync(p).filter(function(name){ if (name.charAt(0) === '.') return false; try { return fs.statSync(path.join(p, name)).isDirectory(); } catch(_) { return false; } }); } catch(_) { return []; } }
 function openFolder(p) { try { exec('start "" "' + p + '"'); } catch(_) {} }
 
+function openFolder(p) {
+  try {
+    var cmd = process.platform === 'win32'
+      ? 'start "" "' + String(p) + '"'
+      : (process.platform === 'darwin' ? 'open "' + String(p) + '"' : 'xdg-open "' + String(p) + '"');
+    exec(cmd);
+  } catch (_) {}
+}
+
 function safeResolve(base, ...segments) {
   const resolved = path.resolve(path.join(base, ...segments));
   if (!resolved.startsWith(path.resolve(base) + path.sep) && resolved !== path.resolve(base)) {
@@ -313,8 +322,27 @@ function startServer() {
     res.json({ ok: true, appRoot: d.appRoot, dataRoot: d.dataRoot, sameRoot: sameRoot, layers: layers, counts: counts });
   });
 
-  app.post('/api/links', function(req, res) {
-    var result = links.upsertLink(req.body);
+  app.post('/api/reveal', function(req, res) {
+    var target = String(req.body && req.body.target || '');
+    var map = {
+      app: paths.APP_ROOT,
+      data: paths.DATA_ROOT,
+      tools: paths.TOOLS_DIR,
+      apps: paths.APPS_DIR,
+      tips: paths.TIPS_DIR,
+      principles: paths.PRINCIPLES_DIR,
+      config: paths.CONFIG_DIR,
+      runtime: paths.RUNTIME_DIR,
+      archive: paths.ARCHIVE_DIR
+    };
+    if (!map[target]) return res.status(400).json({ ok: false, error: 'unknown target' });
+    var dir = map[target];
+    if (!fs.existsSync(dir)) return res.status(404).json({ ok: false, error: 'path missing' });
+    openFolder(dir);
+    res.json({ ok: true, target: target, path: dir });
+  });
+
+  app.post('/api/links', function(req, res) {    var result = links.upsertLink(req.body);
     if (!result.ok) return res.status(400).json(result);
     res.json(result);
   });
