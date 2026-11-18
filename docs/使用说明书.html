@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Agent 工具架 · 使用说明书</title>
-<script>document.documentElement.className+=' js'</script>
+<script>document.documentElement.className+=' js';if(/[?&]embed=1/.test(location.search))document.documentElement.className+=' embed'</script>
 <style>
 /* ══ DESIGN TOKENS ── 黄绿白 60/30/10 ══ */
 :root{
@@ -218,6 +218,15 @@ code{font-family:var(--font-code);font-size:.88em;background:var(--soft);color:v
 
 /* ══ 响应式 ══ */
 @media(max-width:900px){.icon-row{flex-direction:column}.hero-panel{flex-direction:column}}
+/* ══ 嵌入仪表盘（?embed=1）══ */
+/* 仪表盘已有 64px 页头，这里隐藏说明书自己的顶栏/hero，只留正文并按 32px 对齐 */
+html.embed .topbar,
+html.embed .hero{display:none}
+html.embed .hero-intro,
+html.embed .module-in{max-width:none;padding-left:32px;padding-right:32px}
+html.embed .hero-intro{padding-top:24px}
+html.embed .module{padding-left:0;padding-right:0}
+html.embed .module-in{padding-left:32px;padding-right:32px}
 </style>
 <link rel="stylesheet" href="/shared/back-to-top.css">
 </head>
@@ -354,6 +363,7 @@ code{font-family:var(--font-code);font-size:.88em;background:var(--soft);color:v
         <div class="pg reveal"><span class="pg-no">07</span><div><b>说明书<span class="c">就是这份</span></b><p>工具架的使用说明，AI 和人同读。</p></div></div>
       </div>
     </div>
+    <p class="flow-note reveal">侧栏展开 128px，点底部的「收起」收成 48px 图标轨；折叠状态按浏览器记住，悬停图标看名称与数量。</p>
     <div class="sub-head reveal">架子长这样 · 文件结构</div>
     <div class="code-macos reveal">
       <div class="code-titlebar">
@@ -523,6 +533,7 @@ code{font-family:var(--font-code);font-size:.88em;background:var(--soft);color:v
       <div class="dim w2 reveal"><span class="dim-k">Filter · 4</span><span class="dim-t">状态</span><span class="dim-arr">运行 / 停止 / 出错 / 警告</span></div>
     </div>
     <p class="flow-note reveal">「治理审计」是独立一页，四合一巡检怎么读，见第 05 节。</p>
+    <p class="flow-note reveal"><b>卡片 / 列表：</b>右上角可切换。卡片用来看图标与完整描述；列表一屏看更多行，按列比较状态、端口、入口，并就地启停。两种视图共用筛选与操作，选择按页面记住；默认仍是卡片。列表首列的六点手柄可直接拖拽排序（工具架、我的网站）。</p>
     <div class="sub-head reveal">卡片怎么读</div>
     <div class="dim-list">
       <div class="card-big reveal">

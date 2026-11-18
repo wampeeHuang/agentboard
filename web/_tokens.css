@@ -26,6 +26,8 @@
      高度分两级：工具类卡片 256（--card-h），分类筛选块 96（--dim-h）。
      改这里全站生效；任何页面不得用 minmax()/1fr 覆盖卡片宽度，不得把 gap 降到 32px 以下。 */
   --card-w:384px; --card-h:256px; --dim-h:96px; --card-gap:32px;
+  /* 侧栏两档：展开 128、折叠 48（对齐 8771 的图标轨；折叠按钮在侧栏底部） */
+  --sidebar-w:128px; --sidebar-w-collapsed:48px;
   --shadow-border:0 0 0 1px rgba(38,43,39,.08);
   --shadow-card:0 1px 2px rgba(38,43,39,.06);
   --shadow-card-hover:0 2px 8px rgba(38,43,39,.1);

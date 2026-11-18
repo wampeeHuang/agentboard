@@ -8,6 +8,7 @@ window.addEventListener('unhandledrejection', function(evt) {
   if (e) { e.style.display='block'; e.textContent += ' | Promise: ' + (evt.reason||{}).message; }
 });
 var tools = [];
+var toolsLoadState = 'loading';
 var starting = {}; // id → true when waiting for start
 var stopping = {}; // id → true when waiting for stop
 var opened = {};   // id → true when user clicked "打开" this session
@@ -17,8 +18,52 @@ var domainFilter = 'all'; // 功能分类
 var accFilter = 'all';    // 接入形态
 var stateFilter = 'all';  // 状态
 var appsData = null;
+var appFilters = { dev: 'all', host: 'all', scope: 'all' };
+var APP_DIMS = [
+  { key: 'dev',   label: '开发方式', cls: 'dim-fn',     bg: '#74A63F', tip: '按有没有本地开发服务筛选' },
+  { key: 'host',  label: '托管',     cls: 'dim-acc',    bg: '#FFFFFF', tip: '按托管链路首段筛选（腾讯云 / 阿里云 / Cloudflare / 其他）' },
+  { key: 'scope', label: '域名归属', cls: 'dim-status', bg: '#EEF4EF', tip: '按是否在 *.evopearl.com 站群下筛选' }
+];
 var princData = null;
 var princF = 'all';
+
+// ── 卡片 / 列表 双视图 ──
+// 列表是叠加模式，不替代卡片：每页独立记忆，默认卡片；只改本页记忆，不动他人偏好。
+var VIEW_PAGE_IDS = ['tools', 'apps', 'tips', 'principles'];
+function getViewMode(page) {
+  var v = '';
+  try { v = localStorage.getItem('agentboard-view-' + page) || ''; } catch (_) {}
+  return v === 'list' ? 'list' : 'card';
+}
+function isListView(page) {
+  var pg = document.getElementById('page-' + page);
+  return !!(pg && pg.getAttribute('data-view') === 'list');
+}
+function applyViewMode(page) {
+  var pg = document.getElementById('page-' + page);
+  if (!pg) return;
+  var mode = getViewMode(page);
+  pg.setAttribute('data-view', mode);
+  var btns = pg.querySelectorAll('[data-view-btn]');
+  for (var i = 0; i < btns.length; i++) {
+    var active = btns[i].getAttribute('data-view-btn') === mode;
+    btns[i].classList.toggle('active', active);
+    btns[i].setAttribute('aria-pressed', active ? 'true' : 'false');
+  }
+}
+function applyAllViewModes() { VIEW_PAGE_IDS.forEach(applyViewMode); }
+function setViewMode(page, mode) {
+  var m = mode === 'list' ? 'list' : 'card';
+  try { localStorage.setItem('agentboard-view-' + page, m); } catch (_) {}
+  applyViewMode(page);
+  rerenderView(page);
+}
+function rerenderView(page) {
+  if (page === 'tools') render();
+  else if (page === 'apps') { if (appsData) paintApps(); else renderApps(); }
+  else if (page === 'tips') { if (window.TipsPanel && window.TipsPanel.render) window.TipsPanel.render(); }
+  else if (page === 'principles') renderPrinciples();
+}
 
 // ── 三维异色筛选块 ──
 // 功能分类取值从 /api/tools/schema 派生（唯一真相源），前端不再手写副本 → 与编辑表单永不漂移
@@ -182,10 +227,12 @@ async function fetchCronState() {
 }
 
 async function fetchTools() {
+  if (!tools.length) { toolsLoadState = 'loading'; render(); }
   try {
     var res = await fetch('/api/tools');
     var data = await res.json();
     if (data.ok) {
+      toolsLoadState = 'loaded';
       tools = data.tools;
       // 清除已生效的 starting / stopping 状态
       Object.keys(starting).forEach(function(id){
@@ -201,9 +248,13 @@ async function fetchTools() {
       render();
       renderToolsSub();
     } else {
+      toolsLoadState = 'error';
+      render();
       toast('工具清单加载失败：' + (data.error || '未知错误'));
     }
   } catch(e) {
+    toolsLoadState = 'error';
+    render();
     var eb = document.getElementById('errBox');
     if (eb) { eb.style.display='block'; eb.textContent += ' | fetchTools: ' + e.message; }
   }
@@ -228,12 +279,67 @@ function updateCounts() {
   el = document.getElementById('navToolsCnt'); if (el) el.textContent = tools.length;
   el = document.getElementById('navAppsCnt'); if (el && appsData) el.textContent = appsData.length;
   el = document.getElementById('navPrincCnt'); if (el && princData) el.textContent = princData.length;
+  syncSidebarTips();
+}
+
+// ── 侧栏折叠：展开 128 / 折叠 48 两档，按浏览器记忆；折叠按钮固定在侧栏底部 ──
+var SIDEBAR_KEY = 'agentboard-sidebar-collapsed';
+function sidebarCollapsed() {
+  return document.documentElement.classList.contains('sidebar-collapsed');
+}
+function syncSidebarTips() {
+  var collapsed = sidebarCollapsed();
+  var items = document.querySelectorAll('.nav-item[data-page]');
+  for (var j = 0; j < items.length; j++) {
+    var item = items[j];
+    var labelEl = item.querySelector('.nav-label');
+    var cntEl = item.querySelector('.cnt');
+    var text = labelEl ? labelEl.textContent.trim() : '';
+    var num = cntEl ? cntEl.textContent.trim() : '';
+    if (num && num !== '—') text += ' · ' + num;
+    if (collapsed) {
+      if (text) item.setAttribute('data-tip', text);
+      item.removeAttribute('title');
+    } else {
+      item.removeAttribute('data-tip');
+      if (text) item.setAttribute('title', text);
+    }
+  }
+}
+function applySidebar(collapsed) {
+  document.documentElement.classList.toggle('sidebar-collapsed', !!collapsed);
+  var btn = document.getElementById('sidebarToggle');
+  if (btn) {
+    var label = collapsed ? '展开侧栏' : '折叠侧栏';
+    btn.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+    btn.setAttribute('aria-label', label);
+    btn.setAttribute('title', label);
+    var txt = btn.querySelector('.sidebar-toggle-label');
+    if (txt) txt.textContent = collapsed ? '展开' : '收起';
+  }
+  syncSidebarTips();
+}
+function toggleSidebar() {
+  var next = !sidebarCollapsed();
+  try { localStorage.setItem(SIDEBAR_KEY, next ? '1' : '0'); } catch (_) {}
+  applySidebar(next);
+}
+function initSidebar() {
+  var collapsed = false;
+  try { collapsed = localStorage.getItem(SIDEBAR_KEY) === '1'; } catch (_) {}
+  applySidebar(collapsed);
 }
 
 function render() {
   var grid = document.getElementById('toolGrid');
   if (!tools.length) {
-    grid.innerHTML = '<div class="empty">还没有工具 —— Agent 会在 <code>~/.agentboard/tools/</code> 下写入注册文件，自动上架。</div>';
+    if (toolsLoadState === 'loading') {
+      grid.innerHTML = '<div class="empty" role="status">正在读取工具清单并检查运行状态，请稍候…</div>';
+    } else if (toolsLoadState === 'error') {
+      grid.innerHTML = '<div class="empty" role="alert">工具清单读取失败，请刷新重试。已有工具登记不会因此删除。</div>';
+    } else {
+      grid.innerHTML = '<div class="empty">还没有工具 —— Agent 会在 <code>~/.agentboard/tools/</code> 下写入注册文件，自动上架。</div>';
+    }
     return;
   }
 
@@ -245,7 +351,7 @@ function render() {
   var search = getSearchTerm();
   if (search) {
     sorted = sorted.filter(function(t){
-      return t.name.toLowerCase().indexOf(search) !== -1 || t.id.toLowerCase().indexOf(search) !== -1 || (t.description||'').toLowerCase().indexOf(search) !== -1;
+      return [t.name || '', t.id || '', t.description || '', (t.tags || []).join(' ')].join(' ').toLowerCase().indexOf(search) !== -1;
     });
   }
 
@@ -258,7 +364,11 @@ function render() {
     return;
   }
 
-  grid.innerHTML = sorted.map(function(t){ return renderCard(t); }).join('');
+  if (isListView('tools')) {
+    grid.innerHTML = renderToolTable(sorted);
+  } else {
+    grid.innerHTML = sorted.map(function(t){ return renderCard(t); }).join('');
+  }
 }
 
 // ── 卡片组件：原型绿头通栏（分类/形态/归属 已剥离进 dim 块与编辑面板） ──
@@ -304,6 +414,101 @@ function renderCard(t) {
     + '</div>';
 }
 
+function renderToolTable(list) {
+  var head = '<thead><tr>'
+    + '<th scope="col" class="at-drag" aria-label="拖拽排序"></th>'
+    + '<th scope="col" class="at-name">工具</th>'
+    + '<th scope="col" class="at-cat">分类</th>'
+    + '<th scope="col" class="at-state">状态</th>'
+    + '<th scope="col" class="at-rating">评分</th>'
+    + '<th scope="col" class="at-port">端口</th>'
+    + '<th scope="col" class="at-desc">功能</th>'
+    + '<th scope="col" class="at-enable" data-tip="启用 = AI 可调用；停用 = 卡片保留但 AI 不可调用">启用</th>'
+    + '<th scope="col" class="at-actions">操作</th>'
+    + '</tr></thead>';
+  return '<div class="asset-table-wrap"><table class="asset-table tools-table" aria-label="工具清单">' + head
+    + '<tbody>' + list.map(renderToolRow).join('') + '</tbody></table></div>';
+}
+
+function ratingStarsHtml(rating, id, compact) {
+  var r = Math.max(0, Math.min(5, Math.round(Number(rating) || 0)));
+  var stars = '';
+  for (var i = 1; i <= 5; i++) {
+    stars += '<button type="button" class="rating-star' + (i <= r ? ' on' : '') + '" title="' + i + ' 星' + (i === r ? '（再点清除）' : '') + '" aria-label="评 ' + i + ' 星" aria-pressed="' + (i <= r) + '" onclick="event.stopPropagation();setToolRating(\'' + escAttr(id) + '\',' + i + ')">' + (i <= r ? '★' : '☆') + '</button>';
+  }
+  return '<span class="rating-stars" data-tip="点星评分，再点同星清除">' + stars
+    + (compact ? '' : '<span class="rating-num">' + (r ? r + '/5' : '未评') + '</span>') + '</span>';
+}
+var ratingPending = {};
+async function setToolRating(id, n) {
+  if (ratingPending[id]) return;
+  var t = tools.find(function(x){ return x.id === id; });
+  if (!t) return;
+  var cur = Number(t.rating) || 0;
+  var next = (cur === n) ? 0 : n;
+  ratingPending[id] = true;
+  t.rating = next;   // 先反馈，失败再回滚
+  render();
+  try {
+    var res = await fetch('/api/tools/' + encodeURIComponent(id), {
+      method: 'PUT', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ rating: next })
+    });
+    var data = await res.json();
+    if (!data.ok) {
+      t.rating = cur;
+      render();
+      toast('评分保存失败：' + (data.error || '未知错误'));
+      return;
+    }
+    toast(next ? '已评 ' + next + ' 星' : '已清除评分');
+  } catch (e) {
+    t.rating = cur;
+    render();
+    toast('评分保存失败：' + e.message);
+  } finally {
+    delete ratingPending[id];
+  }
+}
+
+// 列表只显示「用途」一句，完整描述留在悬停气泡里；卡片仍显示全文
+function toolPurpose(t) {
+  var d = t.description || '';
+  var m = d.match(/【用途】([\s\S]*?)(?=【|$)/);
+  var s = (m ? m[1] : d).replace(/\s+/g, ' ').trim();
+  return s || '—';
+}
+function toolPortLabel(t) {
+  var ports = t.ports || (t.port ? [t.port] : []);
+  return ports.length ? ports.join(' · ') : '—';
+}
+function toolStateLabel(t, state) {
+  if (isApiOnly(t)) return '仅接入';
+  return (STATE_META[state] && STATE_META[state].label) || stateLabelOf(state, t);
+}
+function renderToolRow(t) {
+  var state = classifyState(t);
+  var ico = t.icon || (t.name || t.id).trim().charAt(0);
+  var logo = TOOL_LOGO[t.id];
+  var icoHtml = logo ? '<img src="' + logo + '" alt="">' : escHtml(ico);
+  var extraClass = (t.disabled && state !== 'disabled') ? ' st-disabled' : '';
+  var trialBadge = (t.tags && t.tags.indexOf('试用') !== -1) ? '<span class="tag-trial">试用</span>' : '';
+  return '<tr class="asset-row st-' + state + extraClass + '" data-id="' + escAttr(t.id) + '">'
+    + '<td class="at-drag"><span class="row-drag-handle" draggable="true" title="拖拽排序" aria-label="拖拽排序：' + escAttr(t.name || t.id) + '"></span></td>'
+    + '<td class="at-name"><div class="at-name-cell"><span class="asset-ico">' + icoHtml + '</span>'
+    + '<span class="asset-name-wrap"><span class="asset-name" data-tip="' + escAttr(t.name || t.id) + '">' + escHtml(t.name || t.id) + trialBadge + '</span>'
+    + '<span class="asset-id">' + escHtml(t.id) + '</span></span></div></td>'
+    + '<td class="at-cat"><span class="asset-cat">' + escHtml(t.category || '—') + '</span></td>'
+    + '<td class="at-state"><span class="asset-status"><span class="st-dot ' + state + '"></span>'
+    + '<span class="status-word ' + state + '">' + escHtml(toolStateLabel(t, state)) + '</span></span></td>'
+    + '<td class="at-rating">' + ratingStarsHtml(t.rating, t.id, true) + '</td>'
+    + '<td class="at-port"><span class="asset-port">' + escHtml(toolPortLabel(t)) + '</span>' + (t.type === 'group' ? statusDots(t) : '') + '</td>'
+    + '<td class="at-desc"><span class="asset-desc' + (t.description ? '' : ' placeholder') + '" data-tip="' + escAttr(t.description || '') + '">' + escHtml(toolPurpose(t)) + '</span></td>'
+    + '<td class="at-enable">' + toolToggleHtml(t, true) + '</td>'
+    + '<td class="at-actions">' + toolRowActions(t, state) + '</td>'
+    + '</tr>';
+}
+
 function statusDots(t) {
   var children = t.children || [];
   var tasks = children.filter(function(c){ return c.type !== 'section'; });
@@ -322,12 +527,13 @@ function metaRowHtml(t, state) {
   return '<div class="card-meta-row">'
     + '<span class="cf"><span class="cf-l">ID</span><span class="card-id">' + escHtml(t.id) + '</span></span>'
     + '<span class="cf"><span class="cf-l">端口</span><span class="card-port">' + portHtml + '</span>' + (isGroup ? statusDots(t) : '') + '</span>'
+    + '<span class="cf"><span class="cf-l">评分</span>' + ratingStarsHtml(t.rating, t.id) + '</span>'
     + '<span class="cf"><span class="cf-l">功能</span><span class="card-desc' + (t.description ? '' : ' placeholder') + '" data-tip="' + escAttr(t.description || '') + '">' + escHtml(desc) + '</span></span>'
     + '</div>';
 }
 
-function actionsHtml(t, state) {
-  var v = isVirtual(t);
+// 状态相关按钮（卡片与列表共用；两套视图共用一套动作逻辑，避免漂移）
+function toolStateBtns(t, state, compact) {
   var hasCommands = t.startCommand || t.stopCommand;
   var portCount = (t.ports && t.ports.length) || (t.port ? 1 : 0);
   var isNoPortCli = portCount === 0 && hasCommands;
@@ -348,16 +554,16 @@ function actionsHtml(t, state) {
   } else if (state === 'stale_path') {
     btns.push('<button class="btn fix" onclick="event.stopPropagation();openToolForm(\'' + t.id + '\',\'migrate\')">迁移路径</button>');
   } else if (state === 'starting') {
-    btns.push('<button class="btn go starting" disabled>启动中…</button>');
+    if (!compact) btns.push('<button class="btn go starting" disabled>启动中…</button>');
   } else if (state === 'halting') {
-    btns.push('<span class="card-placeholder">正在停止…</span>');
+    if (!compact) btns.push('<span class="card-placeholder">正在停止…</span>');
   } else if (isFolder) {
     btns.push('<button class="btn go" onclick="event.stopPropagation();window.open(\'/workspace/' + t.id + '\', \'_blank\')">查看项目</button>');
   } else if (isCli) {
     if (state === 'running' && t.openCommand) btns.push('<button class="btn open" onclick="event.stopPropagation();openTool(\'' + t.id + '\')">打开</button>');
-    else if (state === 'running') btns.push('<span class="card-placeholder">运行中</span>');
+    else if (state === 'running') { if (!compact) btns.push('<span class="card-placeholder">运行中</span>'); }
     else if (hasCommands) btns.push('<button class="btn go" onclick="event.stopPropagation();startTool(\'' + t.id + '\')">运行</button>');
-    else btns.push('<span class="cmd-hint">在 Claude Code 中输入</span>');
+    else if (!compact) btns.push('<span class="cmd-hint">在 Claude Code 中输入</span>');
   } else if (state === 'running') {
     btns.push('<button class="btn stop" onclick="event.stopPropagation();stopTool(\'' + t.id + '\')">停止</button>');
   } else if (state === 'stopped') {
@@ -365,19 +571,49 @@ function actionsHtml(t, state) {
       btns.push('<button class="btn go" onclick="event.stopPropagation();startTool(\'' + t.id + '\')">' + (isNoPortCli ? '终端' : '启动') + '</button>');
     }
   }
-
+  return btns;
+}
+function toolOpenBtn(t) {
+  if (!(t.url && (t.running || isVirtual(t)))) return '';
   var isOpened = opened[t.id];
-  if (t.url && (t.running || v)) {
-    btns.push('<a href="' + escAttr(t.url) + '" target="_blank" class="btn ' + (isOpened ? 'open-done' : 'open') + '" onclick="event.preventDefault();event.stopPropagation();verifyAndOpen(event.target,\'' + t.id + '\',\'' + escAttr(t.url) + '\')">' + (isOpened ? '打开中' : '打开') + '</a>');
-  }
-  if (t.publicUrl) {
-    btns.push('<a href="' + escAttr(t.publicUrl) + '" target="_blank" class="btn pub" title="公网站点">公网 ↗</a>');
-  }
-  btns.push('<button class="btn edit" onclick="event.stopPropagation();openToolForm(\'' + t.id + '\',\'edit\')">编辑</button>');
-
-  var toggle = '<label class="toggle-sm" onclick="event.stopPropagation();toggleDisabled(\'' + t.id + '\')"><input type="checkbox"' + (t.disabled ? '' : ' checked') + '><span class="toggle-track' + (t.disabled ? '' : ' on') + '"></span><span class="toggle-label' + (t.disabled ? '' : ' on') + '">' + (v ? '接入' : (t.disabled ? '停用' : '启用')) + '</span></label>';
-
-  return '<div class="card-actions">' + btns.join('') + '<span class="p4-spacer"></span>' + toggle + '</div>';
+  return '<a href="' + escAttr(t.url) + '" target="_blank" class="btn ' + (isOpened ? 'open-done' : 'open') + '" onclick="event.preventDefault();event.stopPropagation();verifyAndOpen(event.target,\'' + t.id + '\',\'' + escAttr(t.url) + '\')">' + (isOpened ? '打开中' : '打开') + '</a>';
+}
+function toolPublicBtn(t) {
+  if (!t.publicUrl) return '';
+  return '<a href="' + escAttr(t.publicUrl) + '" target="_blank" class="btn pub" title="公网站点">公网 ↗</a>';
+}
+function toolEditBtn(t) {
+  return '<button class="btn edit" onclick="event.stopPropagation();openToolForm(\'' + t.id + '\',\'edit\')">编辑</button>';
+}
+function toolToggleHtml(t, compact) {
+  var v = isVirtual(t);
+  var label = v ? '接入' : (t.disabled ? '停用' : '启用');
+  var tip = t.disabled
+    ? '已停用：卡片保留，AI 不可调用。点开恢复启用。'
+    : (v ? '已接入：AI 可调用。点关改为仅展示。' : '启用中：AI 可调用。点关停用，卡片保留。');
+  return '<label class="toggle-sm' + (compact ? ' toggle-compact' : '') + '" data-tip="' + escAttr(tip) + '" onclick="event.preventDefault();event.stopPropagation();toggleDisabled(\'' + t.id + '\')">'
+    + '<input type="checkbox" aria-label="' + escAttr((t.disabled ? '启用 ' : '停用 ') + (t.name || t.id)) + '"' + (t.disabled ? '' : ' checked') + '>'
+    + '<span class="toggle-track' + (t.disabled ? '' : ' on') + '"></span>'
+    + (compact ? '' : '<span class="toggle-label' + (t.disabled ? '' : ' on') + '">' + label + '</span>')
+    + '</label>';
+}
+function toolRowActions(t, state) {
+  var btns = toolStateBtns(t, state, true);
+  var open = toolOpenBtn(t);
+  if (open) btns.push(open);
+  var pub = toolPublicBtn(t);
+  if (pub) btns.push(pub);
+  btns.push(toolEditBtn(t));
+  return '<div class="card-actions asset-actions">' + btns.join('') + '</div>';
+}
+function actionsHtml(t, state) {
+  var btns = toolStateBtns(t, state);
+  var open = toolOpenBtn(t);
+  if (open) btns.push(open);
+  var pub = toolPublicBtn(t);
+  if (pub) btns.push(pub);
+  btns.push(toolEditBtn(t));
+  return '<div class="card-actions">' + btns.join('') + '<span class="p4-spacer"></span>' + toolToggleHtml(t, false) + '</div>';
 }
 
 function getCronChildStatus(childName) {
@@ -465,6 +701,8 @@ function renderToolsSub() {
   sub.innerHTML = list.map(function(id){
     var t = tools.find(function(x){ return x.id === id; });
     var label = t && t.name ? t.name : id;
+    // 128 侧栏只留主名，去掉「 · 副标题」；完整地址仍在 title 里
+    if (label.indexOf(' · ') > 0) label = label.split(' · ')[0];
     return '<div class="nav-sub-item" title="' + escAttr(t && t.url ? t.url : '') + '" onclick="quickPreview(\'' + id + '\')">'
       + '<span class="nav-sub-label">' + escHtml(label) + '</span>'
       + '<span class="nav-sub-del" title="移除快捷" onclick="event.stopPropagation();deleteToolsSubItem(\'' + id + '\')">×</span>'
@@ -561,7 +799,7 @@ async function openTool(id) {
 
 async function stopTool(id) {
   // 确认机制：第一次点变"确认停止？"，2秒内再点才执行
-  var stopBtn = document.querySelector('.tool-card[data-id="' + id + '"] .btn.stop');
+  var stopBtn = document.querySelector('#toolGrid [data-id="' + id + '"] .btn.stop');
   if (stopBtn && !stopBtn.classList.contains('confirming')) {
     stopBtn.textContent = '确认停止？';
     stopBtn.classList.add('confirming');
@@ -609,16 +847,75 @@ async function renderApps() {
   try {
     var res = await fetch('/api/apps');
     var data = await res.json();
-    if (data.ok) { appsData = data.apps || []; updateCounts(); paintApps(); }
+    if (data.ok) { appsData = data.apps || []; updateCounts(); buildAppDims(); paintApps(); }
     else document.getElementById('appGrid').innerHTML = '<div class="empty">应用加载失败：' + escHtml(data.error || '') + '</div>';
   } catch(e) {
     document.getElementById('appGrid').innerHTML = '<div class="empty">应用加载失败</div>';
   }
 }
+/* 我的网站分类模块：从现有字段派生筛选维度，不新增站点分类数据 */
+function appDevOf(a) { return a.devTool ? '有本地开发' : '纯公网'; }
+function appHostOf(a) {
+  var h = a.host || '';
+  if (h.indexOf('腾讯云') !== -1) return '腾讯云';
+  if (h.indexOf('阿里云') !== -1) return '阿里云';
+  if (h.toLowerCase().indexOf('cloudflare') !== -1) return 'Cloudflare';
+  return '其他';
+}
+function appScopeOf(a) {
+  var h = (a.url || '').replace(/^https?:\/\//, '').split('/')[0];
+  return /(^|\.)evopearl\.com$/i.test(h) ? 'evopearl 站群' : '独立域名';
+}
+function appDimValue(key, a) {
+  return key === 'dev' ? appDevOf(a) : key === 'host' ? appHostOf(a) : appScopeOf(a);
+}
+function appList() {
+  return (appsData || []).filter(function(a){
+    return ['dev', 'host', 'scope'].every(function(k){
+      return appFilters[k] === 'all' || appDimValue(k, a) === appFilters[k];
+    });
+  });
+}
+function appOptHtml(key, val, label, n) {
+  return '<span class="dim-opt' + (appFilters[key] === val ? ' active' : '') + '" onclick="setAppDim(\'' + key + '\',\'' + escAttr(val) + '\')">' + escHtml(label) + '<span class="d-n">' + n + '</span></span>';
+}
+function buildAppDims() {
+  var el = document.getElementById('appDimBlocks'); if (!el) return;
+  var data = appsData || [];
+  var html = '';
+  APP_DIMS.forEach(function(d){
+    var counts = {};
+    data.forEach(function(a){ var v = appDimValue(d.key, a); counts[v] = (counts[v] || 0) + 1; });
+    var vals = Object.keys(counts).sort(function(x, y){ return counts[y] - counts[x] || (x < y ? -1 : 1); });
+    if (appFilters[d.key] !== 'all' && vals.indexOf(appFilters[d.key]) === -1) appFilters[d.key] = 'all';
+    html += '<div class="dim-block ' + d.cls + '" style="--b:' + d.bg + '" data-tip="' + escAttr(d.tip) + '"><div class="dim-block-title">' + d.label + '<span class="dim-arr">></span></div><div class="dim-block-opts">';
+    html += appOptHtml(d.key, 'all', '全部', data.length);
+    vals.forEach(function(v){ html += appOptHtml(d.key, v, v, counts[v]); });
+    html += '</div></div>';
+  });
+  el.innerHTML = html;
+}
+function setAppDim(key, val) {
+  appFilters[key] = val;
+  buildAppDims();
+  paintApps();
+}
+function resetAppDims() {
+  appFilters = { dev: 'all', host: 'all', scope: 'all' };
+  buildAppDims();
+  paintApps();
+}
 function paintApps() {
   var grid = document.getElementById('appGrid'); if (!grid) return;
+  if (!appsData) { grid.innerHTML = '<div class="empty" role="status">正在读取网站清单…</div>'; return; }
   if (!appsData.length) { grid.innerHTML = '<div class="empty">还没有网站 —— 点上方 + 添加网站。</div>'; return; }
-  grid.innerHTML = appsData.map(appCard).join('');
+  var list = appList();
+  if (!list.length) {
+    grid.innerHTML = '<div class="empty"><p>没有网站匹配当前筛选组合</p><p style="font-size:12px;margin-top:8px"><a class="reset-link" onclick="resetAppDims()" title="清除所有筛选条件">← 重置全部筛选</a></p></div>';
+    return;
+  }
+  if (isListView('apps')) { grid.innerHTML = renderAppTable(list); return; }
+  grid.innerHTML = list.map(appCard).join('');
 }
 function appDomainOf(a) {
   return (a.url || '').replace(/^https?:\/\//, '').replace(/\/$/, '');
@@ -651,51 +948,96 @@ function appCard(a) {
     + '</div>'
     + '</div>';
 }
+function renderAppTable(list) {
+  var head = '<thead><tr>'
+    + '<th scope="col" class="at-drag" aria-label="拖拽排序"></th>'
+    + '<th scope="col" class="aa-name">网站</th>'
+    + '<th scope="col" class="aa-url">地址</th>'
+    + '<th scope="col" class="aa-host">托管</th>'
+    + '<th scope="col" class="aa-dev">本地</th>'
+    + '<th scope="col" class="aa-desc">描述</th>'
+    + '<th scope="col" class="aa-actions">操作</th>'
+    + '</tr></thead>';
+  return '<div class="asset-table-wrap"><table class="asset-table apps-table" aria-label="网站清单">' + head
+    + '<tbody>' + list.map(renderAppRow).join('') + '</tbody></table></div>';
+}
+function renderAppRow(a) {
+  var ico = a.name ? a.name.trim().charAt(0) : '站';
+  var dev = appDevHtml(a);
+  var domain = appDomainOf(a);
+  return '<tr class="asset-row" data-id="' + escAttr(a.id) + '">'
+    + '<td class="at-drag"><span class="row-drag-handle" draggable="true" title="拖拽排序" aria-label="拖拽排序：' + escAttr(a.name || a.id) + '"></span></td>'
+    + '<td class="aa-name"><div class="at-name-cell"><span class="asset-ico">' + escHtml(ico) + '</span>'
+    + '<span class="asset-name-wrap"><span class="asset-name" data-tip="' + escAttr(a.name || a.id) + '">' + escHtml(a.name || a.id) + '</span>'
+    + '<span class="asset-id">' + escHtml(a.id) + '</span></span></div></td>'
+    + '<td class="aa-url">' + (a.url
+      ? '<a class="asset-link" href="' + escAttr(a.url) + '" target="_blank" data-tip="' + escAttr(a.url) + '">' + escHtml(domain) + ' ↗</a>'
+      : '<span class="asset-muted">—</span>') + '</td>'
+    + '<td class="aa-host"><span class="asset-mono" data-tip="' + escAttr(a.host || '') + '">' + escHtml(a.host || '—') + '</span></td>'
+    + '<td class="aa-dev">' + (dev ? '<span class="asset-mono">' + escHtml(dev) + '</span>' : '<span class="asset-muted">—</span>') + '</td>'
+    + '<td class="aa-desc"><span class="asset-desc' + (a.description ? '' : ' placeholder') + '" data-tip="' + escAttr(a.description || '') + '">' + escHtml(a.description || '—') + '</span></td>'
+    + '<td class="aa-actions"><div class="card-actions asset-actions">'
+    + (a.url ? '<a class="btn open" href="' + escAttr(a.url) + '" target="_blank">打开</a>' : '')
+    + '<button class="btn edit" onclick="openEditApp(\'' + escAttr(a.id) + '\')">编辑</button>'
+    + '<button class="btn del" onclick="deleteApp(\'' + escAttr(a.id) + '\')">删除</button>'
+    + '</div></td></tr>';
+}
+
 /* apps 拖拽排序：六点手柄触发（对齐 scheduler），事件委托在 #appGrid，drop 后按 DOM 顺序批量写 order */
 var appDragId = null;
 function onAppGridDragStart(e) {
-  if (!e.target.closest('.card-drag-handle')) { e.preventDefault(); return; }
-  var card = e.target.closest('.tool-card');
-  if (!card || !card.getAttribute('data-id')) return;
-  appDragId = card.getAttribute('data-id');
-  card.classList.add('dragging');
+  if (!e.target.closest('.card-drag-handle, .row-drag-handle')) { e.preventDefault(); return; }
+  var item = e.target.closest('.tool-card, .asset-row');
+  if (!item || !item.getAttribute('data-id')) return;
+  appDragId = item.getAttribute('data-id');
+  item.classList.add('dragging');
   e.dataTransfer.effectAllowed = 'move';
   e.dataTransfer.setData('text/plain', appDragId);
 }
 function onAppGridDragOver(e) {
   e.preventDefault();
   if (!appDragId) return;
-  var card = e.target.closest('.tool-card');
-  if (!card || card.getAttribute('data-id') === appDragId) return;
+  var item = e.target.closest('.tool-card, .asset-row');
+  if (!item || item.getAttribute('data-id') === appDragId) return;
   e.dataTransfer.dropEffect = 'move';
-  card.classList.add('drag-over');
+  item.classList.add('drag-over');
 }
 function onAppGridDragLeave(e) {
-  var card = e.target.closest('.tool-card');
-  if (card) card.classList.remove('drag-over');
+  var item = e.target.closest('.tool-card, .asset-row');
+  if (item) item.classList.remove('drag-over');
 }
 function onAppGridDrop(e) {
   e.preventDefault();
-  var card = e.target.closest('.tool-card');
-  if (card) card.classList.remove('drag-over');
-  if (!appDragId || !card || card.getAttribute('data-id') === appDragId) return;
+  var item = e.target.closest('.tool-card, .asset-row');
+  if (item) item.classList.remove('drag-over');
+  if (!appDragId || !item || item.getAttribute('data-id') === appDragId) return;
   var grid = document.getElementById('appGrid');
-  var src = grid.querySelector('.tool-card[data-id="' + appDragId + '"]');
+  var src = grid.querySelector('.tool-card[data-id="' + appDragId + '"], .asset-row[data-id="' + appDragId + '"]');
   if (!src) return;
-  var cards = Array.prototype.slice.call(grid.querySelectorAll('.tool-card'));
-  var srcIdx = cards.indexOf(src);
-  var dstIdx = cards.indexOf(card);
-  if (srcIdx < dstIdx) card.parentNode.insertBefore(src, card.nextSibling);
-  else card.parentNode.insertBefore(src, card);
+  var sel = src.classList.contains('asset-row') ? '.asset-row' : '.tool-card';
+  var peers = Array.prototype.slice.call(grid.querySelectorAll(sel));
+  var srcIdx = peers.indexOf(src);
+  var dstIdx = peers.indexOf(item);
+  if (srcIdx < dstIdx) item.parentNode.insertBefore(src, item.nextSibling);
+  else item.parentNode.insertBefore(src, item);
   var ids = appGridOrder();
-  if (ids.length) persistAppOrder(ids);
+  if (ids.length) {
+    // 有筛选时只重排可见项：把可见 id 填回全量顺序，隐藏项保持原位
+    var full = (appsData || []).map(function(a){ return a.id; });
+    var out = [], vi = 0;
+    for (var i = 0; i < full.length; i++) {
+      if (ids.indexOf(full[i]) !== -1) out.push(ids[vi++]);
+      else out.push(full[i]);
+    }
+    persistAppOrder(out.length ? out : ids);
+  }
 }
 function onAppGridDragEnd() {
   var grid = document.getElementById('appGrid');
   if (grid) {
-    var s = grid.querySelector('.tool-card.dragging');
+    var s = grid.querySelector('.tool-card.dragging, .asset-row.dragging');
     if (s) s.classList.remove('dragging');
-    var overs = grid.querySelectorAll('.tool-card.drag-over');
+    var overs = grid.querySelectorAll('.tool-card.drag-over, .asset-row.drag-over');
     for (var i = 0; i < overs.length; i++) overs[i].classList.remove('drag-over');
   }
   appDragId = null;
@@ -703,7 +1045,7 @@ function onAppGridDragEnd() {
 function appGridOrder() {
   var grid = document.getElementById('appGrid');
   if (!grid) return [];
-  return Array.prototype.map.call(grid.querySelectorAll('.tool-card[data-id]'), function (c) { return c.getAttribute('data-id'); });
+  return Array.prototype.map.call(grid.querySelectorAll('.tool-card[data-id], .asset-row[data-id]'), function (c) { return c.getAttribute('data-id'); });
 }
 function persistAppOrder(ids) {
   fetch('/api/apps/reorder', {
@@ -766,55 +1108,59 @@ function compareTools(a, b, cardOrder) {
   return (a.order||99) - (b.order||99);
 }
 var toolDragId = null;
+function dragItemOf(el) {
+  return el ? el.closest('.tool-card, .asset-row') : null;
+}
 function onToolGridDragStart(e) {
-  if (!e.target.closest('.card-drag-handle')) { e.preventDefault(); return; }
-  var card = e.target.closest('.tool-card');
-  if (!card || !card.getAttribute('data-id')) return;
-  toolDragId = card.getAttribute('data-id');
-  card.classList.add('dragging');
+  if (!e.target.closest('.card-drag-handle, .row-drag-handle')) { e.preventDefault(); return; }
+  var item = dragItemOf(e.target);
+  if (!item || !item.getAttribute('data-id')) return;
+  toolDragId = item.getAttribute('data-id');
+  item.classList.add('dragging');
   e.dataTransfer.effectAllowed = 'move';
   e.dataTransfer.setData('text/plain', toolDragId);
 }
 function onToolGridDragOver(e) {
   e.preventDefault();
   if (!toolDragId) return;
-  var card = e.target.closest('.tool-card');
-  if (!card || card.getAttribute('data-id') === toolDragId) return;
+  var item = dragItemOf(e.target);
+  if (!item || item.getAttribute('data-id') === toolDragId) return;
   e.dataTransfer.dropEffect = 'move';
-  card.classList.add('drag-over');
+  item.classList.add('drag-over');
 }
 function onToolGridDragLeave(e) {
-  var card = e.target.closest('.tool-card');
-  if (card) card.classList.remove('drag-over');
+  var item = dragItemOf(e.target);
+  if (item) item.classList.remove('drag-over');
 }
 function onToolGridDrop(e) {
   e.preventDefault();
-  var card = e.target.closest('.tool-card');
-  if (card) card.classList.remove('drag-over');
-  if (!toolDragId || !card || card.getAttribute('data-id') === toolDragId) return;
+  var item = dragItemOf(e.target);
+  if (item) item.classList.remove('drag-over');
+  if (!toolDragId || !item || item.getAttribute('data-id') === toolDragId) return;
   var grid = document.getElementById('toolGrid');
-  var src = grid.querySelector('.tool-card[data-id="' + toolDragId + '"]');
+  var src = grid.querySelector('.tool-card[data-id="' + toolDragId + '"], .asset-row[data-id="' + toolDragId + '"]');
   if (!src) return;
-  var cards = Array.prototype.slice.call(grid.querySelectorAll('.tool-card'));
-  var srcIdx = cards.indexOf(src);
-  var dstIdx = cards.indexOf(card);
-  if (srcIdx < dstIdx) card.parentNode.insertBefore(src, card.nextSibling);
-  else card.parentNode.insertBefore(src, card);
+  var sel = src.classList.contains('asset-row') ? '.asset-row' : '.tool-card';
+  var peers = Array.prototype.slice.call(grid.querySelectorAll(sel));
+  var srcIdx = peers.indexOf(src);
+  var dstIdx = peers.indexOf(item);
+  if (srcIdx < dstIdx) item.parentNode.insertBefore(src, item.nextSibling);
+  else item.parentNode.insertBefore(src, item);
   persistToolOrder(grid);
 }
 function onToolGridDragEnd() {
   var grid = document.getElementById('toolGrid');
   if (grid) {
-    var s = grid.querySelector('.tool-card.dragging');
+    var s = grid.querySelector('.tool-card.dragging, .asset-row.dragging');
     if (s) s.classList.remove('dragging');
-    var overs = grid.querySelectorAll('.tool-card.drag-over');
+    var overs = grid.querySelectorAll('.tool-card.drag-over, .asset-row.drag-over');
     for (var i = 0; i < overs.length; i++) overs[i].classList.remove('drag-over');
   }
   toolDragId = null;
 }
-// 拖拽后落盘：只重排可见卡（当前筛选下），不可见卡保持原位 → 全序写 localStorage，render 排序直接消费
+// 拖拽后落盘：只重排可见项（当前筛选下），不可见项保持原位 → 全序写 localStorage，render 排序直接消费
 function persistToolOrder(gridEl) {
-  var visible = Array.prototype.map.call(gridEl.querySelectorAll('.tool-card[data-id]'), function (c) { return c.getAttribute('data-id'); });
+  var visible = Array.prototype.map.call(gridEl.querySelectorAll('.tool-card[data-id], .asset-row[data-id]'), function (c) { return c.getAttribute('data-id'); });
   if (!visible.length) return;
   var cardOrder = loadCardOrder();
   var full = tools.slice().sort(function (a, b) { return compareTools(a, b, cardOrder); }).map(function (t) { return t.id; });
@@ -852,13 +1198,15 @@ async function renderPrinciples() {
     if (q && (x.title + ' ' + x.what + ' ' + x.desc + ' ' + x.file).toLowerCase().indexOf(q) === -1) return false;
     return true;
   });
-  document.getElementById('princGrid').innerHTML = list.length ? list.map(princCard).join('') : '<div class="empty">没有匹配的原则</div>';
+  document.getElementById('princGrid').innerHTML = list.length
+    ? (isListView('principles') ? renderPrincTable(list) : list.map(princCard).join(''))
+    : '<div class="empty">没有匹配的原则</div>';
 }
 function renderPrincDims() {
   var el = document.getElementById('princDimBlocks'); if (!el) return;
   var counts = {};
   (princData || []).forEach(function(x){ counts[x.type] = (counts[x.type] || 0) + 1; });
-  var html = '<div class="dim-block" style="--b:#EEF4EF"><div class="dim-block-title">类型<span class="dim-arr">></span></div><div class="dim-block-opts">';
+  var html = '<div class="dim-block dim-fn" style="--b:#74A63F"><div class="dim-block-title">类型<span class="dim-arr">></span></div><div class="dim-block-opts">';
   PRINC_DEFS.forEach(function(d){
     var cnt = d[0] === 'all' ? (princData || []).length : (counts[d[0]] || 0);
     html += '<span class="dim-opt' + (princF === d[0] ? ' active' : '') + '" onclick="setPrincF(\'' + d[0] + '\')">' + d[1] + '<span class="d-n">' + cnt + '</span></span>';
@@ -877,6 +1225,31 @@ function princCard(x) {
     + '</div>'
     + '<div class="card-actions"><span class="p4-spacer"></span><button class="btn edit" onclick="openEditPrinc(\'' + escAttr(x.file) + '\')">编辑</button><button class="btn del" onclick="deletePrinc(\'' + escAttr(x.file) + '\')">删除</button></div>'
     + '</div>';
+}
+
+function renderPrincTable(list) {
+  var head = '<thead><tr>'
+    + '<th scope="col" class="pt-name">原则</th>'
+    + '<th scope="col" class="pt-type">类型</th>'
+    + '<th scope="col" class="pt-file">文件</th>'
+    + '<th scope="col" class="pt-desc">内容</th>'
+    + '<th scope="col" class="pt-actions">操作</th>'
+    + '</tr></thead>';
+  return '<div class="asset-table-wrap"><table class="asset-table princ-table" aria-label="原则清单">' + head
+    + '<tbody>' + list.map(princRow).join('') + '</tbody></table></div>';
+}
+function princRow(x) {
+  var content = x.what || x.desc || '—';
+  return '<tr class="asset-row">'
+    + '<td class="pt-name"><span class="asset-name" data-tip="' + escAttr(x.title) + '">' + escHtml(x.title) + '</span></td>'
+    + '<td class="pt-type"><span class="tip-type" data-type="' + escAttr(x.type || '') + '"><span>'
+    + escHtml(PRINC_LABEL[x.type] || x.type || '原则') + '</span></span></td>'
+    + '<td class="pt-file"><span class="asset-id">' + escHtml(x.file) + '</span></td>'
+    + '<td class="pt-desc"><span class="asset-desc" data-tip="' + escAttr(content) + '">' + escHtml(content) + '</span></td>'
+    + '<td class="pt-actions"><div class="card-actions asset-actions">'
+    + '<button class="btn edit" onclick="openEditPrinc(\'' + escAttr(x.file) + '\')">编辑</button>'
+    + '<button class="btn del" onclick="deletePrinc(\'' + escAttr(x.file) + '\')">删除</button>'
+    + '</div></td></tr>';
 }
 
 // ── 通用字段渲染（principles/tools 表单共用；apps 表单专属 custom/dynamic 逻辑不动） ──
@@ -1253,7 +1626,7 @@ function renderAuditDims() {
     { key: 'docs',   label: '文档新鲜度' },
     { key: 'card',   label: '卡片尺寸契约' }
   ];
-  var html = '<div class="dim-block" style="--b:#EEF4EF"><div class="dim-block-title">检查项<span class="dim-arr">></span></div><div class="dim-block-opts">';
+  var html = '<div class="dim-block dim-fn" style="--b:#74A63F"><div class="dim-block-title">检查项<span class="dim-arr">></span></div><div class="dim-block-opts">';
   defs.forEach(function(d){
     html += '<span class="dim-opt' + (auditF === d.key ? ' active' : '') + '" onclick="setAuditF(\'' + d.key + '\')">' + d.label + '</span>';
   });
@@ -1363,6 +1736,8 @@ function setAuditS(s) {
 
 /* ── 初始化 ── */
 document.addEventListener('DOMContentLoaded', function() {
+  initSidebar();
+  applyAllViewModes();
   var tipDesc = document.getElementById('tp-desc');
   if (tipDesc) tipDesc.addEventListener('input', function () { this.dataset.touched = '1'; });
   initToolForm();
@@ -1482,8 +1857,45 @@ function renderToolField(f) {
   if (f.type === 'note') return '<div class="cg-note">' + escHtml(f.note || '') + '</div>';
   if (f.type === 'display') return '<div class="field"><label>' + escHtml(f.label) + '</label>' + (f.displayHtml || '<div class="auto-val" id="' + f.input + '">—</div>') + '</div>';
   if (f.type === 'icon') return iconFieldHtml(f);
+  if (f.type === 'rating') return ratingFieldHtml(f);
   if (f.newOnly) return idFieldHtml(f);
   return renderFieldHtml(f, f.input);
+}
+function ratingFieldHtml(f) {
+  var html = '<div class="field"><label title="' + escAttr(f.tooltip || '') + '">' + escHtml(f.label) + '</label>'
+    + '<div class="rating-input" id="rating-input" data-value="0" role="group" aria-label="' + escAttr(f.label) + '">';
+  for (var i = 1; i <= 5; i++) {
+    html += '<button type="button" class="rating-star" data-value="' + i + '" aria-label="评 ' + i + ' 星" aria-pressed="false" onclick="setFormRating(' + i + ')">☆</button>';
+  }
+  html += '<span class="rating-text" id="f-rating-text">未评</span>'
+    + '<input type="hidden" id="f-rating" value="0"></div></div>';
+  return html;
+}
+function applyFormRating(n) {
+  var inp = document.getElementById('f-rating');
+  if (!inp) return;
+  var v = Math.max(0, Math.min(5, Math.round(Number(n) || 0)));
+  inp.value = String(v);
+  var box = document.getElementById('rating-input');
+  if (box) {
+    box.setAttribute('data-value', String(v));
+    var stars = box.querySelectorAll('.rating-star');
+    for (var i = 0; i < stars.length; i++) {
+      var on = i < v;
+      stars[i].classList.toggle('on', on);
+      stars[i].textContent = on ? '★' : '☆';
+      stars[i].setAttribute('aria-pressed', on ? 'true' : 'false');
+    }
+  }
+  var txt = document.getElementById('f-rating-text');
+  if (txt) txt.textContent = v ? v + ' / 5' : '未评';
+}
+function setFormRating(n) {
+  var inp = document.getElementById('f-rating');
+  if (!inp) return;
+  var cur = Number(inp.value) || 0;
+  applyFormRating(cur === n ? 0 : n);
+  tfRender();
 }
 function iconFieldHtml(f) {
   return '<div class="field"><label title="' + escAttr(f.tooltip || '') + '">' + escHtml(f.label) + '</label>' +
@@ -1620,6 +2032,7 @@ async function openToolForm(id, mode) {
   setv('f-runtime', !isNew && t && t.runtime && t.runtime.language ? t.runtime.language : 'node');
   setv('f-notes', isNew ? '' : (t && (t.agent_notes || '')));
   setv('f-conflicts', isNew ? '' : (t && t.conflicts ? t.conflicts.map(function(c){ return typeof c === 'string' ? c : (c.toolId || c.toolName || ''); }).join(',') : ''));
+  setv('f-rating', isNew ? '0' : String((t && t.rating) || 0));
   document.getElementById('f-autostart').checked = !isNew && t && t.autoStart;
   document.getElementById('f-disabled').checked = !isNew && t && t.disabled;
   var _trialEl = document.getElementById('f-trial');
@@ -1640,6 +2053,7 @@ async function openToolForm(id, mode) {
 
   tfMissing = (t && t.missingFields) ? t.missingFields : [];
   applyFormType();
+  applyFormRating(Number((document.getElementById('f-rating') || {}).value) || 0);
   document.getElementById('editModal').style.display = 'flex';
   tfRender();
   document.querySelectorAll('#editModal textarea').forEach(autoGrowTA); // 打开即按内容展开
@@ -1792,6 +2206,7 @@ function buildManifest() {
   if (document.getElementById('f-disabled').checked) mf.disabled = true;
   var _trialEl = document.getElementById('f-trial');
   mf.tags = (_trialEl && _trialEl.checked) ? ['试用'] : []; // 总是输出：空数组 = 清标签（PUT 是合并语义，靠它去除）
+  mf.rating = Number(v('f-rating')) || 0;
   var _ackEl = document.getElementById('f-category-ack');
   if (_ackEl && _ackEl.checked) mf.categoryAck = true;
   if (v('f-notes')) mf.agent_notes = v('f-notes');

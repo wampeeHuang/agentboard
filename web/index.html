@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script>try{if(localStorage.getItem('agentboard-sidebar-collapsed')==='1')document.documentElement.classList.add('sidebar-collapsed');}catch(e){}</script>
 <title>工具架 · Agentboard</title>
 <link rel="icon" type="image/svg+xml" href="/logo.svg">
 <!-- Google Fonts removed: blocked by GFW in China. System font stack used instead. -->
@@ -50,7 +51,13 @@ OCR:  Tesseract OCR (pytesseract)
     <div class="nav-item" data-page="audit" onclick="showPage('audit')"><span class="ico"><svg viewBox="0 0 20 20" aria-hidden="true"><rect class="ico-bg" width="20" height="20" rx="3"/><path class="ico-fg" d="M10 3.5 L15.5 5.5 V10 C15.5 13.5 13.2 15.8 10 16.7 C6.8 15.8 4.5 13.5 4.5 10 V5.5 Z" fill="none" stroke-width="1.4" stroke-linejoin="round"/><path class="ico-fg" d="M7.8 10.2 L9.3 11.7 L12.4 8.5" fill="none" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="nav-label">治理审计</span></div>
     <div class="nav-item" data-page="docs" onclick="showPage('docs')"><span class="ico"><svg viewBox="0 0 20 20" aria-hidden="true"><rect class="ico-bg" width="20" height="20" rx="3"/><path class="ico-fg" d="M10 5 C8.6 4.2 6.6 4 4.2 4.3 V14.6 C6.6 14.3 8.6 14.5 10 15.3 C11.4 14.5 13.4 14.3 15.8 14.6 V4.3 C13.4 4 11.4 4.2 10 5 Z" fill="none" stroke-width="1.4" stroke-linejoin="round"/><path class="ico-fg" d="M10 5 V15.3" fill="none" stroke-width="1.4"/></svg></span><span class="nav-label">说明书</span></div>
   </nav>
-  <div class="sidebar-foot"><span class="foot-txt">双平面 一份真相</span></div>
+  <div class="sidebar-footer">
+    <button type="button" class="sidebar-toggle" id="sidebarToggle" aria-label="折叠侧栏" aria-expanded="true" aria-controls="nav" title="折叠侧栏" onclick="toggleSidebar()">
+      <span class="sidebar-toggle-ico ico-collapse" aria-hidden="true"><svg viewBox="0 0 20 20"><rect x="2.5" y="3.5" width="15" height="13" rx="2" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M7.8 3.5v13" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M13.2 8 L10.8 10 l2.4 2" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+      <span class="sidebar-toggle-ico ico-expand" aria-hidden="true"><svg viewBox="0 0 20 20"><rect x="2.5" y="3.5" width="15" height="13" rx="2" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M7.8 3.5v13" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M10.8 8 L13.2 10 l-2.4 2" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+      <span class="sidebar-toggle-label">收起</span>
+    </button>
+  </div>
 </aside>
 
 <main class="main">
@@ -74,6 +81,10 @@ OCR:  Tesseract OCR (pytesseract)
         <img src="/shared/logos/feishu-base.png" alt="" aria-hidden="true">
         <span>密钥管理中心</span>
       </a>
+      <div class="view-toggle" role="group" aria-label="工具视图切换">
+        <button type="button" class="view-btn" data-view-btn="card" aria-pressed="true" title="卡片视图：看图标、描述与完整信息" onclick="setViewMode('tools','card')">卡片</button>
+        <button type="button" class="view-btn" data-view-btn="list" aria-pressed="false" title="列表视图：一屏看更多，按列比较、就地操作" onclick="setViewMode('tools','list')">列表</button>
+      </div>
     </div>
     <div class="dim-blocks tools-dims" id="dimBlocks"></div>
     <div class="tool-grid" id="toolGrid"></div>
@@ -82,7 +93,7 @@ OCR:  Tesseract OCR (pytesseract)
   <!-- ── 能力地图（独立服务 :3110 iframe 内嵌，自带 hero+tabs，不加外层 hero-bar） ── -->
   <section class="page" id="page-capabilities">
     <div class="docs-shell">
-      <iframe class="doc-frame" src="http://localhost:3110"></iframe>
+      <iframe class="doc-frame" src="http://localhost:3110/?embed=1" allow="clipboard-write"></iframe>
     </div>
   </section>
 
@@ -95,7 +106,12 @@ OCR:  Tesseract OCR (pytesseract)
     </div>
     <div class="apps-bar">
       <button class="btn-add" onclick="openAppModal()">+ 添加网站</button>
+      <div class="view-toggle" role="group" aria-label="网站视图切换">
+        <button type="button" class="view-btn" data-view-btn="card" aria-pressed="true" title="卡片视图：看图标与完整描述" onclick="setViewMode('apps','card')">卡片</button>
+        <button type="button" class="view-btn" data-view-btn="list" aria-pressed="false" title="列表视图：按列比较地址、托管与本地端口" onclick="setViewMode('apps','list')">列表</button>
+      </div>
     </div>
+    <div class="dim-blocks" id="appDimBlocks"></div>
     <div class="tool-grid" id="appGrid"></div>
   </section>
 
@@ -111,6 +127,10 @@ OCR:  Tesseract OCR (pytesseract)
       <div class="search-box">
         <input id="tipSearch" data-tip-search placeholder="搜索标题或描述…">
         <svg class="search-ico" viewBox="0 0 20 20" aria-hidden="true"><circle cx="9" cy="9" r="6.5" fill="none" stroke="currentColor" stroke-width="2"/><line x1="14.2" y1="14.2" x2="18" y2="18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      </div>
+      <div class="view-toggle" role="group" aria-label="日志视图切换">
+        <button type="button" class="view-btn" data-view-btn="card" aria-pressed="true" title="卡片视图：看摘要与完整信息" onclick="setViewMode('tips','card')">卡片</button>
+        <button type="button" class="view-btn" data-view-btn="list" aria-pressed="false" title="列表视图：按标题、类型、领域、作者快速扫读" onclick="setViewMode('tips','list')">列表</button>
       </div>
     </div>
     <div class="dim-blocks tip-dims" id="tipDimBlocks"></div>
@@ -129,6 +149,10 @@ OCR:  Tesseract OCR (pytesseract)
       <div class="search-box">
         <input id="princSearch" placeholder="搜索标题或内容…" oninput="renderPrinciples()">
         <svg class="search-ico" viewBox="0 0 20 20" aria-hidden="true"><circle cx="9" cy="9" r="6.5" fill="none" stroke="currentColor" stroke-width="2"/><line x1="14.2" y1="14.2" x2="18" y2="18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      </div>
+      <div class="view-toggle" role="group" aria-label="原则视图切换">
+        <button type="button" class="view-btn" data-view-btn="card" aria-pressed="true" title="卡片视图：看一句话内容" onclick="setViewMode('principles','card')">卡片</button>
+        <button type="button" class="view-btn" data-view-btn="list" aria-pressed="false" title="列表视图：按类型与文件扫读原则" onclick="setViewMode('principles','list')">列表</button>
       </div>
     </div>
     <div class="dim-blocks tip-dims" id="princDimBlocks"></div>
@@ -151,10 +175,15 @@ OCR:  Tesseract OCR (pytesseract)
     <div class="audit-frame" id="auditGrid"></div>
   </section>
 
-  <!-- ── 说明书（嵌入独立文档，自带 hero，不加外层 hero-bar；页序最底） ── -->
+  <!-- ── 说明书（嵌入独立文档，外层加 64px 页头；页序最底） ── -->
   <section class="page" id="page-docs">
+    <div class="hero-bar">
+      <div class="hero-eyebrow">MANUAL</div>
+      <div class="hero-title">说明书</div>
+      <div class="hero-sub">一份清单，两面读。</div>
+    </div>
     <div class="docs-shell">
-      <iframe class="doc-frame" src="/manual"></iframe>
+      <iframe class="doc-frame" src="/manual?embed=1"></iframe>
     </div>
   </section>
 
@@ -256,6 +285,7 @@ window.TIPS_CFG = {
   constUrl: '/api/tips/const',
   fileUrl: '/api/tips/',
   sectionSel: '#page-tips',
+  dimOrder: ['type', 'domain', 'author'],
   stdTitle: '操作日志宪法 · 工具架',
   normList: function (d) { return (d && d.tips) || []; },
   normBody: function (d) { return typeof d === 'string' ? d : (d && d.content) || ''; }

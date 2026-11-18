@@ -41,11 +41,11 @@
   var DOMAIN_LABEL = { general: '通用', dsh: 'DSH', cron: 'Cron' };
 
   /* ── 作者元数据（来源：谁写的，枚举 + 其他兜底）── */
-  var AUTHOR_DEFS = [['all', '全部'], ['人工', '人工'], ['dsh-agent', 'dsh-agent'], ['claude', 'claude'], ['codex', 'codex'], ['cron', 'cron'], ['其他', '其他']];
+  var AUTHOR_DEFS = [['all', '全部'], ['人工', '人工'], ['dsh-agent', 'dsh-agent'], ['claude', 'claude'], ['codex', 'codex'], ['cron', 'cron'], ['workbuddy', 'workbuddy'], ['deepseek', 'deepseek'], ['其他', '其他']];
 
   /* ── 筛选分类悬停气泡文案（作者/领域/类型）── */
   var DIM_DESC = {
-    author: { all: '所有来源', '人工': '你手动写的', 'dsh-agent': 'DeepSeek Harness agent 沉淀', claude: 'Claude 沉淀', codex: 'Codex 沉淀', cron: '定时任务沉淀', '其他': '未知来源' },
+    author: { all: '所有来源', '人工': '你手动写的', 'dsh-agent': 'DeepSeek Harness agent 沉淀', claude: 'Claude 沉淀', codex: 'Codex 沉淀', cron: '定时任务沉淀', workbuddy: 'WorkBuddy 沉淀', deepseek: 'DeepSeek 直连会话沉淀', '其他': '未知来源' },
     domain: { all: '所有领域', general: '不依附任何系统的经验', dsh: 'DeepSeek Harness 专属', cron: '调度中心专属' },
     type: { all: '所有类型', diagnosis: '为什么X会这样？因果链路', method: '怎么做X？步骤序列', fact: 'X在哪/是什么？', capability: '我能用X在Y场景做什么', feedback: '用户/环境的纠正' }
   };
@@ -228,25 +228,24 @@
       var ak = tipAuthor(x);
       aCounts[ak] = (aCounts[ak] || 0) + 1;
     });
-    var html = '<div class="dim-block dim-author"><div class="dim-block-title">作者</div><div class="dim-block-opts">';
-    AUTHOR_DEFS.forEach(function (d) {
-      var n = d[0] === 'all' ? state.data.length : (aCounts[d[0]] || 0);
-      html += '<span class="dim-opt' + (state.authorFilter === d[0] ? ' active' : '') + '" data-tipa="' + d[0] + '" data-desc="' + escAttr(DIM_DESC.author[d[0]] || '') + '">' + d[1] + '<span class="d-n">' + n + '</span></span>';
-    });
-    html += '</div></div>';
-    html += '<div class="dim-block dim-domain"><div class="dim-block-title">领域</div><div class="dim-block-opts">';
-    DOMAIN_DEFS.forEach(function (d) {
-      var n = d[0] === 'all' ? state.data.length : (dCounts[d[0]] || 0);
-      html += '<span class="dim-opt' + (state.domainFilter === d[0] ? ' active' : '') + '" data-tipd="' + d[0] + '" data-desc="' + escAttr(DIM_DESC.domain[d[0]] || '') + '">' + d[1] + '<span class="d-n">' + n + '</span></span>';
-    });
-    html += '</div></div>';
-    html += '<div class="dim-block dim-status"><div class="dim-block-title">类型</div><div class="dim-block-opts">';
-    TIP_DEFS.forEach(function (d) {
-      var n = d[0] === 'all' ? state.data.length : (tCounts[d[0]] || 0);
-      html += '<span class="dim-opt' + (state.filter === d[0] ? ' active' : '') + '" data-tipf="' + d[0] + '" data-desc="' + escAttr(DIM_DESC.type[d[0]] || '') + '">' + d[1] + '<span class="d-n">' + n + '</span></span>';
-    });
-    html += '</div></div>';
-    wrap.innerHTML = html;
+    function block(cls, title, defs, counts, active, attr, descKey) {
+      var arrow = CFG.dimOrder ? '<span class="dim-arr">></span>' : '';
+      var html = '<div class="dim-block ' + cls + '"><div class="dim-block-title">' + title + arrow + '</div><div class="dim-block-opts">';
+      defs.forEach(function (d) {
+        var n = d[0] === 'all' ? state.data.length : (counts[d[0]] || 0);
+        html += '<span class="dim-opt' + (active === d[0] ? ' active' : '') + '" ' + attr + '="' + d[0] + '" data-desc="' + escAttr(DIM_DESC[descKey][d[0]] || '') + '">' + d[1] + '<span class="d-n">' + n + '</span></span>';
+      });
+      return html + '</div></div>';
+    }
+    function authorBlock() { return block('dim-author dim-status', '作者', AUTHOR_DEFS, aCounts, state.authorFilter, 'data-tipa', 'author'); }
+    function domainBlock() { return block('dim-domain dim-acc', '领域', DOMAIN_DEFS, dCounts, state.domainFilter, 'data-tipd', 'domain'); }
+    function typeBlock() {
+      var cls = 'dim-type' + (CFG.dimOrder ? ' dim-fn' : '');
+      return block(cls, '类型', TIP_DEFS, tCounts, state.filter, 'data-tipf', 'type');
+    }
+    var map = { author: authorBlock, domain: domainBlock, type: typeBlock };
+    var order = CFG.dimOrder || ['author', 'domain', 'type'];
+    wrap.innerHTML = order.map(function (k) { return map[k] ? map[k]() : ''; }).join('');
   }
   function emptyHtml() {
     return '<div class="empty"><div class="empty-icon"><svg class="geo-empty" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 19 L12 6 L20 19 Z"/><path d="M8 13.5 H16"/></svg></div><div class="empty-title">没有匹配的日志</div><div class="empty-desc">换个筛选，或点「+ 新增日志」沉淀一条</div></div>';
@@ -272,11 +271,44 @@
       + '</div>'
       + '</div>';
   }
+  /* 列表视图：宿主页 #page-tips[data-view=list] 时才启用；其他宿主（调度中心）保持卡片不变 */
+  function listView() {
+    var pg = document.getElementById('page-tips');
+    return !!(pg && pg.getAttribute('data-view') === 'list');
+  }
+  function row(x) {
+    var type = x.type || 'diagnosis';
+    var geo = TIP_GEO[type] || TIP_GEO.diagnosis;
+    var label = TIP_LABEL[type] || type;
+    var dom = tipDomain(x);
+    var domLabel = DOMAIN_LABEL[dom] || dom;
+    return '<tr class="asset-row">'
+      + '<td class="at-name"><span class="asset-name-wrap"><span class="asset-name" data-tip="' + escAttr(x.title || x.file) + '">' + esc(x.title || x.file) + '</span>'
+      + '<span class="asset-id">' + esc(x.file) + '</span></span></td>'
+      + '<td><span class="tip-type" data-type="' + escAttr(type) + '">' + geo + '<span>' + esc(label) + '</span></span></td>'
+      + '<td><span class="tip-domain" data-domain="' + escAttr(dom) + '">' + esc(domLabel) + '</span></td>'
+      + '<td><span class="tip-meta-val">' + esc(x.author || '其他') + '</span></td>'
+      + '<td><span class="asset-desc" data-tip="' + escAttr(x.source || '') + '">' + esc(x.source || '—') + '</span></td>'
+      + '<td class="at-actions"><div class="asset-actions">'
+      + '<button class="btn" data-act="edit" data-file="' + escAttr(x.file) + '">编辑</button>'
+      + '<button class="btn btn-danger" data-act="del" data-file="' + escAttr(x.file) + '">删除</button>'
+      + '</div></td>'
+      + '</tr>';
+  }
   function renderGrid() {
     var grid = $('tipGrid');
     if (!grid) return;
     var list = tipList();
-    grid.innerHTML = list.length ? list.map(card).join('') : emptyHtml();
+    if (!list.length) { grid.innerHTML = emptyHtml(); return; }
+    if (listView()) {
+      grid.innerHTML = '<div class="asset-table-wrap"><table class="asset-table tips-table" aria-label="经验日志清单">'
+        + '<thead><tr><th scope="col" class="tt-name">日志</th><th scope="col" class="tt-type">类型</th>'
+        + '<th scope="col" class="tt-domain">领域</th><th scope="col" class="tt-author">作者</th>'
+        + '<th scope="col" class="tt-source">来源</th><th scope="col" class="tt-actions">操作</th></tr></thead>'
+        + '<tbody>' + list.map(row).join('') + '</tbody></table></div>';
+      return;
+    }
+    grid.innerHTML = list.map(card).join('');
   }
 
   /* ── 宪法查看 ── */
@@ -490,7 +522,7 @@
     + '<div class="tips-form-head"><span class="tips-form-title" id="tips-form-title">新增日志</span><button class="tips-form-close" data-tips-close>x</button></div>'
     + '<div class="tips-form-body">'
     + '<div class="tips-field"><label>作者</label><select id="tips-tp-author">'
-    + '<option value="人工">人工</option><option value="dsh-agent">dsh-agent</option><option value="claude">claude</option><option value="codex">codex</option><option value="cron">cron</option><option value="其他">其他</option>'
+    + '<option value="人工">人工</option><option value="dsh-agent">dsh-agent</option><option value="claude">claude</option><option value="codex">codex</option><option value="cron">cron</option><option value="workbuddy">workbuddy</option><option value="deepseek">deepseek</option><option value="其他">其他</option>'
     + '</select></div>'
     + '<div class="tips-field"><label>领域</label><select id="tips-tp-domain">'
     + '<option value="general">通用</option><option value="dsh">DSH</option><option value="cron">Cron</option>'
@@ -634,6 +666,6 @@
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
   else init();
 
-  window.TipsPanel = { load: load, renderMarkdown: renderMarkdown };
+  window.TipsPanel = { load: load, render: function () { renderDims(); renderGrid(); }, renderMarkdown: renderMarkdown };
   window.md2html = function (src) { return renderMarkdown(src); };
 })();
