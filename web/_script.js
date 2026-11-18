@@ -380,14 +380,15 @@ function renderStorageMap(b) {
   var body = document.getElementById('storageModalBody');
   if (!body) return;
   var same = !!b.sameRoot;
-  body.innerHTML =
-    '<div class="folder-status ' + (same ? 'not-split' : 'split') + '">' +
-      '<span class="folder-status-dot" aria-hidden="true"></span>' +
-      '<div class="folder-status-text"><strong>' + (same ? '未解耦' : '已解耦') + '</strong>' +
-      '<span>' + (same
-        ? '应用与个人数据在同一个文件夹；打开数据文件夹会看到应用目录。'
-        : '应用与个人数据在两个独立文件夹。') + '</span></div>' +
-    '</div>' +
+  // 已解耦是默认状态，不再占用一行提示；只有未解耦/读取异常才显示状态条。
+  var status = same
+    ? '<div class="folder-status not-split">' +
+        '<span class="folder-status-dot" aria-hidden="true"></span>' +
+        '<div class="folder-status-text"><strong>未解耦</strong>' +
+        '<span>应用与个人数据在同一个文件夹；打开数据文件夹会看到应用目录。</span></div>' +
+      '</div>'
+    : '';
+  body.innerHTML = status +
     folderRowHtml('app', '应用文件夹', '通用应用 / 代码', b.appRoot) +
     folderRowHtml('data', '个人数据文件夹', '你的内容 / 配置 / 运行数据', b.dataRoot);
 }
