@@ -148,6 +148,12 @@ function updateTool(id, body) { return registry.updateTool(id, body, TOOLS_DIRS)
 
 function startServer() {
   paths.ensureDataDirs();
+  try {
+    var migrated = require('./lib/migrations').run();
+    if (migrated && migrated.length) console.log('[agentboard] migrations:', JSON.stringify(migrated));
+  } catch (e) {
+    console.error('[agentboard] migration runner failed:', e.message);
+  }
   const app = express();
   app.use(express.json());
 

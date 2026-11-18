@@ -26,7 +26,7 @@
 - 接口：`GET /api/links` → `{ ok, links: [{id,label,url,icon,openInNewTab}] }`
 - 外壳只负责渲染：标签、图标、是否新标签页都来自配置；未配置就整块隐藏。
 - URL 只允许 `http(s)`；图标只允许本地 `svg/png/webp` 文件名；不存 token。
-- 旧 `state/private-links.json` 的 `keyManagementUrl` 只作为兼容映射；新代码不读它。
+- 启动迁移 `links-v1` 把旧 `state/private-links.json` 写进当前 `config/links.json`；运行时和前端不再读旧文件。
 
 ### Connector（同步/动作，含凭据）
 
@@ -76,8 +76,8 @@
 
 ### 工具架（:3099）
 
-- `lib/links.js`：读取 `config/links.json`，做 URL/图标/长度/去重/数量限制；`state/private-links.json` 仅兼容。
-- `server.js`：`GET /api/links`；`GET /api/private-links` 保留旧形状一个版本。
+- `lib/links.js`：只读 `config/links.json`，做 URL/图标/长度/去重/数量限制；旧文件只由启动迁移处理。
+- `server.js`：启动时跑 `lib/migrations.js`；`GET /api/links` 只读迁移后的配置；`GET /api/private-links` 仅保留一个后端兼容形状。
 - `web/index.html`：`#externalLinks` 容器；`web/_script.js` 渲染 `.external-link`；不再有飞书图标/文案的硬编码。
 - 本机 `config/links.json` 由旧配置迁移；`config/` 已进 `.gitignore`。
 - 工具架 UI：搜索栏右侧的 `＋` 打开「外部入口」弹窗；标签 / URL / 图标 / 新标签页，保存走 `POST /api/links`，删除走 `DELETE /api/links/:id`，都写同一份 `config/links.json`。未配置时只显示 `＋`，不显示空白链接。
@@ -92,7 +92,7 @@
 
 ### 迁移与兼容
 
-- 旧 `state/private-links.json` 保留；新配置优先。
+- 旧 `state/private-links.json` 保留为备份；启动迁移 `links-v1` 写入新配置，前端不感知旧格式。
 - 旧工具架 UI 的 `/api/private-links` 形状保留一个版本，避免外部脚本立刻断。
 - 新增配置示例见 `examples/config/links.example.json`。
 

@@ -198,6 +198,7 @@ Both planes share one truth source: `tools/{id}/manifest.json`. Change a file, b
   lib/manifest-schema.js
   lib/mcp-handlers.js
   lib/mcp-http.js
+  lib/migrations.js
   lib/ops-log.js
   lib/paths.js
   lib/principle-schema.js

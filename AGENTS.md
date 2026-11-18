@@ -69,6 +69,7 @@
   lib/manifest-schema.js
   lib/mcp-handlers.js
   lib/mcp-http.js
+  lib/migrations.js
   lib/ops-log.js
   lib/paths.js
   lib/principle-schema.js
@@ -105,6 +106,7 @@
 - `DATA_ROOT`：用户数据，默认 `~/.agentboard`，可用 `AGENTBOARD_HOME` 覆盖；含 `tools/ apps/ tips/ principles/ state/ config/ _runtime/ archive/ skills/`。
 - `lib/paths.js` 是唯一路径真相源；后端不再用 `__dirname/_runtime` 或仓库根写运行数据。
 - 个人卡片是数据，不进 Git；只保留 `apps|tips|principles/CONSTITUTION.md`。`npm run init` 只补目录/宪法/示例，不覆盖已有数据。
+- 数据迁移是启动时数据层职责：`lib/migrations.js` + `state/migrations/` 标记；旧链接卡片由 `links-v1` 写入 `config/links.json`，前端不感知旧格式，旧文件只做备份。
 - 单用户、本地、无账号/登录；只监听 `127.0.0.1`。远程/团队另做认证层，不把登录塞进单机面板。
 - 外部入口（密钥中心、GitHub 仓库管理）走 `DATA_ROOT/config/links.json` + `GET /api/links`；同步类走 connector 配置/环境变量，不把 URL、Token、App Secret 写进源码或前端。
 - 侧栏底部「应用与数据」走 `/api/boundary`，只呈现应用文件夹 / 个人数据文件夹两张行 + 未解耦/已解耦状态；只提供打开（`/api/reveal`），不显示计数；工具架 `＋` 通过 `POST/DELETE /api/links` 写同一份 links.json。
