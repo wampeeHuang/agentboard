@@ -263,14 +263,18 @@ async function fetchTools() {
 function safeLinkIcon(name) {
   return /^[a-z0-9._-]+\.(svg|png|webp)$/i.test(name || '') && name.indexOf('..') === -1 ? name : '';
 }
+function externalAddBtnHtml() {
+  return '<button type="button" class="external-link-add" id="addExternalLink" title="添加外部入口" aria-label="添加外部入口" onclick="openLinksModal()">＋</button>';
+}
 async function loadExternalLinks() {
   var box = document.getElementById('externalLinks');
   if (!box) return;
+  var html = '';
   try {
     var res = await fetch('/api/links', { cache: 'no-store' });
     var data = await res.json();
     var list = data && data.ok && Array.isArray(data.links) ? data.links : [];
-    box.innerHTML = list.map(function(l) {
+    html = list.map(function(l) {
       var icon = safeLinkIcon(l.icon);
       var ico = icon
         ? '<img src="/shared/logos/' + escAttr(icon) + '" alt="" aria-hidden="true">'
@@ -279,10 +283,173 @@ async function loadExternalLinks() {
       return '<a class="external-link" href="' + escAttr(l.url) + '"' + target + ' title="' + escAttr(l.label) + '">' +
         '<span class="external-link-ico">' + ico + '</span><span>' + escHtml(l.label) + '</span></a>';
     }).join('');
-    box.hidden = list.length === 0;
-  } catch (_) {
-    box.hidden = true;
+  } catch (_) {}
+  box.innerHTML = html + externalAddBtnHtml();
+  box.hidden = false;
+}
+
+/* ── 外部入口管理 ── */
+function setLinkError(msg) {
+  var el = document.getElementById('linkFormError');
+  if (!el) return;
+  el.textContent = msg || '';
+  el.className = 'tf-hint' + (msg ? ' err' : '');
+}
+function renderLinksModal(list) {
+  var box = document.getElementById('linksList');
+  if (!box) return;
+  box.innerHTML = (list || []).map(function(l) {
+    var icon = safeLinkIcon(l.icon);
+    return '<div class="links-row">' +
+      (icon ? '<img src="/shared/logos/' + escAttr(icon) + '" alt="" aria-hidden="true">' : '') +
+      '<div class="links-row-main"><div class="links-row-label">' + escHtml(l.label) + '</div>' +
+      '<div class="links-row-url">' + escHtml(l.url) + '</div></div>' +
+      '<button type="button" class="links-row-del" title="删除" aria-label="删除 ' + escAttr(l.label) + '" onclick="deleteExternalLink(\'' + escAttr(l.id) + '\')">✕</button></div>';
+  }).join('');
+}
+async function refreshLinksModal() {
+  try {
+    var res = await fetch('/api/links', { cache: 'no-store' });
+    var data = await res.json();
+    renderLinksModal(data && data.ok && Array.isArray(data.links) ? data.links : []);
+  } catch (_) { setLinkError('入口列表读取失败'); }
+}
+async function openLinksModal() {
+  var modal = document.getElementById('linksModal');
+  if (!modal) return;
+  modal.style.display = 'flex';
+  setLinkError('');
+  ['linkLabel', 'linkUrl'].forEach(function(id) { var el = document.getElementById(id); if (el) el.value = ''; });
+  var icon = document.getElementById('linkIcon'); if (icon) icon.value = '';
+  var tab = document.getElementById('linkNewTab'); if (tab) tab.checked = true;
+  await refreshLinksModal();
+  setTimeout(function() { var el = document.getElementById('linkLabel'); if (el) el.focus(); }, 30);
+}
+function closeLinksModal() {
+  var modal = document.getElementById('linksModal');
+  if (modal) modal.style.display = 'none';
+  setLinkError('');
+}
+async function saveExternalLink() {
+  var label = (document.getElementById('linkLabel') || {}).value || '';
+  var url = (document.getElementById('linkUrl') || {}).value || '';
+  var icon = (document.getElementById('linkIcon') || {}).value || '';
+  var newTab = !!(document.getElementById('linkNewTab') || {}).checked;
+  label = label.trim(); url = url.trim();
+  if (!label) return setLinkError('标签必填');
+  if (!/^https?:\/\//i.test(url)) return setLinkError('URL 需以 http:// 或 https:// 开头');
+  setLinkError('');
+  try {
+    var res = await fetch('/api/links', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ label: label, url: url, icon: icon, openInNewTab: newTab })
+    });
+    var data = await res.json();
+    if (!data.ok) return setLinkError(data.error || '保存失败');
+    closeLinksModal();
+    loadExternalLinks();
+    toast('已添加入口：' + label);
+  } catch (e) { setLinkError('保存失败：' + e.message); }
+}
+async function deleteExternalLink(id) {
+  if (!window.confirm('删除这个外部入口？只删入口，不删目标文档。')) return;
+  try {
+    var res = await fetch('/api/links/' + encodeURIComponent(id), { method: 'DELETE' });
+    var data = await res.json();
+    if (!data.ok) { toast('删除失败：' + (data.error || '未知错误')); return; }
+    await refreshLinksModal();
+    loadExternalLinks();
+    toast('已删除入口');
+  } catch (e) { toast('删除失败：' + e.message); }
+}
+
+/* ── 存储地图：应用/数据/内容/运行态/集成 ── */
+var storageBoundary = null;
+function storageRowHtml(layer) {
+  var ico = { app: 'A', tools: 'T', content: 'C', runtime: 'R', integrations: 'I' }[layer.id] || '·';
+  var note = (layer.count != null ? layer.count + ' · ' : '') + (layer.note || '');
+  var sub = '';
+  if (layer.paths) {
+    sub = '<div class="storage-subpaths">' + Object.keys(layer.paths).map(function(k) {
+      return '<span>' + escHtml(k) + ' ' + (layer.counts && layer.counts[k] || 0) + ' · ' + escHtml(layer.paths[k]) + '</span>';
+    }).join('') + '</div>';
   }
+  return '<div class="storage-row">' +
+    '<div class="storage-row-h"><span class="storage-row-ico">' + ico + '</span><span class="storage-row-label">' + escHtml(layer.label) + '</span>' +
+    (note ? '<span class="storage-row-note">' + escHtml(note) + '</span>' : '') + '</div>' +
+    '<div class="storage-path"><code>' + escHtml(layer.path) + '</code><button type="button" class="storage-copy" data-copy="' + escAttr(layer.path) + '">复制</button></div>' +
+    sub + '</div>';
+}
+function renderStorageMap(b) {
+  var pop = document.getElementById('storagePop');
+  if (!pop) return;
+  var counts = b.counts || {};
+  pop.innerHTML = '<div class="storage-head"><span class="storage-title">存储地图</span>' +
+    '<span class="storage-badge">' + (b.sameRoot ? '应用/数据同目录' : '应用/数据已分离') + '</span>' +
+    '<button type="button" class="storage-close" onclick="closeStorageMap()" aria-label="关闭">✕</button></div>' +
+    '<div class="storage-sub">共 ' + b.layers.length + ' 个部分 · 个人内容卡片不进 Git</div>' +
+    '<div class="storage-layers">' + b.layers.map(storageRowHtml).join('') + '</div>' +
+    '<div class="storage-counts">' +
+      '<span>工具 <b>' + (counts.tools || 0) + '</b></span>' +
+      '<span>网站 <b>' + (counts.apps || 0) + '</b></span>' +
+      '<span>经验 <b>' + (counts.tips || 0) + '</b></span>' +
+      '<span>原则 <b>' + (counts.principles || 0) + '</b></span>' +
+      '<span>外部入口 <b>' + (counts.links || 0) + '</b></span>' +
+    '</div>' +
+    '<div class="storage-foot">' + (b.sameRoot
+      ? '当前应用与数据同目录；可用 AGENTBOARD_HOME 指定独立数据根。'
+      : '应用与数据已分离；数据根由 AGENTBOARD_HOME 指定。') + '</div>';
+}
+async function openStorageMap() {
+  var btn = document.getElementById('storageMapBtn');
+  var pop = document.getElementById('storagePop');
+  if (!btn || !pop) return;
+  if (!pop.hidden) { closeStorageMap(); return; }
+  pop.innerHTML = '<div class="storage-head"><span class="storage-title">存储地图</span><button type="button" class="storage-close" onclick="closeStorageMap()" aria-label="关闭">✕</button></div><div class="storage-sub">读取路径与计数…</div>';
+  pop.hidden = false;
+  btn.setAttribute('aria-expanded', 'true');
+  try {
+    var res = await fetch('/api/boundary', { cache: 'no-store' });
+    var b = await res.json();
+    if (!b || !b.ok) throw new Error((b && b.error) || '读取失败');
+    storageBoundary = b;
+    renderStorageMap(b);
+  } catch (e) {
+    pop.innerHTML = '<div class="storage-head"><span class="storage-title">存储地图</span><button type="button" class="storage-close" onclick="closeStorageMap()" aria-label="关闭">✕</button></div><div class="storage-sub">读取失败：' + escHtml(e.message) + '</div>';
+  }
+}
+function closeStorageMap() {
+  var pop = document.getElementById('storagePop');
+  var btn = document.getElementById('storageMapBtn');
+  if (pop) pop.hidden = true;
+  if (btn) btn.setAttribute('aria-expanded', 'false');
+}
+function initStorageMap() {
+  var btn = document.getElementById('storageMapBtn');
+  var pop = document.getElementById('storagePop');
+  if (!btn || !pop) return;
+  btn.addEventListener('click', function(e) { e.stopPropagation(); openStorageMap(); });
+  document.addEventListener('click', function(e) {
+    if (pop.hidden) return;
+    if (pop.contains(e.target) || btn.contains(e.target)) return;
+    closeStorageMap();
+  });
+  document.addEventListener('keydown', function(e) {
+    if (e.key !== 'Escape') return;
+    if (!pop.hidden) closeStorageMap();
+    var lm = document.getElementById('linksModal');
+    if (lm && lm.style.display === 'flex') closeLinksModal();
+  });
+  document.addEventListener('click', function(e) {
+    var c = e.target.closest ? e.target.closest('.storage-copy') : null;
+    if (!c) return;
+    var text = c.getAttribute('data-copy') || '';
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(function() { toast('路径已复制'); }).catch(function() { toast('复制失败'); });
+    } else {
+      toast('当前浏览器不支持复制');
+    }
+  });
 }
 
 function updateCounts() {
@@ -1748,6 +1915,7 @@ function setAuditS(s) {
 /* ── 初始化 ── */
 document.addEventListener('DOMContentLoaded', function() {
   initSidebar();
+  initStorageMap();
   applyAllViewModes();
   var tipDesc = document.getElementById('tp-desc');
   if (tipDesc) tipDesc.addEventListener('input', function () { this.dataset.touched = '1'; });

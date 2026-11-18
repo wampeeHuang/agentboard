@@ -270,6 +270,61 @@ function startServer() {
     res.json({ ok: true, links: links.loadLinks() });
   });
 
+  // 存储地图：应用/数据/内容/运行态/集成，给底部入口和诊断用；只返回本机路径与计数
+  app.get('/api/boundary', function(req, res) {
+    res.set('Cache-Control', 'no-store');
+    function countDirs(p) {
+      try { return fs.readdirSync(p, { withFileTypes: true }).filter(function (e) { return e.isDirectory() && e.name.charAt(0) !== '.' && e.name.charAt(0) !== '_'; }).length; } catch (_) { return 0; }
+    }
+    function countJson(p) {
+      try { return fs.readdirSync(p, { withFileTypes: true }).filter(function (e) { return e.isFile() && e.name.endsWith('.json'); }).length; } catch (_) { return 0; }
+    }
+    function countTips(p) {
+      var n = 0;
+      ['', 'dsh', 'cron'].forEach(function (sub) {
+        var dir = sub ? path.join(p, sub) : p;
+        try {
+          n += fs.readdirSync(dir).filter(function (f) {
+            return f.endsWith('.md') && f !== 'CONSTITUTION.md' && f !== 'CHECKPOINT.md';
+          }).length;
+        } catch (_) {}
+      });
+      return n;
+    }
+    function countPrinciples(p) {
+      try { return fs.readdirSync(p).filter(function (f) { return f.endsWith('.md') && f !== 'CONSTITUTION.md'; }).length; } catch (_) { return 0; }
+    }
+    var d = paths.describe();
+    var sameRoot = path.resolve(d.appRoot) === path.resolve(d.dataRoot);
+    var counts = {
+      tools: countDirs(d.dirs.tools),
+      apps: countJson(d.dirs.apps),
+      tips: countTips(d.dirs.tips),
+      principles: countPrinciples(d.dirs.principles),
+      links: links.loadLinks().length
+    };
+    var layers = [
+      { id: 'app', label: '应用代码', path: d.appRoot, note: 'server / lib / web / docs / examples / scripts' },
+      { id: 'tools', label: '工具清单', path: d.dirs.tools, note: '一个目录 = 一个 manifest.json', count: counts.tools },
+      { id: 'content', label: '个人内容', path: d.dataRoot, note: 'apps / tips / principles', paths: { apps: d.dirs.apps, tips: d.dirs.tips, principles: d.dirs.principles }, counts: { apps: counts.apps, tips: counts.tips, principles: counts.principles } },
+      { id: 'runtime', label: '运行态', path: d.dataRoot, note: 'state / _runtime' },
+      { id: 'integrations', label: '集成配置', path: d.dirs.config, note: 'links.json；凭据走环境变量', count: counts.links }
+    ];
+    res.json({ ok: true, appRoot: d.appRoot, dataRoot: d.dataRoot, sameRoot: sameRoot, layers: layers, counts: counts });
+  });
+
+  app.post('/api/links', function(req, res) {
+    var result = links.upsertLink(req.body);
+    if (!result.ok) return res.status(400).json(result);
+    res.json(result);
+  });
+
+  app.delete('/api/links/:id', function(req, res) {
+    var result = links.removeLink(req.params.id);
+    if (!result.ok) return res.status(404).json(result);
+    res.json(result);
+  });
+
   // 旧入口保留一个版本：只做兼容映射，新代码/新 UI 用 /api/links。
   app.get('/api/private-links', function(req, res) {
     res.set('Cache-Control', 'no-store');

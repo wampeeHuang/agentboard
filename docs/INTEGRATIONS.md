@@ -80,6 +80,8 @@
 - `server.js`：`GET /api/links`；`GET /api/private-links` 保留旧形状一个版本。
 - `web/index.html`：`#externalLinks` 容器；`web/_script.js` 渲染 `.external-link`；不再有飞书图标/文案的硬编码。
 - 本机 `config/links.json` 由旧配置迁移；`config/` 已进 `.gitignore`。
+- 工具架 UI：搜索栏右侧的 `＋` 打开「外部入口」弹窗；标签 / URL / 图标 / 新标签页，保存走 `POST /api/links`，删除走 `DELETE /api/links/:id`，都写同一份 `config/links.json`。未配置时只显示 `＋`，不显示空白链接。
+- 侧栏底部「存储地图」同时显示外部入口数量和 `config/` 路径，回答“我的资产在哪”。
 
 ### 能力地图（:3110，独立仓库）
 

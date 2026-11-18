@@ -52,6 +52,10 @@ OCR:  Tesseract OCR (pytesseract)
     <div class="nav-item" data-page="docs" onclick="showPage('docs')"><span class="ico"><svg viewBox="0 0 20 20" aria-hidden="true"><rect class="ico-bg" width="20" height="20" rx="3"/><path class="ico-fg" d="M10 5 C8.6 4.2 6.6 4 4.2 4.3 V14.6 C6.6 14.3 8.6 14.5 10 15.3 C11.4 14.5 13.4 14.3 15.8 14.6 V4.3 C13.4 4 11.4 4.2 10 5 Z" fill="none" stroke-width="1.4" stroke-linejoin="round"/><path class="ico-fg" d="M10 5 V15.3" fill="none" stroke-width="1.4"/></svg></span><span class="nav-label">说明书</span></div>
   </nav>
   <div class="sidebar-footer">
+    <button type="button" class="sidebar-storage" id="storageMapBtn" aria-haspopup="dialog" aria-expanded="false" title="存储地图：应用 / 工具 / 个人内容 / 运行态 / 集成">
+      <span class="sidebar-storage-ico" aria-hidden="true"><svg viewBox="0 0 20 20"><path d="M2.6 5.4A1.5 1.5 0 0 1 4.1 4h3.7l1.5 1.6h6.6a1.5 1.5 0 0 1 1.5 1.5v7.4a1.5 1.5 0 0 1-1.5 1.5H4.1a1.5 1.5 0 0 1-1.5-1.5Z" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg></span>
+      <span class="sidebar-storage-label">存储地图</span>
+    </button>
     <button type="button" class="sidebar-toggle" id="sidebarToggle" aria-label="折叠侧栏" aria-expanded="true" aria-controls="nav" title="折叠侧栏" onclick="toggleSidebar()">
       <span class="sidebar-toggle-ico ico-collapse" aria-hidden="true"><svg viewBox="0 0 20 20"><rect x="2.5" y="3.5" width="15" height="13" rx="2" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M7.8 3.5v13" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M13.2 8 L10.8 10 l2.4 2" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
       <span class="sidebar-toggle-ico ico-expand" aria-hidden="true"><svg viewBox="0 0 20 20"><rect x="2.5" y="3.5" width="15" height="13" rx="2" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M7.8 3.5v13" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M10.8 8 L13.2 10 l-2.4 2" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
@@ -59,6 +63,8 @@ OCR:  Tesseract OCR (pytesseract)
     </button>
   </div>
 </aside>
+
+<div class="storage-pop" id="storagePop" role="dialog" aria-modal="true" aria-label="存储地图" hidden></div>
 
 <main class="main">
 
@@ -190,6 +196,34 @@ OCR:  Tesseract OCR (pytesseract)
 <div id="errBox" style="display:none;background:#fff0f0;color:#c00;padding:6px 20px;font-size:12px;font-family:monospace;border-bottom:1px solid #fcc;max-width:1100px;margin:0 auto;word-break:break-all"></div>
 
 <div class="toast" id="toast"></div>
+
+<!-- ── 外部入口管理（通用 link，不绑定供应商） ── -->
+<div class="modal-mask" id="linksModal" onclick="if(event.target===this)closeLinksModal()">
+  <div class="modal modal-sm">
+    <div class="modal-head">
+      <span class="modal-title">外部入口</span>
+      <span class="modal-sub">LINK · 数据根/config/links.json</span>
+      <span class="modal-close" onclick="closeLinksModal()">✕</span>
+    </div>
+    <div class="modal-body">
+      <div class="links-list" id="linksList"></div>
+      <div class="links-form">
+        <div class="field"><label for="linkLabel">标签</label><input id="linkLabel" type="text" maxlength="48" placeholder="例：飞书知识库"></div>
+        <div class="field"><label for="linkUrl">URL</label><input id="linkUrl" type="text" placeholder="https://…feishu.cn/…"></div>
+        <div class="row2">
+          <div class="field"><label for="linkIcon">图标</label><select id="linkIcon"><option value="">无图标</option><option value="feishu-base.png">飞书</option><option value="capability-map.svg">能力地图</option><option value="inspiration-wall.svg">灵感库</option><option value="evolution-cat-editor.svg">进化猫</option></select></div>
+          <label class="check-row" style="align-self:end;padding-bottom:8px"><input type="checkbox" id="linkNewTab" checked> 新标签页打开</label>
+        </div>
+        <div class="tf-hint" id="linkFormError"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn go" onclick="saveExternalLink()">添加入口</button>
+      <span class="modal-spacer"></span>
+      <button class="btn" onclick="closeLinksModal()">关闭</button>
+    </div>
+  </div>
+</div>
 
 <!-- ── 编辑表单 modal（edit-form.html 原样搬来） ── -->
 <div class="modal-mask" id="editModal" onclick="if(event.target===this)closeModal()">
