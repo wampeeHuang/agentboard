@@ -1,0 +1,19 @@
+{
+  "links": [
+    {
+      "id": "docs",
+      "label": "团队文档",
+      "url": "https://example.com/docs",
+      "icon": "",
+      "openInNewTab": true
+    },
+    {
+      "id": "keys",
+      "label": "密钥中心",
+      "url": "https://example.com/keys",
+      "icon": "",
+      "openInNewTab": true
+    }
+  ],
+  "sync": {}
+}

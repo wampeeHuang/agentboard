@@ -5,6 +5,7 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
+    "init": "node scripts/init-data.js",
     "test": "node --test \"lib/__tests__/*.test.js\"",
     "coverage": "c8 --include=\"lib/**/*.js\" --include=\"server.js\" --exclude=\"lib/__tests__/**\" node --test \"lib/__tests__/*.test.js\""
   },

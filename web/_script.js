@@ -260,18 +260,29 @@ async function fetchTools() {
   }
 }
 
-async function loadPrivateLinks() {
-  var keyManagementLink = document.getElementById('keyManagementLink');
-  if (!keyManagementLink) return;
+function safeLinkIcon(name) {
+  return /^[a-z0-9._-]+\.(svg|png|webp)$/i.test(name || '') && name.indexOf('..') === -1 ? name : '';
+}
+async function loadExternalLinks() {
+  var box = document.getElementById('externalLinks');
+  if (!box) return;
   try {
-    var res = await fetch('/api/private-links', { cache: 'no-store' });
+    var res = await fetch('/api/links', { cache: 'no-store' });
     var data = await res.json();
-    var url = data && data.ok && data.links && data.links.keyManagementUrl;
-    if (url) {
-      keyManagementLink.href = url;
-      keyManagementLink.hidden = false;
-    }
-  } catch (_) {}
+    var list = data && data.ok && Array.isArray(data.links) ? data.links : [];
+    box.innerHTML = list.map(function(l) {
+      var icon = safeLinkIcon(l.icon);
+      var ico = icon
+        ? '<img src="/shared/logos/' + escAttr(icon) + '" alt="" aria-hidden="true">'
+        : '<span class="external-link-glyph" aria-hidden="true">↗</span>';
+      var target = l.openInNewTab === false ? '' : ' target="_blank" rel="noopener noreferrer"';
+      return '<a class="external-link" href="' + escAttr(l.url) + '"' + target + ' title="' + escAttr(l.label) + '">' +
+        '<span class="external-link-ico">' + ico + '</span><span>' + escHtml(l.label) + '</span></a>';
+    }).join('');
+    box.hidden = list.length === 0;
+  } catch (_) {
+    box.hidden = true;
+  }
 }
 
 function updateCounts() {
@@ -1776,7 +1787,7 @@ document.addEventListener('DOMContentLoaded', function() {
   }
   renderToolsSub();
   ensureToolSchema();  // 分类筛选取值从 schema 派生（先拉，dim 块刷新）
-  loadPrivateLinks();
+  loadExternalLinks();
   fetchTools();
   loadServerCardOrder();
   renderApps();

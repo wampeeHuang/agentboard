@@ -92,7 +92,7 @@ YAML frontmatter（`---` 包裹）在前，正文 H1 标题在后。frontmatter 
 ---
 type: diagnosis | method | fact | capability | feedback
 domain: general | dsh | cron        # 必填，缺省 general
-author: 人工 | dsh-agent | claude | codex | cron | 其他   # 必填，缺省 其他
+author: 人工 | dsh-agent | claude | codex | cron | workbuddy | deepseek | 其他   # 必填，缺省 其他
 date: YYYY-MM-DD
 source: 触发写入的事件/任务简述
 ---
@@ -209,6 +209,7 @@ recipe: 详细操作手册的绝对路径（可选）
 - **25 条 capability 误标已纠正** — 原标 capability 但无 tool/scenario 的诊断/方法类日志，改回 diagnosis(20)/method(5)
 - **6 条遗留缺 source** — agentboard-architecture / agentboard-tools-lifecycle / backup-strategy / json-parse-null / project-json-pattern / toolrack-delete-first-verify，触发事件不可考，留空待人工补
 - **1 条非标准 type 已纠正（2026-09-11）** — `version-bound-inline-review-gates.md` 原 `type: pattern`（不在五类枚举内，会让 `/tips` 标红），按内容归 `method`。同日复核：全库 482 条 `errors=0`，`warnings=7`（均为上一条列出的遗留缺 source，保留待人工补）
+- **author 枚举扩充（2026-11-16）** — 新增 `workbuddy`、`deepseek`。这两个值此前已被实际写入（`supervisor-restricted-container-blocks-writes.md` 用 workbuddy；`feedback-second-occurrence-change-method.md`、`layout-constraints-conflict-surface-costs.md` 用 deepseek），但不在 §三·补 声明的枚举内，属"自创值裸奔"。按「稳定后由人把它加进枚举」补登记，同步改 4 处：`lib/tip-schema.js` 的 `AUTHOR_VALUES`、`web/shared/tips-panel.js` 的 `AUTHOR_DEFS` / `DIM_DESC.author` / 编辑下拉框选项。复核：全库 569 条 `errors=0`
 
 ---
 

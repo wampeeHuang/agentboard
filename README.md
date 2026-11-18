@@ -18,6 +18,14 @@ Agentboard is a local tool control plane. Drop a `manifest.json` in the `tools/`
 
 想让你的 AI agent 帮你建一套？往下看。
 
+## App / Data boundary
+
+- **App root**：克隆/安装目录，装代码：`server.js`、`lib/`、`web/`、`docs/`、`examples/`、`scripts/`。
+- **Data root**：默认 `~/.agentboard`（可用 `AGENTBOARD_HOME` 改）：`tools/`、`apps/`、`tips/`、`principles/`、`state/`、`config/`、`_runtime/`、`archive/`、`skills/`。
+- 个人卡片是数据，不是应用代码；`apps/`、`tips/`、`principles/` 的卡片默认不进 Git，只保留宪法/契约。
+- `npm run init` 只补目录、三份宪法和 `examples/` 模板；已存在的数据不覆盖。
+- 单用户、本地优先，不要求账号/登录；只监听 `127.0.0.1`。详见 [docs/DATA-BOUNDARY.md](docs/DATA-BOUNDARY.md) 与 [docs/INTEGRATIONS.md](docs/INTEGRATIONS.md)。
+
 ---
 
 ## Quick Start (告诉你的 AI agent 照着做)
@@ -31,17 +39,17 @@ Agentboard is a local tool control plane. Drop a `manifest.json` in the `tools/`
 ### 2. Clone
 
 ```bash
-git clone https://github.com/wampeeHuang/agentboard.git ~/.agentboard
+git clone https://github.com/wampeeHuang/agentboard.git ~/agentboard
 ```
 
 Windows PowerShell: `~` works. Windows cmd: replace `~` with `%USERPROFILE%`.
 
-If `~/.agentboard` already exists, rename or remove it first — the clone will fail if the target directory is non-empty.
+数据默认在 `~/.agentboard`（`AGENTBOARD_HOME` 可改）；如果那里已有数据，`npm run init` 不会覆盖。
 
 ### 3. Install
 
 ```bash
-cd ~/.agentboard
+cd ~/agentboard
 npm install
 ```
 
@@ -50,22 +58,23 @@ Two dependencies: `express` (web server) and `@modelcontextprotocol/sdk` (MCP pr
 ### 4. Start
 
 ```bash
-node server.js
+npm run init     # 只补目录、宪法和示例；已有数据不覆盖
+npm start
 ```
 
 Expected output: `Agentboard http://localhost:3099`
 
 **Verify**: `curl http://localhost:3099/api/tools` returns JSON. If port 3099 is in use, set `PORT=3098 node server.js`.
 
-The dashboard opens at `http://localhost:3099` with an empty tool rack. See `examples/` for manifest templates — copy one to `tools/` and customize.
+The dashboard opens at `http://localhost:3099` with the data root's tools; on an empty data root `npm run init` copies two example manifests.
 
 ### 5. Register your first tool
 
 Copy an example and customize, or create from scratch:
 
 ```bash
-cp -r examples/hello-server tools/my-server
-# edit tools/my-server/manifest.json with your paths and ports
+cp -r examples/hello-server ~/.agentboard/tools/my-server
+# edit ~/.agentboard/tools/my-server/manifest.json with your paths and ports
 ```
 
 Or create a directory and manifest manually:
@@ -127,6 +136,8 @@ Agentboard stops when you close the terminal. To keep it alive:
 
 Both planes share one truth source: `tools/{id}/manifest.json`. Change a file, both planes see it instantly.
 
+> 当前作者机的默认部署是 `APP_ROOT = DATA_ROOT = ~/.agentboard`。独立安装时应用代码在 `APP_ROOT`，个人数据在 `DATA_ROOT`（默认 `~/.agentboard`）；见 [docs/DATA-BOUNDARY.md](docs/DATA-BOUNDARY.md)。
+
 ```
 ~/.agentboard/
 ├── README.md              项目入口（人读，Quick Start / 治理入口）
@@ -182,10 +193,12 @@ Both planes share one truth source: `tools/{id}/manifest.json`. Change a file, b
   lib/card-drift.js
   lib/crash-guard.js
   lib/docs-fresh.js
+  lib/links.js
   lib/manifest-schema.js
   lib/mcp-handlers.js
   lib/mcp-http.js
   lib/ops-log.js
+  lib/paths.js
   lib/principle-schema.js
   lib/routes.js
   lib/schema-loader.js
@@ -200,9 +213,12 @@ Both planes share one truth source: `tools/{id}/manifest.json`. Change a file, b
   web/capability-map.svg
   web/index.html
   web/logo.svg
+  web/shared/back-to-top.css
+  web/shared/back-to-top.js
   web/shared/icon-lib.js
   web/shared/logo-lib.js
   web/shared/logos/capability-map.svg
+  web/shared/logos/evolution-cat-editor.svg
   web/shared/logos/inspiration-wall.svg
   web/shared/tips-panel.css
   web/shared/tips-panel.js

@@ -9,6 +9,18 @@ state/
 tools/
 !examples/
 skills/
+# 个人内容层：卡片是数据，不进应用仓库；宪法/契约文件保留
+apps/*
+!apps/CONSTITUTION.md
+!apps/.gitkeep
+tips/*
+!tips/CONSTITUTION.md
+!tips/.gitkeep
+principles/*
+!principles/CONSTITUTION.md
+!principles/.gitkeep
+# 本机集成配置：外部入口 URL、凭据引用；不进仓库（只忽略数据根 config/，示例仍可入库）
+/config/
 
 # Claude Code 项目级配置
 .claude/

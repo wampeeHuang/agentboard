@@ -93,10 +93,13 @@ html.sidebar-collapsed .nav-sub{display:none}
 .tools-search-group{display:flex;align-items:center;gap:8px;width:calc((100% - 48px)/4);min-width:0}
 .tools-search-group .btn-add{flex-shrink:0}
 .tools-search-group .search-box{flex:1;min-width:0}
-.feishu-base-link{height:32px;flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;gap:8px;box-sizing:border-box;padding:0 12px 0 4px;overflow:hidden;border:1px solid var(--border);border-radius:8px;background:var(--paper);color:var(--text-secondary);font-size:13px;font-weight:500;text-decoration:none;white-space:nowrap;transition:border-color .15s ease,box-shadow .15s ease,transform .15s ease}
-.feishu-base-link:hover{border-color:var(--green);box-shadow:0 2px 8px rgba(23,107,77,.16);transform:translateY(-1px)}
-.feishu-base-link:focus-visible{outline:2px solid var(--green);outline-offset:2px}
-.feishu-base-link img{width:24px;height:24px;display:block;border-radius:6px;object-fit:cover}
+.external-links{display:flex;align-items:center;gap:8px;flex:0 0 auto}
+.external-link{height:32px;flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;gap:8px;box-sizing:border-box;padding:0 12px 0 4px;overflow:hidden;border:1px solid var(--border);border-radius:8px;background:var(--paper);color:var(--text-secondary);font-size:13px;font-weight:500;text-decoration:none;white-space:nowrap;transition:border-color .15s ease,box-shadow .15s ease,transform .15s ease}
+.external-link:hover{border-color:var(--green);box-shadow:0 2px 8px rgba(23,107,77,.16);transform:translateY(-1px)}
+.external-link:focus-visible{outline:2px solid var(--green);outline-offset:2px}
+.external-link img{width:24px;height:24px;display:block;border-radius:6px;object-fit:cover}
+.external-link-ico{width:24px;height:24px;display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto}
+.external-link-glyph{width:24px;height:24px;display:inline-flex;align-items:center;justify-content:center;border-radius:6px;background:var(--paper-tint);color:var(--green);font-size:14px;line-height:1}
 @media(max-width:1600px){.tools-search-group{width:calc((100% - 32px)/3)}}
 @media(max-width:1200px){.tools-search-group{width:calc((100% - 16px)/2)}}
 @media(max-width:820px){.tools-search-group{width:100%}}

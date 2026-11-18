@@ -65,10 +65,12 @@
   lib/card-drift.js
   lib/crash-guard.js
   lib/docs-fresh.js
+  lib/links.js
   lib/manifest-schema.js
   lib/mcp-handlers.js
   lib/mcp-http.js
   lib/ops-log.js
+  lib/paths.js
   lib/principle-schema.js
   lib/routes.js
   lib/schema-loader.js
@@ -83,9 +85,12 @@
   web/capability-map.svg
   web/index.html
   web/logo.svg
+  web/shared/back-to-top.css
+  web/shared/back-to-top.js
   web/shared/icon-lib.js
   web/shared/logo-lib.js
   web/shared/logos/capability-map.svg
+  web/shared/logos/evolution-cat-editor.svg
   web/shared/logos/inspiration-wall.svg
   web/shared/tips-panel.css
   web/shared/tips-panel.js
@@ -93,6 +98,16 @@
 
 （省略 .git/、node_modules/、coverage/ 等非架构目录。全局 skills 是外部只读资源，不在本目录树内。）
 ```
+
+### 应用层 / 数据层边界
+
+- `APP_ROOT`：代码、`web/`、`docs/`、`examples/`、`scripts/`（仓库/安装目录）。
+- `DATA_ROOT`：用户数据，默认 `~/.agentboard`，可用 `AGENTBOARD_HOME` 覆盖；含 `tools/ apps/ tips/ principles/ state/ config/ _runtime/ archive/ skills/`。
+- `lib/paths.js` 是唯一路径真相源；后端不再用 `__dirname/_runtime` 或仓库根写运行数据。
+- 个人卡片是数据，不进 Git；只保留 `apps|tips|principles/CONSTITUTION.md`。`npm run init` 只补目录/宪法/示例，不覆盖已有数据。
+- 单用户、本地、无账号/登录；只监听 `127.0.0.1`。远程/团队另做认证层，不把登录塞进单机面板。
+- 外部入口（密钥中心、GitHub 仓库管理）走 `DATA_ROOT/config/links.json` + `GET /api/links`；同步类走 connector 配置/环境变量，不把 URL、Token、App Secret 写进源码或前端。
+- 详见 [docs/DATA-BOUNDARY.md](docs/DATA-BOUNDARY.md) 与 [docs/INTEGRATIONS.md](docs/INTEGRATIONS.md)。
 
 **双平面架构**: MCP (AI plane) + REST (human plane)，共享同一真相源 `tools/*/manifest.json`。
 
@@ -220,7 +235,7 @@ agentboard 是骨件，不是全部。兄弟骨件各管一段，本骨件只代
 
 ## 资产边界
 
-- Agentboard 自身资产全部在 `~/.agentboard/`，不分裂
+- 应用资产在 `APP_ROOT`；用户数据在 `DATA_ROOT`（默认 `~/.agentboard`，`AGENTBOARD_HOME` 可改）。代码不写数据根，数据根不提交。
 - `~/.claude/` 只保留 Claude Code 原生文件（宪法、skills、memory）。Agentboard 可以读、展示、索引，但不写入、不修改、不复制
 - Skills、全局宪法对 Agentboard 是只读索引
 
@@ -233,7 +248,7 @@ agentboard 是骨件，不是全部。兄弟骨件各管一段，本骨件只代
 
 ## 操作日志
 
-- 写入路径：`~/.agentboard/tips/*.md`
+- 写入路径：`DATA_ROOT/tips/*.md`（默认 `~/.agentboard/tips/*.md`）
 - **不要写到 `~/.claude/tips/`** — agentboard 不读那个目录
 - **写入前必须先读 `tips/CONSTITUTION.md`** — 格式、分类、准入五问的唯一真相源
 

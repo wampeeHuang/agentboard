@@ -1,13 +1,15 @@
-﻿const express = require('express');
+const express = require('express');
 const fs = require('fs');
 const path = require('path');
 const { exec, execSync, spawn } = require('child_process');
 const os = require('os');
 var registry = require('./lib/tool-registry');
 var opslog = require('./lib/ops-log');
+var paths = require('./lib/paths');
+var links = require('./lib/links');
 
 var serverStartTime = Date.now();
-var EVENTS_LOG = path.join(__dirname, '_runtime', 'events.jsonl');
+var EVENTS_LOG = path.join(paths.RUNTIME_DIR, 'events.jsonl');
 
 function getHealth() {
   var now = Date.now();
@@ -66,29 +68,22 @@ function getHealth() {
   };
 }
 
-const PROJECT_DIR = __dirname;
-const AGENTBOARD_HOME = process.env.AGENTBOARD_HOME || path.join(os.homedir(), '.agentboard');
-const TOOLS_DIR = process.env.AGENTBOARD_TOOLS_DIR || path.join(AGENTBOARD_HOME, 'tools');
+const PROJECT_DIR = paths.APP_ROOT;
+const DATA_ROOT = paths.DATA_ROOT;
+const TOOLS_DIR = paths.TOOLS_DIR;
 const TOOLS_DIRS = [TOOLS_DIR];
-const SKILLS_DIR = process.env.AGENTBOARD_SKILLS_DIR || path.join(os.homedir(), '.claude', 'skills');
+const SKILLS_DIR = paths.GLOBAL_SKILLS_DIR;
 var apiHTML = require('./lib/api-page');
-const TIPS_DIR = process.env.AGENTBOARD_TIPS_DIR || path.join(AGENTBOARD_HOME, 'tips');
-const PRINCIPLES_DIR = process.env.AGENTBOARD_PRINCIPLES_DIR || path.join(AGENTBOARD_HOME, 'principles');
-const LOCAL_SKILLS_DIR = path.join(PROJECT_DIR, 'skills');
+const TIPS_DIR = paths.TIPS_DIR;
+const PRINCIPLES_DIR = paths.PRINCIPLES_DIR;
+const LOCAL_SKILLS_DIR = paths.LOCAL_SKILLS_DIR;
+const STATE_DIR = paths.STATE_DIR;
+const RUNTIME_DIR = paths.RUNTIME_DIR;
+const CONFIG_DIR = paths.CONFIG_DIR;
 const PREFERRED_PORT = parseInt(process.env.PORT || '3099', 10);
 const PLATFORM = process.platform;
 
 function read(p) { try { return fs.readFileSync(p,'utf8'); } catch(_) { return null; } }
-function privateLinks() {
-  // 真实业务入口只保留在 gitignored 的本机 state 配置；公开源码不携带 Base 标识。
-  try {
-    var config = JSON.parse(read(path.join(AGENTBOARD_HOME, 'state', 'private-links.json')) || '{}');
-    var url = new URL(config.keyManagementUrl || '');
-    var host = url.hostname.toLowerCase();
-    if (url.protocol !== 'https:' || !(host.endsWith('.feishu.cn') || host.endsWith('.larksuite.com'))) return {};
-    return { keyManagementUrl: url.toString() };
-  } catch (_) { return {}; }
-}
 function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function monogram(name) { var s = (name||'').trim(); var en = s.match(/[A-Za-z][A-Za-z\s]+/); if (en) { var w = en[0].split(/\s+/).filter(Boolean); if (w.length >= 2) return (w[0][0] + w[w.length-1][0]).toUpperCase(); if (w.length === 1 && w[0].length >= 2) return w[0].substring(0,2).toUpperCase(); } var cn = s.replace(/[^一-鿿]/g,''); if (cn.length >= 2) return cn[0] + cn[cn.length-1]; var ascii = s.replace(/[^A-Za-z0-9]/g,''); if (ascii.length >= 2) return ascii.substring(0,2).toUpperCase(); return (s.substring(0,2) || '??').toUpperCase(); }
 function listDirs(p) { try { return fs.readdirSync(p).filter(function(name){ if (name.charAt(0) === '.') return false; try { return fs.statSync(path.join(p, name)).isDirectory(); } catch(_) { return false; } }); } catch(_) { return []; } }
@@ -143,11 +138,12 @@ function createTool(body) { return registry.createTool(body, TOOLS_DIRS); }
 function updateTool(id, body) { return registry.updateTool(id, body, TOOLS_DIRS); }
 
 function startServer() {
+  paths.ensureDataDirs();
   const app = express();
   app.use(express.json());
 
   // --- request logging (in-memory + file, date-partitioned) ---
-  var LOGS_DIR = path.join(AGENTBOARD_HOME, 'state', 'api-calls');
+  var LOGS_DIR = path.join(STATE_DIR, 'api-calls');
   var apiLog = []; // [{ts, method, path, ua, caller, action, target}]
   var apiCounts = {}; // { '/api/tools': {count, first, last}, ... }
   try { fs.mkdirSync(LOGS_DIR, {recursive:true}); } catch(_) {}
@@ -163,7 +159,7 @@ function startServer() {
   }
 
   // migrate legacy flat file
-  var OLD_LOG = path.join(AGENTBOARD_HOME, 'state', 'api-calls.jsonl');
+  var OLD_LOG = path.join(STATE_DIR, 'api-calls.jsonl');
   if (fs.existsSync(OLD_LOG)) {
     try {
       var oldContent = read(OLD_LOG);
@@ -269,15 +265,22 @@ function startServer() {
     next();
   });
 
+  app.get('/api/links', function(req, res) {
+    res.set('Cache-Control', 'no-store');
+    res.json({ ok: true, links: links.loadLinks() });
+  });
+
+  // 旧入口保留一个版本：只做兼容映射，新代码/新 UI 用 /api/links。
   app.get('/api/private-links', function(req, res) {
     res.set('Cache-Control', 'no-store');
-    res.json({ ok: true, links: privateLinks() });
+    var list = links.loadLinks();
+    res.json({ ok: true, links: { keyManagementUrl: (list[0] && list[0].url) || '' }, externalLinks: list });
   });
 
 
 
   // shared context for route/static modules (module-level helpers + closure logging state)
-  var ctx = { read: read, esc: esc, monogram: monogram, listDirs: listDirs, openFolder: openFolder, safeResolve: safeResolve, renderMarkdown: renderMarkdown, scanTools: scanTools, findManifest: findManifest, startTool: startTool, stopTool: stopTool, createTool: createTool, updateTool: updateTool, getHealth: getHealth, apiHTML: apiHTML, registry: registry, TOOLS_DIR: TOOLS_DIR, SKILLS_DIR: SKILLS_DIR, TIPS_DIR: TIPS_DIR, PRINCIPLES_DIR: PRINCIPLES_DIR, LOCAL_SKILLS_DIR: LOCAL_SKILLS_DIR, PROJECT_DIR: PROJECT_DIR, apiLog: apiLog, apiCounts: apiCounts };
+  var ctx = { read: read, esc: esc, monogram: monogram, listDirs: listDirs, openFolder: openFolder, safeResolve: safeResolve, renderMarkdown: renderMarkdown, scanTools: scanTools, findManifest: findManifest, startTool: startTool, stopTool: stopTool, createTool: createTool, updateTool: updateTool, getHealth: getHealth, apiHTML: apiHTML, registry: registry, TOOLS_DIR: TOOLS_DIR, SKILLS_DIR: SKILLS_DIR, TIPS_DIR: TIPS_DIR, PRINCIPLES_DIR: PRINCIPLES_DIR, LOCAL_SKILLS_DIR: LOCAL_SKILLS_DIR, PROJECT_DIR: PROJECT_DIR, DATA_ROOT: DATA_ROOT, STATE_DIR: STATE_DIR, RUNTIME_DIR: RUNTIME_DIR, CONFIG_DIR: CONFIG_DIR, ARCHIVE_DIR: paths.ARCHIVE_DIR, apiLog: apiLog, apiCounts: apiCounts };
 
   // routes (REST API + content)
   require('./lib/routes')(app, ctx);
