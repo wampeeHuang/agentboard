@@ -25,7 +25,7 @@ Agentboard is a local tool control plane. Drop a `manifest.json` in the `tools/`
 - 个人卡片是数据，不是应用代码；`apps/`、`tips/`、`principles/` 的卡片默认不进 Git，只保留宪法/契约。
 - `npm run init` 只补目录、三份宪法和 `examples/` 模板；已存在的数据不覆盖。
 - 单用户、本地优先，不要求账号/登录；只监听 `127.0.0.1`。详见 [docs/DATA-BOUNDARY.md](docs/DATA-BOUNDARY.md) 与 [docs/INTEGRATIONS.md](docs/INTEGRATIONS.md)。
-- 侧栏底部「应用与数据」只呈现两张卡：应用层（应用入口 + 代码路径）和个人数据层（工具 / 网站 / 经验 / 原则 / 外部入口计数 + 数据路径）；工具架搜索旁的 `＋` 管理外部入口。
+- 侧栏底部「应用与数据」只呈现两张文件夹（应用文件夹 / 个人数据文件夹）+ 未解耦/已解耦状态，只提供打开文件夹；工具架搜索旁的 `＋` 管理外部入口。
 
 ---
 

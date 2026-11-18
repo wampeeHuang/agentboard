@@ -107,7 +107,7 @@
 - 个人卡片是数据，不进 Git；只保留 `apps|tips|principles/CONSTITUTION.md`。`npm run init` 只补目录/宪法/示例，不覆盖已有数据。
 - 单用户、本地、无账号/登录；只监听 `127.0.0.1`。远程/团队另做认证层，不把登录塞进单机面板。
 - 外部入口（密钥中心、GitHub 仓库管理）走 `DATA_ROOT/config/links.json` + `GET /api/links`；同步类走 connector 配置/环境变量，不把 URL、Token、App Secret 写进源码或前端。
-- 侧栏底部「应用与数据」走 `/api/boundary`，只呈现应用层 / 个人数据层两张卡；数据层内按工具/内容/运行态/集成细分；工具架 `＋` 通过 `POST/DELETE /api/links` 写同一份 links.json。
+- 侧栏底部「应用与数据」走 `/api/boundary`，只呈现应用文件夹 / 个人数据文件夹两张行 + 未解耦/已解耦状态；只提供打开（`/api/reveal`），不显示计数；工具架 `＋` 通过 `POST/DELETE /api/links` 写同一份 links.json。
 - 详见 [docs/DATA-BOUNDARY.md](docs/DATA-BOUNDARY.md) 与 [docs/INTEGRATIONS.md](docs/INTEGRATIONS.md)。
 
 **双平面架构**: MCP (AI plane) + REST (human plane)，共享同一真相源 `tools/*/manifest.json`。

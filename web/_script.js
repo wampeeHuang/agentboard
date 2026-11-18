@@ -363,71 +363,44 @@ async function deleteExternalLink(id) {
   } catch (e) { toast('删除失败：' + e.message); }
 }
 
-/* ── 应用与数据：用户只关心两个地方 ── */
+/* ── 应用与数据：只做「打开文件夹」和「解耦状态」 ── */
 var storageBoundary = null;
 
-function storageChip(id, label, count, title) {
-  return '<button type="button" class="storage-chip" data-reveal="' + id + '" title="' + escAttr(title) + '"><b>' + (count || 0) + '</b><span>' + escHtml(label) + '</span></button>';
+function folderRowHtml(target, title, sub, path) {
+  return '<div class="folder-row">' +
+    '<span class="folder-row-ico" aria-hidden="true"><svg viewBox="0 0 20 20"><path d="M2.6 5.4A1.5 1.5 0 0 1 4.1 4h3.7l1.5 1.6h6.6a1.5 1.5 0 0 1 1.5 1.5v7.4a1.5 1.5 0 0 1-1.5 1.5H4.1a1.5 1.5 0 0 1-1.5-1.5Z" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg></span>' +
+    '<div class="folder-row-main"><div class="folder-row-title">' + escHtml(title) + '</div>' +
+    '<div class="folder-row-sub">' + escHtml(sub) + '</div>' +
+    '<div class="folder-row-path">' + escHtml(path) + '</div></div>' +
+    '<button type="button" class="folder-open" data-reveal="' + target + '">打开文件夹</button>' +
+  '</div>';
 }
 
 function renderStorageMap(b) {
-  var pop = document.getElementById('storagePop');
-  if (!pop) return;
-  var c = b.counts || {};
-  var appUrl = location.origin + '/';
+  var body = document.getElementById('storageModalBody');
+  if (!body) return;
   var same = !!b.sameRoot;
-  pop.innerHTML = '<div class="storage-head"><span class="storage-title">应用与数据</span>' +
-    '<span class="storage-badge">' + (same ? '同根 / 可分离' : '已分离') + '</span>' +
-    '<button type="button" class="storage-refresh" onclick="refreshStorageMap()" title="刷新" aria-label="刷新">↻</button>' +
-    '<button type="button" class="storage-close" onclick="closeStorageMap()" aria-label="关闭">✕</button></div>' +
-    '<div class="storage-sub">2 个地方 · 应用是代码，个人数据是你的内容与配置</div>' +
-    '<div class="storage-groups">' +
-      '<section class="storage-group">' +
-        '<div class="storage-group-h"><span class="storage-group-ico">A</span><div><div class="storage-group-title">应用层</div><div class="storage-group-sub">通用应用 / 代码</div></div></div>' +
-        '<div class="storage-group-path"><code>' + escHtml(b.appRoot) + '</code><button type="button" class="storage-copy" data-copy="' + escAttr(b.appRoot) + '">复制</button></div>' +
-        '<a class="storage-app-url" href="' + escAttr(appUrl) + '" target="_blank" rel="noopener noreferrer">' + escHtml(appUrl) + '</a>' +
-        '<div class="storage-group-actions"><a class="storage-action primary" href="' + escAttr(appUrl) + '" target="_blank" rel="noopener noreferrer">打开应用</a><button type="button" class="storage-action" data-reveal="app">打开应用目录</button></div>' +
-      '</section>' +
-      '<section class="storage-group storage-group-data">' +
-        '<div class="storage-group-h"><span class="storage-group-ico">D</span><div><div class="storage-group-title">个人数据层</div><div class="storage-group-sub">你的内容 / 配置 / 运行数据</div></div></div>' +
-        '<div class="storage-group-path"><code>' + escHtml(b.dataRoot) + '</code><button type="button" class="storage-copy" data-copy="' + escAttr(b.dataRoot) + '">复制</button></div>' +
-        '<div class="storage-group-actions"><button type="button" class="storage-action primary" data-reveal="data">打开数据目录</button></div>' +
-        '<div class="storage-chip-grid">' +
-          storageChip('tools', '工具', c.tools, '打开 tools/') +
-          storageChip('apps', '网站', c.apps, '打开 apps/') +
-          storageChip('tips', '经验', c.tips, '打开 tips/') +
-          storageChip('principles', '原则', c.principles, '打开 principles/') +
-          storageChip('config', '外部入口', c.links, '打开 config/') +
-        '</div>' +
-        '<div class="storage-note">导入的 manifest / 配置单会自动出现在这里；点 ↻ 刷新计数。</div>' +
-        '<div class="storage-system">运行态与集成配置也在数据层：<code>state / _runtime / config</code></div>' +
-      '</section>' +
+  body.innerHTML =
+    '<div class="folder-status ' + (same ? 'not-split' : 'split') + '">' +
+      '<span class="folder-status-dot" aria-hidden="true"></span>' +
+      '<div class="folder-status-text"><strong>' + (same ? '未解耦' : '已解耦') + '</strong>' +
+      '<span>' + (same
+        ? '应用与个人数据在同一个文件夹；打开数据文件夹会看到应用目录。'
+        : '应用与个人数据在两个独立文件夹。') + '</span></div>' +
     '</div>' +
-    '<div class="storage-foot">' + (same
-      ? '应用代码与个人数据当前同根，数据目录独立；可用 AGENTBOARD_HOME 指定独立数据根。'
-      : '应用与数据已分离；数据根由 AGENTBOARD_HOME 指定。') + '</div>';
-}
-
-async function refreshStorageMap() {
-  var pop = document.getElementById('storagePop');
-  if (!pop || pop.hidden) return;
-  try {
-    var res = await fetch('/api/boundary', { cache: 'no-store' });
-    var b = await res.json();
-    if (!b || !b.ok) throw new Error((b && b.error) || '读取失败');
-    storageBoundary = b;
-    renderStorageMap(b);
-  } catch (e) { toast('刷新失败：' + e.message); }
+    folderRowHtml('app', '应用文件夹', '通用应用 / 代码', b.appRoot) +
+    folderRowHtml('data', '个人数据文件夹', '你的内容 / 配置 / 运行数据', b.dataRoot);
 }
 
 async function openStorageMap() {
+  var modal = document.getElementById('storageModal');
+  var body = document.getElementById('storageModalBody');
   var btn = document.getElementById('storageMapBtn');
-  var pop = document.getElementById('storagePop');
-  if (!btn || !pop) return;
-  if (!pop.hidden) { closeStorageMap(); return; }
-  pop.innerHTML = '<div class="storage-head"><span class="storage-title">应用与数据</span><button type="button" class="storage-close" onclick="closeStorageMap()" aria-label="关闭">✕</button></div><div class="storage-sub">读取中…</div>';
-  pop.hidden = false;
-  btn.setAttribute('aria-expanded', 'true');
+  if (!modal || !body) return;
+  if (modal.style.display === 'flex') { closeStorageMap(); return; }
+  modal.style.display = 'flex';
+  if (btn) btn.setAttribute('aria-expanded', 'true');
+  body.innerHTML = '<div class="folder-status"><span class="folder-status-dot" aria-hidden="true"></span><div class="folder-status-text"><strong>读取中…</strong><span>正在确认应用与数据的位置。</span></div></div>';
   try {
     var res = await fetch('/api/boundary', { cache: 'no-store' });
     var b = await res.json();
@@ -435,14 +408,14 @@ async function openStorageMap() {
     storageBoundary = b;
     renderStorageMap(b);
   } catch (e) {
-    pop.innerHTML = '<div class="storage-head"><span class="storage-title">应用与数据</span><button type="button" class="storage-close" onclick="closeStorageMap()" aria-label="关闭">✕</button></div><div class="storage-sub">读取失败：' + escHtml(e.message) + '</div>';
+    body.innerHTML = '<div class="folder-status not-split"><span class="folder-status-dot" aria-hidden="true"></span><div class="folder-status-text"><strong>读取失败</strong><span>' + escHtml(e.message) + '</span></div></div>';
   }
 }
 
 function closeStorageMap() {
-  var pop = document.getElementById('storagePop');
+  var modal = document.getElementById('storageModal');
   var btn = document.getElementById('storageMapBtn');
-  if (pop) pop.hidden = true;
+  if (modal) modal.style.display = 'none';
   if (btn) btn.setAttribute('aria-expanded', 'false');
 }
 
@@ -451,37 +424,26 @@ async function revealPath(target) {
     var res = await fetch('/api/reveal', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ target: target }) });
     var data = await res.json();
     if (!data.ok) { toast('打开失败：' + (data.error || '未知错误')); return; }
-    toast('已打开目录');
+    toast('已打开文件夹');
   } catch (e) { toast('打开失败：' + e.message); }
 }
 
 function initStorageMap() {
   var btn = document.getElementById('storageMapBtn');
-  var pop = document.getElementById('storagePop');
-  if (!btn || !pop) return;
+  var modal = document.getElementById('storageModal');
+  if (!btn || !modal) return;
   btn.addEventListener('click', function(e) { e.stopPropagation(); openStorageMap(); });
-  document.addEventListener('click', function(e) {
-    if (pop.hidden) return;
-    if (pop.contains(e.target) || btn.contains(e.target)) return;
-    closeStorageMap();
-  });
   document.addEventListener('keydown', function(e) {
     if (e.key !== 'Escape') return;
-    if (!pop.hidden) closeStorageMap();
+    if (modal.style.display === 'flex') closeStorageMap();
     var lm = document.getElementById('linksModal');
     if (lm && lm.style.display === 'flex') closeLinksModal();
   });
   document.addEventListener('click', function(e) {
     var r = e.target.closest ? e.target.closest('[data-reveal]') : null;
-    if (r && pop.contains(r)) { e.preventDefault(); revealPath(r.getAttribute('data-reveal')); return; }
-    var c = e.target.closest ? e.target.closest('.storage-copy') : null;
-    if (!c) return;
-    var text = c.getAttribute('data-copy') || '';
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(text).then(function() { toast('路径已复制'); }).catch(function() { toast('复制失败'); });
-    } else {
-      toast('当前浏览器不支持复制');
-    }
+    if (!r || !modal.contains(r)) return;
+    e.preventDefault();
+    revealPath(r.getAttribute('data-reveal'));
   });
 }
 

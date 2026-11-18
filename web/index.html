@@ -64,7 +64,15 @@ OCR:  Tesseract OCR (pytesseract)
   </div>
 </aside>
 
-<div class="storage-pop" id="storagePop" role="dialog" aria-modal="true" aria-label="存储地图" hidden></div>
+<div class="modal-mask" id="storageModal" onclick="if(event.target===this)closeStorageMap()">
+  <div class="modal modal-sm">
+    <div class="modal-head">
+      <span class="modal-title">应用与数据</span>
+      <span class="modal-close" onclick="closeStorageMap()">✕</span>
+    </div>
+    <div class="modal-body" id="storageModalBody"></div>
+  </div>
+</div>
 
 <main class="main">
 
